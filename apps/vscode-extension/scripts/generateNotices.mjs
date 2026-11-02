@@ -75,7 +75,10 @@ const NOTES = {
 	lucide:
 		"The drawing of every icon the `lucideIcon` shape can render is generated\n" +
 		"from this package into the extension's own source\n" +
-		"(plugins/lucide-icon-shape/src/schema/icon/iconData.generated.ts).\n",
+		"(plugins/lucide-icon-shape/src/schema/icon/iconData.generated.ts).\n" +
+		"The category names and which icons each holds come from the Lucide\n" +
+		"GitHub repository at the tag of the same version, generated into\n" +
+		"plugins/lucide-icon-shape/src/schema/icon/iconCategories.generated.ts.\n",
 };
 
 /** Where the Lucide version is stated, as the header of the generated icon data. */

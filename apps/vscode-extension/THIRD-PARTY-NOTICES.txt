@@ -1205,6 +1205,9 @@ lucide@1.31.0 — ISC
 The drawing of every icon the `lucideIcon` shape can render is generated
 from this package into the extension's own source
 (plugins/lucide-icon-shape/src/schema/icon/iconData.generated.ts).
+The category names and which icons each holds come from the Lucide
+GitHub repository at the tag of the same version, generated into
+plugins/lucide-icon-shape/src/schema/icon/iconCategories.generated.ts.
 
 ISC License
 

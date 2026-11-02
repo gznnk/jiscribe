@@ -100,8 +100,9 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   shown. `CanvasMessages` gains `stencilLibraryShowAll` and
   `stencilLibraryBack`. `awsStencilCategory` declares 25 groups, one per AWS
   category ordered for architecture diagrams, holding all 781 icons;
-  `lucideIconStencilCategory` declares one group holding all 1767 icons by
-  name.
+  `lucideIconStencilCategory` declares 42 groups, one per Lucide category
+  ordered for diagrams, holding all 1767 icons; an icon in several categories
+  is listed in each.
 
 ### Changed
 

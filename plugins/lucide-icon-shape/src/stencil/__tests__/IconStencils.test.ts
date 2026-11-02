@@ -1,6 +1,9 @@
 import { describe, it, expect } from "vitest";
 
+import type { IconCategoryId } from "../../schema/icon/iconCategories.generated";
+import { ICON_NAMES_BY_CATEGORY } from "../../schema/icon/iconCategories.generated";
 import { ICON_NODES } from "../../schema/icon/iconData.generated";
+import { ICON_BROWSE_GROUP_DECLARATIONS } from "../iconBrowseGroups";
 import { lucideIconStencilCategory } from "../IconStencilCategory";
 import { ICON_STENCIL_IDS, IconStencils } from "../IconStencils";
 
@@ -41,19 +44,39 @@ describe("lucideIconStencilCategory.search", () => {
 });
 
 describe("lucideIconStencilCategory.browseGroups", () => {
-	it("lays every registered icon out in one section, by name", () => {
-		const browseGroups = lucideIconStencilCategory.browseGroups ?? [];
-		expect(browseGroups.map((group) => group.id)).toEqual(["all"]);
+	const browseGroups = lucideIconStencilCategory.browseGroups ?? [];
 
-		const presetIds = browseGroups[0].presetIds;
-		expect(new Set(presetIds)).toEqual(registeredIds);
-		expect(presetIds).toHaveLength(registeredIds.size);
-		const labelsInOrder = presetIds.map(
-			(presetId) =>
-				IconStencils.find((stencil) => stencil.id === presetId)?.label,
+	it("lays out one section per category, in the declared order", () => {
+		expect(browseGroups.map((group) => group.id)).toEqual(
+			ICON_BROWSE_GROUP_DECLARATIONS.map((declaration) => declaration.id),
 		);
-		expect(labelsInOrder).toEqual(
-			Object.keys(ICON_NODES).sort((left, right) => left.localeCompare(right)),
-		);
+		expect(browseGroups).toHaveLength(42);
+		expect(browseGroups[0].label).toEqual({
+			en: "Accounts & access",
+			ja: "アカウント・アクセス",
+		});
+	});
+
+	it("lists each section by name, and only registered icons", () => {
+		for (const group of browseGroups) {
+			const labels = group.presetIds.map(
+				(presetId) =>
+					IconStencils.find((stencil) => stencil.id === presetId)?.label,
+			);
+			expect(labels, group.id).toEqual(
+				ICON_NAMES_BY_CATEGORY[group.id as IconCategoryId],
+			);
+			expect([...labels].sort(), group.id).toEqual(labels);
+		}
+	});
+
+	it("shows every icon at least once, and one in several categories in each", () => {
+		const shownIds = new Set(browseGroups.flatMap((group) => group.presetIds));
+		expect(shownIds).toEqual(registeredIds);
+
+		const groupsShowingComputer = browseGroups
+			.filter((group) => group.presetIds.includes("lucideIconComputer"))
+			.map((group) => group.id);
+		expect(groupsShowingComputer).toEqual(["devices", "development", "gaming"]);
 	});
 });

@@ -12,7 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **The Icon and AWS sections of the shape library can show every icon.**
   **Show all ›** under either section opens all of it: the AWS icons in one
   section per AWS category, Compute first, and the Lucide icons in one section
-  by name, with a search over that set alone and a back button to the library.
+  per Lucide category, Accounts & access first (an icon in several categories
+  shows in each), with a search over that set alone and a back button to the
+  library.
 - **The Icon and AWS sections of the shape library fill whole rows of six.**
   The icon flyout and section add `bot`, `smartphone`, `send` and `x` (24
   icons), and the AWS palette adds EBS `Volume` and `IAM Role` (102 icons).

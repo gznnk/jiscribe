@@ -37,7 +37,9 @@ covers that.
 - **The Icon and AWS sections of the shape library can show every icon.**
   **Show all ›** under either section opens all of it: the AWS icons in one
   section per AWS category, Compute first, and the Lucide icons in one section
-  by name, with a search over that set alone and a back button to the library.
+  per Lucide category, Accounts & access first (an icon in several categories
+  shows in each), with a search over that set alone and a back button to the
+  library.
 - **`capture_canvas` keeps up to 2576 px on the long edge**, up from 1400. A
   part named by `ids`, `rect` or the selection is drawn at full size (1 world
   unit to 1 px) and shrinks only past that edge.
