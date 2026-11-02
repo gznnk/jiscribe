@@ -1,9 +1,8 @@
 import type { Point } from "@jiscribe/geometry";
 
 import { DocOperationError } from "../errors";
-import { findObject } from "./objectAccess";
+import { type ObjectLocation, requireLocatedObject } from "./objectAccess";
 import type { DocDefinitions } from "./objectGeometry";
-import type { CanvasDoc } from "../../model/canvas/CanvasDoc";
 import type {
 	ConnectPointId,
 	EdgeAnchorSide,
@@ -49,23 +48,21 @@ export type AnchorHandleId =
 /**
  * Check an endpoint candidate and return its id.
  *
- * @param doc - Searched but not modified
- * @param id - Candidate endpoint's id, looked up through group children as well, since
- *   ids are unique across the whole root tree (#115)
+ * @param locatedObjects - What locateObjects found for the doc, `id` among the ids it
+ *   looked for; group children count as well, since ids are unique across the whole root
+ *   tree (#115)
+ * @param id - Candidate endpoint's id
  * @param definitions - Type table whose `features.connectable` decides what is legal
  * @returns `id` unchanged, so the check reads as a step in building the endpoint
  * @throws {@link DocOperationError} with a user-facing message when the object is missing
  *   or its type is not connectable
  */
 export const requireConnectable = (
-	doc: CanvasDoc,
+	locatedObjects: ReadonlyMap<string, ObjectLocation>,
 	id: string,
 	definitions: DocDefinitions,
 ): string => {
-	const found = findObject(doc, id);
-	if (found === undefined) {
-		throw new DocOperationError(`object not found: ${id}`);
-	}
+	const found = requireLocatedObject(locatedObjects, id);
 	const definition = definitions.get(found.object.type);
 	if (definition === undefined || definition.features.connectable !== true) {
 		const connectableTypes = [...definitions]
@@ -140,8 +137,9 @@ const describeOfferedConnectPointIds = (
  * one the owner's type declares for it as it stands (see listConnectPointIds). Any other
  * anchor kind passes unchecked.
  *
- * @param doc - Searched but not modified; must already hold the owner as the end will see it
- * @param ownerId - The object the end attaches to, looked up through group children as well
+ * @param locatedObjects - What locateObjects found for the doc, `ownerId` among the ids it
+ *   looked for; the owner is read as it stands, so it must already be as the end will see it
+ * @param ownerId - The object the end attaches to
  * @param anchor - The anchor about to be stored on that end
  * @param definitions - Type table the owner's `extraConnectPointIds` is read from; a type
  *   missing from it offers the edge midpoints only
@@ -150,7 +148,7 @@ const describeOfferedConnectPointIds = (
  *   the owner does not offer the id, or when the owner is not in the doc
  */
 export const requireOfferedConnectPoint = (
-	doc: CanvasDoc,
+	locatedObjects: ReadonlyMap<string, ObjectLocation>,
 	ownerId: string,
 	anchor: OwnedEndpointRef["anchor"],
 	definitions: DocDefinitions,
@@ -158,10 +156,7 @@ export const requireOfferedConnectPoint = (
 	if (anchor.kind !== "connectPoint" || isConnectPointId(anchor.id)) {
 		return anchor;
 	}
-	const found = findObject(doc, ownerId);
-	if (found === undefined) {
-		throw new DocOperationError(`object not found: ${ownerId}`);
-	}
+	const found = requireLocatedObject(locatedObjects, ownerId);
 	const offeredIds = listConnectPointIds(
 		found.object,
 		definitions.get(found.object.type) ?? {},
@@ -177,20 +172,21 @@ export const requireOfferedConnectPoint = (
 /**
  * Endpoint owned by `ownerId`, anchored where `anchorId` says (centre when omitted).
  *
- * @param doc - Searched but not modified, for the connect points the owner offers
+ * @param locatedObjects - What locateObjects found for the doc, `ownerId` among the ids it
+ *   looked for; read for the connect points the owner offers
  * @param definitions - Type table the owner's declared connect points are read from
  * @throws {@link DocOperationError} for an unusable edge handle (see {@link buildAnchor})
  *   or a connect point the owner does not offer (see {@link requireOfferedConnectPoint})
  */
 export const buildEndpoint = (
-	doc: CanvasDoc,
+	locatedObjects: ReadonlyMap<string, ObjectLocation>,
 	ownerId: string,
 	anchorId: AnchorHandleId | undefined,
 	definitions: DocDefinitions,
 ): OwnedEndpointRef => ({
 	owner: { id: ownerId },
 	anchor: requireOfferedConnectPoint(
-		doc,
+		locatedObjects,
 		ownerId,
 		buildAnchor(anchorId),
 		definitions,

@@ -510,6 +510,35 @@ describe("connectMany", () => {
 		expect(JSON.stringify(doc)).toBe(before);
 	});
 
+	it("cannot connect to a connector staged earlier in the same call", () => {
+		const doc = twoRects();
+		const before = JSON.stringify(doc);
+
+		expect(() =>
+			docOps.connectMany(doc, [
+				{ sourceId: "rect-1", targetId: "rect-2" },
+				{ sourceId: "rect-1", targetId: "connector-1" },
+			]),
+		).toThrow(
+			"entries[1]: object not found: connector-1 — the document was left unchanged",
+		);
+		expect(JSON.stringify(doc)).toBe(before);
+	});
+
+	it("names the first entry at fault when several are", () => {
+		const doc = twoRects();
+
+		expect(() =>
+			docOps.connectMany(doc, [
+				{ sourceId: "rect-1", targetId: "rect-2" },
+				{ sourceId: "missing-a", targetId: "rect-2" },
+				{ sourceId: "rect-1", targetId: "missing-b" },
+			]),
+		).toThrow(
+			"entries[1]: object not found: missing-a — the document was left unchanged",
+		);
+	});
+
 	it("is a no-op returning no ids for an empty array", () => {
 		const doc = twoRects();
 		const before = JSON.stringify(doc);
@@ -795,6 +824,44 @@ describe("updateConnectors", () => {
 		expect(JSON.stringify(doc)).toBe(before);
 	});
 
+	// Every entry is checked against the doc as it stood before the call, so an entry
+	// re-attaching connector-1 does not make it an owner a later entry may attach to.
+	it("checks every entry against the doc before any is written", () => {
+		const doc = twoConnectors();
+		const before = JSON.stringify(doc);
+
+		expect(() =>
+			docOps.updateConnectors(doc, [
+				{ id: "connector-1", targetId: "rect-3" },
+				{ id: "connector-2", targetId: "connector-1" },
+			]),
+		).toThrow(
+			'entries[1] (connector-2): object connector-1 is "connector" which is not connectable',
+		);
+		expect(JSON.stringify(doc)).toBe(before);
+	});
+
+	it("names a missing connector or owner in the entry at fault", () => {
+		const doc = twoConnectors();
+
+		expect(() =>
+			docOps.updateConnectors(doc, [
+				{ id: "connector-1", targetId: "rect-3" },
+				{ id: "missing", endArrow: "None" },
+			]),
+		).toThrow(
+			"entries[1] (missing): object not found: missing — the document was left unchanged",
+		);
+		expect(() =>
+			docOps.updateConnectors(doc, [
+				{ id: "connector-1", targetId: "rect-3" },
+				{ id: "connector-2", sourceId: "missing" },
+			]),
+		).toThrow(
+			"entries[1] (connector-2): object not found: missing — the document was left unchanged",
+		);
+	});
+
 	it("is a no-op for an empty array", () => {
 		const doc = twoConnectors();
 		const before = JSON.stringify(doc);
@@ -1062,6 +1129,29 @@ describe("connect points the owner offers", () => {
 		expect(sourceAnchorOf(doc, "connector-1")).toEqual({
 			kind: "connectPoint",
 			id: "col:0:left",
+		});
+	});
+
+	// Only the anchor is given, so the owner each end keeps is read off the connector.
+	it("re-anchors several connectors onto points the owners they keep declare", () => {
+		const doc = cardAndRect();
+		columnOps.connectMany(doc, [
+			{ sourceId: "column-card-1", targetId: "rect-1" },
+			{ sourceId: "column-card-1", targetId: "rect-1" },
+		]);
+
+		columnOps.updateConnectors(doc, [
+			{ id: "connector-1", sourceAnchor: "col:0:right" },
+			{ id: "connector-2", sourceAnchor: "col:3:right" },
+		]);
+
+		expect(sourceAnchorOf(doc, "connector-1")).toEqual({
+			kind: "connectPoint",
+			id: "col:0:right",
+		});
+		expect(sourceAnchorOf(doc, "connector-2")).toEqual({
+			kind: "connectPoint",
+			id: "col:3:right",
 		});
 	});
 

@@ -32,41 +32,65 @@ export const readChildren = (object: ObjectDoc): ObjectRecord[] => {
 };
 
 /**
- * Locate an object by id, recursing into group children.
+ * Locate several ids in one walk of the tree, for an op that looks up many objects and
+ * would otherwise walk the tree once per id.
  *
  * @param doc - Searched but not modified
- * @param id - Id to look for; ids are unique across the whole root tree (ids.ts)
- * @returns The object with its parent array and index, or undefined when no id matches
+ * @param wantedIds - Ids to look for; the walk stops as soon as every one is found.
+ *   Omitted locates every object in the tree
+ * @returns Each found id with its location; when an id is carried twice, the first in
+ *   pre-order (a group before its children). An id no object carries has no entry. The
+ *   indexes go stale once a `siblings` array is spliced, the object references do not
  */
-export const findObject = (
+export const locateObjects = (
 	doc: CanvasDoc,
-	id: string,
-): ObjectLocation | undefined => {
-	const visit = (siblings: ObjectDoc[]): ObjectLocation | undefined => {
-		for (const [index, object] of siblings.entries()) {
-			if (object.id === id) {
-				return { object: object as ObjectRecord, siblings, index };
+	wantedIds?: ReadonlySet<string>,
+): Map<string, ObjectLocation> => {
+	const locations = new Map<string, ObjectLocation>();
+	const isComplete = (): boolean =>
+		wantedIds !== undefined && locations.size === wantedIds.size;
+	const visit = (siblings: ObjectDoc[]): boolean => {
+		for (let index = 0; index < siblings.length; index += 1) {
+			const object = siblings[index];
+			if (
+				(wantedIds === undefined || wantedIds.has(object.id)) &&
+				!locations.has(object.id)
+			) {
+				locations.set(object.id, {
+					object: object as ObjectRecord,
+					siblings,
+					index,
+				});
+				if (isComplete()) {
+					return true;
+				}
 			}
-			const found = visit(readChildren(object));
-			if (found !== undefined) {
-				return found;
+			if (visit(readChildren(object))) {
+				return true;
 			}
 		}
-		return undefined;
+		return false;
 	};
-	return visit(doc.root);
+	if (!isComplete()) {
+		visit(doc.root);
+	}
+	return locations;
 };
 
 /**
- * {@link findObject} that fails instead of returning undefined.
+ * Read one id out of what {@link locateObjects} found, failing when it found nothing.
  *
- * @param doc - Searched but not modified
- * @param id - Id to look for
+ * @param locatedObjects - A {@link locateObjects} result whose walk looked for `id`;
+ *   an id it was not asked for reads as missing
+ * @param id - Id to read
  * @returns The located object
  * @throws {@link DocOperationError} when no object carries the id
  */
-export const requireObject = (doc: CanvasDoc, id: string): ObjectLocation => {
-	const found = findObject(doc, id);
+export const requireLocatedObject = (
+	locatedObjects: ReadonlyMap<string, ObjectLocation>,
+	id: string,
+): ObjectLocation => {
+	const found = locatedObjects.get(id);
 	if (found === undefined) {
 		throw new DocOperationError(`object not found: ${id}`);
 	}
@@ -74,7 +98,19 @@ export const requireObject = (doc: CanvasDoc, id: string): ObjectLocation => {
 };
 
 /**
- * Locate every id in one pass, so a bulk op can reject a bad id before it mutates anything.
+ * Locate an object by id, recursing into group children.
+ *
+ * @param doc - Searched but not modified
+ * @param id - Id to look for; ids are unique across the whole root tree (ids.ts)
+ * @returns The object with its parent array and index
+ * @throws {@link DocOperationError} when no object carries the id
+ */
+export const requireObject = (doc: CanvasDoc, id: string): ObjectLocation =>
+	requireLocatedObject(locateObjects(doc, new Set([id])), id);
+
+/**
+ * Locate every id in one walk of the tree, so a bulk op can reject a bad id before it
+ * mutates anything.
  *
  * @param doc - Searched but not modified
  * @param ids - Ids to look for; duplicates yield duplicate entries
@@ -85,14 +121,12 @@ export const requireObjects = (
 	doc: CanvasDoc,
 	ids: readonly string[],
 ): ObjectLocation[] => {
-	const located = ids.map((id) => ({ id, location: findObject(doc, id) }));
-	const missingIds = located
-		.filter(({ location }) => location === undefined)
-		.map(({ id }) => id);
+	const locations = locateObjects(doc, new Set(ids));
+	const missingIds = ids.filter((id) => !locations.has(id));
 	if (missingIds.length > 0) {
 		throw new DocOperationError(`object not found: ${missingIds.join(", ")}`);
 	}
-	return located.map(({ location }) => location as ObjectLocation);
+	return ids.map((id) => locations.get(id) as ObjectLocation);
 };
 
 /** Read `id` as a group, failing when it is something else, with its children to hand. */

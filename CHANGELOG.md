@@ -253,6 +253,12 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   the properties sidebar's number fields. Each now lands on a whole pixel. The
   full-width bar is 1px taller, the grid's columns are packed from the left
   with a fixed gap, and the properties sidebar's label column is 1px wider.
+- **Doc ops that take many ids no longer walk the document once per id.**
+  `translateObjects` and the other ops taking an id list, `connectMany` and
+  `updateConnectors` look every id up in one walk of the tree, so moving all
+  5000 shapes of a document with as many connectors takes about 3ms instead of
+  230ms, and re-attaching those connectors about 5ms instead of 1.3s. Results and
+  error messages are unchanged.
 
 ## [0.12.2] - 2026-10-25
 

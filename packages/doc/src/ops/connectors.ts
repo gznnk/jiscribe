@@ -15,8 +15,11 @@ import {
 } from "./utils/connectorEndpoints";
 import { generateUniqueId } from "./utils/ids";
 import {
+	locateObjects,
+	type ObjectLocation,
 	type ObjectRecord,
 	rejectIds,
+	requireLocatedObject,
 	requireObject,
 	visitObjects,
 } from "./utils/objectAccess";
@@ -90,9 +93,25 @@ export type ConnectParams = {
 	points?: readonly Point[];
 };
 
+/** The objects the entries ask their ends to attach to, for one walk to locate them all. */
+const collectRequestedOwnerIds = (
+	entries: readonly ConnectParams[],
+): Set<string> => {
+	const ownerIds = new Set<string>();
+	for (const { sourceId, targetId } of entries) {
+		if (sourceId !== undefined) {
+			ownerIds.add(sourceId);
+		}
+		if (targetId !== undefined) {
+			ownerIds.add(targetId);
+		}
+	}
+	return ownerIds;
+};
+
 /** Endpoint for one end: attached to an object, or standing at a coordinate. */
 const buildRequestedEndpoint = (
-	doc: CanvasDoc,
+	locatedObjects: ReadonlyMap<string, ObjectLocation>,
 	end: ConnectorEnd,
 	ownerId: string | undefined,
 	point: Point | undefined,
@@ -109,8 +128,8 @@ const buildRequestedEndpoint = (
 		);
 	}
 	return buildEndpoint(
-		doc,
-		requireConnectable(doc, ownerId, definitions),
+		locatedObjects,
+		requireConnectable(locatedObjects, ownerId, definitions),
 		anchorId,
 		definitions,
 	);
@@ -119,10 +138,12 @@ const buildRequestedEndpoint = (
 /**
  * Build the connector `connect` would push, id included, without touching `doc`.
  *
+ * @param locatedObjects - What locateObjects found in `doc` for the ends' owners
  * @param reservedIds - Ids already handed out to connectors staged but not yet pushed
  */
 const buildConnector = (
 	doc: CanvasDoc,
+	locatedObjects: ReadonlyMap<string, ObjectLocation>,
 	params: ConnectParams,
 	definitions: DocDefinitions,
 	reservedIds?: ReadonlySet<string>,
@@ -137,7 +158,7 @@ const buildConnector = (
 		);
 	}
 	const source = buildRequestedEndpoint(
-		doc,
+		locatedObjects,
 		"source",
 		params.sourceId,
 		params.sourcePoint,
@@ -145,7 +166,7 @@ const buildConnector = (
 		definitions,
 	);
 	const target = buildRequestedEndpoint(
-		doc,
+		locatedObjects,
 		"target",
 		params.targetId,
 		params.targetPoint,
@@ -212,7 +233,12 @@ export const connect = (
 	params: ConnectParams,
 	definitions: DocDefinitions,
 ): string => {
-	const connector = buildConnector(doc, params, definitions);
+	const connector = buildConnector(
+		doc,
+		locateObjects(doc, collectRequestedOwnerIds([params])),
+		params,
+		definitions,
+	);
 	doc.root.push(connector);
 	return connector.id;
 };
@@ -241,12 +267,21 @@ export const connectMany = (
 	entries: readonly ConnectParams[],
 	definitions: DocDefinitions,
 ): string[] => {
+	// Nothing is pushed until every entry is built, so the owners located up front stay
+	// what each entry would find on its own.
+	const locatedObjects = locateObjects(doc, collectRequestedOwnerIds(entries));
 	const reservedIds = new Set<string>();
 	const staged: ObjectDoc[] = [];
 	entries.forEach((params, index) => {
 		let connector: ObjectDoc;
 		try {
-			connector = buildConnector(doc, params, definitions, reservedIds);
+			connector = buildConnector(
+				doc,
+				locatedObjects,
+				params,
+				definitions,
+				reservedIds,
+			);
 		} catch (error) {
 			throw batchItemError("entries", index, undefined, error);
 		}
@@ -296,7 +331,7 @@ export type UpdateConnectorParams = {
 
 /** Rebuild one end, keeping whatever the params leave out; undefined leaves the end alone. */
 const nextEndpoint = (
-	doc: CanvasDoc,
+	locatedObjects: ReadonlyMap<string, ObjectLocation>,
 	end: ConnectorEnd,
 	current: EndpointRef | undefined,
 	ownerId: string | undefined,
@@ -317,7 +352,7 @@ const nextEndpoint = (
 			`the ${end} end is not attached to an object, so give ${end}Id to attach it`,
 		);
 	}
-	requireConnectable(doc, nextOwnerId, definitions);
+	requireConnectable(locatedObjects, nextOwnerId, definitions);
 	// A free anchor carries a coordinate that means nothing once the end is owned.
 	const keptAnchor =
 		current?.anchor !== undefined && current.anchor.kind !== "free"
@@ -331,7 +366,12 @@ const nextEndpoint = (
 			: (keptAnchor ?? { kind: "center" });
 	return {
 		owner: { id: nextOwnerId },
-		anchor: requireOfferedConnectPoint(doc, nextOwnerId, anchor, definitions),
+		anchor: requireOfferedConnectPoint(
+			locatedObjects,
+			nextOwnerId,
+			anchor,
+			definitions,
+		),
 	};
 };
 
@@ -376,14 +416,47 @@ type ConnectorWrite = {
 	params: UpdateConnectorParams;
 };
 
-/** Resolve one connector change, failing before any of it is written. */
-const planConnectorUpdate = (
+/**
+ * Locate what the entries' connector changes read: the connectors, then the owners they
+ * are attached to now and the ones the entries move them to. Which owners a connector
+ * keeps only shows once it is found, hence the second walk.
+ */
+const locateConnectorUpdateObjects = (
 	doc: CanvasDoc,
+	entries: readonly UpdateConnectorEntry[],
+): Map<string, ObjectLocation> => {
+	const connectorIds = new Set(entries.map(({ id }) => id));
+	const connectorLocations = locateObjects(doc, connectorIds);
+	const wantedIds = new Set(connectorIds);
+	for (const { id, sourceId, targetId } of entries) {
+		const connector = connectorLocations.get(id)?.object;
+		if (connector !== undefined && isConnectorObject(connector)) {
+			for (const ownerId of endpointOwnerIds(connector)) {
+				wantedIds.add(ownerId);
+			}
+		}
+		if (sourceId !== undefined) {
+			wantedIds.add(sourceId);
+		}
+		if (targetId !== undefined) {
+			wantedIds.add(targetId);
+		}
+	}
+	return locateObjects(doc, wantedIds);
+};
+
+/**
+ * Resolve one connector change, failing before any of it is written.
+ *
+ * @param locatedObjects - What {@link locateConnectorUpdateObjects} found for the entry
+ */
+const planConnectorUpdate = (
+	locatedObjects: ReadonlyMap<string, ObjectLocation>,
 	id: string,
 	params: UpdateConnectorParams,
 	definitions: DocDefinitions,
 ): ConnectorWrite => {
-	const { object } = requireObject(doc, id);
+	const { object } = requireLocatedObject(locatedObjects, id);
 	if (!isConnectorObject(object)) {
 		throw new DocOperationError(`${id} is "${object.type}", not a connector`);
 	}
@@ -391,7 +464,7 @@ const planConnectorUpdate = (
 	const currentSource = object.source as EndpointRef;
 	const currentTarget = object.target as EndpointRef;
 	const source = nextEndpoint(
-		doc,
+		locatedObjects,
 		"source",
 		currentSource,
 		params.sourceId,
@@ -400,7 +473,7 @@ const planConnectorUpdate = (
 		definitions,
 	);
 	const target = nextEndpoint(
-		doc,
+		locatedObjects,
 		"target",
 		currentTarget,
 		params.targetId,
@@ -514,7 +587,14 @@ export const updateConnector = (
 	params: UpdateConnectorParams,
 	definitions: DocDefinitions,
 ): void => {
-	applyConnectorUpdate(planConnectorUpdate(doc, id, params, definitions));
+	applyConnectorUpdate(
+		planConnectorUpdate(
+			locateConnectorUpdateObjects(doc, [{ ...params, id }]),
+			id,
+			params,
+			definitions,
+		),
+	);
 };
 
 /** One connector's changes in an {@link updateConnectors} call. */
@@ -554,9 +634,12 @@ export const updateConnectors = (
 		findRepeatedIds(entries.map(({ id }) => id)),
 		"given more than once; put every change to one connector in a single entry",
 	);
+	// Every entry is planned before any is written, so the objects located up front stay
+	// what each entry would find on its own.
+	const locatedObjects = locateConnectorUpdateObjects(doc, entries);
 	const writes = entries.map((entry, index) => {
 		try {
-			return planConnectorUpdate(doc, entry.id, entry, definitions);
+			return planConnectorUpdate(locatedObjects, entry.id, entry, definitions);
 		} catch (error) {
 			throw batchItemError("entries", index, entry.id, error);
 		}
@@ -578,7 +661,7 @@ export type RemappedConnectorEnd = {
 
 /** One remap value checked and copied, so the doc never holds the caller's object. */
 const buildRemapAnchor = (
-	doc: CanvasDoc,
+	locatedObjects: ReadonlyMap<string, ObjectLocation>,
 	ownerId: string,
 	fromId: string,
 	value: unknown,
@@ -603,7 +686,7 @@ const buildRemapAnchor = (
 				);
 			}
 			return requireOfferedConnectPoint(
-				doc,
+				locatedObjects,
 				ownerId,
 				{ kind: "connectPoint", id: anchor.id },
 				definitions,
@@ -661,11 +744,11 @@ export const remapConnectPoints = (
 	remap: Readonly<Record<string, OwnedEndpointRef["anchor"]>>,
 	definitions: DocDefinitions,
 ): RemappedConnectorEnd[] => {
-	requireObject(doc, ownerId);
+	const ownerLocations = new Map([[ownerId, requireObject(doc, ownerId)]]);
 	const anchorsByFromId = new Map(
 		Object.entries(remap).map(([fromId, value]) => [
 			fromId,
-			buildRemapAnchor(doc, ownerId, fromId, value, definitions),
+			buildRemapAnchor(ownerLocations, ownerId, fromId, value, definitions),
 		]),
 	);
 

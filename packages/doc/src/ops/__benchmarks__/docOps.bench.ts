@@ -1,7 +1,12 @@
 import { bench, describe } from "vitest";
 
 import { createDocOps } from "../createDocOps";
-import { buildConnectedDoc } from "./support/buildConnectedDoc";
+import {
+	buildConnectedDoc,
+	buildConnectManyEntries,
+} from "./support/buildConnectedDoc";
+import type { EndpointRef } from "../../model/objects/types/EndpointRef";
+import type { UpdateConnectorEntry } from "../connectors";
 
 const docOps = createDocOps();
 
@@ -39,6 +44,57 @@ describe("getConnectors: one shape", () => {
 		const lastShapeId = shapeIds[shapeIds.length - 1];
 		bench(`${shapeCount} shapes, ${shapeCount} connectors`, () => {
 			docOps.getConnectors(doc, lastShapeId);
+		});
+	}
+});
+
+// Every end is looked up before any connector is pushed. 5000 is left out: allocating
+// each connector's id walks the whole tree (generateUniqueId), which takes seconds there.
+describe("connectMany: every connector at once", () => {
+	for (const shapeCount of SIZES.filter((size) => size <= 1000)) {
+		const { doc, shapeIds } = buildConnectedDoc({
+			shapeCount,
+			connectorCount: 0,
+		});
+		const entries = buildConnectManyEntries(shapeIds, shapeCount);
+		const rootLength = doc.root.length;
+		bench(`${shapeCount} shapes, ${shapeCount} connectors`, () => {
+			docOps.connectMany(doc, entries);
+			// Drop what was pushed, so every run starts from the same document.
+			doc.root.length = rootLength;
+		});
+	}
+});
+
+// Every connector and every end it is moved to is looked up before any is written.
+describe("updateConnectors: every connector re-attached at once", () => {
+	for (const { shapeCount, doc } of docsBySize) {
+		const connectors = doc.root.filter(
+			(object) => object.type === "connector",
+		) as unknown as {
+			id: string;
+			source: EndpointRef;
+			target: EndpointRef;
+		}[];
+		const asBuilt: UpdateConnectorEntry[] = connectors.map(
+			({ id, source, target }) => ({
+				id,
+				sourceId: source.owner?.id,
+				targetId: target.owner?.id,
+			}),
+		);
+		const reversed: UpdateConnectorEntry[] = asBuilt.map(
+			({ id, sourceId, targetId }) => ({
+				id,
+				sourceId: targetId,
+				targetId: sourceId,
+			}),
+		);
+		let entries = reversed;
+		bench(`${shapeCount} shapes, ${shapeCount} connectors`, () => {
+			// Reversed and back, so the document stays where it was built.
+			docOps.updateConnectors(doc, entries);
+			entries = entries === reversed ? asBuilt : reversed;
 		});
 	}
 });

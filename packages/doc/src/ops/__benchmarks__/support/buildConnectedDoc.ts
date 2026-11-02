@@ -1,4 +1,5 @@
 import type { CanvasDoc } from "../../../model/canvas/CanvasDoc";
+import type { ConnectParams } from "../../connectors";
 import { createDocOps } from "../../createDocOps";
 
 const docOps = createDocOps();
@@ -20,6 +21,27 @@ export type ConnectedDocSize = {
 };
 
 /**
+ * The connectors {@link buildConnectedDoc} draws, as `connectMany` entries.
+ *
+ * @param shapeIds - The shapes to join; needs 2 or more when `connectorCount` is positive
+ * @param connectorCount - How many entries; the same arguments yield the same entries
+ * @returns Entries joining distinct shapes centre to centre, the sources cycling through
+ *   `shapeIds` in order
+ */
+export const buildConnectManyEntries = (
+	shapeIds: readonly string[],
+	connectorCount: number,
+): ConnectParams[] =>
+	Array.from({ length: connectorCount }, (_, index) => {
+		const sourceIndex = index % shapeIds.length;
+		// The offset runs 1..length-1, so a connector never joins a shape to itself.
+		const targetIndex =
+			(sourceIndex + 1 + ((index * 7) % (shapeIds.length - 1))) %
+			shapeIds.length;
+		return { sourceId: shapeIds[sourceIndex], targetId: shapeIds[targetIndex] };
+	});
+
+/**
  * A document built through the doc ops, so it is what the parser accepts as it stands.
  *
  * @param size - How many shapes and connectors; the same size yields the same document
@@ -39,19 +61,7 @@ export const buildConnectedDoc = ({
 			text: `Shape ${index}`,
 		})),
 	);
-	docOps.connectMany(
-		doc,
-		Array.from({ length: connectorCount }, (_, index) => {
-			const sourceIndex = index % shapeCount;
-			// The offset runs 1..shapeCount-1, so a connector never joins a shape to itself.
-			const targetIndex =
-				(sourceIndex + 1 + ((index * 7) % (shapeCount - 1))) % shapeCount;
-			return {
-				sourceId: shapeIds[sourceIndex],
-				targetId: shapeIds[targetIndex],
-			};
-		}),
-	);
+	docOps.connectMany(doc, buildConnectManyEntries(shapeIds, connectorCount));
 	for (let start = 0; start + GROUP_SIZE <= shapeCount; start += GROUP_STRIDE) {
 		docOps.groupObjects(doc, shapeIds.slice(start, start + GROUP_SIZE));
 	}
