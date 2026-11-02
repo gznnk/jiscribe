@@ -77,6 +77,12 @@ covers that.
   `get_object`, `add_rect`, `diagnose_canvas` and the rest of the tools that
   take a `path` passed the raw `ENOENT` through; now the error says the file
   does not exist yet and that `open_canvas` creates it as an empty canvas.
+- **Panning or area-selecting through a file switch is no longer reported as a
+  lost drag.** When `open_canvas` moved the viewer to another file mid-drag,
+  every drag was named in the "not saved" notice, and the switch waited up to
+  1.5 s for it to be let go. Now only a drag that edits the drawing (moving,
+  resizing, a connector, a menu slider and the like) is; panning the view and
+  an area selection change nothing in the file, so they pass without either.
 
 ## [0.12.2] - 2026-10-25
 

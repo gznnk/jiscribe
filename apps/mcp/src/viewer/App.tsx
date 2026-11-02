@@ -38,8 +38,10 @@ import type { CSSProperties } from "react";
 
 import { CanvasErrorBoundary } from "./CanvasErrorBoundary";
 import { CanvasSurface } from "./CanvasSurface";
+import { DRAG_RELEASE_WAIT_MS } from "./dragReleaseWait";
 import { exportCanvasImage } from "./exportCanvasImage";
 import { requestHostAction } from "./files";
+import { isDocEditingDrag } from "./isDocEditingDrag";
 import { noticeDurationsMs, type NoticeKind } from "./noticeDurations";
 import { calcDocLoadId } from "./ownEcho";
 import { createDocImageResolver } from "./resolveDocImage";
@@ -95,13 +97,6 @@ const noticeStyles: Record<NoticeKind, CSSProperties> = {
 
 /** One notice on screen. The id remounts the element when the same text is said again */
 type Notice = { id: number; kind: NoticeKind; message: string };
-
-/**
- * How long a flush waits for a drag in progress to be let go before it answers.
- * The canvas has no way to end a drag from outside, and the host gives up on the
- * flush after 3 seconds, which leaves the rest for the commit and the write
- */
-const DRAG_RELEASE_WAIT_MS = 1_500;
 
 /** How often that wait looks, the canvas having nothing to call when a drag ends */
 const DRAG_RELEASE_POLL_MS = 50;
@@ -161,18 +156,20 @@ export function App() {
 		if (status.editingTextId !== null) {
 			return "text";
 		}
-		return status.drag === null ? null : "drag";
+		return isDocEditingDrag(status.drag) ? "drag" : null;
 	}, []);
 
 	/**
-	 * Waits for a drag in progress to be let go, up to DRAG_RELEASE_WAIT_MS, so that
-	 * it ends as the person ends it rather than being dropped with the document
+	 * Waits for a drag that edits the document to be let go, up to
+	 * DRAG_RELEASE_WAIT_MS, so that it ends as the person ends it rather than being
+	 * dropped with the document
 	 */
 	const waitForDragRelease = useCallback(async (): Promise<void> => {
 		const deadline = performance.now() + DRAG_RELEASE_WAIT_MS;
 		while (
-			(canvasHandleRef.current?.interaction.getStatus().drag ?? null) !==
-				null &&
+			isDocEditingDrag(
+				canvasHandleRef.current?.interaction.getStatus().drag ?? null,
+			) &&
 			performance.now() < deadline
 		) {
 			await new Promise((resolve) => {

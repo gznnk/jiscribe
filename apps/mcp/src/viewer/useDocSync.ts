@@ -114,8 +114,9 @@ const UNSAVED_EDITS_OVERWRITTEN_MESSAGE =
 
 /**
  * What the person may have in hand that the canvas drops when it takes another
- * document: text being typed in the editor, or a drag not yet let go. Nothing of
- * either has reached onCommit, and the canvas has no way to be told to finish it
+ * document: text being typed in the editor, or a drag not yet let go whose edit
+ * lands on release (isDocEditingDrag). Nothing of either has reached onCommit, and
+ * the canvas has no way to be told to finish it
  */
 export type WorkInHand = "text" | "drag";
 

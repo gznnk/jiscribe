@@ -3,6 +3,7 @@ import { join } from "node:path";
 
 import type { Page } from "@playwright/test";
 
+import { DRAG_RELEASE_WAIT_MS } from "../../src/viewer/dragReleaseWait";
 import { SINGLE_RECT, singleRectDoc } from "../support/canvasDocs";
 import {
 	expect,
@@ -21,6 +22,12 @@ const DRAG_DX = 70;
  * stretch the page waits for a drag to be let go before it answers the flush
  */
 const RELEASE_AFTER_MS = 300;
+
+/**
+ * What open_canvas may take while a marquee is held: under the viewer's wait for a
+ * drag to be let go, with room for the switch itself
+ */
+const MARQUEE_SWITCH_LIMIT_MS = DRAG_RELEASE_WAIT_MS - 300;
 
 /** The notice's text for what a switch took from under the person's hands */
 const lostInHandPattern = (fileName: string, whatWasLost: string): RegExp =>
@@ -131,6 +138,49 @@ test("a drag still held when the file switches is said to be lost", async ({
 	);
 	expect((await workspace.readDoc(firstPath)).root[0].x).toBe(SINGLE_RECT.x);
 	expect((await workspace.readDoc(secondPath)).root).toEqual([]);
+});
+
+test("a marquee still held when the file switches is not said to be lost", async ({
+	page,
+	mcp,
+	workspace,
+	openInViewer,
+}) => {
+	const firstPath = await workspace.writeDoc("a.jis.json", singleRectDoc());
+	const secondPath = join(workspace.dirPath, "c.jis.json");
+	await openInViewer(firstPath);
+
+	const box = await page
+		.locator(`[data-id="${SINGLE_RECT.id}"]`)
+		.first()
+		.boundingBox();
+	if (box === null) {
+		throw new Error(`${SINGLE_RECT.id} is not drawn, so it cannot be found`);
+	}
+	// From the background below-right of the rectangle (above-left is the chrome),
+	// back over it
+	const start = { x: box.x + box.width + 40, y: box.y + box.height + 40 };
+	await page.mouse.move(start.x, start.y);
+	await page.mouse.down();
+	await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, {
+		steps: 6,
+	});
+	await expect(page.getByTestId("marquee-rect")).toBeVisible();
+
+	const openStartedAt = performance.now();
+	expect(
+		(await mcp.callTool("open_canvas", { path: secondPath })).isError,
+	).toBe(false);
+	// The flush does not hold the switch for the drag to be let go, as it does for
+	// one that edits
+	expect(performance.now() - openStartedAt).toBeLessThan(
+		MARQUEE_SWITCH_LIMIT_MS,
+	);
+	await expectFileOnDisplay(page, "c.jis.json");
+	await page.mouse.up();
+
+	await expect(warningNotice(page)).toHaveCount(0);
+	expect((await workspace.readDoc(firstPath)).root[0].x).toBe(SINGLE_RECT.x);
 });
 
 test("text still being typed when the file switches is said to be lost", async ({
