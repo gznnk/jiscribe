@@ -558,6 +558,17 @@ const applyDocChange = (
 			docOps.distributeObjects(draftDoc, op.ids, op.axis, op.spacing);
 			return `distributed ${quoteIds(op.ids)} ${op.axis}ly`;
 		}
+		case "layoutObjects": {
+			const { kind: _kind, ids, ...params } = op;
+			const { nodeIds, connectorIds } = docOps.layoutObjects(
+				draftDoc,
+				ids,
+				params,
+			);
+			return connectorIds.length === 0
+				? `laid out ${quoteIds(nodeIds)} (no connectors between them)`
+				: `laid out ${quoteIds(nodeIds)}, re-anchoring ${quoteIds(connectorIds)}`;
+		}
 		case "dissolveGroup": {
 			const releasedIds = docOps.dissolveGroup(draftDoc, op.id);
 			return `dissolved "${op.id}", releasing ${quoteIds(releasedIds)}`;

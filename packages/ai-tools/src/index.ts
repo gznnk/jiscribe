@@ -7,6 +7,7 @@ export type { CanvasApiRef } from "./canvasApiRef";
 export {
 	type AiAddObjectParams,
 	type AiAlignEdge,
+	type AiLayoutDirection,
 	type AiArrowType,
 	type AiCanvasOp,
 	type AiCanvasOpOutcome,

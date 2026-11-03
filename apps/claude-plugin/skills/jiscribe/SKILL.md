@@ -3,7 +3,7 @@ name: jiscribe
 description: Use when creating or editing a Jiscribe canvas diagram — a .jis / .jiscribe file, or a flowchart, architecture diagram, sticky-note board or chart the user wants drawn on a Jiscribe canvas.
 ---
 
-<!-- jiscribe guide 0.12.2+0970265e -->
+<!-- jiscribe guide 0.12.2+7fd8f5e8 -->
 
 # Drawing on a Jiscribe canvas
 
@@ -16,7 +16,7 @@ To read or write a `.jis` file directly with your own file tools instead of thos
 - The canvas is an **infinite plane**. Coordinates follow the SVG convention: **x increases to the right, y increases downward** (the opposite of math; screen coordinates). Unit is **px**.
 - Coordinate values are arbitrary (**negatives are allowed**). The origin `(0, 0)` is **not** pinned to the top-left of the screen (the view pans and zooms).
 - Objects have a **stacking order** (z-order): one is drawn on top of another, and overlapping is allowed.
-- There is no auto-layout. You compute coordinates yourself (see "Layout").
+- Nothing is laid out by itself. You compute coordinates yourself (see "Layout"), or build the nodes and connectors first and let `layout_objects` arrange them as a layered graph.
 
 ## Colors, lines, fill and text
 
@@ -339,6 +339,7 @@ allowed (see "The canvas"); what these avoid is the overlap nobody meant.
 - Keep a single flow direction (left→right or top→bottom).
 - Choose connect points to match the connection direction (for left→right, source = `rightCenter`, target = `leftCenter`).
 - Do not overlap objects that are already there.
+- For a flow or a graph, `layout_objects` does this arithmetic for you: add the nodes, connect them, then call it (direction `TB` or `LR`). It layers the nodes along the connectors, orders each layer to reduce crossings, and re-attaches every connector to the sides that face each other. Use it instead of a hand-made grid, and again on a drawing that got tangled.
 
 ## Choosing what to draw with
 

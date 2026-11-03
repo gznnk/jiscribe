@@ -11,6 +11,11 @@ export {
 export { type AddObjectEntry, type AddObjectParams } from "./create";
 export { type DeleteObjectsResult } from "./delete";
 export { type RemoveObjectsFromGroupResult } from "./grouping";
+export {
+	type LayoutDirection,
+	type LayoutObjectsParams,
+	type LayoutObjectsResult,
+} from "./layout";
 export { type GetZOrderResult, type ZOrderPlacement } from "./order";
 export {
 	type ResizeObjectParams,

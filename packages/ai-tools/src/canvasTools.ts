@@ -35,6 +35,7 @@ import {
 } from "./canvasOps";
 import type {
 	AiAlignEdge,
+	AiLayoutDirection,
 	AiCanvasOp,
 	AiDistributeAxis,
 	AiHeightMode,
@@ -116,6 +117,13 @@ const ANCHOR_ID_NOTE = [
 /** One anchor argument: an open set of ids, since a type may declare its own. */
 const anchorIdSchema = (purpose: string) =>
 	z.string().min(1).optional().describe(`${purpose} ${ANCHOR_ID_NOTE}`);
+
+const LAYOUT_DIRECTIONS = [
+	"TB",
+	"BT",
+	"LR",
+	"RL",
+] as const satisfies readonly AiLayoutDirection[];
 
 const ALIGN_EDGES = [
 	"left",
@@ -1362,6 +1370,38 @@ export const createCanvasToolDescriptors = (
 		{ drives: ["docOps.distributeObjects"] },
 	);
 
+	const layoutObjectsTool = defineCanvasTool(
+		"layout_objects",
+		[
+			"Arrange objects automatically as a layered graph, the way a flowchart renderer does: the connectors between them decide the layers (a source sits above, or left of, its targets), objects of one layer are ordered to reduce crossings, and every connector between two placed objects is re-attached to the sides that now face each other and given a right-angled route that goes around the objects in between.",
+			"Omit ids to lay out the whole canvas; give ids to rearrange just those (a group moves as one box, connectors among the ids are skipped since they follow their ends). The arrangement keeps the top-left corner the objects occupied together.",
+			"Use it after adding nodes and connectors instead of computing a grid by hand, and on a drawing that got tangled. Objects with no connector still get a place, in the first layer.",
+		].join(" "),
+		{
+			ids: z
+				.array(z.string())
+				.min(2)
+				.optional()
+				.describe("ids to arrange; omit for every top-level object."),
+			direction: z
+				.enum(LAYOUT_DIRECTIONS)
+				.optional()
+				.describe(
+					"Which way the flow runs: TB (top to bottom, the default), LR (left to right), BT or RL.",
+				),
+			nodeSpacing: z
+				.number()
+				.optional()
+				.describe("Gap in px between neighbours of one layer; default 80."),
+			rankSpacing: z
+				.number()
+				.optional()
+				.describe("Gap in px between one layer and the next; default 80."),
+		},
+		(args) => ({ kind: "layoutObjects", ...args }),
+		{ drives: ["docOps.layoutObjects"] },
+	);
+
 	const groupObjectsTool = defineCanvasTool(
 		"group_objects",
 		"Wrap objects in a group so the user can move them as one. They must sit next to each other in the document (not already inside different groups). Connectors cannot be grouped — they follow the objects they join anyway.",
@@ -1810,6 +1850,7 @@ export const createCanvasToolDescriptors = (
 		updateConnectorsTool,
 		alignObjectsTool,
 		distributeObjectsTool,
+		layoutObjectsTool,
 		groupObjectsTool,
 		dissolveGroupTool,
 		dissolveGroupsTool,

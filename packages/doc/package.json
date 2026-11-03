@@ -28,6 +28,7 @@
 	"dependencies": {
 		"@jiscribe/basic-validators": "workspace:*",
 		"@jiscribe/geometry": "workspace:*",
+		"@jiscribe/layout": "workspace:*",
 		"@jiscribe/utility-types": "workspace:*"
 	},
 	"devDependencies": {

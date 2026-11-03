@@ -3,7 +3,7 @@
 - The canvas is an **infinite plane**. Coordinates follow the SVG convention: **x increases to the right, y increases downward** (the opposite of math; screen coordinates). Unit is **px**.
 - Coordinate values are arbitrary (**negatives are allowed**). The origin `(0, 0)` is **not** pinned to the top-left of the screen (the view pans and zooms).
 - Objects have a **stacking order** (z-order): one is drawn on top of another, and overlapping is allowed.
-- There is no auto-layout. You compute coordinates yourself (see "Layout").
+- Nothing is laid out by itself. You compute coordinates yourself (see "Layout"), or build the nodes and connectors first and let `layout_objects` arrange them as a layered graph.
 
 ## Colors, lines, fill and text
 

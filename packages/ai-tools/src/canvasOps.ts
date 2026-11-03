@@ -15,6 +15,7 @@ import type {
 	ConnectorRouting,
 	DistributeAxis,
 	InlineTextStyleParams,
+	LayoutDirection,
 	ObjectFilter,
 	Rect,
 	SetInlineTextStyleEntry,
@@ -291,6 +292,14 @@ export type AiDocOp =
 	// An id may appear only once, each entry holding every change to that connector
 	| { kind: "updateConnectors"; entries: readonly AiUpdateConnectorEntry[] }
 	| { kind: "alignObjects"; ids: string[]; edge: AiAlignEdge }
+	// Omitted ids lays out every top-level object
+	| {
+			kind: "layoutObjects";
+			ids?: string[];
+			direction?: AiLayoutDirection;
+			nodeSpacing?: number;
+			rankSpacing?: number;
+	  }
 	| {
 			kind: "distributeObjects";
 			ids: string[];
@@ -371,6 +380,8 @@ export type AiStyle = StyleParams;
 export type AiAlignEdge = AlignEdge;
 
 export type AiDistributeAxis = DistributeAxis;
+
+export type AiLayoutDirection = LayoutDirection;
 
 export type AiZOrderPlacement = ZOrderPlacement;
 
