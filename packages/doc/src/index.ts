@@ -66,7 +66,13 @@ export {
 export { OPACITY_MAX, OPACITY_MIN } from "./model/objects/utils/opacity";
 export { AUTO_COLOR } from "./model/objects/utils/autoColor";
 export { RADIUS_STYLE_KEYS } from "./model/objects/base/RadiusStyleDoc";
-export { ARROW_STYLE_KEYS } from "./model/objects/base/ArrowStyleDoc";
+export {
+	ARROW_OUTLINE_THINNING_SCALE,
+	ARROW_SCALE_MAX,
+	ARROW_SCALE_MIN,
+	ARROW_STYLE_KEYS,
+	DEFAULT_ARROW_SCALE,
+} from "./model/objects/base/ArrowStyleDoc";
 export type { ArrowType } from "./model/objects/types/ArrowType";
 export { ArrowTypes } from "./model/objects/types/ArrowType";
 // Where a connector end attaches: the owner it names and the anchor on it. A

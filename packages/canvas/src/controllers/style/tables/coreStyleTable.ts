@@ -41,6 +41,7 @@ export const coreStyleTable = (
 	...(features.arrow && {
 		startArrow: objectFieldEntry("startArrow"),
 		endArrow: objectFieldEntry("endArrow"),
+		arrowScale: objectFieldEntry("arrowScale"),
 	}),
 	// The lock rides on the transform the resize it governs acts on.
 	...(features.transform && {

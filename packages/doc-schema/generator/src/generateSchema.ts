@@ -1,7 +1,10 @@
 import { readFileSync } from "node:fs";
 
 import {
+	ARROW_SCALE_MAX,
+	ARROW_SCALE_MIN,
 	AUTO_COLOR,
+	DEFAULT_ARROW_SCALE,
 	DEFAULT_FILL,
 	DEFAULT_FILL_OPACITY,
 	DEFAULT_STROKE_OPACITY,
@@ -42,14 +45,22 @@ type SharedStyleFacts = {
 	default: unknown;
 };
 
+/** The arrowheads' size, which the two arrow-carrying defs state inline. */
+const ARROW_SCALE_FACTS: SharedStyleFacts = {
+	minimum: ARROW_SCALE_MIN,
+	maximum: ARROW_SCALE_MAX,
+	default: DEFAULT_ARROW_SCALE,
+};
+
 /**
- * Bounds and defaults of the shared style defs, keyed by def and property. The
- * template carries only the prose for these: the numbers and the default colors
- * are the doc package's constants, so the schema cannot drift from what the
- * validators and renderers hold.
+ * Bounds and defaults of the shared style defs, keyed by def and property — and
+ * of the arrow group, which has no def of its own and is written into the two
+ * defs that carry it. The template carries only the prose for these: the numbers
+ * and the default colors are the doc package's constants, so the schema cannot
+ * drift from what the validators and renderers hold.
  */
 const SHARED_STYLE_FACTS: Record<
-	"StrokeStyle" | "FillStyle",
+	"StrokeStyle" | "FillStyle" | "PolylineDoc" | "ConnectorDoc",
 	Record<string, SharedStyleFacts>
 > = {
 	StrokeStyle: {
@@ -69,6 +80,8 @@ const SHARED_STYLE_FACTS: Record<
 			default: DEFAULT_FILL_OPACITY,
 		},
 	},
+	PolylineDoc: { arrowScale: ARROW_SCALE_FACTS },
+	ConnectorDoc: { arrowScale: ARROW_SCALE_FACTS },
 };
 
 /**

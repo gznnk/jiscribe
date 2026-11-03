@@ -14,6 +14,7 @@ import type { SelectionValue } from "../../../../style/SelectionValue";
 import {
 	isMixedSelectionValue,
 	selectionValueOr,
+	selectionValueOrFirst,
 } from "../../../../style/SelectionValue";
 import { ArrowSwapIcon } from "../../../icons/ArrowSwapIcon";
 import { ArrowHeadIconPreview } from "../../ObjectMenu/items/ArrowHeadMenu/ArrowHeadIconPreview";
@@ -27,7 +28,14 @@ import {
 	PropertyMixedLabel,
 } from "../common/PropertyControlsStyled";
 import { PropertyDropdownField } from "../common/PropertyDropdownField";
+import { PropertyNumberField } from "../common/PropertyNumberField";
 import { PropertyRow } from "../common/PropertyRow";
+import {
+	MAX_ARROW_SCALE_PERCENT,
+	MIN_ARROW_SCALE_PERCENT,
+	toArrowScalePercent,
+	toArrowScaleValue,
+} from "../utils/arrowScalePercent";
 
 /** Size the swap icon is drawn at, leaving the button's border a margin of its own. */
 const SWAP_ICON_SIZE = 16;
@@ -84,41 +92,69 @@ const ArrowEndField: React.FC<{
  * through its title. Triggers rather than the menu's inline buttons: the
  * sidebar has no room for fifteen marks side by side, so each end shows what it
  * is set to and opens the grid.
+ *
+ * Below it, the size both heads share (`arrowScale`) in percent. The row stays
+ * while both ends are None, the size being kept for when a head is set.
  */
-const ArrowHeadsItemComponent: React.FC<BuiltinItemProps> = () => {
+const ArrowHeadsItemComponent: React.FC<BuiltinItemProps> = ({
+	onStyleIntent,
+}) => {
 	const messages = useCanvasMessages();
 	const startArrow = useSelectionStyle("startArrow");
 	const endArrow = useSelectionStyle("endArrow");
+	const arrowScale = useSelectionStyle("arrowScale");
 
 	return (
-		<PropertyRow>
-			<ArrowEndField
-				property="startArrow"
-				direction="start"
-				title={messages.menuStartArrow}
-				arrowType={startArrow}
-				messages={messages}
-			/>
-			<PropertyIconButton
-				type="button"
-				data-action={commandAction("swapArrows")}
-				title={messages.menuSwapArrows}
-				aria-label={messages.menuSwapArrows}
-			>
-				<ArrowSwapIcon
-					fill="currentColor"
-					width={SWAP_ICON_SIZE}
-					height={SWAP_ICON_SIZE}
+		<>
+			<PropertyRow>
+				<ArrowEndField
+					property="startArrow"
+					direction="start"
+					title={messages.menuStartArrow}
+					arrowType={startArrow}
+					messages={messages}
 				/>
-			</PropertyIconButton>
-			<ArrowEndField
-				property="endArrow"
-				direction="end"
-				title={messages.menuEndArrow}
-				arrowType={endArrow}
-				messages={messages}
-			/>
-		</PropertyRow>
+				<PropertyIconButton
+					type="button"
+					data-action={commandAction("swapArrows")}
+					title={messages.menuSwapArrows}
+					aria-label={messages.menuSwapArrows}
+				>
+					<ArrowSwapIcon
+						fill="currentColor"
+						width={SWAP_ICON_SIZE}
+						height={SWAP_ICON_SIZE}
+					/>
+				</PropertyIconButton>
+				<ArrowEndField
+					property="endArrow"
+					direction="end"
+					title={messages.menuEndArrow}
+					arrowType={endArrow}
+					messages={messages}
+				/>
+			</PropertyRow>
+			<PropertyRow label={messages.propertyPanelRowArrowScale}>
+				<PropertyNumberField
+					value={toArrowScalePercent(
+						selectionValueOrFirst(arrowScale, SHAPE_STYLE_FALLBACK.arrowScale),
+					)}
+					isMixed={isMixedSelectionValue(arrowScale)}
+					min={MIN_ARROW_SCALE_PERCENT}
+					max={MAX_ARROW_SCALE_PERCENT}
+					unit="%"
+					ariaLabel={messages.menuArrowScale}
+					testId="property-field:arrowScale"
+					onUpdate={(percent, commit, coalesceHistory) =>
+						onStyleIntent(
+							{ kind: "arrowScale", scale: toArrowScaleValue(percent) },
+							commit,
+							coalesceHistory,
+						)
+					}
+				/>
+			</PropertyRow>
+		</>
 	);
 };
 

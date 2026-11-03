@@ -260,5 +260,23 @@ describe("ConnectorMapper", () => {
 			const convertedDoc = connectorToDoc(state);
 			expect(convertedDoc.label).toEqual(originalDoc.label);
 		});
+
+		it("carries arrowScale through, and leaves it out when it was left out", () => {
+			const scaledDoc = {
+				id: "connector-scaled",
+				type: "connector",
+				source: { anchor: { kind: "free", point: { x: 0, y: 0 } } },
+				target: { anchor: { kind: "free", point: { x: 100, y: 0 } } },
+				endArrow: "FilledTriangle",
+				arrowScale: 1.5,
+			} as unknown as ConnectorDoc;
+			expect(connectorToDoc(connectorToState(scaledDoc)).arrowScale).toBe(1.5);
+
+			const { arrowScale: _omitted, ...unscaledDoc } = scaledDoc;
+			expect("arrowScale" in connectorToState(unscaledDoc)).toBe(false);
+			expect(
+				"arrowScale" in connectorToDoc(connectorToState(unscaledDoc)),
+			).toBe(false);
+		});
 	});
 });

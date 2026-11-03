@@ -9,4 +9,6 @@ export type ArrowStyleState = {
 	startArrow?: ArrowType;
 	/** Arrowhead drawn at the end of the line. Omitted means none. */
 	endArrow?: ArrowType;
+	/** Factor on both arrowheads' size, which is otherwise 9 × strokeWidth. Omitted means 1. */
+	arrowScale?: number;
 };

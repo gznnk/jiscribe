@@ -5,6 +5,10 @@ import {
 import { calcPolyBoundingBox } from "@jiscribe/geometry";
 import type { BoundingBox, Point } from "@jiscribe/geometry";
 
+import {
+	resolveArrowHeadReaches,
+	unionArrowHeadsBoundingBox,
+} from "./unionArrowHeadsBoundingBox";
 import type {
 	ConnectorRouteRegistries,
 	VisualExtentRegistries,
@@ -163,11 +167,12 @@ const collectLabelCorners = (
  * @param connector - The connector to measure
  * @param objects - The object map, used to resolve the endpoint owners
  * @param visualExtentRegistries - Per-canvas registries the path is resolved
- *   through, as the renderer draws it; only the four geometry ones are read. Omitted =
- *   the path is resolved without them, which is not the drawn route: an end on a
- *   type-declared anchor collapses onto the owner's center, so a route that loops
- *   outside the owners falls outside the box. Every consumer framing the drawing
- *   must pass them
+ *   through, as the renderer draws it, and the arrowheads are sized through
+ *   (calcConnectorDrawnBoundingBox): the box is then the drawn extent. Omitted =
+ *   no arrowheads, and the path is resolved without them, which is not the drawn
+ *   route: an end on a type-declared anchor collapses onto the owner's center, so
+ *   a route that loops outside the owners falls outside the box. Every consumer
+ *   framing the drawing must pass them
  * @returns null if the endpoints cannot be resolved (e.g. a referenced object was removed)
  */
 export const calcConnectorBoundingBox = (
@@ -182,7 +187,13 @@ export const calcConnectorBoundingBox = (
 		return null;
 	}
 
-	return calcConnectorPathBoundingBox(connector, connectorPoints);
+	return visualExtentRegistries
+		? calcConnectorDrawnBoundingBox(
+				connector,
+				connectorPoints,
+				visualExtentRegistries.objectShapeStyleDefaults,
+			)
+		: calcConnectorPathBoundingBox(connector, connectorPoints);
 };
 
 /**
@@ -203,17 +214,49 @@ export const calcConnectorPathBoundingBox = (
 	]);
 
 /**
- * A box that contains {@link calcConnectorPathBoundingBox} of the connector's
+ * {@link calcConnectorPathBoundingBox} widened by the arrowheads drawn at the
+ * path's two ends (unionArrowHeadsBoundingBox): the connector's drawn extent,
+ * for the visual-extent consumers. The hit test and the selection frame keep
+ * the path's own box.
+ *
+ * @param connector - The connector the path belongs to; its label, stroke width and arrow fields are read
+ * @param connectorPoints - The path, source → waypoints → target, in world coordinates; the first and last points are the heads' tips
+ * @param shapeStyleDefaults - The canvas's shape-style defaults, which resolve the unset fields as the renderer does
+ * @returns null only for an empty path
+ */
+export const calcConnectorDrawnBoundingBox = (
+	connector: ConnectorState,
+	connectorPoints: readonly Point[],
+	shapeStyleDefaults: VisualExtentRegistries["objectShapeStyleDefaults"],
+): BoundingBox | null => {
+	const pathBox = calcConnectorPathBoundingBox(connector, connectorPoints);
+	if (!pathBox) {
+		return null;
+	}
+	return unionArrowHeadsBoundingBox(
+		pathBox,
+		connector,
+		connectorPoints[0],
+		connectorPoints[connectorPoints.length - 1],
+		shapeStyleDefaults,
+	);
+};
+
+/**
+ * A box that contains {@link calcConnectorDrawnBoundingBox} of the connector's
  * drawn path, found without routing it (calcConnectorPathBound), so a caller
  * that only needs to know the connector is somewhere else can skip the router.
  * The label is bounded by its own box around any anchor on the path: the anchor
- * is a point of the path moved at most `|offset|` along each axis.
+ * is a point of the path moved at most `|offset|` along each axis. The
+ * arrowheads are bounded by the larger head's reach around the whole path, the
+ * tips not being known without routing.
  *
  * @param connector - The connector to bound
  * @param sourceOwner - The source endpoint's owner as resolveEndpointOwner returns it; null for a free endpoint or a missing owner
  * @param targetOwner - The target endpoint's owner, likewise
- * @param visualExtentRegistries - The registries the path is drawn through; only the three
- *   geometry ones the endpoints resolve through are read
+ * @param visualExtentRegistries - The registries the path is drawn through; the three
+ *   geometry ones the endpoints resolve through and the shape-style defaults the heads
+ *   are sized through are read
  * @returns null where no bound is known and the path has to be resolved instead:
  *   an endpoint that does not resolve, or a label whose offset or measured box is not finite
  */
@@ -231,16 +274,25 @@ export const calcConnectorExtentBound = (
 		visualExtentRegistries.objectAnchorRegion,
 		visualExtentRegistries.objectExtraConnectPoints,
 	);
-	const label = connector.label;
-	if (!pathBound || !label || label.text === "") {
-		return pathBound;
+	if (!pathBound) {
+		return null;
 	}
 
-	const offset = Math.abs(label.offset ?? CONNECTOR_LABEL_DEFAULTS.offset);
-	const { width, height } = resolveConnectorLabelBox(label);
-	// 1 unit of slack for the float error of interpolating the anchor along a segment.
-	const reachX = offset + width / 2 + 1;
-	const reachY = offset + height / 2 + 1;
+	const { startReach, endReach } = resolveArrowHeadReaches(
+		connector,
+		visualExtentRegistries.objectShapeStyleDefaults,
+	);
+	const arrowReach = Math.max(startReach, endReach);
+	const label = connector.label;
+	let reachX = arrowReach;
+	let reachY = arrowReach;
+	if (label && label.text !== "") {
+		const offset = Math.abs(label.offset ?? CONNECTOR_LABEL_DEFAULTS.offset);
+		const { width, height } = resolveConnectorLabelBox(label);
+		// 1 unit of slack for the float error of interpolating the anchor along a segment.
+		reachX = Math.max(reachX, offset + width / 2 + 1);
+		reachY = Math.max(reachY, offset + height / 2 + 1);
+	}
 	if (!Number.isFinite(reachX) || !Number.isFinite(reachY)) {
 		return null;
 	}

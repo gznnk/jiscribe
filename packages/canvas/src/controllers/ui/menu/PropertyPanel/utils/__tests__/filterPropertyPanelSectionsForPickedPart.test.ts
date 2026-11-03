@@ -79,7 +79,7 @@ describe("filterPropertyPanelSectionsForPickedPart", () => {
 		]);
 	});
 
-	it("keeps a row naming two kinds only once both are received", () => {
+	it("keeps a row naming several kinds only once all are received", () => {
 		const arrowIds = (kinds: string[]): string[] =>
 			filterPropertyPanelSectionsForPickedPart(
 				SECTIONS,
@@ -88,7 +88,11 @@ describe("filterPropertyPanelSectionsForPickedPart", () => {
 			).map((section) => section.id);
 
 		expect(arrowIds(["startArrow"])).toEqual(["text"]);
-		expect(arrowIds(["startArrow", "endArrow"])).toEqual(["arrow", "text"]);
+		expect(arrowIds(["startArrow", "endArrow"])).toEqual(["text"]);
+		expect(arrowIds(["startArrow", "endArrow", "arrowScale"])).toEqual([
+			"arrow",
+			"text",
+		]);
 	});
 
 	it("drops custom rows not naming the picked kind, and the frame rows, whatever is received", () => {

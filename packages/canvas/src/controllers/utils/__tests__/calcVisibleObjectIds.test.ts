@@ -186,6 +186,58 @@ describe("calcVisibleObjectIds", () => {
 		expect(visibleIds).toEqual(new Set(["crossing"]));
 	});
 
+	it("keeps a line whose arrowhead alone reaches the screen", () => {
+		// The lines end at x = -200, 100 short of the culled rect's left edge
+		// (-VIEWPORT_CULL_MARGIN); a head 9 × 5 × 4 long reaches past it, one at
+		// scale 1 does not.
+		const headed = {
+			endArrow: "FilledTriangle",
+			strokeWidth: 5,
+			features: { type: "polyline", geometry: "poly", arrow: true },
+		};
+		const objects = {
+			bigConnector: {
+				...freeConnector(
+					"bigConnector",
+					{ x: -400, y: 400 },
+					{ x: -200, y: 400 },
+				),
+				...headed,
+				arrowScale: 4,
+			},
+			smallConnector: {
+				...freeConnector(
+					"smallConnector",
+					{ x: -400, y: 500 },
+					{ x: -200, y: 500 },
+				),
+				...headed,
+			},
+			bigPolyline: {
+				...poly("bigPolyline", [
+					{ x: -400, y: 600 },
+					{ x: -200, y: 600 },
+				]),
+				...headed,
+				arrowScale: 4,
+			},
+			smallPolyline: {
+				...poly("smallPolyline", [
+					{ x: -400, y: 700 },
+					{ x: -200, y: 700 },
+				]),
+				...headed,
+			},
+		} as unknown as Record<string, ObjectState>;
+		const { visibleIds } = calcVisibleObjectIds({
+			registries,
+			objects,
+			rootIds: Object.keys(objects),
+			viewport,
+		});
+		expect(visibleIds).toEqual(new Set(["bigConnector", "bigPolyline"]));
+	});
+
 	it("conservatively includes objects without a computable bbox", () => {
 		const emptyPoly = poly("emptyPoly", []);
 		const { visibleIds } = calcVisibleObjectIds({

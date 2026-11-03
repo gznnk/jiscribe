@@ -28,6 +28,10 @@ describe("toStyleIntent (the one translation)", () => {
 				kind: "fillOpacity",
 				opacity: 0.5,
 			});
+			expect(toStyleIntent("arrowScale", "1.5")).toEqual({
+				kind: "arrowScale",
+				scale: 1.5,
+			});
 		});
 
 		it("a string no number can be made of states nothing", () => {

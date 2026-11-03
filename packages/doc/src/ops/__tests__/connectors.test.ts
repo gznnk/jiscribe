@@ -44,6 +44,36 @@ describe("connect", () => {
 		expectValid(doc);
 	});
 
+	it("writes arrowScale when given, and leaves it off when not", () => {
+		const doc = twoRects();
+
+		docOps.connect(doc, {
+			sourceId: "rect-1",
+			targetId: "rect-2",
+			endArrow: "FilledTriangle",
+			arrowScale: 1.5,
+		});
+		docOps.connect(doc, { sourceId: "rect-1", targetId: "rect-2" });
+
+		expect(readObject(doc, "connector-1").arrowScale).toBe(1.5);
+		expect("arrowScale" in readObject(doc, "connector-2")).toBe(false);
+		expectValid(doc);
+	});
+
+	it("refuses an arrowScale outside 0.2..4 before writing anything", () => {
+		const doc = twoRects();
+		const before = JSON.stringify(doc);
+
+		expect(() =>
+			docOps.connect(doc, {
+				sourceId: "rect-1",
+				targetId: "rect-2",
+				arrowScale: 5,
+			}),
+		).toThrow("arrowScale: must be a number between 0.2 and 4");
+		expect(JSON.stringify(doc)).toBe(before);
+	});
+
 	it("defaults to straight routing for the center-to-center default (no anchors)", () => {
 		const doc = emptyDoc();
 		const source = docOps.addObject(doc, "rect", { x: 0, y: 0 });
@@ -448,10 +478,12 @@ describe("connectMany", () => {
 				targetId: "rect-3",
 				sourceAnchor: "rightCenter",
 				targetAnchor: "leftCenter",
+				arrowScale: 1.5,
 			},
 		]);
 
 		expect(ids).toEqual(["connector-1", "connector-2"]);
+		expect(readObject(doc, "connector-2").arrowScale).toBe(1.5);
 		expect(rootIds(doc)).toEqual([
 			"rect-1",
 			"rect-2",
@@ -460,6 +492,7 @@ describe("connectMany", () => {
 			"connector-2",
 		]);
 		expect(readObject(doc, "connector-1").endArrow).toBe("FilledTriangle");
+		expect("arrowScale" in readObject(doc, "connector-1")).toBe(false);
 		expect(readObject(doc, "connector-2").source).toMatchObject({
 			anchor: { kind: "connectPoint", id: "rightCenter" },
 		});
@@ -590,6 +623,29 @@ describe("connectMany", () => {
 });
 
 describe("updateConnector", () => {
+	it("writes arrowScale, and keeps it when the params leave it out", () => {
+		const doc = twoConnectedRects();
+
+		docOps.updateConnector(doc, "connector-1", { arrowScale: 0.5 });
+		docOps.updateConnector(doc, "connector-1", { endArrow: "OpenArrow" });
+
+		expect(readObject(doc, "connector-1").arrowScale).toBe(0.5);
+		expectValid(doc);
+	});
+
+	it("refuses an arrowScale outside 0.2..4, leaving the connector as it was", () => {
+		const doc = twoConnectedRects();
+		const before = JSON.stringify(doc);
+
+		expect(() =>
+			docOps.updateConnector(doc, "connector-1", {
+				endArrow: "OpenArrow",
+				arrowScale: 0.19,
+			}),
+		).toThrow("arrowScale: must be a number between 0.2 and 4");
+		expect(JSON.stringify(doc)).toBe(before);
+	});
+
 	it("re-attaches an end to another object", () => {
 		const doc = twoConnectedRects();
 		docOps.addObject(doc, "rect", { x: 600, y: 0 });
@@ -796,6 +852,7 @@ describe("updateConnectors", () => {
 				id: "connector-1",
 				sourceAnchor: "rightCenter",
 				targetAnchor: "leftCenter",
+				arrowScale: 2,
 			},
 			{ id: "connector-2", endArrow: "None", targetPoint: { x: 800, y: 300 } },
 		]);
@@ -804,6 +861,7 @@ describe("updateConnectors", () => {
 			owner: { id: "rect-1" },
 			anchor: { kind: "connectPoint", id: "rightCenter" },
 		});
+		expect(readObject(doc, "connector-1").arrowScale).toBe(2);
 		expect(readObject(doc, "connector-2").endArrow).toBe("None");
 		expect(readObject(doc, "connector-2").target).toEqual({
 			anchor: { kind: "free", point: { x: 800, y: 300 } },

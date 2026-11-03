@@ -29,7 +29,7 @@ import {
 /**
  * Fallback margin (world px) kept around the content in exported images, used
  * where neither the caller nor the document says otherwise. Also absorbs extents
- * the content bounds do not account for (stroke widths, arrow heads). A
+ * the content bounds do not account for (stroke widths). A
  * document's `view.padding`, the export dialog and {@link CanvasExportOptions}
  * all take precedence over it.
  */

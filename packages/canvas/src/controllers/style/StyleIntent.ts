@@ -26,6 +26,8 @@ export type CoreStyleIntent =
 	| { kind: "cornerRadius"; radius: number }
 	| { kind: "startArrow"; arrow: ArrowType }
 	| { kind: "endArrow"; arrow: ArrowType }
+	/** The factor on both arrowheads' size (`arrowScale`), 1 being the size the stroke width alone gives. */
+	| { kind: "arrowScale"; scale: number }
 	| { kind: "fontColor"; color: string }
 	| { kind: "fontSize"; size: number }
 	| { kind: "fontFamily"; family: string }

@@ -5,7 +5,7 @@ import { memo } from "react";
 import { ArrowPolygon } from "./ArrowStyled";
 import { createSvgTransform } from "../../utils/createSvgTransform";
 import { ARROW_SIZE } from "../ArrowConstants";
-import type { ArrowShapeProps } from "../ArrowTypes";
+import type { ArrowExtent, ArrowShapeProps } from "../ArrowTypes";
 
 /**
  * Inset (in local units) used to terminate the line at this arrow's base.
@@ -13,6 +13,12 @@ import type { ArrowShapeProps } from "../ArrowTypes";
  * stop the line there.
  */
 export const CONCAVE_TRIANGLE_INSET = ARROW_SIZE * 0.9;
+
+/** How far this head runs from its tip (local units), for the drawn extent (calcArrowReach). */
+export const CONCAVE_TRIANGLE_EXTENT: ArrowExtent = {
+	length: ARROW_SIZE,
+	halfWidth: ARROW_SIZE / 2,
+};
 
 /**
  * ConcaveTriangle arrow shape component.

@@ -1,4 +1,4 @@
-// The standard shape set as a host mounts it: the twelve plugins a `<Canvas>` is
+// The standard shape set as a host mounts it: the thirteen plugins a `<Canvas>` is
 // configured with, plus the declarations that make their stencils reachable —
 // the toolbar sections, the stencil bar's presets and the shape library
 // sidebar. The headless half lives behind ./doc and pulls in no react.
@@ -42,6 +42,10 @@ import {
 	flowchartStencilCategory,
 } from "@jiscribe/plugin-flowchart-shapes";
 import {
+	gcpShapesPlugin,
+	gcpStencilCategory,
+} from "@jiscribe/plugin-gcp-shapes";
+import {
 	generalPlugin,
 	generalStencilCategory,
 } from "@jiscribe/plugin-general-shapes";
@@ -55,7 +59,7 @@ import { tablePlugin } from "@jiscribe/plugin-table-shape";
 import { umlPlugin, umlStencilCategory } from "@jiscribe/plugin-uml-shapes";
 
 /**
- * The twelve plugins of the standard shape set, in the same order as
+ * The thirteen plugins of the standard shape set, in the same order as
  * `standardDocPlugins`. Pass to `CanvasConfig.plugins`; a shape whose plugin is
  * missing is simply not drawn, so this array and the one the parser is given
  * have to describe the same set.
@@ -73,13 +77,14 @@ export const standardPlugins: readonly CanvasPlugin[] = [
 	lucideIconPlugin,
 	awsShapesPlugin,
 	azureShapesPlugin,
+	gcpShapesPlugin,
 ];
 
 /**
  * The presets the standard set pins on the stencil bar, in display order:
  * the six a diagram is mostly built out of, ordered area → line → text.
  * Everything else the set ships — the `markdown` and `table` presets and the
- * ten plugin categories — is reached through the shape library sidebar
+ * eleven plugin categories — is reached through the shape library sidebar
  * instead, so pass `standardStencilLibrarySections` alongside this or those
  * shapes become undrawable by hand.
  *
@@ -169,4 +174,5 @@ export const standardStencilLibrarySections: StencilCategory[] = [
 	awsStencilCategory,
 	awsGroupStencilCategory,
 	azureStencilCategory,
+	gcpStencilCategory,
 ];

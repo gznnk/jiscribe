@@ -3,13 +3,14 @@ import type React from "react";
 import { memo } from "react";
 
 import { createSvgTransform } from "../../utils/createSvgTransform";
-import type { ArrowShapeProps } from "../ArrowTypes";
+import type { ArrowExtent, ArrowShapeProps } from "../ArrowTypes";
 import { ArrowPath } from "./ArrowStyled";
 import {
 	buildCrowFootBar,
 	buildCrowFootSpine,
 	CROW_FOOT_BAR_OFFSET,
 	CROW_FOOT_MARK_GAP,
+	CROW_FOOT_HALF_HEIGHT,
 } from "./utils/crowFootGeometry";
 
 /** Distance from the tip to the bar standing behind the leading one. */
@@ -20,6 +21,12 @@ const REAR_BAR_DISTANCE = CROW_FOOT_BAR_OFFSET + CROW_FOOT_MARK_GAP;
  * The mark draws its own spine, so the line stops at the rear bar.
  */
 export const CROW_FOOT_ONE_INSET = REAR_BAR_DISTANCE;
+
+/** How far this head runs from its tip (local units), for the drawn extent (calcArrowReach). */
+export const CROW_FOOT_ONE_EXTENT: ArrowExtent = {
+	length: REAR_BAR_DISTANCE,
+	halfWidth: CROW_FOOT_HALF_HEIGHT,
+};
 
 /**
  * CrowFootOne arrow shape component.
@@ -32,6 +39,7 @@ const CrowFootOneArrowComponent: React.FC<ArrowShapeProps> = ({
 	opacity,
 	radians,
 	scale,
+	outlineWidth,
 	dataKind,
 	dataId,
 }) => {
@@ -49,7 +57,7 @@ const CrowFootOneArrowComponent: React.FC<ArrowShapeProps> = ({
 			d={d}
 			strokeColor={color}
 			alpha={opacity}
-			strokeWidth={1}
+			strokeWidth={outlineWidth}
 			transform={transform}
 			data-kind={dataKind}
 			data-id={dataId}

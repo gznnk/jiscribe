@@ -20,7 +20,7 @@ import type { StyleIntentUpdater } from "../ObjectMenu/ObjectMenuTypes";
  *   shape resizes
  * - `fill` / `fillOpacity` / `strokeColor` / `strokeWidth` / `strokeDashType` /
  *   `strokeOpacity` / `radius` — the shape style
- * - `arrowHeads` — the two ends of an arrow
+ * - `arrowHeads` — the two ends of an arrow, and the size they share
  * - `fontFamily` / `fontSize` / `fontColor` / `textFormat` / `textAlign` /
  *   `verticalAlign` / `textLayout` — the text style of the selected slot
  */

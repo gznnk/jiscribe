@@ -574,6 +574,44 @@ describe("CanvasToolDescriptor.inputSchema", () => {
 		},
 	);
 
+	it.each([
+		["set_style", { ids: ["a"], arrowScale: 1.5 }],
+		["connect", { sourceId: "a", targetId: "b", arrowScale: 1.5 }],
+		[
+			"connect_many",
+			{ entries: [{ sourceId: "a", targetId: "b", arrowScale: 1.5 }] },
+		],
+		["update_connector", { id: "c", arrowScale: 1.5 }],
+		["update_connectors", { entries: [{ id: "c", arrowScale: 1.5 }] }],
+	] as const)(
+		"takes arrowScale on %s and keeps it in the op",
+		(toolName, args) => {
+			const descriptor = findDescriptor(
+				createCanvasToolDescriptors(capabilities),
+				toolName,
+			);
+			const parsed = parseArgs(toolName, args);
+
+			expect(parsed.success).toBe(true);
+			expect(JSON.stringify(descriptor.toOp(parsed.data as never))).toContain(
+				'"arrowScale":1.5',
+			);
+		},
+	);
+
+	it.each([0.19, 4.01])(
+		"refuses an arrowScale of %s, outside 0.2..4",
+		(arrowScale) => {
+			for (const [toolName, args] of [
+				["set_style", { ids: ["a"], arrowScale }],
+				["connect", { sourceId: "a", targetId: "b", arrowScale }],
+				["update_connector", { id: "c", arrowScale }],
+			] as const) {
+				expect(parseArgs(toolName, args).success, toolName).toBe(false);
+			}
+		},
+	);
+
 	it("still takes the arguments the closed schemas declare", () => {
 		expect(
 			parseArgs("add_objects", {

@@ -2,7 +2,7 @@ import { test, expect, selectors } from "@jiscribe/canvas/testing";
 import type { CanvasDriver } from "@jiscribe/canvas/testing";
 
 /**
- * All twelve shipped plugins registered on one canvas. Each plugin's own e2e suite
+ * All thirteen shipped plugins registered on one canvas. Each plugin's own e2e suite
  * loads a harness holding that plugin alone, so nothing there can see what only
  * breaks when they share a canvas. That is all this suite owns:
  * - a canvas mounting at all with every plugin applied (a type claimed twice
@@ -49,6 +49,9 @@ const AWS_S3_PRESET_ID = "awsIconServiceAmazonSimpleStorageService";
  */
 const AZURE_VM_PRESET_ID = "azureIconVirtualMachine";
 
+/** The gcpIcon preset the gcp section is found by and the Google Cloud icon is placed from. */
+const GCP_COMPUTE_ENGINE_PRESET_ID = "gcpIconComputeEngine";
+
 /**
  * Sections of the shape library sidebar, in declaration order. `ownPresetId` is a
  * preset only that section holds, so finding it there proves the section resolved
@@ -66,6 +69,7 @@ const LIBRARY_SECTIONS = [
 	{ id: "aws", ownPresetId: AWS_S3_PRESET_ID },
 	{ id: "aws-group", ownPresetId: "awsGroupVpc" },
 	{ id: "azure", ownPresetId: AZURE_VM_PRESET_ID },
+	{ id: "gcp", ownPresetId: GCP_COMPUTE_ENGINE_PRESET_ID },
 ];
 
 /** Every toolbar category button, pinned presets excluded. */
@@ -291,6 +295,9 @@ async function drawOneShapePerPlugin(canvas: CanvasDriver): Promise<string[]> {
 	await canvas.deselect();
 
 	ids.push(await placeFromLibrary(canvas, AWS_S3_PRESET_ID));
+	await canvas.deselect();
+
+	ids.push(await placeFromLibrary(canvas, GCP_COMPUTE_ENGINE_PRESET_ID));
 	await canvas.deselect();
 
 	// Two of the same Azure icon, center-placed too. Its drawing defines the ids

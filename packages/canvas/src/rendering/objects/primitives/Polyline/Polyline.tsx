@@ -4,7 +4,12 @@ import { memo } from "react";
 
 import { PolylineElement, PolylineHitArea } from "./PolylineStyled";
 import type { PolylineState } from "../../../../states/objects/primitives/polyline/PolylineState";
-import { Arrow, getArrowLineInset } from "../../arrows";
+import {
+	Arrow,
+	calcArrowLineEndWedge,
+	calcArrowLineInset,
+	calcArrowOutlineWidth,
+} from "../../arrows";
 import { useObjectShapeStyleDefaultsRegistry } from "../../registry/ObjectShapeStyleDefaultsRegistryContext";
 import { formatPolygonPoints } from "../../utils/formatPolygonPoints";
 import { getStrokeDasharray } from "../../utils/getStrokeDasharray";
@@ -23,24 +28,26 @@ const PolylineComponent: React.FC<PolylineProps> = ({
 	strokeOpacity,
 	startArrow,
 	endArrow,
+	arrowScale,
 }) => {
 	const pointsAttr = formatPolygonPoints(points);
 	const shapeStyle = useObjectShapeStyleDefaultsRegistry().resolveShapeStyle(
 		type,
-		{ stroke, strokeWidth, strokeDashType, strokeOpacity },
+		{ stroke, strokeWidth, strokeDashType, strokeOpacity, arrowScale },
 	);
 	const resolvedStrokeWidth = shapeStyle.strokeWidth;
+	const arrowHeadScale = resolvedStrokeWidth * shapeStyle.arrowScale;
+	const arrowOutlineWidth = calcArrowOutlineWidth(shapeStyle.arrowScale);
 	// Resolve auto (theme-following) — and an unspecified stroke, like every
 	// other renderer — to the theme foreground (ink) (issue #38).
 	const strokeColor = resolveAutoColor(shapeStyle.stroke, "ink");
-
-	// For hollow arrows, terminate the line at the arrow's base so it does not
-	// pass through the hollow area. The arrow itself is drawn at the original
-	// endpoint (tip), so the visible endpoint position is unchanged.
+	// Stop the line where the head needs it (calcArrowLineInset) so it does not
+	// show through a hollow head or past a thinned one. The arrow itself is drawn
+	// at the original endpoint (tip), so the visible endpoint position is unchanged.
 	const linePoints = insetPolylineEnds(
 		points,
-		getArrowLineInset(startArrow) * resolvedStrokeWidth,
-		getArrowLineInset(endArrow) * resolvedStrokeWidth,
+		calcArrowLineInset(startArrow, resolvedStrokeWidth, shapeStyle.arrowScale),
+		calcArrowLineInset(endArrow, resolvedStrokeWidth, shapeStyle.arrowScale),
 	);
 	const linePointsAttr = formatPolygonPoints(linePoints);
 
@@ -88,7 +95,12 @@ const PolylineComponent: React.FC<PolylineProps> = ({
 					color={strokeColor}
 					opacity={shapeStyle.strokeOpacity}
 					radians={startAngleRadians}
-					scale={resolvedStrokeWidth}
+					scale={arrowHeadScale}
+					outlineWidth={arrowOutlineWidth}
+					lineEndWedge={calcArrowLineEndWedge(
+						startArrow,
+						shapeStyle.arrowScale,
+					)}
 					dataKind="object"
 					dataId={id}
 				/>
@@ -101,7 +113,9 @@ const PolylineComponent: React.FC<PolylineProps> = ({
 					color={strokeColor}
 					opacity={shapeStyle.strokeOpacity}
 					radians={endAngleRadians}
-					scale={resolvedStrokeWidth}
+					scale={arrowHeadScale}
+					outlineWidth={arrowOutlineWidth}
+					lineEndWedge={calcArrowLineEndWedge(endArrow, shapeStyle.arrowScale)}
 					dataKind="object"
 					dataId={id}
 				/>

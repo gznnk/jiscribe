@@ -1,3 +1,4 @@
+import { ArrowTypes } from "@jiscribe/doc/model/objects/types/ArrowType";
 import type { BoundingBox, Point } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
@@ -131,10 +132,23 @@ const createTarget = (
 	);
 };
 
+/** Either end's head, its width and its scale: none at all, or any of them set. */
+const createArrowFields = (random: () => number) => ({
+	features: { type: "connector", geometry: "poly", arrow: true },
+	...(random() < 0.7 ? { startArrow: pick(random, ArrowTypes) } : {}),
+	...(random() < 0.7 ? { endArrow: pick(random, ArrowTypes) } : {}),
+	...(random() < 0.6
+		? { strokeWidth: pick(random, [0, 0.5, 1, 2, 6, 20]) }
+		: {}),
+	...(random() < 0.6
+		? { arrowScale: pick(random, [0.2, 0.35, 0.5, 1, 1.5, 4]) }
+		: {}),
+});
+
 /**
  * One generated layout: two owners (or one, for a self-loop) at any gap
  * including overlap, either end possibly free, either routing, sometimes with
- * stored vertices and a label.
+ * stored vertices, a label and arrowheads of any size.
  */
 const createCase = (random: () => number) => {
 	const source = createOwner(random, "source", 0, 0);
@@ -170,6 +184,7 @@ const createCase = (random: () => number) => {
 			y: randomBetween(random, -900, 900),
 		}),
 		...(label ? { label } : {}),
+		...createArrowFields(random),
 	} as unknown as ConnectorState;
 	const objects: Record<string, ObjectState> = { source };
 	if (target) {
@@ -206,6 +221,34 @@ describe("calcConnectorExtentBound", () => {
 				`case ${caseIndex}: ${JSON.stringify({ connector, objects, exact, bound })}`,
 			).toBe(true);
 		}
+	});
+
+	it("reaches past the path by the larger head's reach", () => {
+		const connector = {
+			id: "headed",
+			type: "connector",
+			routing: "straight",
+			points: [],
+			source: { anchor: { kind: "free", point: { x: 0, y: 0 } } },
+			target: { anchor: { kind: "free", point: { x: 100, y: 0 } } },
+			features: { type: "connector", geometry: "poly", arrow: true },
+			startArrow: "FilledTriangle",
+			endArrow: "CrowFootZeroMany",
+			strokeWidth: 2,
+			arrowScale: 1.5,
+		} as unknown as ConnectorState;
+		const bound = calcConnectorExtentBound(
+			connector,
+			null,
+			null,
+			registries,
+		) as BoundingBox;
+		// CrowFootZeroMany's reach: hypot(18.45, 4.5) × 2 × 1.5 + 2.
+		const reach = Math.hypot(18.45, 4.5) * 3 + 2;
+		expect(bound.left).toBeCloseTo(-reach, 6);
+		expect(bound.right).toBeCloseTo(100 + reach, 6);
+		expect(bound.top).toBeCloseTo(-reach, 6);
+		expect(bound.bottom).toBeCloseTo(reach, 6);
 	});
 
 	it("is null where the path does not resolve, so the caller routes instead", () => {

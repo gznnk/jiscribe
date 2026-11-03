@@ -1,5 +1,5 @@
 import { AUTO_COLOR } from "./autoColor";
-import { DEFAULT_ARROW } from "../base/ArrowStyleDoc";
+import { DEFAULT_ARROW, DEFAULT_ARROW_SCALE } from "../base/ArrowStyleDoc";
 import type { ArrowStyleDoc } from "../base/ArrowStyleDoc";
 import { DEFAULT_FILL, DEFAULT_FILL_OPACITY } from "../base/FillStyleDoc";
 import type { FillStyleDoc } from "../base/FillStyleDoc";
@@ -43,4 +43,5 @@ export const SHAPE_STYLE_FALLBACK = {
 	rx: DEFAULT_CORNER_RADIUS,
 	startArrow: DEFAULT_ARROW,
 	endArrow: DEFAULT_ARROW,
+	arrowScale: DEFAULT_ARROW_SCALE,
 } as const satisfies ResolvedShapeStyle;

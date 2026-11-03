@@ -74,6 +74,7 @@ const ConnectorRendererComponent: React.FC<ConnectorRendererProps> = ({
 				strokeOpacity={connectorState.strokeOpacity}
 				startArrow={connectorState.startArrow}
 				endArrow={connectorState.endArrow}
+				arrowScale={connectorState.arrowScale}
 				disablePointerEvents={disablePointerEvents}
 			/>
 			{/* Drawn between the line and the label, so the label keeps the pointer over itself. */}

@@ -98,6 +98,7 @@ const INTENT_BY_PROPERTY = {
 	rx: numberIntent((radius) => ({ kind: "cornerRadius", radius })),
 	startArrow: (value) => ({ kind: "startArrow", arrow: value as ArrowType }),
 	endArrow: (value) => ({ kind: "endArrow", arrow: value as ArrowType }),
+	arrowScale: numberIntent((scale) => ({ kind: "arrowScale", scale })),
 	fontColor: (value) => ({ kind: "fontColor", color: value }),
 	fontSize: numberIntent((size) => ({ kind: "fontSize", size })),
 	fontFamily: (value) => ({ kind: "fontFamily", family: value }),

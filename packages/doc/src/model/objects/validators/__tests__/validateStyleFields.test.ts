@@ -151,6 +151,24 @@ describe("validateArrowFields", () => {
 			expect(validateArrowFields({ startArrow: t }, "root")).toEqual([]);
 		}
 	});
+
+	it("arrowScale at either end of its range has no errors", () => {
+		expect(validateArrowFields({ arrowScale: 0.2 }, "root")).toEqual([]);
+		expect(validateArrowFields({ arrowScale: 4 }, "root")).toEqual([]);
+	});
+
+	it("errors for an arrowScale outside 0.2..4 or not a number", () => {
+		for (const arrowScale of [0.19, 4.01, 0, -1, "2", Number.NaN]) {
+			const errors = validateArrowFields({ arrowScale }, "root");
+			expect(errors).toEqual([
+				{
+					path: "root.arrowScale",
+					message: "must be a number between 0.2 and 4",
+					severity: "error",
+				},
+			]);
+		}
+	});
 });
 // ─── Lower bounds for optional number fields ─────────────────────
 

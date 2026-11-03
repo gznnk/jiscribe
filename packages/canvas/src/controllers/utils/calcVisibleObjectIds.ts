@@ -1,8 +1,8 @@
 import type { BoundingBox, Point } from "@jiscribe/geometry";
 
 import {
+	calcConnectorDrawnBoundingBox,
 	calcConnectorExtentBound,
-	calcConnectorPathBoundingBox,
 } from "./calcConnectorBoundingBox";
 import { calcObjectBoundingBox } from "./calcObjectBoundingBox";
 import type { VisualExtentRegistries } from "./VisualExtentRegistries";
@@ -23,8 +23,8 @@ import { isGroupState } from "../../states/objects/primitives/group/GroupState";
 
 /**
  * Margin (world px) added around the visible rect. Absorbs extents the bbox
- * does not account for (stroke widths, arrow heads, text overflowing its
- * frame), so objects straddling the viewport edge never pop in late.
+ * does not account for (stroke widths, text overflowing its frame), so objects
+ * straddling the viewport edge never pop in late.
  */
 export const VIEWPORT_CULL_MARGIN = 100;
 
@@ -200,9 +200,10 @@ export function calcVisibleObjectIds({
 			return prevEntry.bbox;
 		}
 		const bbox = resolved
-			? calcConnectorPathBoundingBox(
+			? calcConnectorDrawnBoundingBox(
 					connector,
 					listConnectorPathPoints(resolved),
+					registries.objectShapeStyleDefaults,
 				)
 			: null;
 		bboxCache.set(id, {

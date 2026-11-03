@@ -24,7 +24,7 @@ const BUILTIN_ROW_STYLE_INTENT_KINDS = {
 	strokeDashType: ["strokeDashType"],
 	strokeOpacity: ["strokeOpacity"],
 	radius: ["cornerRadius"],
-	arrowHeads: ["startArrow", "endArrow"],
+	arrowHeads: ["startArrow", "endArrow", "arrowScale"],
 	fontFamily: "text",
 	fontSize: "text",
 	fontColor: "text",

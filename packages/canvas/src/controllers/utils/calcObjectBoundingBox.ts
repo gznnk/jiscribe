@@ -9,6 +9,7 @@ import type { BoundingBox, TransformedFrame } from "@jiscribe/geometry";
 
 import { calcConnectorBoundingBox } from "./calcConnectorBoundingBox";
 import { calcTransformedRectBounds } from "./calcTransformedRectBounds";
+import { unionArrowHeadsBoundingBox } from "./unionArrowHeadsBoundingBox";
 import type { VisualExtentRegistries } from "./VisualExtentRegistries";
 import type { ObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
@@ -56,12 +57,14 @@ const unionVisualBounds = (
  * @param objects - The object map, used to resolve connector endpoints and group children
  * @param visualExtentRegistries - Per-canvas registries measuring what is drawn:
  *   a frame shape's box widened by what it draws outside its geometry (an actor's
- *   label, say), a connector's path resolved as the renderer routes it. Pass them
- *   from the visual-extent consumers (zoom-to-fit, export viewBox, culling, menu
- *   placement). Omitted, a frame keeps its geometry box but a connector's path is
- *   not the drawn route (see calcConnectorBoundingBox). Of the bundle, only
- *   `objectVisualBounds` must stay out of a geometry-box consumer; as this takes
- *   the bundle whole, such a consumer resolves connectors through
+ *   label, say), a connector's path resolved as the renderer routes it, and a
+ *   line's arrowheads (a connector's, a polyline's) taken in. Pass them from the
+ *   visual-extent consumers (zoom-to-fit, export viewBox, culling, menu
+ *   placement). Omitted, a frame keeps its geometry box, a line leaves its heads
+ *   out, and a connector's path is not the drawn route (see
+ *   calcConnectorBoundingBox). Of the bundle, `objectVisualBounds` and
+ *   `objectShapeStyleDefaults` must stay out of a geometry-box consumer; as this
+ *   takes the bundle whole, such a consumer resolves connectors through
  *   ConnectorRouteRegistries instead — the multi-select frame takes its extent
  *   from collectObjectPoints that way
  * @returns The bounding box, or null when the object has no valid extent
@@ -96,7 +99,16 @@ export function calcObjectBoundingBox(
 	}
 
 	if (isPoly(obj)) {
-		return calcPolyBoundingBox(obj.points);
+		const pointsBox = calcPolyBoundingBox(obj.points);
+		return pointsBox && visualExtentRegistries
+			? unionArrowHeadsBoundingBox(
+					pointsBox,
+					obj,
+					obj.points[0],
+					obj.points[obj.points.length - 1],
+					visualExtentRegistries.objectShapeStyleDefaults,
+				)
+			: pointsBox;
 	}
 
 	return null;

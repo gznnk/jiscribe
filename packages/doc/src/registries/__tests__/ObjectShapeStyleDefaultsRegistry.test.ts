@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { DEFAULT_ARROW } from "../../model/objects/base/ArrowStyleDoc";
+import {
+	DEFAULT_ARROW,
+	DEFAULT_ARROW_SCALE,
+} from "../../model/objects/base/ArrowStyleDoc";
 import {
 	DEFAULT_FILL,
 	DEFAULT_FILL_OPACITY,
@@ -115,6 +118,7 @@ describe("ObjectShapeStyleDefaultsRegistry.resolveShapeStyle", () => {
 			rx: DEFAULT_CORNER_RADIUS,
 			startArrow: DEFAULT_ARROW,
 			endArrow: DEFAULT_ARROW,
+			arrowScale: DEFAULT_ARROW_SCALE,
 		});
 	});
 
@@ -141,7 +145,19 @@ describe("ObjectShapeStyleDefaultsRegistry.resolveShapeStyle", () => {
 			rx: DEFAULT_CORNER_RADIUS,
 			startArrow: DEFAULT_ARROW,
 			endArrow: DEFAULT_ARROW,
+			arrowScale: DEFAULT_ARROW_SCALE,
 		});
+	});
+
+	it("resolves arrowScale like any other field: own over type default over 1", () => {
+		const arrowRegistry = createObjectShapeStyleDefaultsRegistry();
+		arrowRegistry.register("polyline", { arrowScale: 2 });
+		expect(arrowRegistry.resolveShapeStyle("polyline", {}).arrowScale).toBe(2);
+		expect(
+			arrowRegistry.resolveShapeStyle("polyline", { arrowScale: 0.5 })
+				.arrowScale,
+		).toBe(0.5);
+		expect(arrowRegistry.resolveShapeStyle("connector", {}).arrowScale).toBe(1);
 	});
 
 	it("is not shadowed by a field the object carries as undefined", () => {

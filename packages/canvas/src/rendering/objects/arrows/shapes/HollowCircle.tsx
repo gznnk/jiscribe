@@ -5,7 +5,7 @@ import { memo } from "react";
 import { ArrowCircle } from "./ArrowStyled";
 import { createSvgTransform } from "../../utils/createSvgTransform";
 import { ARROW_SIZE } from "../ArrowConstants";
-import type { ArrowShapeProps } from "../ArrowTypes";
+import type { ArrowExtent, ArrowShapeProps } from "../ArrowTypes";
 
 /**
  * Inset (in local units) used to terminate the line at this arrow's base.
@@ -13,6 +13,12 @@ import type { ArrowShapeProps } from "../ArrowTypes";
  * instead of showing through the interior.
  */
 export const HOLLOW_CIRCLE_INSET = ARROW_SIZE;
+
+/** How far this head runs from its tip (local units), for the drawn extent (calcArrowReach). */
+export const HOLLOW_CIRCLE_EXTENT: ArrowExtent = {
+	length: ARROW_SIZE,
+	halfWidth: ARROW_SIZE / 2,
+};
 
 /**
  * HollowCircle arrow shape component.
@@ -25,6 +31,7 @@ const HollowCircleArrowComponent: React.FC<ArrowShapeProps> = ({
 	opacity,
 	radians,
 	scale,
+	outlineWidth,
 	dataKind,
 	dataId,
 }) => {
@@ -41,7 +48,7 @@ const HollowCircleArrowComponent: React.FC<ArrowShapeProps> = ({
 			r={radius}
 			strokeColor={color}
 			alpha={opacity}
-			strokeWidth={1}
+			strokeWidth={outlineWidth}
 			transform={transform}
 			data-kind={dataKind}
 			data-id={dataId}

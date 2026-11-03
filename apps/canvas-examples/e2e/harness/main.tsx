@@ -23,6 +23,10 @@ import {
 	flowchartStencilCategory,
 } from "@jiscribe/plugin-flowchart-shapes";
 import {
+	gcpShapesPlugin,
+	gcpStencilCategory,
+} from "@jiscribe/plugin-gcp-shapes";
+import {
 	generalPlugin,
 	generalStencilCategory,
 } from "@jiscribe/plugin-general-shapes";
@@ -47,7 +51,7 @@ import "katex/dist/katex.min.css";
 // shape library sidebar holding the whole set as sections; the sidebar controls are the
 // kit's (see mountPluginHarness). The shipped hosts leave no
 // flyout on the top bar (standardToolbarSections carries no shape tool at all). The
-// markdown / sticky presets and the ten categories are all plugin-supplied and absent from
+// markdown / sticky presets and the eleven categories are all plugin-supplied and absent from
 // core's defaults.
 mountPluginHarness({
 	plugins: [
@@ -63,6 +67,7 @@ mountPluginHarness({
 		lucideIconPlugin,
 		awsShapesPlugin,
 		azureShapesPlugin,
+		gcpShapesPlugin,
 	],
 	toolbarItems: [
 		{ type: "stencilCategory", category: lucideIconStencilCategory },
@@ -95,5 +100,6 @@ mountPluginHarness({
 		awsStencilCategory,
 		awsGroupStencilCategory,
 		azureStencilCategory,
+		gcpStencilCategory,
 	],
 });

@@ -5,7 +5,7 @@ import { memo } from "react";
 import { ArrowPath } from "./ArrowStyled";
 import { createSvgTransform } from "../../utils/createSvgTransform";
 import { ARROW_SIZE } from "../ArrowConstants";
-import type { ArrowShapeProps } from "../ArrowTypes";
+import type { ArrowExtent, ArrowShapeProps } from "../ArrowTypes";
 
 /** Half length of each arm, so the cross spans `ARROW_SIZE * 0.8` along the line. */
 const CROSS_ARM = ARROW_SIZE * 0.4;
@@ -16,6 +16,12 @@ const CROSS_ARM = ARROW_SIZE * 0.4;
  * association end), so the line runs through to the tip and is not shortened.
  */
 export const CROSS_INSET = 0;
+
+/** How far this head runs from its tip (local units), for the drawn extent (calcArrowReach). */
+export const CROSS_EXTENT: ArrowExtent = {
+	length: CROSS_ARM * 2,
+	halfWidth: CROSS_ARM,
+};
 
 /**
  * Cross arrow shape component.
@@ -28,6 +34,7 @@ const CrossArrowComponent: React.FC<ArrowShapeProps> = ({
 	opacity,
 	radians,
 	scale,
+	outlineWidth,
 	dataKind,
 	dataId,
 }) => {
@@ -42,7 +49,7 @@ const CrossArrowComponent: React.FC<ArrowShapeProps> = ({
 			d={d}
 			strokeColor={color}
 			alpha={opacity}
-			strokeWidth={1}
+			strokeWidth={outlineWidth}
 			transform={transform}
 			data-kind={dataKind}
 			data-id={dataId}

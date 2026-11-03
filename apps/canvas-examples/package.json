@@ -21,6 +21,7 @@
 		"@jiscribe/plugin-container-shapes": "workspace:*",
 		"@jiscribe/plugin-er-shapes": "workspace:*",
 		"@jiscribe/plugin-flowchart-shapes": "workspace:*",
+		"@jiscribe/plugin-gcp-shapes": "workspace:*",
 		"@jiscribe/plugin-general-shapes": "workspace:*",
 		"@jiscribe/plugin-lucide-icon-shape": "workspace:*",
 		"@jiscribe/plugin-markdown-shape": "workspace:*",

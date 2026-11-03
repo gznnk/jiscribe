@@ -1,4 +1,4 @@
-<!-- jiscribe guide 0.12.2+8bc49bc9 -->
+<!-- jiscribe guide 0.12.2+0970265e -->
 
 # Jiscribe AI Authoring Guide
 
@@ -26,6 +26,7 @@ It focuses on the essentials. The field-level specification lives in the JSON Sc
 - Two further UML ends are circles rather than heads: `"Circle"` (filled) is an owned association end, and is also the endpoint of a lost / found message in a sequence diagram; `"HollowCircle"` (unfilled) is a provided interface — the lollipop
 - `"ConcaveTriangle"` is a filled triangle with a notch cut into the middle of its base (a swallowtail). It belongs to no notation — reach for it only when a plain arrow needs a silhouette of its own
 - ER cardinality (crow's foot notation) goes on the end nearest the entity it describes: `"CrowFootMany"` (many) / `"CrowFootOneMany"` (`1..*`) / `"CrowFootZeroMany"` (`0..*`) / `"CrowFootOne"` (`1..1`) / `"CrowFootZeroOne"` (`0..1`). A one-to-many relationship therefore sets **both** ends, e.g. `"startArrow": "CrowFootOne"` with `"endArrow": "CrowFootZeroMany"`
+- Arrowhead size: each head is drawn `9 × strokeWidth × arrowScale` px, so `arrowScale` (on polyline and connector, shared by both ends) is the multiplier on the size the line width alone gives — `0.2` to `4`, `1` when omitted. `1.5` makes the heads clearly larger, `0.6` keeps them modest on a thick line, and ER cardinality marks read well at `1.3` to `1.5`. The heads' outline stays at `strokeWidth` down to `arrowScale` `0.5` and thins with the head below it
 
 ## Styling part of a text
 
@@ -281,6 +282,7 @@ rather than a `rect` with a label on it.
 | `awsIcon`               | AWS service / resource icon (a labelled, connectable node)         |
 | `awsGroup`              | AWS boundary frame (VPC, subnet, region, account)                  |
 | `azureIcon`             | Azure service icon (a labelled, connectable node)                  |
+| `gcpIcon`               | Google Cloud product icon (a labelled, connectable node)           |
 | `polyline`              | open line                                                          |
 | `polygon`               | closed shape from points                                           |
 | `group`                 | container of child objects                                         |
@@ -487,6 +489,7 @@ shape" here and below means every object type except `text` / `polyline` /
 | `awsIcon`               | `x`,`y`,`width`,`height`                                       |
 | `awsGroup`              | `x`,`y`,`width`,`height`                                       |
 | `azureIcon`             | `x`,`y`,`width`,`height`                                       |
+| `gcpIcon`               | `x`,`y`,`width`,`height`                                       |
 | `polyline`              | `points` (open line)                                           |
 | `polygon`               | `points` (auto-closed)                                         |
 | `group`                 | `children`                                                     |

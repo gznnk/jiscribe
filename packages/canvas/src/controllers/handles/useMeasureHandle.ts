@@ -50,7 +50,7 @@ export type CanvasHitTestOptions = {
 export type CanvasMeasureHandle = {
 	/**
 	 * Bounds of what the objects *draw*, decoration outside their geometry
-	 * included (an actor's label, a sticky's shadow) — the extent zoom-to-fit
+	 * included (an actor's label, a sticky's shadow, a line's arrowheads) — the extent zoom-to-fit
 	 * and the export viewBox use. `docOps.getCombinedBounds` is the geometry-box
 	 * counterpart, which is what a layout should be computed from.
 	 *
