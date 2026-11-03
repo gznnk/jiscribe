@@ -61,12 +61,26 @@ export type LaidOutNode = {
 	bounds: Rect;
 };
 
+/** Where an edge meets a box: a side and a position along it. */
+export type LayoutEdgeAnchor = {
+	side: LayoutSide;
+	/**
+	 * Position along the side, 0..1 measured left to right on `top` / `bottom` and top to
+	 * bottom on `left` / `right`; 0.5 is the side's midpoint. Kept within
+	 * {@link EDGE_ANCHOR_T_RANGE} so an edge never leaves at a corner.
+	 */
+	t: number;
+};
+
+/** How far along a side an anchor may sit, so edges fan out without reaching the corners. */
+export const EDGE_ANCHOR_T_RANGE = { min: 0.2, max: 0.8 } as const;
+
 export type LaidOutEdge = {
 	id: string;
-	/** Side of the source box the edge should leave from, as the laid-out positions face. */
-	sourceSide: LayoutSide;
-	/** Side of the target box the edge should arrive at. */
-	targetSide: LayoutSide;
+	/** Where the edge leaves the source box, on the side facing the target along the rank axis. */
+	source: LayoutEdgeAnchor;
+	/** Where it enters the target box. */
+	target: LayoutEdgeAnchor;
 	/**
 	 * Corners of a right-angled route from the source side to the target side that
 	 * stays clear of the boxes in between, excluding the two ends themselves; empty when
@@ -89,7 +103,7 @@ const calcFacingSides = (
 	source: Rect,
 	target: Rect,
 	direction: LayoutDirection,
-): Pick<LaidOutEdge, "sourceSide" | "targetSide"> => {
+): { sourceSide: LayoutSide; targetSide: LayoutSide } => {
 	if (isVerticalFlow(direction)) {
 		const deltaY =
 			target.y + target.height / 2 - (source.y + source.height / 2);
@@ -103,19 +117,61 @@ const calcFacingSides = (
 		: { sourceSide: "left", targetSide: "right" };
 };
 
-/** Where an edge meets a box on the given side: the midpoint of that side. */
-const calcSidePoint = (bounds: Rect, side: LayoutSide): Point => {
-	switch (side) {
+/** Where an anchor sits on a box, in the same frame as `bounds`. */
+const calcAnchorPoint = (bounds: Rect, anchor: LayoutEdgeAnchor): Point => {
+	switch (anchor.side) {
 		case "top":
-			return { x: bounds.x + bounds.width / 2, y: bounds.y };
+			return { x: bounds.x + bounds.width * anchor.t, y: bounds.y };
 		case "bottom":
-			return { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height };
+			return {
+				x: bounds.x + bounds.width * anchor.t,
+				y: bounds.y + bounds.height,
+			};
 		case "left":
-			return { x: bounds.x, y: bounds.y + bounds.height / 2 };
+			return { x: bounds.x, y: bounds.y + bounds.height * anchor.t };
 		case "right":
-			return { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 };
+			return {
+				x: bounds.x + bounds.width,
+				y: bounds.y + bounds.height * anchor.t,
+			};
 	}
 };
+
+/**
+ * The anchor on `side` closest to `toward` (a coordinate across the rank axis), so
+ * edges leaving or entering one box fan out toward where each of them goes.
+ */
+const calcAnchorToward = (
+	bounds: Rect,
+	side: LayoutSide,
+	toward: number,
+	direction: LayoutDirection,
+): LayoutEdgeAnchor => {
+	const start = isVerticalFlow(direction) ? bounds.x : bounds.y;
+	const extent = isVerticalFlow(direction) ? bounds.width : bounds.height;
+	const ratio = (toward - start) / extent;
+	return {
+		side,
+		t: Math.min(
+			EDGE_ANCHOR_T_RANGE.max,
+			Math.max(EDGE_ANCHOR_T_RANGE.min, ratio),
+		),
+	};
+};
+
+/**
+ * The columns (coordinates across the rank axis) an edge travels in, between its
+ * ends: the dummy slots dagre routed it through, read off its interior points.
+ */
+const readSlotColumns = (
+	dagrePoints: readonly Point[],
+	direction: LayoutDirection,
+): number[] =>
+	dagrePoints
+		.slice(1, -1)
+		// Even indexes are the gap midpoints, odd ones the dummy slots (see calcOrthogonalCorners).
+		.filter((_, index) => index % 2 === 1)
+		.map((point) => (isVerticalFlow(direction) ? point.x : point.y));
 
 /** Drop every point that lies on the straight line between its neighbours. */
 const dropCollinearPoints = (path: readonly Point[]): Point[] =>
@@ -259,16 +315,37 @@ export const computeLayeredLayout = (
 			const sourceBounds = boundsById.get(edge.sourceId) as Rect;
 			const targetBounds = boundsById.get(edge.targetId) as Rect;
 			const sides = calcFacingSides(sourceBounds, targetBounds, direction);
+			const dagrePoints = (routed.points ?? []).map(({ x, y }) => ({
+				x: x - originX,
+				y: y - originY,
+			}));
+			// Each end leans toward the first column the edge travels in beyond it: the
+			// nearest dummy slot, or the other box's centre when there is none.
+			const slotColumns = readSlotColumns(dagrePoints, direction);
+			const centreOf = (bounds: Rect): number =>
+				isVerticalFlow(direction)
+					? bounds.x + bounds.width / 2
+					: bounds.y + bounds.height / 2;
+			const source = calcAnchorToward(
+				sourceBounds,
+				sides.sourceSide,
+				slotColumns[0] ?? centreOf(targetBounds),
+				direction,
+			);
+			const target = calcAnchorToward(
+				targetBounds,
+				sides.targetSide,
+				slotColumns[slotColumns.length - 1] ?? centreOf(sourceBounds),
+				direction,
+			);
 			return {
 				id: edge.id,
-				...sides,
+				source,
+				target,
 				points: calcOrthogonalCorners(
-					calcSidePoint(sourceBounds, sides.sourceSide),
-					calcSidePoint(targetBounds, sides.targetSide),
-					(routed.points ?? []).map(({ x, y }) => ({
-						x: x - originX,
-						y: y - originY,
-					})),
+					calcAnchorPoint(sourceBounds, source),
+					calcAnchorPoint(targetBounds, target),
+					dagrePoints,
 					direction,
 				),
 			};

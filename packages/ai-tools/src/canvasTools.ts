@@ -1373,7 +1373,7 @@ export const createCanvasToolDescriptors = (
 	const layoutObjectsTool = defineCanvasTool(
 		"layout_objects",
 		[
-			"Arrange objects automatically as a layered graph, the way a flowchart renderer does: the connectors between them decide the layers (a source sits above, or left of, its targets), objects of one layer are ordered to reduce crossings, and every connector between two placed objects is re-attached to the sides that now face each other and given a right-angled route that goes around the objects in between.",
+			"Arrange objects automatically as a layered graph, the way a flowchart renderer does: the connectors between them decide the layers (a source sits above, or left of, its targets), objects of one layer are ordered to reduce crossings, and every connector between two placed objects is re-attached onto the sides that now face each other (fanned out along the side when several share it) and given a right-angled route that goes around the objects in between.",
 			"Omit ids to lay out the whole canvas; give ids to rearrange just those (a group moves as one box, connectors among the ids are skipped since they follow their ends). The arrangement keeps the top-left corner the objects occupied together.",
 			"Use it after adding nodes and connectors instead of computing a grid by hand, and on a drawing that got tangled. Objects with no connector still get a place, in the first layer.",
 		].join(" "),

@@ -20,13 +20,16 @@ describe("computeLayeredLayout", () => {
 		expect(b).toEqual({ x: 0, y: 140, width: 160, height: 80 });
 		expect(c).toEqual({ x: 0, y: 280, width: 160, height: 80 });
 		expect(
-			result.edges.map(({ sourceSide, targetSide }) => [
-				sourceSide,
-				targetSide,
-			]),
+			result.edges.map(({ source, target }) => [source, target]),
 		).toEqual([
-			["bottom", "top"],
-			["bottom", "top"],
+			[
+				{ side: "bottom", t: 0.5 },
+				{ side: "top", t: 0.5 },
+			],
+			[
+				{ side: "bottom", t: 0.5 },
+				{ side: "top", t: 0.5 },
+			],
 		]);
 		// One column, so no corner is needed anywhere.
 		expect(result.edges.map(({ points }) => points)).toEqual([[], []]);
@@ -46,8 +49,8 @@ describe("computeLayeredLayout", () => {
 			height: 80,
 		});
 		expect(result.edges[0]).toMatchObject({
-			sourceSide: "right",
-			targetSide: "left",
+			source: { side: "right", t: 0.5 },
+			target: { side: "left", t: 0.5 },
 		});
 	});
 
@@ -78,7 +81,10 @@ describe("computeLayeredLayout", () => {
 		);
 
 		const back = result.edges.find(({ id }) => id === "back");
-		expect(back).toMatchObject({ sourceSide: "top", targetSide: "bottom" });
+		expect(back).toMatchObject({
+			source: { side: "top" },
+			target: { side: "bottom" },
+		});
 	});
 
 	it("leaves a self loop out of the edges and places lone nodes too", () => {
@@ -109,10 +115,11 @@ describe("computeLayeredLayout", () => {
 		expect(corners.length).toBeGreaterThanOrEqual(2);
 		const a = result.nodes.find(({ id }) => id === "a")?.bounds;
 		const c = result.nodes.find(({ id }) => id === "c")?.bounds;
+		const ac = byId.get("ac");
 		const path = [
-			{ x: (a?.x ?? 0) + 80, y: (a?.y ?? 0) + 80 },
+			{ x: (a?.x ?? 0) + 160 * (ac?.source.t ?? 0), y: (a?.y ?? 0) + 80 },
 			...corners,
-			{ x: (c?.x ?? 0) + 80, y: c?.y ?? 0 },
+			{ x: (c?.x ?? 0) + 160 * (ac?.target.t ?? 0), y: c?.y ?? 0 },
 		];
 		for (let index = 1; index < path.length; index += 1) {
 			const turnsRightAngle =

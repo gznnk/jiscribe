@@ -50,11 +50,11 @@ describe("layoutObjects", () => {
 		expect(readObject(doc, "connector-1")).toMatchObject({
 			source: {
 				owner: { id: "rect-1" },
-				anchor: { kind: "connectPoint", id: "bottomCenter" },
+				anchor: { kind: "edge", side: "bottom", t: 0.5 },
 			},
 			target: {
 				owner: { id: "rect-2" },
-				anchor: { kind: "connectPoint", id: "topCenter" },
+				anchor: { kind: "edge", side: "top", t: 0.5 },
 			},
 			points: [],
 		});
@@ -71,8 +71,8 @@ describe("layoutObjects", () => {
 
 		expect(readObject(doc, "rect-2")).toMatchObject({ x: 300, y: 20 });
 		expect(readObject(doc, "connector-1")).toMatchObject({
-			source: { anchor: { id: "rightCenter" } },
-			target: { anchor: { id: "leftCenter" } },
+			source: { anchor: { kind: "edge", side: "right" } },
+			target: { anchor: { kind: "edge", side: "left" } },
 		});
 	});
 

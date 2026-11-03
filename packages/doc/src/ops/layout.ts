@@ -3,7 +3,6 @@ import {
 	type LayoutDirection,
 	type LayoutGraphEdge,
 	type LayoutGraphNode,
-	type LayoutSide,
 } from "@jiscribe/layout";
 
 import { DocOperationError } from "./errors";
@@ -43,13 +42,6 @@ export type LayoutObjectsResult = {
 	connectorIds: string[];
 };
 
-const CONNECT_POINT_BY_SIDE: Record<LayoutSide, AnchorHandleId> = {
-	top: "topCenter",
-	right: "rightCenter",
-	bottom: "bottomCenter",
-	left: "leftCenter",
-};
-
 const readOwnerId = (endpoint: EndpointRef): string | undefined =>
 	endpoint.owner?.id;
 
@@ -57,7 +49,8 @@ const readOwnerId = (endpoint: EndpointRef): string | undefined =>
  * Arrange objects as a layered graph, mutating `doc` in place: the connectors between
  * them decide the ranks (a source sits above, or left of, its targets), nodes of one rank
  * are ordered to reduce crossings, and every connector between two placed objects is
- * re-anchored to the sides that now face each other, with a right-angled route around the
+ * re-anchored onto the sides that now face each other (an edge anchor, placed toward where
+ * the connector goes so several on one side fan out), with a right-angled route around the
  * objects in between written as its corners (none when it runs straight). The arrangement keeps the top-left corner the objects occupied together, so the
  * drawing stays where it was.
  *
@@ -140,13 +133,13 @@ export const layoutObjects = (
 			source: buildEndpoint(
 				locatedOwners,
 				readOwnerId(connector.source) as string,
-				CONNECT_POINT_BY_SIDE[edge.sourceSide],
+				edge.source,
 				definitions,
 			),
 			target: buildEndpoint(
 				locatedOwners,
 				readOwnerId(connector.target) as string,
-				CONNECT_POINT_BY_SIDE[edge.targetSide],
+				edge.target,
 				definitions,
 			),
 		};
