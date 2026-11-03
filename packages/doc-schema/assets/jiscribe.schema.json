@@ -4205,7 +4205,7 @@
 							"$ref": "#/$defs/TextStyle/properties/fontWeight"
 						},
 						"fill": {
-							"description": "Label background color (CSS color, or \"auto\"). Omitted/\"auto\" uses the canvas background to mask the line behind the label (knockout). Use \"transparent\" to let the line show through.",
+							"description": "Label background color (CSS color, or \"auto\"). Omitted/\"auto\" uses the document's background, or the theme's canvas colour when the document sets none, to mask the line behind the label (knockout). Use \"transparent\" to let the line show through.",
 							"$ref": "#/$defs/FillStyle/properties/fill"
 						},
 						"stroke": {

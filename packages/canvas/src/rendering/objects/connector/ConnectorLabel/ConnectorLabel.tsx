@@ -20,7 +20,7 @@ type ConnectorLabelProps = {
 	fontFamily?: string;
 	fontSize?: number;
 	fontWeight?: string;
-	/** Background color (omitted/auto uses the canvas background = knockout). */
+	/** Background color (omitted/auto knocks out the line in the page's color; see resolveLabelFill). */
 	fill?: string;
 	/** Border color. */
 	stroke?: string;

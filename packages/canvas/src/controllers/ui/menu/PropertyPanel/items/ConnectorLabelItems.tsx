@@ -203,9 +203,10 @@ const ConnectorLabelStyleItemComponent: React.FC<PropertyPanelItemProps> = ({
 export const ConnectorLabelStyleItem = memo(ConnectorLabelStyleItemComponent);
 
 /**
- * The face of the label's box. Unset it knocks the line out with the canvas
- * surface color rather than with a color of its own (resolveLabelFill), which is
- * the `canvas` role's swatch.
+ * The face of the label's box. Unset it knocks the line out with the page's
+ * color rather than with a color of its own (resolveLabelFill), which is the
+ * `canvas` role's swatch: `theme.canvasBg`, overridden by the document's opaque
+ * `background` at the Canvas root.
  */
 const ConnectorLabelBackgroundItemComponent: React.FC<
 	PropertyPanelItemProps

@@ -272,6 +272,13 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Fixed
 
+- **A connector label with no `fill` masks the line in the document's
+  `background`.** It drew in the theme's canvas colour, so on a document with its
+  own opaque `background` every default label was a box of another colour, in the
+  viewer and in PNG / SVG export alike. The Canvas root now sets
+  `--jiscribe-canvas-bg` to an opaque `background`, so the label, its editor,
+  the label-fill swatches and export follow the page; a see-through one keeps
+  the theme's.
 - **A `set:` style action that changes nothing is no longer committed.** The
   ObjectMenu's and the properties sidebar's swatches wrote through it whether
   or not the value was already in place, and every write was a commit: a

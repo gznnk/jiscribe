@@ -1,4 +1,4 @@
-<!-- jiscribe guide 0.12.2+144194ae -->
+<!-- jiscribe guide 0.12.2+ba43e5b1 -->
 
 # The Jiscribe file format
 
@@ -165,7 +165,8 @@ in a nested `label` object: `"label": { "text": "Yes" }`. Optional fields:
 `position` (0–1 along the path, default 0.5 = midpoint), `offset` (perpendicular
 shift, default 0), `fontColor` (default `"auto"`), `fontFamily` (one of the four
 shipped stacks; default sans), `fontSize` (default 16), `fontWeight`, plus
-background/border — `fill` (default canvas background = masks the line;
+background/border — `fill` (default: the document's `background`, or the
+theme's canvas colour when the document sets none, so it masks the line;
 `"transparent"` to show the line), `stroke` (border color), `strokeWidth` (border
 width, default 0 = no border), `strokeDashType` (border line style:
 `"solid"`/`"dashed"`/`"dotted"`). It takes **no** `fillOpacity` /

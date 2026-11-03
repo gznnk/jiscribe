@@ -54,7 +54,8 @@ export const CONNECTOR_DOC_DEFAULTS: Required<
  * A label whose `text` is an empty string is equivalent to "none" and is removed on save.
  *
  * Background and border borrow the same vocabulary as shapes (`fill` / `stroke` / `strokeWidth`).
- * When `fill` is omitted, the knockout that hides the line with the canvas background color is kept;
+ * When `fill` is omitted, the knockout that hides the line is kept, in the document's `background`, or the
+ * theme's canvas colour when the document sets none;
  * when `strokeWidth` is omitted, there is no border.
  */
 export type ConnectorLabel = Pick<

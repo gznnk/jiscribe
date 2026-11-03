@@ -23,7 +23,8 @@ import { selectors } from "../../support/selectors";
  * - Transparent background: no background rect is laid down (the default does
  *   lay one down)
  * - Connector labels: written as <text> plus a <rect> box rather than a
- *   foreignObject (B1), and rasterized in PNG too
+ *   foreignObject (B1), and rasterized in PNG too; a label with no fill is
+ *   baked in the document's background, transparent export included
  * - Derived geometry: a block text and a height-less shape survive the trip with
  *   the fields they left out still left out
  * - Selection scope: the viewBox covers the selected shape plus the margin and
@@ -827,6 +828,81 @@ test("writes connector labels as <text> plus a box <rect> rather than a foreignO
 	expect(viewBox.y + viewBox.height).toBeGreaterThanOrEqual(
 		labelBox.y + labelBox.height,
 	);
+});
+
+/** The document background of the label-knockout export spec, far from the theme's #1e1e1e. */
+const KNOCKOUT_DOC_BACKGROUND = "rgb(22, 163, 74)";
+
+/** A labeled connector whose label leaves `fill` unset, on a document with its own background. */
+const labelKnockoutDocText = JSON.stringify({
+	version: 1,
+	background: "#16a34a",
+	root: [
+		{
+			id: "knockout-source",
+			type: "rect",
+			x: 150,
+			y: 150,
+			width: 80,
+			height: 60,
+		},
+		{
+			id: "knockout-target",
+			type: "rect",
+			x: 550,
+			y: 150,
+			width: 80,
+			height: 60,
+		},
+		{
+			id: "knockout-connector",
+			type: "connector",
+			points: [],
+			routing: "straight",
+			source: { owner: { id: "knockout-source" }, anchor: { kind: "center" } },
+			target: { owner: { id: "knockout-target" }, anchor: { kind: "center" } },
+			label: { text: "Yes" },
+		},
+	],
+});
+
+test("bakes a label with no fill in the document background, transparent export included", async ({
+	canvas,
+	page,
+}) => {
+	await loadHarnessDoc(page, labelKnockoutDocText);
+	await expect(labelBoxOf(canvas)).toHaveCSS(
+		"background-color",
+		KNOCKOUT_DOC_BACKGROUND,
+	);
+	const labelBox = await labelForeignObjectBox(canvas);
+
+	// The label rect is told from the background rect by sitting on the label's box.
+	const findLabelRect = (svgText: string) =>
+		parseTagAttributes(svgText, "rect").find(
+			(attributes) =>
+				Math.abs(Number(attributes.x) - labelBox.x) < 1 &&
+				Math.abs(Number(attributes.y) - labelBox.y) < 1 &&
+				Math.abs(Number(attributes.width) - labelBox.width) < 1,
+		);
+
+	for (const transparentBackground of [false, true]) {
+		const svg = await downloadViaExportDialog(
+			page,
+			canvas,
+			{ x: 700, y: 500 },
+			"svg",
+			{ transparentBackground },
+		);
+		const labelRect = findLabelRect(
+			Buffer.from(svg.base64, "base64").toString("utf-8"),
+		);
+		expect(
+			labelRect,
+			`a rect on the label box is emitted (transparent: ${transparentBackground})`,
+		).toBeDefined();
+		expect(labelRect!.fill).toBe(KNOCKOUT_DOC_BACKGROUND);
+	}
 });
 
 test("rasterizes connector labels in the PNG export too", async ({

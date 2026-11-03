@@ -19,7 +19,7 @@ const SECTION_ID = "label-bg-color";
 
 /**
  * Label background color menu (same layout as the shape's Background Color).
- * The value is the nested `label.fill`. Omitted/auto resolves to the canvas background color (knockout).
+ * The value is the nested `label.fill`. Omitted/auto resolves as resolveLabelFill does (the page's color, knockout).
  */
 const LabelBackgroundColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	objects,
