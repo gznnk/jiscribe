@@ -19,9 +19,7 @@ describe("computeLayeredLayout", () => {
 		expect(a).toEqual({ x: 0, y: 0, width: 160, height: 80 });
 		expect(b).toEqual({ x: 0, y: 140, width: 160, height: 80 });
 		expect(c).toEqual({ x: 0, y: 280, width: 160, height: 80 });
-		expect(
-			result.edges.map(({ source, target }) => [source, target]),
-		).toEqual([
+		expect(result.edges.map(({ source, target }) => [source, target])).toEqual([
 			[
 				{ side: "bottom", t: 0.5 },
 				{ side: "top", t: 0.5 },

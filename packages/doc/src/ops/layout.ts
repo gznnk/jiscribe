@@ -6,7 +6,7 @@ import {
 } from "@jiscribe/layout";
 
 import { DocOperationError } from "./errors";
-import { type AnchorHandleId, buildEndpoint } from "./utils/connectorEndpoints";
+import { buildEndpoint } from "./utils/connectorEndpoints";
 import {
 	type ObjectLocation,
 	type ObjectRecord,
