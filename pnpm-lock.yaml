@@ -142,6 +142,9 @@ importers:
       '@jiscribe/plugin-flowchart-shapes':
         specifier: workspace:*
         version: link:../../plugins/flowchart-shapes
+      '@jiscribe/plugin-gcp-shapes':
+        specifier: workspace:*
+        version: link:../../plugins/gcp-shapes
       '@jiscribe/plugin-general-shapes':
         specifier: workspace:*
         version: link:../../plugins/general-shapes
@@ -840,6 +843,9 @@ importers:
       '@jiscribe/plugin-flowchart-shapes':
         specifier: workspace:*
         version: link:../../plugins/flowchart-shapes
+      '@jiscribe/plugin-gcp-shapes':
+        specifier: workspace:*
+        version: link:../../plugins/gcp-shapes
       '@jiscribe/plugin-general-shapes':
         specifier: workspace:*
         version: link:../../plugins/general-shapes
@@ -1109,6 +1115,42 @@ importers:
       '@jiscribe/geometry':
         specifier: workspace:*
         version: link:../../packages/geometry
+    devDependencies:
+      '@emotion/react':
+        specifier: 'catalog:'
+        version: 11.14.0(@types/react@19.2.18)(react@19.2.8)(supports-color@10.2.2)
+      '@emotion/styled':
+        specifier: 'catalog:'
+        version: 11.14.1(@emotion/react@11.14.0(@types/react@19.2.18)(react@19.2.8)(supports-color@10.2.2))(@types/react@19.2.18)(react@19.2.8)(supports-color@10.2.2)
+      '@jiscribe/canvas':
+        specifier: workspace:*
+        version: link:../../packages/canvas
+      '@jiscribe/canvas-sdk':
+        specifier: workspace:*
+        version: link:../../packages/canvas-sdk
+      '@jiscribe/doc':
+        specifier: workspace:*
+        version: link:../../packages/doc
+      '@playwright/test':
+        specifier: ^1.62.1
+        version: 1.62.1
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.2.18
+      react:
+        specifier: 'catalog:'
+        version: 19.2.8
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+      vite:
+        specifier: 'catalog:'
+        version: 7.3.7(@types/node@24.19.2)(tsx@4.23.11)
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.12(@types/node@24.19.2)(@vitest/coverage-v8@4.1.12)(@vitest/ui@4.1.12)(jsdom@30.1.2)(vite@7.3.7(@types/node@24.19.2)(tsx@4.23.11))
+
+  plugins/gcp-shapes:
     devDependencies:
       '@emotion/react':
         specifier: 'catalog:'

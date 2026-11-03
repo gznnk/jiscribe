@@ -232,6 +232,9 @@
 					"$ref": "#/$defs/AzureIconDoc"
 				},
 				{
+					"$ref": "#/$defs/GcpIconDoc"
+				},
+				{
 					"$ref": "#/$defs/PolylineDoc"
 				},
 				{
@@ -413,6 +416,9 @@
 				},
 				{
 					"$ref": "#/$defs/AzureIconDoc"
+				},
+				{
+					"$ref": "#/$defs/GcpIconDoc"
 				},
 				{
 					"$ref": "#/$defs/PolylineDoc"
@@ -3465,6 +3471,97 @@
 				}
 			}
 		},
+		"GcpIconDoc": {
+			"description": "One icon from Google's official Google Cloud product icons, drawn as a node: it holds text and can be a connector endpoint, so arrows attach to it directly. Google draws its core products with icons of their own and every other product with the icon of its category, and `icon` follows that: it names the picture as a flat kebab-case name — a core product (\"compute-engine\", \"cloud-run\", \"gke\", \"cloud-storage\", \"cloud-sql\", \"bigquery\", \"vertex-ai\") or a category (\"networking\", \"data-analytics\", \"security-identity\", \"serverless-computing\"). Any other product's name resolves to its category's icon (\"pubsub\" and \"dataflow\" draw \"data-analytics\", \"cloud-functions\" draws \"serverless-computing\", \"vpc\" draws \"networking\", \"iam\" draws \"security-identity\"), and common short names resolve too (\"gce\", \"gcs\", \"spanner\", \"scc\"); a name that resolves to nothing is a validation error carrying suggestions. `text` is drawn as a label below the box, auto-sized to itself: write the product's official name there (\"Compute Engine\", \"Pub/Sub\", \"Cloud Load Balancing\"), which tells apart the products sharing one category icon and belongs near the icon. There is no stroke or fill: the icons may not be recoloured or altered. Keep the box square (the 64x64 default) — the drawing is scaled uniformly and centred, so a non-square box only adds margin. Group them with a container frame to show which project, region or VPC network they live in.",
+			"type": "object",
+			"required": ["id", "type", "x", "y", "width", "height"],
+			"additionalProperties": false,
+			"properties": {
+				"id": {
+					"description": "Unique identifier.",
+					"type": "string"
+				},
+				"type": {
+					"description": "Must be \"gcpIcon\".",
+					"type": "string",
+					"const": "gcpIcon"
+				},
+				"meta": {
+					"$ref": "#/$defs/MetaDoc"
+				},
+				"icon": {
+					"description": "Which icon to draw, as a flat kebab-case name from Google's official Google Cloud product icons. Google draws its core products with icons of their own (\"compute-engine\", \"cloud-run\", \"gke\", \"cloud-storage\", \"cloud-sql\", \"cloud-spanner\", \"alloydb\", \"bigquery\", \"looker\", \"vertex-ai\", \"apigee\") and every other product with the icon of its category (\"networking\", \"data-analytics\", \"databases\", \"security-identity\", \"serverless-computing\", \"integration-services\", \"observability\"). Name the product you mean: a product without an icon of its own resolves to its category's icon (\"pubsub\" and \"dataflow\" draw \"data-analytics\", \"cloud-functions\" draws \"serverless-computing\", \"vpc\" and \"cloud-load-balancing\" draw \"networking\", \"iam\" draws \"security-identity\", \"firestore\" draws \"databases\"), and the short names people say resolve too (\"gce\", \"gcs\", \"spanner\", \"scc\", \"google-kubernetes-engine\"). Write the product's official name in `text`: it is what tells apart the products sharing one category icon. A name that resolves to nothing is rejected with the nearest candidates named, so a wrong guess costs one correction rather than a broken document. Do not invent a name from another icon set. Omitted = \"compute-engine\".",
+					"type": "string",
+					"default": "compute-engine",
+					"examples": [
+						"compute-engine",
+						"cloud-run",
+						"bigquery",
+						"networking",
+						"pubsub"
+					]
+				},
+				"x": {
+					"description": "Left-edge X coordinate of the bounding box.",
+					"type": "number"
+				},
+				"y": {
+					"description": "Top-edge Y coordinate of the bounding box.",
+					"type": "number"
+				},
+				"width": {
+					"description": "Bounding-box width in pixels. Size written when a creation omits it: 64",
+					"type": "number",
+					"minimum": 0
+				},
+				"height": {
+					"description": "Bounding-box height in pixels. Size written when a creation omits it: 64",
+					"type": "number",
+					"minimum": 0
+				},
+				"text": {
+					"$ref": "#/$defs/TextStyle/properties/text"
+				},
+				"textAlign": {
+					"$ref": "#/$defs/TextStyle/properties/textAlign"
+				},
+				"verticalAlign": {
+					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
+				},
+				"fontColor": {
+					"$ref": "#/$defs/TextStyle/properties/fontColor"
+				},
+				"fontSize": {
+					"$ref": "#/$defs/TextStyle/properties/fontSize"
+				},
+				"fontFamily": {
+					"$ref": "#/$defs/TextStyle/properties/fontFamily"
+				},
+				"fontWeight": {
+					"$ref": "#/$defs/TextStyle/properties/fontWeight"
+				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
+				},
+				"rotation": {
+					"$ref": "#/$defs/TransformStyle/properties/rotation"
+				},
+				"flipX": {
+					"$ref": "#/$defs/TransformStyle/properties/flipX"
+				},
+				"flipY": {
+					"$ref": "#/$defs/TransformStyle/properties/flipY"
+				},
+				"lockAspectRatio": {
+					"description": "Lock aspect ratio during resize. Default: true (overrides the shared default false).",
+					"type": "boolean",
+					"default": true
+				}
+			}
+		},
 		"PolylineDoc": {
 			"description": "Open polyline (non-closed path).",
 			"type": "object",
@@ -4301,7 +4398,7 @@
 			}
 		},
 		"OwnerRef": {
-			"description": "Reference to an object on the canvas by ID. The referenced object must be connectable: rect / markdown / ellipse / text / diamond / stadium / parallelogram / hexagon / cloud / document / multiDocument / actor / browserWindow / terminalWindow / smartphone / laptop / server / gear / package / folder / file / envelope / queue / lock / shield / lucideIcon / callout / note / brace / bracketWithStem / bracket / db / storedData / subroutine / trapezoid / manualInput / card / delay / loopLimit / display / extract / cross / offPageConnector / record / umlPackage / umlComponent / erEntity / awsIcon / awsGroup / azureIcon / container / sticky / table / image (NOT polyline / polygon / group / svg / connector).",
+			"description": "Reference to an object on the canvas by ID. The referenced object must be connectable: rect / markdown / ellipse / text / diamond / stadium / parallelogram / hexagon / cloud / document / multiDocument / actor / browserWindow / terminalWindow / smartphone / laptop / server / gear / package / folder / file / envelope / queue / lock / shield / lucideIcon / callout / note / brace / bracketWithStem / bracket / db / storedData / subroutine / trapezoid / manualInput / card / delay / loopLimit / display / extract / cross / offPageConnector / record / umlPackage / umlComponent / erEntity / awsIcon / awsGroup / azureIcon / gcpIcon / container / sticky / table / image (NOT polyline / polygon / group / svg / connector).",
 			"type": "object",
 			"required": ["id"],
 			"additionalProperties": false,

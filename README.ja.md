@@ -15,7 +15,7 @@ AI が続きを描いても、丸ごと描き直されることはなく、手�
 作図に必要なものの多くは、はじめから揃っている。コアが 8 つの基本型（`rect` /
 `ellipse` / `text` / `polyline` / `polygon` / `group` / `connector` / `svg`）を
 受け持ち、フローチャート・UML・ER 図・表・付箋・Markdown・コンテナ・注釈・
-汎用ピクトグラム・Lucide アイコン・AWS / Azure アーキテクチャといった図形セットは
+汎用ピクトグラム・Lucide アイコン・AWS / Azure / Google Cloud アーキテクチャといった図形セットは
 プラグインとして同梱している。図形セットは今後も増やしていく。
 
 ## 何が作れるか
@@ -148,25 +148,25 @@ DOM にも依存せずに `CanvasDoc` の解析・検証・編集・計測がで
 
 ## 全体の構成
 
-| パッケージ                   | 内容                                                                                                                            |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `@jiscribe/canvas`           | エンジン本体。描画、ジェスチャー、コマンド、状態                                                                                |
-| `@jiscribe/doc`              | ヘッドレスなドキュメント層。`CanvasDoc` モデル・パーサー・編集 ops・`.jis.*` の入出力                                           |
-| `@jiscribe/canvas-sdk`       | プラグイン作者向けの図形オーサリングキット。canvas の公開 API だけで書かれている                                                |
-| `@jiscribe/geometry`         | 幾何型と幾何計算（矩形、楕円、変換、交差判定）                                                                                  |
-| `@jiscribe/markdown`         | Markdown 図形が使う Markdown レンダリング                                                                                       |
-| `@jiscribe/basic-validators` | 基本的な実行時バリデーター                                                                                                      |
-| `@jiscribe/utility-types`    | 共有の TypeScript ユーティリティ型                                                                                              |
-| `@jiscribe/doc-schema`       | 標準図形セットから生成した JSON Schema・AI 向けリファレンス・Claude Code スキル                                                 |
-| `@jiscribe/ai-tools`         | AI が呼べるキャンバスツールの宣言（トランスポート非依存）と、その適用                                                           |
-| `@jiscribe/standard-shapes`  | 標準図形セットを全ホスト向けに 1 か所で束ねたもの（doc 面 / presentation 面の 2 エントリ）                                      |
-| `@jiscribe/doc-tools`        | 標準図形セットに対する検証・計測・診断（Node 計測バックエンド込み）                                                             |
-| `plugins/*`                  | 標準図形セットの実体 — flowchart、UML、ER、table、container、general、annotation、sticky、markdown、Lucide アイコン、AWS、Azure |
-| `apps/canvas-examples`       | 統合サンプル（1 サンプル = 1 ファイル）                                                                                         |
-| `apps/cli`                   | `jiscribe` コマンド。validate / diagnose / measure / render / preview                                                           |
-| `apps/mcp`                   | MCP サーバー。stdio でツールを提供し、ローカルにキャンバスビューアを立てる                                                      |
-| `apps/claude-plugin`         | Claude Code プラグイン。MCP サーバーと、自動生成の作図スキル                                                                    |
-| `apps/vscode-extension`      | Jiscribe の VSCode 拡張                                                                                                         |
+| パッケージ                   | 内容                                                                                                                                          |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@jiscribe/canvas`           | エンジン本体。描画、ジェスチャー、コマンド、状態                                                                                              |
+| `@jiscribe/doc`              | ヘッドレスなドキュメント層。`CanvasDoc` モデル・パーサー・編集 ops・`.jis.*` の入出力                                                         |
+| `@jiscribe/canvas-sdk`       | プラグイン作者向けの図形オーサリングキット。canvas の公開 API だけで書かれている                                                              |
+| `@jiscribe/geometry`         | 幾何型と幾何計算（矩形、楕円、変換、交差判定）                                                                                                |
+| `@jiscribe/markdown`         | Markdown 図形が使う Markdown レンダリング                                                                                                     |
+| `@jiscribe/basic-validators` | 基本的な実行時バリデーター                                                                                                                    |
+| `@jiscribe/utility-types`    | 共有の TypeScript ユーティリティ型                                                                                                            |
+| `@jiscribe/doc-schema`       | 標準図形セットから生成した JSON Schema・AI 向けリファレンス・Claude Code スキル                                                               |
+| `@jiscribe/ai-tools`         | AI が呼べるキャンバスツールの宣言（トランスポート非依存）と、その適用                                                                         |
+| `@jiscribe/standard-shapes`  | 標準図形セットを全ホスト向けに 1 か所で束ねたもの（doc 面 / presentation 面の 2 エントリ）                                                    |
+| `@jiscribe/doc-tools`        | 標準図形セットに対する検証・計測・診断（Node 計測バックエンド込み）                                                                           |
+| `plugins/*`                  | 標準図形セットの実体 — flowchart、UML、ER、table、container、general、annotation、sticky、markdown、Lucide アイコン、AWS、Azure、Google Cloud |
+| `apps/canvas-examples`       | 統合サンプル（1 サンプル = 1 ファイル）                                                                                                       |
+| `apps/cli`                   | `jiscribe` コマンド。validate / diagnose / measure / render / preview                                                                         |
+| `apps/mcp`                   | MCP サーバー。stdio でツールを提供し、ローカルにキャンバスビューアを立てる                                                                    |
+| `apps/claude-plugin`         | Claude Code プラグイン。MCP サーバーと、自動生成の作図スキル                                                                                  |
+| `apps/vscode-extension`      | Jiscribe の VSCode 拡張                                                                                                                       |
 
 `plugins/` ディレクトリは意図的に*外部*として扱っている。これらのパッケージは
 `@jiscribe/canvas`・`@jiscribe/doc`・`@jiscribe/canvas-sdk` の公開 API しか使えず、
@@ -224,6 +224,13 @@ MIT ライセンスの対象外**である。Microsoft のアイコン利用条�
 教材・ドキュメントでの利用に限る。Entra の条件はさらにマーケティングでの利用を禁じる）に基づき、無改変・帰属表示付きで再配布している
 ものなので、改変は許されない。詳細は
 [`plugins/azure-shapes/LICENSE-ICONS.md`](./plugins/azure-shapes/LICENSE-ICONS.md)。
+
+Google Cloud 図形セット（`plugins/gcp-shapes`）は **Google Cloud product icons**
+の図を同梱している。これらは Google LLC の著作物で、**こちらも下記の MIT
+ライセンスの対象外**である。Google は図やテクニカルドキュメントのために公開して
+いるがライセンス文は付けておらず、その用途で無改変・帰属表示付きで再配布している
+ものなので、改変は許されず、マーケティング素材には使えない。詳細は
+[`plugins/gcp-shapes/LICENSE-ICONS.md`](./plugins/gcp-shapes/LICENSE-ICONS.md)。
 
 ## ライセンス
 

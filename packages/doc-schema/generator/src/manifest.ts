@@ -70,6 +70,9 @@ export const CANONICAL_TYPE_ORDER = [
 	// azure-shapes: one Azure Architecture Icon or Microsoft Entra ID (frames come
 	// from container)
 	"azureIcon",
+	// gcp-shapes: one Google Cloud product icon, a core product's or a
+	// category's (frames come from container)
+	"gcpIcon",
 	"polyline",
 	"polygon",
 	"group",

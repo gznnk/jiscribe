@@ -127,6 +127,20 @@
 			]
 		}
 	},
+	"gcpIcon": {
+		"icon": {
+			"description": "Which icon to draw, as a flat kebab-case name from Google's official Google Cloud product icons. Google draws its core products with icons of their own (\"compute-engine\", \"cloud-run\", \"gke\", \"cloud-storage\", \"cloud-sql\", \"cloud-spanner\", \"alloydb\", \"bigquery\", \"looker\", \"vertex-ai\", \"apigee\") and every other product with the icon of its category (\"networking\", \"data-analytics\", \"databases\", \"security-identity\", \"serverless-computing\", \"integration-services\", \"observability\"). Name the product you mean: a product without an icon of its own resolves to its category's icon (\"pubsub\" and \"dataflow\" draw \"data-analytics\", \"cloud-functions\" draws \"serverless-computing\", \"vpc\" and \"cloud-load-balancing\" draw \"networking\", \"iam\" draws \"security-identity\", \"firestore\" draws \"databases\"), and the short names people say resolve too (\"gce\", \"gcs\", \"spanner\", \"scc\", \"google-kubernetes-engine\"). Write the product's official name in `text`: it is what tells apart the products sharing one category icon. A name that resolves to nothing is rejected with the nearest candidates named, so a wrong guess costs one correction rather than a broken document. Do not invent a name from another icon set. Omitted = \"compute-engine\".",
+			"type": "string",
+			"default": "compute-engine",
+			"examples": [
+				"compute-engine",
+				"cloud-run",
+				"bigquery",
+				"networking",
+				"pubsub"
+			]
+		}
+	},
 	"awsGroup": {
 		"kind": {
 			"description": "Which boundary this frame is. The border color, the line style and the corner badge all follow from it, and nesting them the way AWS does (aws-cloud > region > vpc > public-subnet / private-subnet) is what makes the diagram read. Setting `stroke` or `strokeDashType` overrides what the kind would have chosen. Omitted = \"generic\", a frame tied to no AWS service.",

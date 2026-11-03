@@ -11,12 +11,13 @@
  *   @fontsource packages by the name esbuild kept in front of its hash
  * - the Lucide icon drawings generated into the shape plugin's source, whose
  *   version the generated file states in its header
- * - the AWS and the Azure Architecture Icons generated into their shape
- *   plugins' source (the Azure plugin's carrying Microsoft Entra ID from the
- *   Entra icon package too), each listed only when the source maps name its
- *   generated drawing module (the catalog of names alone ships no icon). They
- *   are not open source, so each section reproduces its plugin's
- *   LICENSE-ICONS.md instead of a package's license file
+ * - the AWS and the Azure Architecture Icons and the Google Cloud product
+ *   icons generated into their shape plugins' source (the Azure plugin's
+ *   carrying Microsoft Entra ID from the Entra icon package too), each listed
+ *   only when the source maps name its generated drawing module (the catalog
+ *   of names alone ships no icon). They are not open source, so each section
+ *   reproduces its plugin's LICENSE-ICONS.md instead of a package's license
+ *   file
  *
  * Run `pnpm --filter jiscribe generate:notices` after a build; `--check` fails
  * instead of writing, which is what CI runs.
@@ -150,6 +151,34 @@ const AZURE_ICON_LICENSE_PATH = join(
 	"LICENSE-ICONS.md",
 );
 
+/** The generated Google Cloud icon drawings, relative to the repository root. */
+const GCP_ICON_DRAWINGS_RELATIVE_PATH = [
+	"plugins",
+	"gcp-shapes",
+	"src",
+	"drawing",
+	"iconDrawings.generated.ts",
+];
+
+/** Where the Google Cloud release is stated, as the header of the generated icon catalog. */
+const GCP_ICON_CATALOG_PATH = join(
+	repoRoot,
+	"plugins",
+	"gcp-shapes",
+	"src",
+	"schema",
+	"icon",
+	"iconCatalog.generated.ts",
+);
+
+/** The conditions the Google Cloud icons are redistributed on, kept next to the data. */
+const GCP_ICON_LICENSE_PATH = join(
+	repoRoot,
+	"plugins",
+	"gcp-shapes",
+	"LICENSE-ICONS.md",
+);
+
 /**
  * Directory of one package inside the pnpm store.
  *
@@ -269,6 +298,17 @@ function shipsAzureIcons(inputs) {
 }
 
 /**
+ * Whether the Google Cloud icon drawings are compiled into the extension,
+ * decided the way {@link shipsAwsIcons} decides it.
+ *
+ * @param inputs - Source map inputs, from {@link sourceMapInputs}
+ */
+function shipsGcpIcons(inputs) {
+	const suffix = `/${GCP_ICON_DRAWINGS_RELATIVE_PATH.join("/")}`;
+	return inputs.some((source) => source.endsWith(suffix));
+}
+
+/**
  * The @fontsource packages that actually contributed a file to dist/fonts/.
  * esbuild keeps the original file name in front of its hash, and every
  * @fontsource file starts with its own package name.
@@ -349,6 +389,24 @@ function azureIconsReleases() {
 }
 
 /**
+ * The Google Cloud product icons' release, as the catalog's header states it
+ * within its first 400 characters: the month of Google's icon overview
+ * (`May 2026`), the zips carrying none.
+ */
+function gcpIconsRelease() {
+	const header = readFileSync(GCP_ICON_CATALOG_PATH, "utf8").slice(0, 400);
+	const hit = header.match(
+		/Google Cloud product icons \(([A-Z][a-z]+ \d{4})\)/,
+	);
+	if (!hit) {
+		throw new Error(
+			`${GCP_ICON_CATALOG_PATH} no longer states the Google Cloud icons release`,
+		);
+	}
+	return hit[1];
+}
+
+/**
  * An icon set's section: its plugin's LICENSE-ICONS.md reproduced whole, minus
  * its title, which the section heading replaces.
  *
@@ -407,6 +465,7 @@ function generate() {
 	bundled.set("lucide", lucideVersion());
 	const awsIcons = shipsAwsIcons(inputs);
 	const azureIcons = shipsAzureIcons(inputs);
+	const gcpIcons = shipsGcpIcons(inputs);
 
 	const fontPackages = bundledFontPackages();
 	// One version for all of them, so the heading can name it once. packageDir
@@ -447,6 +506,15 @@ function generate() {
 						body: iconTermsSection(AZURE_ICON_LICENSE_PATH),
 					}
 				: [],
+		)
+		.concat(
+			gcpIcons
+				? {
+						sortKey: "google cloud product icons",
+						heading: `Google Cloud product icons (release ${gcpIconsRelease()}) — no license published, not open source`,
+						body: iconTermsSection(GCP_ICON_LICENSE_PATH),
+					}
+				: [],
 		);
 
 	const listed = [...bundled]
@@ -475,6 +543,14 @@ function generate() {
 						line: `Microsoft Azure Architecture Icons ${azureIconsReleases().azure} and Microsoft Entra architecture icons ${azureIconsReleases().entra} (Microsoft terms, not open source)`,
 					}
 				: [],
+		)
+		.concat(
+			gcpIcons
+				? {
+						sortKey: "google cloud product icons",
+						line: `Google Cloud product icons ${gcpIconsRelease()} (no license published, not open source)`,
+					}
+				: [],
 		);
 
 	const byName = (a, b) =>
@@ -490,9 +566,9 @@ function generate() {
 		"assets — code compiled into the extension, the icon drawings generated into",
 		"it, and the font files shipped alongside it. Their license texts are",
 		"reproduced below. All of them are open source except the AWS Architecture",
-		"Icons, the Microsoft Azure Architecture Icons and the Microsoft Entra",
-		"architecture icons, whose sections state the terms they are redistributed",
-		"under.",
+		"Icons, the Microsoft Azure Architecture Icons, the Microsoft Entra",
+		"architecture icons and the Google Cloud product icons, whose sections",
+		"state the terms they are redistributed under.",
 		"",
 		"Package list:",
 		...listed.map((one) => `  - ${one.line}`),

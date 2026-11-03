@@ -147,6 +147,22 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   before writing. `@jiscribe/doc` exports `ARROW_SCALE_MIN`, `ARROW_SCALE_MAX`,
   `DEFAULT_ARROW_SCALE` and `ARROW_OUTLINE_THINNING_SCALE`; `CanvasMessages` gains `propertyPanelRowArrowScale`
   and `menuArrowScale`.
+- **Google Cloud architecture diagrams: `@jiscribe/plugin-gcp-shapes`.** The
+  new `gcpIcon` draws the 45 Google Cloud product icons (May 2026): the 19 core
+  products' own icons and the 26 category icons Google draws every other
+  product with, redistributed unmodified with attribution (Google publishes
+  them for diagrams and documentation with no license attached; the plugin's
+  `LICENSE-ICONS.md`). It is built the way `awsIcon` is — a labelled,
+  connectable node whose label hangs under the box, with no stroke or fill —
+  and `icon` takes a flat kebab-case name (`compute-engine`, `cloud-run`,
+  `networking`), the short names diagrams use (`gce`, `gcs`, `spanner`) and the
+  name of any product on Google's icon overview, which resolves to its
+  category's icon (`pubsub` → `data-analytics`, `vpc` → `networking`).
+  `gcpStencilCategory` lays out a palette of 42 icons labelled with Google's
+  official names, searches the whole set and browses it in 10 sections.
+  `@jiscribe/standard-shapes` now carries thirteen plugins, so every host
+  draws Google Cloud icons. There is no Google Cloud frame shape; the
+  container plugin's frames serve.
 
 ### Changed
 

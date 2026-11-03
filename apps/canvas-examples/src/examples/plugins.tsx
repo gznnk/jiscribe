@@ -38,6 +38,10 @@ import {
 	flowchartStencilCategory,
 } from "@jiscribe/plugin-flowchart-shapes";
 import {
+	gcpShapesPlugin,
+	gcpStencilCategory,
+} from "@jiscribe/plugin-gcp-shapes";
+import {
 	generalPlugin,
 	generalStencilCategory,
 } from "@jiscribe/plugin-general-shapes";
@@ -60,7 +64,7 @@ import { umlPlugin, umlStencilCategory } from "@jiscribe/plugin-uml-shapes";
 //   sticky     sticky
 //   markdown   markdown
 //   lucide     lucideIcon
-// Only rect / ellipse / polyline / polygon / text / connector are core. The aws, azure and er
+// Only rect / ellipse / polyline / polygon / text / connector are core. The aws, azure, gcp and er
 // plugins are registered alongside them; their shapes are reached through the shape
 // library below.
 const plugins = [
@@ -76,6 +80,7 @@ const plugins = [
 	lucideIconPlugin,
 	awsShapesPlugin,
 	azureShapesPlugin,
+	gcpShapesPlugin,
 ];
 
 // The same array has to reach BOTH sides, and neither side complains when it does not:
@@ -140,6 +145,7 @@ const stencilLibrarySections: StencilCategory[] = [
 	awsStencilCategory,
 	awsGroupStencilCategory,
 	azureStencilCategory,
+	gcpStencilCategory,
 ];
 
 const legendMarkdown = [
@@ -359,7 +365,7 @@ const buildPluginsDoc = (): CanvasDoc => {
 const pluginsDoc = buildPluginsDoc();
 
 /**
- * Assembling a canvas out of shape plugins: the twelve shipped plugins are registered at
+ * Assembling a canvas out of shape plugins: the thirteen shipped plugins are registered at
  * once, and their shapes are drawn, edited and validated exactly like the core ones. Open
  * the shape library (the switch at the toolbar's far right) to draw more of them.
  */

@@ -3,7 +3,7 @@ name: jiscribe
 description: Use when creating or editing a Jiscribe canvas diagram — a .jis / .jiscribe file, or a flowchart, architecture diagram, sticky-note board or chart the user wants drawn on a Jiscribe canvas.
 ---
 
-<!-- jiscribe guide 0.12.2+c738a42f -->
+<!-- jiscribe guide 0.12.2+55d526da -->
 
 # Drawing on a Jiscribe canvas
 
@@ -288,6 +288,7 @@ rather than a `rect` with a label on it.
 | `awsIcon`               | AWS service / resource icon (a labelled, connectable node)         |
 | `awsGroup`              | AWS boundary frame (VPC, subnet, region, account)                  |
 | `azureIcon`             | Azure service icon (a labelled, connectable node)                  |
+| `gcpIcon`               | Google Cloud product icon (a labelled, connectable node)           |
 | `polyline`              | open line                                                          |
 | `polygon`               | closed shape from points                                           |
 | `group`                 | container of child objects                                         |

@@ -17,6 +17,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   its `icon` (`virtual-machine`, or a short name such as `vm`, `aks` or
   `entra`). The icons are Microsoft's, shipped unmodified under Microsoft's icon terms
   (THIRD-PARTY-NOTICES.txt).
+- **Google Cloud product icons.** The shape library gains a **Google Cloud**
+  section: 42 of the 45 icons, each labelled with Google's official name when
+  placed, and **Show all ›** for all of them in 10 sections. Google draws its
+  core products with icons of their own and every other product with its
+  category's icon, so a `.jis` file names one with `gcpIcon` and its `icon` as
+  either (`compute-engine`, `networking`) or as any product's name, which draws
+  its category's icon (`pubsub`, `vpc`, `iam`). The icons are Google's, shipped
+  unmodified with attribution; Google publishes them with no license attached
+  (THIRD-PARTY-NOTICES.txt).
 
 ### Changed
 

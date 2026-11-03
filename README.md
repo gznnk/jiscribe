@@ -18,7 +18,7 @@ Most of what you need to draw is already in the box. The core carries eight
 primitive types (`rect` / `ellipse` / `text` / `polyline` / `polygon` / `group` /
 `connector` / `svg`), and the richer shape sets — flowchart, UML, ER diagrams,
 tables, sticky, markdown, container, annotation, general pictograms, Lucide
-icons, AWS and Azure architecture — ship as plugins. More sets are on the way.
+icons, AWS, Azure and Google Cloud architecture — ship as plugins. More sets are on the way.
 
 ## What you can make
 
@@ -155,27 +155,27 @@ that is the package to take.
 
 ## How it fits together
 
-| Package                      | What it is                                                                                                               |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `@jiscribe/canvas`           | The engine: rendering, gestures, commands, state                                                                         |
-| `@jiscribe/doc`              | The headless document layer: the `CanvasDoc` model, its parser, its editing ops and its `.jis.*` file I/O                |
-| `@jiscribe/canvas-sdk`       | Shape-authoring kit for plugin authors, written against the canvas public API                                            |
-| `@jiscribe/geometry`         | Geometry types and calculations (rects, ellipses, transforms, intersections)                                             |
-| `@jiscribe/markdown`         | Markdown rendering used by the markdown shape                                                                            |
-| `@jiscribe/basic-validators` | Primitive runtime validators                                                                                             |
-| `@jiscribe/utility-types`    | Shared TypeScript utility types                                                                                          |
-| `@jiscribe/doc-schema`       | Generated JSON Schema, AI reference and Claude Code skill for the shipped shape set                                      |
-| `@jiscribe/ai-tools`         | The canvas tool set an AI can call — declared free of any transport, and applied                                         |
-| `@jiscribe/ai-tools-sdk`     | The contract a plugin offers AI tools for its own shapes through; plugins take it from `@jiscribe/canvas-sdk/tools`      |
-| `@jiscribe/standard-shapes`  | The shipped shape set, bundled once for every host (doc + presentation entries)                                          |
-| `@jiscribe/doc-tools`        | Validate / measure / diagnose over the standard set (Node text measurer included)                                        |
-| `plugins/*`                  | The shipped shape sets — flowchart, UML, ER, table, container, general, annotation, sticky, markdown, Lucide, AWS, Azure |
-| `apps/canvas-examples`       | Integration examples (one example = one file)                                                                            |
-| `apps/cli`                   | The `jiscribe` command: validate / diagnose / measure / render / preview                                                 |
-| `apps/mcp`                   | MCP server: the tool set over stdio, with a local canvas viewer                                                          |
-| `apps/desktop`               | The MCP server as a desktop app (proof of concept): Streamable HTTP, the viewer in its own window                        |
-| `apps/claude-plugin`         | The Claude Code plugin: the MCP server and a generated drawing skill                                                     |
-| `apps/vscode-extension`      | The Jiscribe VSCode extension                                                                                            |
+| Package                      | What it is                                                                                                                             |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `@jiscribe/canvas`           | The engine: rendering, gestures, commands, state                                                                                       |
+| `@jiscribe/doc`              | The headless document layer: the `CanvasDoc` model, its parser, its editing ops and its `.jis.*` file I/O                              |
+| `@jiscribe/canvas-sdk`       | Shape-authoring kit for plugin authors, written against the canvas public API                                                          |
+| `@jiscribe/geometry`         | Geometry types and calculations (rects, ellipses, transforms, intersections)                                                           |
+| `@jiscribe/markdown`         | Markdown rendering used by the markdown shape                                                                                          |
+| `@jiscribe/basic-validators` | Primitive runtime validators                                                                                                           |
+| `@jiscribe/utility-types`    | Shared TypeScript utility types                                                                                                        |
+| `@jiscribe/doc-schema`       | Generated JSON Schema, AI reference and Claude Code skill for the shipped shape set                                                    |
+| `@jiscribe/ai-tools`         | The canvas tool set an AI can call — declared free of any transport, and applied                                                       |
+| `@jiscribe/ai-tools-sdk`     | The contract a plugin offers AI tools for its own shapes through; plugins take it from `@jiscribe/canvas-sdk/tools`                    |
+| `@jiscribe/standard-shapes`  | The shipped shape set, bundled once for every host (doc + presentation entries)                                                        |
+| `@jiscribe/doc-tools`        | Validate / measure / diagnose over the standard set (Node text measurer included)                                                      |
+| `plugins/*`                  | The shipped shape sets — flowchart, UML, ER, table, container, general, annotation, sticky, markdown, Lucide, AWS, Azure, Google Cloud |
+| `apps/canvas-examples`       | Integration examples (one example = one file)                                                                                          |
+| `apps/cli`                   | The `jiscribe` command: validate / diagnose / measure / render / preview                                                               |
+| `apps/mcp`                   | MCP server: the tool set over stdio, with a local canvas viewer                                                                        |
+| `apps/desktop`               | The MCP server as a desktop app (proof of concept): Streamable HTTP, the viewer in its own window                                      |
+| `apps/claude-plugin`         | The Claude Code plugin: the MCP server and a generated drawing skill                                                                   |
+| `apps/vscode-extension`      | The Jiscribe VSCode extension                                                                                                          |
 
 The `plugins/` directory is deliberately treated as _external_: those packages
 may only use the public API of `@jiscribe/canvas`, `@jiscribe/doc` and
@@ -236,6 +236,14 @@ icon terms, for architecture diagrams, training materials and documentation
 (the Entra terms add: not in marketing communications), redistributed
 unmodified with attribution, and must not be modified. See
 [`plugins/azure-shapes/LICENSE-ICONS.md`](./plugins/azure-shapes/LICENSE-ICONS.md).
+
+The Google Cloud shape set (`plugins/gcp-shapes`) ships the drawings of the
+**Google Cloud product icons**, Google LLC's work. **The MIT license below does
+not cover them either**: Google publishes them for diagrams and technical
+documentation with no license attached, and they are redistributed unmodified
+with attribution for that use, must not be modified, and are not for marketing
+material. See
+[`plugins/gcp-shapes/LICENSE-ICONS.md`](./plugins/gcp-shapes/LICENSE-ICONS.md).
 
 ## License
 

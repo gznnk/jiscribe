@@ -20,7 +20,7 @@ describe("the standard set", () => {
 			listObjectTypes(standardDocPlugins),
 		);
 		expect(listObjectTypes(standardPlugins)).toEqual(
-			expect.arrayContaining(["awsIcon", "awsGroup", "azureIcon"]),
+			expect.arrayContaining(["awsIcon", "awsGroup", "azureIcon", "gcpIcon"]),
 		);
 	});
 
@@ -28,7 +28,7 @@ describe("the standard set", () => {
 	// pins only six presets and the library is where the rest lives.
 	it("files the icon sets in the shape library", () => {
 		expect(standardStencilLibrarySections.map(({ id }) => id)).toEqual(
-			expect.arrayContaining(["aws", "aws-group", "azure"]),
+			expect.arrayContaining(["aws", "aws-group", "azure", "gcp"]),
 		);
 	});
 });

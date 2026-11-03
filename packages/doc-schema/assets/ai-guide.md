@@ -1,4 +1,4 @@
-<!-- jiscribe guide 0.12.2+c738a42f -->
+<!-- jiscribe guide 0.12.2+55d526da -->
 
 # Jiscribe AI Authoring Guide
 
@@ -282,6 +282,7 @@ rather than a `rect` with a label on it.
 | `awsIcon`               | AWS service / resource icon (a labelled, connectable node)         |
 | `awsGroup`              | AWS boundary frame (VPC, subnet, region, account)                  |
 | `azureIcon`             | Azure service icon (a labelled, connectable node)                  |
+| `gcpIcon`               | Google Cloud product icon (a labelled, connectable node)           |
 | `polyline`              | open line                                                          |
 | `polygon`               | closed shape from points                                           |
 | `group`                 | container of child objects                                         |
@@ -488,6 +489,7 @@ shape" here and below means every object type except `text` / `polyline` /
 | `awsIcon`               | `x`,`y`,`width`,`height`                                       |
 | `awsGroup`              | `x`,`y`,`width`,`height`                                       |
 | `azureIcon`             | `x`,`y`,`width`,`height`                                       |
+| `gcpIcon`               | `x`,`y`,`width`,`height`                                       |
 | `polyline`              | `points` (open line)                                           |
 | `polygon`               | `points` (auto-closed)                                         |
 | `group`                 | `children`                                                     |

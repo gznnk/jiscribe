@@ -1,7 +1,7 @@
 // 生成物。編集しないこと（pnpm generate:schema で再生成）。
 // 正本は engine/packages/doc-schema/parts/ にある。
 
-export const GENERATED_CANVAS_PROMPT = `<!-- jiscribe guide 0.12.2+c738a42f -->
+export const GENERATED_CANVAS_PROMPT = `<!-- jiscribe guide 0.12.2+55d526da -->
 
 # Drawing on a Jiscribe canvas
 
@@ -285,6 +285,7 @@ rather than a \`rect\` with a label on it.
 | \`awsIcon\`               | AWS service / resource icon (a labelled, connectable node)         |
 | \`awsGroup\`              | AWS boundary frame (VPC, subnet, region, account)                  |
 | \`azureIcon\`             | Azure service icon (a labelled, connectable node)                  |
+| \`gcpIcon\`               | Google Cloud product icon (a labelled, connectable node)           |
 | \`polyline\`              | open line                                                          |
 | \`polygon\`               | closed shape from points                                           |
 | \`group\`                 | container of child objects                                         |

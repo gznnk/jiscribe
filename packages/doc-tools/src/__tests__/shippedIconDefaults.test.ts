@@ -22,6 +22,7 @@ const schema: {
 describe.each([
 	{ type: "awsIcon", def: "AwsIconDoc" },
 	{ type: "azureIcon", def: "AzureIconDoc" },
+	{ type: "gcpIcon", def: "GcpIconDoc" },
 ])("the published schema's $type", ({ type, def }) => {
 	const docDefault = standardObjectDocDefinitions.get(type)?.defaults?.icon;
 	const icon = schema.$defs[def]?.properties?.icon;
