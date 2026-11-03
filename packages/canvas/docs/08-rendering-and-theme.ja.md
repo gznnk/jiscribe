@@ -133,11 +133,13 @@ foreignObject に `display="none"` を付ける。テキストオーバーレイ
 
 コネクターラベルの背景（`fill`）は例外で、`resolveAutoColor` を通さず
 `resolveLabelFill`（`rendering/objects/connector/ConnectorLabel/utils/resolveLabelFill.ts`）が auto と
-未指定をキャンバス面の色 `theme.canvasBg` へ解決する（背後の線を抜くため）。これは文書の `background` が
-不透明ならその色、そうでなければテーマのキャンバス色になる。`background` が不透明色なら Canvas ルート
-（`controllers/Canvas.tsx`）が `--jiscribe-canvas-bg` をその色で上書きするので、`theme.canvasBg` を読むもの
-（ラベル・そのインライン編集・ラベル背景のスウォッチ・画像エクスポートが焼き込むスタイル）がページの色に
-揃う。不透明とは、ブラウザが alpha 1 の `rgb()` 色へ解決できること。それ以外はテーマの値のままにする。
+未指定を文書の面の色へ解決する（背後の線を抜くため）。これは文書の `background` が不透明ならその色、
+そうでなければテーマのキャンバス色 `theme.canvasBg` で、こちらは CSS 変数のままなのでテーマに追従する。
+`<Canvas>` が `state.background` からこれを求め（`rendering/objects/utils/resolveDocumentSurface.ts`）、
+`DocumentSurfaceContext`（`rendering/objects/DocumentSurfaceContext.ts`）で配る。読むのはラベル・その
+インライン編集・ラベル背景の 2 つのスウォッチで、画像エクスポートはラベルの computed style を焼き込むので
+これにも揃う。
+不透明とは、ブラウザが alpha 1 の `rgb()` 色へ解決できること。それ以外はテーマの値のままにする。
 透けて見えるのはそちらだから。透ける `background`（`transparent`・どの書き方でも alpha 1 未満）、要素ごとに
 解決されるもの（`var()`・`currentColor`）、ブラウザが別の色空間のまま保つもの（`oklch()`・`color-mix()`）、
 ブラウザが色と解釈しない値が当たる（`foundation/color/isOpaqueCssColor.ts`）。

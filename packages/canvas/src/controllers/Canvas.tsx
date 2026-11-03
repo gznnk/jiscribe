@@ -58,15 +58,11 @@ import { useTextEditSession } from "./hooks/useTextEditSession";
 import { useVisibleObjectIds } from "./hooks/useVisibleObjectIds";
 import { createCanvasRegistries, defaultCanvasRegistries } from "./registries";
 import type { CanvasConfig } from "./registries";
-import { isOpaqueCssColor } from "../foundation/color/isOpaqueCssColor";
 import { useLatestRef } from "../foundation/hooks/useLatestRef";
 import { resolveCanvasMessages } from "../foundation/i18n/CanvasMessages";
 import type { CanvasMessages } from "../foundation/i18n/CanvasMessagesTypes";
 import type { CanvasTheme } from "../foundation/theme/CanvasTheme";
-import {
-	THEME_TOKEN_CSS_VARS,
-	buildThemeCssVars,
-} from "../foundation/theme/themeCssVars";
+import { buildThemeCssVars } from "../foundation/theme/themeCssVars";
 import { darkCanvasTheme } from "../foundation/theme/themePresets";
 import { CanvasView } from "../rendering/CanvasView";
 import { CanvasControlLayers } from "./ui/controls/CanvasControlLayers";
@@ -104,6 +100,7 @@ import {
 	isPropertyPanelShown,
 	isStencilLibraryPanelShown,
 } from "./utils/sidebarsState";
+import { resolveDocumentSurface } from "../rendering/objects/utils/resolveDocumentSurface";
 
 type CanvasProps = {
 	// ── Document ──
@@ -418,19 +415,9 @@ const CanvasComponent = ({
 		initialConfig?.sidebars,
 	);
 
-	// An opaque doc background stands in for the theme's canvas color, so what
-	// reads `theme.canvasBg` (the default connector label knockout, export's baked
-	// styles) matches the page. A see-through one keeps the theme color, which is
-	// what shows through it.
-	const rootStyle = useMemo(
-		() =>
-			state.background !== undefined && isOpaqueCssColor(state.background)
-				? {
-						...themeCssVars,
-						[THEME_TOKEN_CSS_VARS.canvasBg]: state.background,
-					}
-				: themeCssVars,
-		[themeCssVars, state.background],
+	const documentSurface = useMemo(
+		() => resolveDocumentSurface(state.background),
+		[state.background],
 	);
 
 	// Boxes derived from their content are re-measured through the reducer, the
@@ -721,13 +708,14 @@ const CanvasComponent = ({
 			fontsNonce={fontsNonce}
 			zoomStore={canvasZoomStore}
 			lookupResolvedImage={lookupResolvedImage}
+			documentSurface={documentSurface}
 			viewportElementRef={canvasRef}
 		>
 			<CanvasRoot
 				ref={rootRef}
 				gestureHandling={gestureHandling}
 				tabIndex={0}
-				style={rootStyle}
+				style={themeCssVars}
 				onContextMenu={handleContextMenu}
 				{...pointerHandlers}
 			>

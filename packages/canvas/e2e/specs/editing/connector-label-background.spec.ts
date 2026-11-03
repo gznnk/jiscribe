@@ -16,9 +16,12 @@ import { selectors } from "../../support/selectors";
  *   not parse as a color leaves the theme color in place
  * - A label with a `fill` of its own keeps it
  * - The inline label editor draws its box in the same color as the label
+ * - Both label-background swatches (ObjectMenu and properties sidebar) show it
+ * - The theme's `--jiscribe-canvas-bg` stays the theme's under it
  */
 
 /** The harness mounts darkCanvasTheme, whose canvasBg is #1e1e1e. */
+const THEME_CANVAS_BG_TOKEN = "#1e1e1e";
 const THEME_CANVAS_BG = "rgb(30, 30, 30)";
 
 /** A document background far from the theme color, as the sidebar writes it. */
@@ -155,7 +158,7 @@ test.describe("connector label background follows the document background", () =
 		await canvas.page.keyboard.press("Control+z");
 		await expect(
 			defaultLabelBox,
-			"undo drops the background and with it the override",
+			"undo drops the background, and the label goes back to the theme color",
 		).toHaveCSS("background-color", THEME_CANVAS_BG);
 
 		await pickDocBackground(canvas, DOC_BACKGROUND_HEX);
@@ -163,7 +166,7 @@ test.describe("connector label background follows the document background", () =
 		await pickDocBackground(canvas, "auto");
 		await expect(
 			defaultLabelBox,
-			"Auto drops the background and with it the override",
+			"Auto drops the background, and the label goes back to the theme color",
 		).toHaveCSS("background-color", THEME_CANVAS_BG);
 	});
 
@@ -210,5 +213,52 @@ test.describe("connector label background follows the document background", () =
 			"background-color",
 			DOC_BACKGROUND,
 		);
+	});
+
+	test("shows the document background on both label-background swatches", async ({
+		canvas,
+	}) => {
+		await loadDoc(canvas, buildDocText(DOC_BACKGROUND_HEX));
+		await labelBoxOf(canvas, DEFAULT_LABEL_CONNECTOR_ID).click();
+
+		await expect(
+			canvas.page
+				.locator(
+					`${selectors.objectMenu} ${selectors.objectMenuToggle("label-bg-color")}`,
+				)
+				.locator("circle"),
+			"the ObjectMenu swatch",
+		).toHaveCSS("fill", DOC_BACKGROUND);
+
+		// The open sidebar takes the ObjectMenu's place; the selection stays.
+		await canvas.openPropertyPanel();
+		await expect(
+			canvas.page
+				.locator(
+					`${selectors.propertyPanel} [aria-label="Label Background Color"]`,
+				)
+				.locator("span")
+				.first(),
+			"the properties sidebar swatch",
+		).toHaveCSS("background-color", DOC_BACKGROUND);
+	});
+
+	test("leaves the theme's --jiscribe-canvas-bg alone under an opaque background", async ({
+		canvas,
+	}) => {
+		await loadDoc(canvas, buildDocText(DOC_BACKGROUND_HEX));
+		await expect(labelBoxOf(canvas, DEFAULT_LABEL_CONNECTOR_ID)).toHaveCSS(
+			"background-color",
+			DOC_BACKGROUND,
+		);
+
+		const canvasBgToken = await canvas.page
+			.locator(selectors.canvasArea)
+			.evaluate((element) =>
+				getComputedStyle(element)
+					.getPropertyValue("--jiscribe-canvas-bg")
+					.trim(),
+			);
+		expect(canvasBgToken).toBe(THEME_CANVAS_BG_TOKEN);
 	});
 });

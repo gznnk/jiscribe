@@ -5,6 +5,7 @@ import { memo, useMemo } from "react";
 
 import { LabelBox } from "./ConnectorLabelStyled";
 import { resolveLabelFill } from "./utils/resolveLabelFill";
+import { useDocumentSurface } from "../../DocumentSurfaceContext";
 import { useFontsLoadedNonceContext } from "../../FontsLoadedNonceContext";
 import { useIsTextLegible } from "../../useIsTextLegible";
 import { resolveAutoColor } from "../../utils/resolveAutoColor";
@@ -49,6 +50,7 @@ const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
 	// whatever face was loaded at the time, so a later arrival has to re-run this
 	// even though nothing the callback reads has changed.
 	const fontsLoadedNonce = useFontsLoadedNonceContext();
+	const documentSurface = useDocumentSurface();
 	// Memoized so dragging the connector (anchor changes every frame, text does not)
 	// skips the per-line measureText.
 	const { width, height } = useMemo(
@@ -73,7 +75,7 @@ const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
 
 	// Resolve auto (theme-following) to the theme foreground (ink) (issue #38).
 	const color = resolveAutoColor(fontColor, "ink");
-	const background = resolveLabelFill(fill);
+	const background = resolveLabelFill(fill, documentSurface);
 	const borderColor = resolveAutoColor(stroke, "ink");
 
 	// Lay out horizontally centered on the anchor (no rotation).

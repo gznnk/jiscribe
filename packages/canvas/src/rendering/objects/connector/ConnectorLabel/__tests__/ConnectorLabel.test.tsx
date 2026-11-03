@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createCanvasZoomStore } from "../../../../../controllers/hooks/utils/createCanvasZoomStore";
 import { CanvasZoomStoreContext } from "../../../CanvasZoomStoreContext";
+import { DocumentSurfaceContext } from "../../../DocumentSurfaceContext";
 import { FontsLoadedNonceContext } from "../../../FontsLoadedNonceContext";
 import type * as ConnectorLabelLayoutModule from "../../geometry/label/connectorLabelLayout";
 import { ConnectorLabel } from "../ConnectorLabel";
@@ -90,6 +91,39 @@ describe("ConnectorLabel", () => {
 
 		expect(boxCalls.count).toBe(measuredBefore);
 		label.unmount();
+	});
+});
+
+describe("ConnectorLabel document surface", () => {
+	it("knocks out in the surface the context carries, through its memo", () => {
+		const container = document.createElement("div");
+		const root = createRoot(container);
+		const renderWithSurface = (documentSurface: string): void => {
+			act(() =>
+				root.render(
+					<DocumentSurfaceContext value={documentSurface}>
+						<svg>
+							<ConnectorLabel
+								id="connector-1"
+								anchor={LABEL_ANCHOR}
+								text="label"
+							/>
+						</svg>
+					</DocumentSurfaceContext>,
+				),
+			);
+		};
+		const readBoxBackground = (): string | undefined =>
+			container.querySelector<HTMLElement>("foreignObject > div")?.style
+				.background;
+
+		renderWithSurface("rgb(11, 18, 32)");
+		expect(readBoxBackground()).toBe("rgb(11, 18, 32)");
+
+		renderWithSurface("rgb(250, 240, 230)");
+		expect(readBoxBackground()).toBe("rgb(250, 240, 230)");
+
+		act(() => root.unmount());
 	});
 });
 

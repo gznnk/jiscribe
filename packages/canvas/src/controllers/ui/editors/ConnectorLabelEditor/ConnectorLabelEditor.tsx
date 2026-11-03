@@ -9,6 +9,7 @@ import {
 } from "./ConnectorLabelEditorStyled";
 import { resolveLabelFill } from "../../../../rendering/objects/connector/ConnectorLabel";
 import { calcConnectorLabelBox } from "../../../../rendering/objects/connector/geometry/label/connectorLabelLayout";
+import { useDocumentSurface } from "../../../../rendering/objects/DocumentSurfaceContext";
 import { resolveAutoColor } from "../../../../rendering/objects/utils/resolveAutoColor";
 import { isCommitTextEditShortcut } from "../../../commands/text/CommitTextEditCommand";
 import { useCaretReporter } from "../hooks/useCaretReporter";
@@ -76,9 +77,10 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 	onCommit,
 	onCaretMove,
 }) => {
+	const documentSurface = useDocumentSurface();
 	// Resolve auto (theme-following) to the theme foreground (ink). Use the same resolver as the rendering side to match colors.
 	const color = resolveAutoColor(fontColor, "ink");
-	const background = resolveLabelFill(fill);
+	const background = resolveLabelFill(fill, documentSurface);
 	const borderColor = resolveAutoColor(stroke, "ink");
 
 	// Width is the measured text's, so the box grows sideways as it is typed and
