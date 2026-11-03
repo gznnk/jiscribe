@@ -100,6 +100,7 @@ import {
 	isPropertyPanelShown,
 	isStencilLibraryPanelShown,
 } from "./utils/sidebarsState";
+import { resolveDocumentSurface } from "../rendering/objects/utils/resolveDocumentSurface";
 
 type CanvasProps = {
 	// ── Document ──
@@ -414,6 +415,11 @@ const CanvasComponent = ({
 		initialConfig?.sidebars,
 	);
 
+	const documentSurface = useMemo(
+		() => resolveDocumentSurface(state.background),
+		[state.background],
+	);
+
 	// Boxes derived from their content are re-measured through the reducer, the
 	// one pass the slots cannot ask for; the counter covers the sites that measure
 	// while they render instead (see useDocFonts).
@@ -702,6 +708,7 @@ const CanvasComponent = ({
 			fontsNonce={fontsNonce}
 			zoomStore={canvasZoomStore}
 			lookupResolvedImage={lookupResolvedImage}
+			documentSurface={documentSurface}
 			viewportElementRef={canvasRef}
 		>
 			<CanvasRoot

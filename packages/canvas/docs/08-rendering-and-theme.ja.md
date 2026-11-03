@@ -133,7 +133,16 @@ foreignObject に `display="none"` を付ける。テキストオーバーレイ
 
 コネクターラベルの背景（`fill`）は例外で、`resolveAutoColor` を通さず
 `resolveLabelFill`（`rendering/objects/connector/ConnectorLabel/utils/resolveLabelFill.ts`）が auto と
-未指定をキャンバス面の色 `theme.canvasBg` へ解決する（背後の線を抜くため）。
+未指定を文書の面の色へ解決する（背後の線を抜くため）。これは文書の `background` が不透明ならその色、
+そうでなければテーマのキャンバス色 `theme.canvasBg` で、こちらは CSS 変数のままなのでテーマに追従する。
+`<Canvas>` が `state.background` からこれを求め（`rendering/objects/utils/resolveDocumentSurface.ts`）、
+`DocumentSurfaceContext`（`rendering/objects/DocumentSurfaceContext.ts`）で配る。読むのはラベル・その
+インライン編集・ラベル背景の 2 つのスウォッチで、画像エクスポートはラベルの computed style を焼き込むので
+これにも揃う。
+不透明とは、ブラウザが alpha 1 の `rgb()` 色へ解決できること。それ以外はテーマの値のままにする。
+透けて見えるのはそちらだから。透ける `background`（`transparent`・どの書き方でも alpha 1 未満）、要素ごとに
+解決されるもの（`var()`・`currentColor`）、ブラウザが別の色空間のまま保つもの（`oklch()`・`color-mix()`）、
+ブラウザが色と解釈しない値が当たる（`foundation/color/isOpaqueCssColor.ts`）。
 
 **単一ルール**: 「auto はロールのテーマトークンへ解決し、色は CSS で当てる」。`var(--jiscribe-*)` は
 SVG presentation 属性では解決されないため、stroke / fill / arrow の color も含め**色は属性では当てない**。

@@ -3,6 +3,7 @@ import { memo, useRef } from "react";
 
 import { useCanvasMessages } from "../../../../../../foundation/i18n/CanvasMessagesContext";
 import { resolveLabelFill } from "../../../../../../rendering/objects/connector/ConnectorLabel";
+import { useDocumentSurface } from "../../../../../../rendering/objects/DocumentSurfaceContext";
 import { toggleAction } from "../../../../../gestures/handlers/menu/utils/menuActions";
 import { ColorPreviewIcon } from "../../../../icons/ColorPreviewIcon";
 import { useConnectorLabelStyle } from "../../../hooks/useConnectorLabelStyle";
@@ -19,7 +20,7 @@ const SECTION_ID = "label-bg-color";
 
 /**
  * Label background color menu (same layout as the shape's Background Color).
- * The value is the nested `label.fill`. Omitted/auto resolves to the canvas background color (knockout).
+ * The value is the nested `label.fill`. Omitted/auto shows the page's color, as resolveLabelFill resolves it (knockout).
  */
 const LabelBackgroundColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	objects,
@@ -28,6 +29,7 @@ const LabelBackgroundColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	onStyleIntent,
 }) => {
 	const messages = useCanvasMessages();
+	const documentSurface = useDocumentSurface();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = openSectionId === SECTION_ID;
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
@@ -54,7 +56,7 @@ const LabelBackgroundColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 				title={messages.menuLabelBackgroundColor}
 			>
 				<ColorPreviewIcon
-					color={resolveLabelFill(fill === AUTO_COLOR ? undefined : fill)}
+					color={resolveLabelFill(fill, documentSurface)}
 					title={messages.menuLabelBackgroundColor}
 				/>
 			</ObjectMenuButton>

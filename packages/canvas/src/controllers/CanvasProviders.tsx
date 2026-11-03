@@ -10,6 +10,7 @@ import type { CanvasTheme } from "../foundation/theme/CanvasTheme";
 import { CanvasThemeContext } from "../foundation/theme/CanvasThemeContext";
 import type { CanvasZoomStore } from "../rendering/objects/CanvasZoomStoreContext";
 import { CanvasZoomStoreContext } from "../rendering/objects/CanvasZoomStoreContext";
+import { DocumentSurfaceContext } from "../rendering/objects/DocumentSurfaceContext";
 import { FontsLoadedNonceContext } from "../rendering/objects/FontsLoadedNonceContext";
 import { RenderingRegistriesProvider } from "../rendering/objects/registry/RenderingRegistriesProvider";
 import type { ResolvedImageLookup } from "../rendering/objects/ResolvedImagesContext";
@@ -26,6 +27,8 @@ type CanvasProvidersProps = {
 	zoomStore: CanvasZoomStore;
 	/** The lookup from `useDocImages`, handed to the image shapes. */
 	lookupResolvedImage: ResolvedImageLookup;
+	/** The color from `resolveDocumentSurface`, handed to the default connector label knockout. */
+	documentSurface: string;
 	viewportElementRef: RefObject<HTMLDivElement | null>;
 	children: ReactNode;
 };
@@ -33,7 +36,7 @@ type CanvasProvidersProps = {
 /**
  * Aggregates the context providers a live `<Canvas>` needs (theme, locale,
  * messages, the registry bundle, its rendering registries, the
- * fonts-loaded counter, the zoom store, the resolved images, and the viewport element ref) into one node, so
+ * fonts-loaded counter, the zoom store, the resolved images, the document surface, and the viewport element ref) into one node, so
  * Canvas.tsx renders its tree without the deep provider nesting.
  */
 export function CanvasProviders({
@@ -44,6 +47,7 @@ export function CanvasProviders({
 	fontsNonce,
 	zoomStore,
 	lookupResolvedImage,
+	documentSurface,
 	viewportElementRef,
 	children,
 }: CanvasProvidersProps) {
@@ -67,9 +71,13 @@ export function CanvasProviders({
 							<FontsLoadedNonceContext value={fontsNonce}>
 								<CanvasZoomStoreContext value={zoomStore}>
 									<ResolvedImagesContext value={lookupResolvedImage}>
-										<CanvasViewportElementRefContext value={viewportElementRef}>
-											{children}
-										</CanvasViewportElementRefContext>
+										<DocumentSurfaceContext value={documentSurface}>
+											<CanvasViewportElementRefContext
+												value={viewportElementRef}
+											>
+												{children}
+											</CanvasViewportElementRefContext>
+										</DocumentSurfaceContext>
 									</ResolvedImagesContext>
 								</CanvasZoomStoreContext>
 							</FontsLoadedNonceContext>

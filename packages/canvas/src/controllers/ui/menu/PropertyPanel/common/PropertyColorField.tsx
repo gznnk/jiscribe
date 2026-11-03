@@ -22,7 +22,8 @@ type PropertyColorFieldProps = {
 	value: string;
 	/**
 	 * The colors of a selection that disagrees, as the objects state them
-	 * (`auto` included; resolved here by `role`) — a SelectionValue's `values`
+	 * (`auto` included; resolved here to `autoSwatchColor` when given, else by
+	 * `role`) — a SelectionValue's `values`
 	 * (selectionMixedValues). The swatch is then split between the first three
 	 * (MAX_MIXED_COLOR_SEGMENTS) and the word for mixed stands in for `value`,
 	 * which is only one of them; picking a swatch from the panel writes to the
@@ -33,6 +34,13 @@ type PropertyColorFieldProps = {
 	property: string;
 	/** Which theme color `auto` follows: the shape's ink, its face, or the canvas surface. */
 	role: AutoColorRole;
+	/**
+	 * The color the swatch shows for an `auto` value, a resolved CSS color in
+	 * place of the theme token `role` gives; applies to every segment of a mixed
+	 * swatch too. Omitted = `role` decides. `value` stays the stated color either
+	 * way, so the word "Auto" and the picker's current color are unaffected.
+	 */
+	autoSwatchColor?: string;
 	/**
 	 * Whether the picker writes through `onStyleIntent` instead of the `set:`
 	 * gesture (see ObjectMenuColorPickerGrid). Set by the row whose target is the
@@ -69,6 +77,7 @@ const PropertyColorFieldComponent: React.FC<PropertyColorFieldProps> = ({
 	mixedValues,
 	property,
 	role,
+	autoSwatchColor,
 	writesThroughCallback = false,
 	currentColorIsShared = false,
 	title,
@@ -77,6 +86,10 @@ const PropertyColorFieldComponent: React.FC<PropertyColorFieldProps> = ({
 	const messages = useCanvasMessages();
 	const isAuto = isAutoColor(value);
 	const isMixed = mixedValues !== undefined;
+	const resolveSwatchColor = (color: string): string =>
+		autoSwatchColor !== undefined && isAutoColor(color)
+			? autoSwatchColor
+			: resolveAutoColor(color, role);
 	const singleColorLabel = isAuto ? (
 		<PropertyColorAutoLabel>{messages.colorPickerAuto}</PropertyColorAutoLabel>
 	) : (
@@ -93,13 +106,13 @@ const PropertyColorFieldComponent: React.FC<PropertyColorFieldProps> = ({
 							{calcMixedColorSegments(mixedValues).map((segment) => (
 								<PropertyColorMixedSwatchSegment
 									key={segment.start}
-									swatchColor={resolveAutoColor(segment.color, role)}
+									swatchColor={resolveSwatchColor(segment.color)}
 									widthFraction={segment.end - segment.start}
 								/>
 							))}
 						</PropertyColorMixedSwatch>
 					) : (
-						<PropertyColorSwatch swatchColor={resolveAutoColor(value, role)} />
+						<PropertyColorSwatch swatchColor={resolveSwatchColor(value)} />
 					)}
 					<PropertyDropdownTriggerLabel>
 						{isMixed ? (
