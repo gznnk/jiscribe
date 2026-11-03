@@ -30,7 +30,7 @@ export type ObjectFeatures = {
 	textVerticalBasis?: boolean;
 	/** Corner radius styling (for rect) */
 	radius?: boolean;
-	/** Arrowhead ends (startArrow / endArrow) */
+	/** Arrowhead ends (startArrow / endArrow) and their size (arrowScale) */
 	arrow?: boolean;
 	/** Whether this object can be used as a connector endpoint target */
 	connectable?: boolean;

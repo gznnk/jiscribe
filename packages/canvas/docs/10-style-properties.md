@@ -119,7 +119,7 @@ is built, and nothing reads them again afterwards:
 | `features.fill`              | `fill`, `fillOpacity`                                      |
 | `features.stroke`            | `stroke`, `strokeWidth`, `strokeDashType`, `strokeOpacity` |
 | `features.radius`            | `cornerRadius` (stored in `rx`)                            |
-| `features.arrow`             | `startArrow`, `endArrow`                                   |
+| `features.arrow`             | `startArrow`, `endArrow`, `arrowScale`                     |
 | `features.transform`         | `lockAspectRatio`                                          |
 | `features.text`              | `textStyleTable(features.text)`                            |
 | `features.textVerticalBasis` | `textVerticalBasis`                                        |

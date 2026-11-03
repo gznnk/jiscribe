@@ -198,6 +198,8 @@ export type AiDocOp =
 			targetAnchor?: AnchorHandleId;
 			startArrow?: AiArrowType;
 			endArrow?: AiArrowType;
+			/** Factor on both arrowheads' size, 0.2..4; omitted draws them at 1 */
+			arrowScale?: number;
 			label?: string;
 			/** 0 at the source to 1 at the target. Needs label text */
 			labelPosition?: number;

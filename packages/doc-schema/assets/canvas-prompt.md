@@ -1,4 +1,4 @@
-<!-- jiscribe guide 0.12.2+144194ae -->
+<!-- jiscribe guide 0.12.2+c738a42f -->
 
 # Drawing on a Jiscribe canvas
 
@@ -26,6 +26,7 @@ What follows is what the canvas can hold, and how to draw on it well.
 - Two further UML ends are circles rather than heads: `"Circle"` (filled) is an owned association end, and is also the endpoint of a lost / found message in a sequence diagram; `"HollowCircle"` (unfilled) is a provided interface — the lollipop
 - `"ConcaveTriangle"` is a filled triangle with a notch cut into the middle of its base (a swallowtail). It belongs to no notation — reach for it only when a plain arrow needs a silhouette of its own
 - ER cardinality (crow's foot notation) goes on the end nearest the entity it describes: `"CrowFootMany"` (many) / `"CrowFootOneMany"` (`1..*`) / `"CrowFootZeroMany"` (`0..*`) / `"CrowFootOne"` (`1..1`) / `"CrowFootZeroOne"` (`0..1`). A one-to-many relationship therefore sets **both** ends, e.g. `"startArrow": "CrowFootOne"` with `"endArrow": "CrowFootZeroMany"`
+- Arrowhead size: each head is drawn `9 × strokeWidth × arrowScale` px, so `arrowScale` (on polyline and connector, shared by both ends) is the multiplier on the size the line width alone gives — `0.2` to `4`, `1` when omitted. `1.5` makes the heads clearly larger, `0.6` keeps them modest on a thick line, and ER cardinality marks read well at `1.3` to `1.5`. The heads' outline stays at `strokeWidth` down to `arrowScale` `0.5` and thins with the head below it
 
 ## Styling part of a text
 

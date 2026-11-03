@@ -136,9 +136,27 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   `standardStencilLibrarySections` include it, so every host — the editors, the
   VSCode extension, the MCP viewer, the CLI — draws Azure icons. There is no
   Azure frame shape; the container plugin's frames serve.
+- **An arrowhead's size can be set apart from the line width.** Polyline and
+  connector take `arrowScale` (0.2 to 4, omitted = 1, both ends alike), and each
+  head is drawn `9 × strokeWidth × arrowScale` px with its outline kept at the
+  stroke width down to 0.5 and thinning with the head below it; the line still
+  stops at the scaled head's base. The property panel's Arrows section gains a
+  size row in percent (20–400%), `set_style`,
+  `connect` / `connect_many` and `update_connector` / `update_connectors` take
+  it, and `docOps.connect` / `updateConnector` refuse a value outside the range
+  before writing. `@jiscribe/doc` exports `ARROW_SCALE_MIN`, `ARROW_SCALE_MAX`,
+  `DEFAULT_ARROW_SCALE` and `ARROW_OUTLINE_THINNING_SCALE`; `CanvasMessages` gains `propertyPanelRowArrowScale`
+  and `menuArrowScale`.
 
 ### Changed
 
+- **A line's drawn extent takes its arrowheads in.** Zoom-to-fit, the export
+  viewBox, viewport culling, zoom-to-selection, the object menu's placement and
+  `measure.visualBounds` (with the AI's `measure_visual_bounds`) now count each
+  head as a square of its reach around the tip, so a large head is no longer
+  cropped from an exported image. Exports and fits of a drawing whose lines end
+  in heads come out slightly larger than before. The selection frame, hit test,
+  snapping and group bounds still use the line alone.
 - **A sticky or note whose height follows its text no longer leaves extra
   room above and below it.** Both hold top-left prose, where the 0.75em every
   other shape keeps opened the top alone while the text sat 6px off the left

@@ -8,6 +8,7 @@ import {
 } from "./fieldValidators";
 import type { SemanticDiagnostic } from "../../types/SemanticDiagnostic";
 import type { ArrowStyleDoc } from "../base/ArrowStyleDoc";
+import { ARROW_SCALE_MAX, ARROW_SCALE_MIN } from "../base/ArrowStyleDoc";
 import type { FillStyleDoc } from "../base/FillStyleDoc";
 import type { RadiusStyleDoc } from "../base/RadiusStyleDoc";
 import { CORNER_RADIUS_MIN } from "../base/RadiusStyleDoc";
@@ -43,6 +44,7 @@ const radiusStyleValidators = {
 const arrowStyleValidators = {
 	startArrow: enumValidator(isArrowType, "must be a valid ArrowType"),
 	endArrow: enumValidator(isArrowType, "must be a valid ArrowType"),
+	arrowScale: numberRangeValidator(ARROW_SCALE_MIN, ARROW_SCALE_MAX),
 } as const satisfies Record<keyof ArrowStyleDoc, DocFieldValidator>;
 
 /** Validate optional stroke style fields: `stroke` (safe CSS color), `strokeWidth` (≥ 0), `strokeDashType`. */
@@ -69,7 +71,7 @@ export function validateRadiusStyleFields(
 	return validateFields(o, path, radiusStyleValidators);
 }
 
-/** Validate the optional arrowhead fields as valid ArrowType values. */
+/** Validate the optional arrowhead fields: the ends as valid ArrowType values, `arrowScale` within its range. */
 export function validateArrowFields(
 	o: Record<string, unknown>,
 	path: string,

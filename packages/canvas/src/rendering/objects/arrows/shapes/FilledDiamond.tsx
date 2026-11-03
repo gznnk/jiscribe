@@ -5,7 +5,7 @@ import { memo } from "react";
 import { ArrowPolygon } from "./ArrowStyled";
 import { createSvgTransform } from "../../utils/createSvgTransform";
 import { ARROW_SIZE } from "../ArrowConstants";
-import type { ArrowShapeProps } from "../ArrowTypes";
+import type { ArrowExtent, ArrowShapeProps } from "../ArrowTypes";
 
 /**
  * Inset (in local units) for terminating the line at this arrow's base.
@@ -14,6 +14,12 @@ import type { ArrowShapeProps } from "../ArrowTypes";
  * center where it is hidden by the fill.
  */
 export const FILLED_DIAMOND_INSET = ARROW_SIZE / 2;
+
+/** How far this head runs from its tip (local units), for the drawn extent (calcArrowReach). */
+export const FILLED_DIAMOND_EXTENT: ArrowExtent = {
+	length: ARROW_SIZE,
+	halfWidth: ARROW_SIZE / 2,
+};
 
 /**
  * FilledDiamond arrow shape component.

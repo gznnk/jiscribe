@@ -10,6 +10,7 @@ import { outlinedPlugin } from "../../__tests__/support/outlinedPlugin";
 import { createCanvasRegistries } from "../../registries/createCanvasRegistries";
 import {
 	calcConnectorBoundingBox,
+	calcConnectorPathBoundingBox,
 	collectConnectorPoints,
 } from "../calcConnectorBoundingBox";
 
@@ -216,6 +217,107 @@ describe("calcConnectorBoundingBox", () => {
 		});
 
 		expect(calcConnectorBoundingBox(connector, {})).toBeNull();
+	});
+});
+
+describe("calcConnectorBoundingBox arrowheads", () => {
+	/** A straight connector from (0,0) to (100,0) whose end carries a head. */
+	const headedConnector = (overrides: Partial<Record<string, unknown>> = {}) =>
+		freeConnector({
+			routing: "straight",
+			source: { anchor: { kind: "free", point: { x: 0, y: 0 } } },
+			target: { anchor: { kind: "free", point: { x: 100, y: 0 } } },
+			features: { type: "connector", geometry: "poly", arrow: true },
+			endArrow: "HollowTriangle",
+			strokeWidth: 2,
+			arrowScale: 2,
+			...overrides,
+		});
+	// HollowTriangle's reach at strokeWidth 2 × arrowScale 2: hypot(9, 4.5) × 4 + 2.
+	const reach = Math.hypot(9, 4.5) * 4 + 2;
+
+	it("takes the end's head in, as a square of its reach around the tip, with the registries", () => {
+		const bbox = calcConnectorBoundingBox(
+			headedConnector(),
+			{},
+			createCanvasRegistries(),
+		);
+
+		// The start end has no head, so the path's own left edge stands.
+		expect(bbox?.left).toBe(0);
+		expect(bbox?.right).toBeCloseTo(100 + reach, 9);
+		expect(bbox?.top).toBeCloseTo(-reach, 9);
+		expect(bbox?.bottom).toBeCloseTo(reach, 9);
+	});
+
+	it("sizes the connector's own head by the type's stroke width and scale where it sets neither", () => {
+		const registries = createCanvasRegistries();
+		registries.objectShapeStyleDefaults.register("connector", {
+			strokeWidth: 2,
+			arrowScale: 2,
+		});
+		const bbox = calcConnectorBoundingBox(
+			headedConnector({ strokeWidth: undefined, arrowScale: undefined }),
+			{},
+			registries,
+		);
+
+		expect(bbox?.right).toBeCloseTo(100 + reach, 9);
+	});
+
+	it("leaves out a head the type's defaults name but the connector does not, which is never drawn", () => {
+		const registries = createCanvasRegistries();
+		registries.objectShapeStyleDefaults.register("connector", {
+			endArrow: "HollowTriangle",
+		});
+		const bbox = calcConnectorBoundingBox(
+			headedConnector({ endArrow: undefined }),
+			{},
+			registries,
+		);
+
+		expect(bbox).toEqual({ left: 0, right: 100, top: 0, bottom: 0 });
+	});
+
+	it("leaves the heads out for a type not declaring features.arrow", () => {
+		const bbox = calcConnectorBoundingBox(
+			headedConnector({ features: { type: "connector", geometry: "poly" } }),
+			{},
+			createCanvasRegistries(),
+		);
+
+		expect(bbox).toEqual({ left: 0, right: 100, top: 0, bottom: 0 });
+	});
+
+	it("leaves the heads out without the registries, and in calcConnectorPathBoundingBox", () => {
+		const connector = headedConnector();
+		const path = [
+			{ x: 0, y: 0 },
+			{ x: 100, y: 0 },
+		];
+
+		expect(calcConnectorBoundingBox(connector, {})).toEqual({
+			left: 0,
+			right: 100,
+			top: 0,
+			bottom: 0,
+		});
+		expect(calcConnectorPathBoundingBox(connector, path)).toEqual({
+			left: 0,
+			right: 100,
+			top: 0,
+			bottom: 0,
+		});
+	});
+
+	it("adds nothing for an end whose head is None", () => {
+		const bbox = calcConnectorBoundingBox(
+			headedConnector({ endArrow: "None" }),
+			{},
+			createCanvasRegistries(),
+		);
+
+		expect(bbox).toEqual({ left: 0, right: 100, top: 0, bottom: 0 });
 	});
 });
 

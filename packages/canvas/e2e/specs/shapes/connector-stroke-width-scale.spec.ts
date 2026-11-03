@@ -4,7 +4,8 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
 /**
  * Spec verifying that the arrow scale and the line inset of a connector track its strokeWidth.
  *
- * An arrow is drawn with scale=strokeWidth (the length of (a,b) in its matrix equals strokeWidth),
+ * An arrow is drawn with scale=strokeWidth × arrowScale, arrowScale left unset (1) here, so the
+ * length of (a,b) in its matrix equals strokeWidth,
  * and the visual line ends short by an arrow inset of a constant times strokeWidth. So thickening
  * the line grows both the arrow and the inset proportionally. connector-style.spec covers line
  * color and dash type, connector-arrow-inset.spec covers the inset at a fixed strokeWidth=2, but

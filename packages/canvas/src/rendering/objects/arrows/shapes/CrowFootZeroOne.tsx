@@ -3,7 +3,7 @@ import type React from "react";
 import { memo } from "react";
 
 import { createSvgTransform } from "../../utils/createSvgTransform";
-import type { ArrowShapeProps } from "../ArrowTypes";
+import type { ArrowExtent, ArrowShapeProps } from "../ArrowTypes";
 import { ArrowCircle, ArrowGroup, ArrowPath } from "./ArrowStyled";
 import {
 	buildCrowFootBar,
@@ -11,6 +11,7 @@ import {
 	CROW_FOOT_BAR_OFFSET,
 	CROW_FOOT_CIRCLE_RADIUS,
 	CROW_FOOT_MARK_GAP,
+	CROW_FOOT_HALF_HEIGHT,
 } from "./utils/crowFootGeometry";
 
 /** Distance from the tip to the near edge of the circle, where the spine ends. */
@@ -25,6 +26,15 @@ export const CROW_FOOT_ZERO_ONE_INSET =
 	CIRCLE_NEAR_EDGE + CROW_FOOT_CIRCLE_RADIUS * 2;
 
 /**
+ * How far this head runs from its tip (local units), for the drawn extent
+ * (calcArrowReach). The circle's far edge is the rearmost point; it is narrower than the bar.
+ */
+export const CROW_FOOT_ZERO_ONE_EXTENT: ArrowExtent = {
+	length: CROW_FOOT_ZERO_ONE_INSET,
+	halfWidth: CROW_FOOT_HALF_HEIGHT,
+};
+
+/**
  * CrowFootZeroOne arrow shape component.
  * ER crow's foot notation: zero or one (`0..1`).
  */
@@ -35,6 +45,7 @@ const CrowFootZeroOneArrowComponent: React.FC<ArrowShapeProps> = ({
 	opacity,
 	radians,
 	scale,
+	outlineWidth,
 	dataKind,
 	dataId,
 }) => {
@@ -50,13 +61,13 @@ const CrowFootZeroOneArrowComponent: React.FC<ArrowShapeProps> = ({
 			data-kind={dataKind}
 			data-id={dataId}
 		>
-			<ArrowPath d={d} strokeColor={color} strokeWidth={1} />
+			<ArrowPath d={d} strokeColor={color} strokeWidth={outlineWidth} />
 			<ArrowCircle
 				cx={-(CIRCLE_NEAR_EDGE + CROW_FOOT_CIRCLE_RADIUS)}
 				cy={0}
 				r={CROW_FOOT_CIRCLE_RADIUS}
 				strokeColor={color}
-				strokeWidth={1}
+				strokeWidth={outlineWidth}
 			/>
 		</ArrowGroup>
 	);

@@ -108,6 +108,57 @@ describe("calcObjectBoundingBox", () => {
 			const obj = poly("pl", []);
 			expect(calcObjectBoundingBox(obj, { pl: obj })).toBeNull();
 		});
+
+		/** A polyline from (0,0) to (100,0) whose start carries a head 2 × 1.5 times its base size. */
+		const headedPolyline = (
+			features: Record<string, unknown> = {
+				type: "polyline",
+				geometry: "poly",
+				arrow: true,
+			},
+		): ObjectState =>
+			({
+				...poly("pl", [
+					{ x: 0, y: 0 },
+					{ x: 100, y: 0 },
+				]),
+				features,
+				startArrow: "Circle",
+				strokeWidth: 2,
+				arrowScale: 1.5,
+			}) as unknown as ObjectState;
+		// Circle's reach: hypot(9, 4.5) × 2 × 1.5 + 2.
+		const reach = Math.hypot(9, 4.5) * 3 + 2;
+
+		it("takes a polyline's heads in with the visual-extent registries", () => {
+			const obj = headedPolyline();
+			const bbox = calcObjectBoundingBox(obj, { pl: obj }, labelBelowBox);
+			expect(bbox?.left).toBeCloseTo(-reach, 9);
+			expect(bbox?.top).toBeCloseTo(-reach, 9);
+			expect(bbox?.bottom).toBeCloseTo(reach, 9);
+			// The end has no head.
+			expect(bbox?.right).toBe(100);
+		});
+
+		it("leaves a polyline's heads out without the registries", () => {
+			const obj = headedPolyline();
+			expect(calcObjectBoundingBox(obj, { pl: obj })).toEqual({
+				left: 0,
+				top: 0,
+				right: 100,
+				bottom: 0,
+			});
+		});
+
+		it("leaves the heads out for a type not declaring features.arrow", () => {
+			const obj = headedPolyline({ type: "polyline", geometry: "poly" });
+			expect(calcObjectBoundingBox(obj, { pl: obj }, labelBelowBox)).toEqual({
+				left: 0,
+				top: 0,
+				right: 100,
+				bottom: 0,
+			});
+		});
 	});
 
 	describe("group objects", () => {

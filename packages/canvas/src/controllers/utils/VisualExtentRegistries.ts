@@ -1,3 +1,5 @@
+import type { ObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
+
 import type { ObjectAnchorRegionRegistry } from "../../rendering/objects/registry/ObjectAnchorRegionRegistry";
 import type { ObjectExtraConnectPointsRegistry } from "../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import type { ObjectGeometryKeyRegistry } from "../../rendering/objects/registry/ObjectGeometryKeyRegistry";
@@ -25,16 +27,24 @@ export type VisualExtentRegistries = {
 	objectExtraConnectPoints: Pick<ObjectExtraConnectPointsRegistry, "get">;
 	/** Lets a connector's path come from the cache the renderer fills (resolveConnectorPointsCached). */
 	objectGeometryKey: Pick<ObjectGeometryKeyRegistry, "get">;
+	/**
+	 * Resolves a line's stroke width and arrowheads as the renderer draws them,
+	 * which sizes the heads its extent takes in (unionArrowHeadsBoundingBox).
+	 */
+	objectShapeStyleDefaults: Pick<
+		ObjectShapeStyleDefaultsRegistry,
+		"resolveShapeStyle"
+	>;
 };
 
 /**
  * The registries a connector's path is resolved through as the renderer routes
- * it, without the frame decoration: what a consumer working on the shapes'
- * geometry (the multi-select frame, the hit test, which also reads the outline as
- * a frame's silhouette) passes so a connector counts where it is drawn. The
- * canvas bundle (ICanvasRegistries) is structurally assignable to it.
+ * it, without the frame decoration or the arrowheads: what a consumer working on
+ * the shapes' geometry (the multi-select frame, the hit test, which also reads the
+ * outline as a frame's silhouette) passes so a connector counts where it is
+ * drawn. The canvas bundle (ICanvasRegistries) is structurally assignable to it.
  */
 export type ConnectorRouteRegistries = Omit<
 	VisualExtentRegistries,
-	"objectVisualBounds"
+	"objectVisualBounds" | "objectShapeStyleDefaults"
 >;

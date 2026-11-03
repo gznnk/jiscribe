@@ -2,7 +2,7 @@ import type { ArrowType } from "@jiscribe/doc/model/objects/types/ArrowType";
 import type React from "react";
 import { memo } from "react";
 
-import type { ArrowShapeProps } from "./ArrowTypes";
+import type { ArrowLineEndWedge, ArrowShapeProps } from "./ArrowTypes";
 import { CircleArrow } from "./shapes/Circle";
 import { ConcaveTriangleArrow } from "./shapes/ConcaveTriangle";
 import { CrossArrow } from "./shapes/Cross";
@@ -29,7 +29,12 @@ type ArrowProps = {
 	/** Opacity of the whole mark, 0..1; see {@link ArrowShapeProps.opacity}. */
 	opacity?: number;
 	radians: number;
+	/** Factor the local-unit head is drawn at: strokeWidth × arrowScale on a line. */
 	scale: number;
+	/** See {@link ArrowShapeProps.outlineWidth}; omitted is 1, an outline as wide as `scale`. */
+	outlineWidth?: number;
+	/** See {@link ArrowShapeProps.lineEndWedge}; omitted draws none. */
+	lineEndWedge?: ArrowLineEndWedge;
 	dataKind?: string;
 	dataId?: string;
 };
@@ -75,6 +80,8 @@ const ArrowComponent: React.FC<ArrowProps> = ({
 	opacity,
 	radians,
 	scale,
+	outlineWidth = 1,
+	lineEndWedge,
 	dataKind,
 	dataId,
 }) => {
@@ -91,6 +98,8 @@ const ArrowComponent: React.FC<ArrowProps> = ({
 			opacity={opacity}
 			radians={radians}
 			scale={scale}
+			outlineWidth={outlineWidth}
+			lineEndWedge={lineEndWedge}
 			dataKind={dataKind}
 			dataId={dataId}
 		/>

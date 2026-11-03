@@ -14,6 +14,10 @@ import {
 	textSlotStyleSchema,
 } from "@jiscribe/ai-tools-sdk";
 import {
+	ARROW_OUTLINE_THINNING_SCALE,
+	ARROW_SCALE_MAX,
+	ARROW_SCALE_MIN,
+	DEFAULT_ARROW_SCALE,
 	ArrowTypes,
 	ConnectorRoutings,
 	ConnectPointIds,
@@ -139,6 +143,19 @@ const HEIGHT_MODES = [
 	"fixed",
 ] as const satisfies readonly AiHeightMode[];
 
+/** How the arrowheads' size is stated; set_style, connect and update_connector share it. */
+const arrowScaleSchema = z
+	.number()
+	.min(ARROW_SCALE_MIN)
+	.max(ARROW_SCALE_MAX)
+	.optional()
+	.describe(
+		[
+			`Factor on both arrowheads' size: each head is drawn 9 × strokeWidth × arrowScale px, so arrowScale is the multiplier on the size the line width alone gives (${ARROW_SCALE_MIN} to ${ARROW_SCALE_MAX}, ${DEFAULT_ARROW_SCALE} when omitted). The heads' outline stays at strokeWidth down to arrowScale ${ARROW_OUTLINE_THINNING_SCALE} and thins with the head below it.`,
+			"1.5 makes them clearly larger; 0.6 keeps them modest on a thick line; ER cardinality marks (CrowFoot*) read well at 1.3 to 1.5.",
+		].join(" "),
+	);
+
 /**
  * The shared style vocabulary; add_object and set_style speak the same one. The
  * typography is the one plugin tools styling text slots declare too (textSlotStyleSchema).
@@ -196,6 +213,9 @@ const styleSchema = {
 		.describe(
 			"Arrowhead at the end of the line, the one that carries the direction (FilledTriangle for a flow). Only for polyline and connector.",
 		),
+	arrowScale: arrowScaleSchema.describe(
+		`${arrowScaleSchema.description} Only for polyline and connector.`,
+	),
 	rx: z.number().min(0).optional().describe("Corner radius in px; rect only."),
 	...textSlotStyleSchema,
 };
@@ -273,6 +293,7 @@ const connectorDrawSchema = {
 		.enum(ArrowTypes)
 		.optional()
 		.describe("Arrowhead at the target end (use FilledTriangle for a flow)."),
+	arrowScale: arrowScaleSchema,
 	label: z
 		.string()
 		.optional()
@@ -329,6 +350,7 @@ const connectorChangeSchema = {
 		.enum(ArrowTypes)
 		.optional()
 		.describe('Arrowhead at the target end; "None" removes it.'),
+	arrowScale: arrowScaleSchema,
 	routing: z.enum(ConnectorRoutings).optional().describe("Line shape."),
 	points: z
 		.array(pointSchema)
@@ -1494,7 +1516,7 @@ export const createCanvasToolDescriptors = (
 	const measureVisualBoundsTool = defineCanvasTool(
 		"measure_visual_bounds",
 		[
-			"Measure the rectangle objects really cover once drawn, decoration outside their geometry included (an actor's label, a shadow).",
+			"Measure the rectangle objects really cover once drawn, decoration outside their geometry included (an actor's label, a shadow, a line's arrowheads).",
 			"describe_canvas reports the boxes you asked for; this reports what came of them, which is what actually collides with a neighbour and what fit_view frames.",
 			"Use it to place something beside existing work without guessing the gap off a capture_canvas picture: measure what is there, then set_position past its edge.",
 			"The result is a single rectangle, the union of everything named, so measure ids one at a time when you need them apart.",

@@ -36,6 +36,7 @@ import type {
 	EndpointRef,
 	OwnedEndpointRef,
 } from "../model/objects/types/EndpointRef";
+import { validateArrowFields } from "../model/objects/validators/validateStyleFields";
 
 export type ConnectParams = {
 	/**
@@ -68,6 +69,11 @@ export type ConnectParams = {
 	startArrow?: ArrowType;
 	/** Arrowhead at the target end; omitted leaves the property off the doc entirely. */
 	endArrow?: ArrowType;
+	/**
+	 * Factor on both arrowheads' size, ARROW_SCALE_MIN..ARROW_SCALE_MAX (0.2..4); omitted
+	 * leaves the property off the doc entirely, which draws them at 1.
+	 */
+	arrowScale?: number;
 	/** Label drawn on the line; omitted or empty leaves the connector unlabelled. */
 	label?: string;
 	/**
@@ -107,6 +113,23 @@ const collectRequestedOwnerIds = (
 		}
 	}
 	return ownerIds;
+};
+
+/**
+ * Refuses an `arrowScale` the document could not hold, with the doc validator's own
+ * constraint, before anything is written.
+ *
+ * @param arrowScale - The requested factor; undefined is not asked for and passes
+ * @throws {@link DocOperationError} naming the field and its range
+ */
+const requireValidArrowScale = (arrowScale: number | undefined): void => {
+	if (arrowScale === undefined) {
+		return;
+	}
+	const [diagnostic] = validateArrowFields({ arrowScale }, "");
+	if (diagnostic !== undefined) {
+		throw new DocOperationError(`arrowScale: ${diagnostic.message}`);
+	}
 };
 
 /** Endpoint for one end: attached to an object, or standing at a coordinate. */
@@ -157,6 +180,7 @@ const buildConnector = (
 			"labelPosition / labelOffset need label text; pass label as well",
 		);
 	}
+	requireValidArrowScale(params.arrowScale);
 	const source = buildRequestedEndpoint(
 		locatedObjects,
 		"source",
@@ -191,6 +215,9 @@ const buildConnector = (
 			? { startArrow: params.startArrow }
 			: {}),
 		...(params.endArrow !== undefined ? { endArrow: params.endArrow } : {}),
+		...(params.arrowScale !== undefined
+			? { arrowScale: params.arrowScale }
+			: {}),
 		...(hasLabelText
 			? {
 					label: {
@@ -225,8 +252,8 @@ const buildConnector = (
  *   and a point or neither, when an object is missing from the root tree, is not connectable,
  *   carries an unusable edge anchor (see {@link AnchorHandleId}) or is asked for a connect point
  *   it does not offer (the message lists the ones it does), when a point is not finite, when
- *   both ends would be free, or when `labelPosition` / `labelOffset` is given without
- *   non-empty `label` text
+ *   both ends would be free, when `labelPosition` / `labelOffset` is given without
+ *   non-empty `label` text, or when `arrowScale` is outside its range
  */
 export const connect = (
 	doc: CanvasDoc,
@@ -314,6 +341,11 @@ export type UpdateConnectorParams = {
 	startArrow?: ArrowType;
 	/** Arrowhead at the target end; "None" removes it. */
 	endArrow?: ArrowType;
+	/**
+	 * Factor on both arrowheads' size, ARROW_SCALE_MIN..ARROW_SCALE_MAX (0.2..4); omitted
+	 * keeps it.
+	 */
+	arrowScale?: number;
 	/** Line shape; omitted keeps it, except when re-anchoring a connector that never set one. */
 	routing?: ConnectorRouting;
 	/**
@@ -458,6 +490,7 @@ const planConnectorUpdate = (
 	if (!isConnectorObject(object)) {
 		throw new DocOperationError(`${id} is "${object.type}", not a connector`);
 	}
+	requireValidArrowScale(params.arrowScale);
 
 	const currentSource = object.source as EndpointRef;
 	const currentTarget = object.target as EndpointRef;
@@ -541,6 +574,9 @@ const applyConnectorUpdate = ({
 	if (params.endArrow !== undefined) {
 		connector.endArrow = params.endArrow;
 	}
+	if (params.arrowScale !== undefined) {
+		connector.arrowScale = params.arrowScale;
+	}
 };
 
 /** Ids listed more than once, each named once, in the order they were first repeated. */
@@ -558,8 +594,8 @@ const findRepeatedIds = (ids: readonly string[]): string[] => {
 };
 
 /**
- * Change an existing connector: where it attaches, how it is routed, its arrowheads, and
- * where its label sits. Mutates `doc` in place.
+ * Change an existing connector: where it attaches, how it is routed, its arrowheads and
+ * their size, and where its label sits. Mutates `doc` in place.
  *
  * This is the way out of a route that crosses the wrong shape — pin the ends to the edges
  * facing each other, or give the corners explicitly through `points`. A non-empty `points`
@@ -577,7 +613,8 @@ const findRepeatedIds = (ids: readonly string[]): string[] => {
  *   carries an unusable edge anchor (see {@link AnchorHandleId}), when an end would name a
  *   connect point its owner does not offer — a kept one included, when the end moves to
  *   another owner — when detaching would leave
- *   both ends free, or when a label placement is given for a connector that has no label
+ *   both ends free, when a label placement is given for a connector that has no label, or
+ *   when `arrowScale` is outside its range
  */
 export const updateConnector = (
 	doc: CanvasDoc,

@@ -5,13 +5,19 @@ import { memo } from "react";
 import { ArrowPolygon } from "./ArrowStyled";
 import { createSvgTransform } from "../../utils/createSvgTransform";
 import { ARROW_SIZE } from "../ArrowConstants";
-import type { ArrowShapeProps } from "../ArrowTypes";
+import type { ArrowExtent, ArrowShapeProps } from "../ArrowTypes";
 
 /**
  * Inset (in local units) for terminating the line at the base of this arrow.
  * The base sits at `-ARROW_SIZE`, so the line stops at the base (also preventing it from passing through the hollow interior).
  */
 export const HOLLOW_TRIANGLE_INSET = ARROW_SIZE;
+
+/** How far this head runs from its tip (local units), for the drawn extent (calcArrowReach). */
+export const HOLLOW_TRIANGLE_EXTENT: ArrowExtent = {
+	length: ARROW_SIZE,
+	halfWidth: ARROW_SIZE / 2,
+};
 
 /**
  * HollowTriangle arrow shape component.
@@ -23,6 +29,7 @@ const HollowTriangleArrowComponent: React.FC<ArrowShapeProps> = ({
 	opacity,
 	radians,
 	scale,
+	outlineWidth,
 	dataKind,
 	dataId,
 }) => {
@@ -36,7 +43,7 @@ const HollowTriangleArrowComponent: React.FC<ArrowShapeProps> = ({
 			points={points}
 			strokeColor={color}
 			alpha={opacity}
-			strokeWidth={1}
+			strokeWidth={outlineWidth}
 			strokeLinejoin="miter"
 			transform={transform}
 			data-kind={dataKind}

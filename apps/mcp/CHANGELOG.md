@@ -31,6 +31,10 @@ covers that.
   `labelPosition` and `labelOffset` as `update_connector` does, so a label
   lands where it should without a second call. Either one needs `label` text
   in the same call.
+- **`set_style`, `connect` and `update_connector` size the arrowheads.** They
+  (and `connect_many` / `update_connectors`) take `arrowScale`, the factor on
+  both heads of a polyline or connector (0.2 to 4, omitted = 1); a value outside
+  the range is refused. `measure_visual_bounds` now counts the heads in.
 
 ### Changed
 

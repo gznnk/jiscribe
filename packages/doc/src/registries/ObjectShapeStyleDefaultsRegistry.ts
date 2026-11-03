@@ -150,6 +150,10 @@ export class ObjectShapeStyleDefaultsRegistry {
 				SHAPE_STYLE_FALLBACK.startArrow,
 			endArrow:
 				own.endArrow ?? typeDefaults?.endArrow ?? SHAPE_STYLE_FALLBACK.endArrow,
+			arrowScale:
+				own.arrowScale ??
+				typeDefaults?.arrowScale ??
+				SHAPE_STYLE_FALLBACK.arrowScale,
 		};
 	}
 

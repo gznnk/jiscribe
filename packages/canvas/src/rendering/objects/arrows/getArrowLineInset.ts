@@ -30,6 +30,7 @@ import { HOLLOW_TRIANGLE_INSET } from "./shapes/HollowTriangle";
  * Types that are not shortened:
  *   - None: no arrow
  *   - OpenArrow: has no body and connects to the line at the tip (endpoint), so shortening would leave a gap
+ *     (a head thinned below the line's width is stopped short by calcArrowLineInset instead)
  *   - Cross: sits on the line by definition (UML non-navigable end)
  */
 const ARROW_LINE_INSETS: Record<ArrowType, number> = {
@@ -51,8 +52,9 @@ const ARROW_LINE_INSETS: Record<ArrowType, number> = {
 };
 
 /**
- * Returns the line inset (in local units) for the given arrow type. The caller
- * multiplies by the arrow scale (= strokeWidth) for the actual distance.
+ * Returns the line inset (in local units) for the given arrow type, the part
+ * that scales with the head; calcArrowLineInset turns it into the distance a line
+ * actually stops short.
  * `undefined` and types that need no shortening return 0.
  */
 export const getArrowLineInset = (type: ArrowType | undefined): number =>

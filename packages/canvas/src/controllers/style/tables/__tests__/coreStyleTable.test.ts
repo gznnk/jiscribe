@@ -36,8 +36,12 @@ describe("coreStyleTable", () => {
 		expect(kindsOf({ radius: true })).toEqual(["cornerRadius"]);
 	});
 
-	it("the arrow group brings both ends", () => {
-		expect(kindsOf({ arrow: true })).toEqual(["endArrow", "startArrow"]);
+	it("the arrow group brings both ends and their size", () => {
+		expect(kindsOf({ arrow: true })).toEqual([
+			"arrowScale",
+			"endArrow",
+			"startArrow",
+		]);
 	});
 
 	it("the transform group brings the aspect-ratio lock", () => {

@@ -306,6 +306,15 @@ describe("validateStateUtils", () => {
 		it("invalid ArrowType is false", () => {
 			expect(isValidArrowFields({ endArrow: "diamond" })).toBe(false);
 		});
+		it("arrowScale inside 0.2..4 is true", () => {
+			expect(isValidArrowFields({ arrowScale: 0.2 })).toBe(true);
+			expect(isValidArrowFields({ arrowScale: 4 })).toBe(true);
+		});
+		it("arrowScale outside 0.2..4 or not a number is false", () => {
+			for (const arrowScale of [0.19, 4.01, "2", Number.NaN]) {
+				expect(isValidArrowFields({ arrowScale })).toBe(false);
+			}
+		});
 	});
 
 	describe("isValidChildIds", () => {

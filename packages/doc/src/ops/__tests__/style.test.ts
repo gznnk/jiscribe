@@ -71,6 +71,22 @@ describe("setStyle", () => {
 		expectValid(doc);
 	});
 
+	it("sets a connector's arrowScale with its arrowheads", () => {
+		const doc = twoConnectedRects();
+
+		const result = docOps.setStyle(doc, ["connector-1"], {
+			endArrow: "HollowTriangle",
+			arrowScale: 1.5,
+		});
+
+		expect(readObject(doc, "connector-1")).toMatchObject({
+			endArrow: "HollowTriangle",
+			arrowScale: 1.5,
+		});
+		expect(result.ignored).toEqual([]);
+		expectValid(doc);
+	});
+
 	it("sends a connector's fill and typography to its label once it has one", () => {
 		const doc = twoConnectedRects();
 		docOps.setText(doc, "connector-1", "yes");
@@ -150,6 +166,8 @@ describe("setStyle: values the document could not hold", () => {
 		["a fill opacity above the range", { fillOpacity: 1.5 }],
 		["a fill opacity written as text", { fillOpacity: "0.5" }],
 		["a stroke opacity that is not a number", { strokeOpacity: Number.NaN }],
+		["an arrow scale below the range", { arrowScale: 0.19 }],
+		["an arrow scale above the range", { arrowScale: 4.5 }],
 	])("refuses %s", (_label, style) => {
 		const doc = emptyDoc();
 		docOps.addObject(doc, "rect", { x: 0, y: 0 });

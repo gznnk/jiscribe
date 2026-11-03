@@ -3499,6 +3499,13 @@
 					"description": "Arrow at the end point.",
 					"$ref": "#/$defs/ArrowType"
 				},
+				"arrowScale": {
+					"description": "Factor on both arrowheads' size: each head is drawn 9 × strokeWidth × arrowScale px, its outline staying at strokeWidth down to arrowScale 0.5 and thinning with the head below it. Default: 1",
+					"type": "number",
+					"minimum": 0.2,
+					"maximum": 4,
+					"default": 1
+				},
 				"stroke": {
 					"$ref": "#/$defs/StrokeStyle/properties/stroke"
 				},
@@ -4159,6 +4166,13 @@
 				"endArrow": {
 					"description": "Arrow at the end point.",
 					"$ref": "#/$defs/ArrowType"
+				},
+				"arrowScale": {
+					"description": "Factor on both arrowheads' size: each head is drawn 9 × strokeWidth × arrowScale px, its outline staying at strokeWidth down to arrowScale 0.5 and thinning with the head below it. Default: 1",
+					"type": "number",
+					"minimum": 0.2,
+					"maximum": 4,
+					"default": 1
 				},
 				"stroke": {
 					"$ref": "#/$defs/StrokeStyle/properties/stroke"

@@ -6,7 +6,12 @@ import { memo } from "react";
 
 import { ConnectorElement, ConnectorHitArea } from "./ConnectorStyled";
 import { dedupePoints } from "./utils/dedupePoints";
-import { Arrow, getArrowLineInset } from "../../arrows";
+import {
+	Arrow,
+	calcArrowLineEndWedge,
+	calcArrowLineInset,
+	calcArrowOutlineWidth,
+} from "../../arrows";
 import { useObjectShapeStyleDefaultsRegistry } from "../../registry/ObjectShapeStyleDefaultsRegistryContext";
 import { formatPolygonPoints } from "../../utils/formatPolygonPoints";
 import { getStrokeDasharray } from "../../utils/getStrokeDasharray";
@@ -23,6 +28,7 @@ type ConnectorProps = {
 	strokeOpacity?: number;
 	startArrow?: ArrowType;
 	endArrow?: ArrowType;
+	arrowScale?: number;
 	disablePointerEvents?: boolean;
 };
 
@@ -35,6 +41,7 @@ const ConnectorComponent: React.FC<ConnectorProps> = ({
 	strokeOpacity,
 	startArrow,
 	endArrow,
+	arrowScale,
 	disablePointerEvents = false,
 }) => {
 	// The component draws that one type, so the type is named here rather than
@@ -42,9 +49,11 @@ const ConnectorComponent: React.FC<ConnectorProps> = ({
 	// unset field on the shared last resort (SHAPE_STYLE_FALLBACK).
 	const shapeStyle = useObjectShapeStyleDefaultsRegistry().resolveShapeStyle(
 		"connector",
-		{ stroke, strokeWidth, strokeDashType, strokeOpacity },
+		{ stroke, strokeWidth, strokeDashType, strokeOpacity, arrowScale },
 	);
 	const resolvedStrokeWidth = shapeStyle.strokeWidth;
+	const arrowHeadScale = resolvedStrokeWidth * shapeStyle.arrowScale;
+	const arrowOutlineWidth = calcArrowOutlineWidth(shapeStyle.arrowScale);
 	// Resolve auto (theme-following) to the theme foreground (ink) (issue #38).
 	const strokeColor = resolveAutoColor(shapeStyle.stroke, "ink");
 
@@ -60,11 +69,11 @@ const ConnectorComponent: React.FC<ConnectorProps> = ({
 	// The hit area keeps its full length up to the endpoints for easier clicking.
 	const hitAreaPointsAttr = formatPolygonPoints(polyPoints);
 
-	// For hollow arrows, terminate the line at the arrow base so it does not pass through the hollow part.
+	// Stop the line where the head needs it (calcArrowLineInset) so it does not show through a hollow head or past a thinned one.
 	const insetPoints = insetPolylineEnds(
 		polyPoints,
-		getArrowLineInset(startArrow) * resolvedStrokeWidth,
-		getArrowLineInset(endArrow) * resolvedStrokeWidth,
+		calcArrowLineInset(startArrow, resolvedStrokeWidth, shapeStyle.arrowScale),
+		calcArrowLineInset(endArrow, resolvedStrokeWidth, shapeStyle.arrowScale),
 	);
 	const linePointsAttr = formatPolygonPoints(insetPoints);
 
@@ -109,7 +118,12 @@ const ConnectorComponent: React.FC<ConnectorProps> = ({
 					color={strokeColor}
 					opacity={shapeStyle.strokeOpacity}
 					radians={startAngleRadians}
-					scale={resolvedStrokeWidth}
+					scale={arrowHeadScale}
+					outlineWidth={arrowOutlineWidth}
+					lineEndWedge={calcArrowLineEndWedge(
+						startArrow,
+						shapeStyle.arrowScale,
+					)}
 					dataKind="connector"
 					dataId={id}
 				/>
@@ -122,7 +136,9 @@ const ConnectorComponent: React.FC<ConnectorProps> = ({
 					color={strokeColor}
 					opacity={shapeStyle.strokeOpacity}
 					radians={endAngleRadians}
-					scale={resolvedStrokeWidth}
+					scale={arrowHeadScale}
+					outlineWidth={arrowOutlineWidth}
+					lineEndWedge={calcArrowLineEndWedge(endArrow, shapeStyle.arrowScale)}
 					dataKind="connector"
 					dataId={id}
 				/>

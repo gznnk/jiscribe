@@ -115,6 +115,8 @@ export type CanvasMessageStrings = {
 	propertyPanelRowOpacity: string;
 	/** Label of the corner-radius row */
 	propertyPanelRowRadius: string;
+	/** Label of the arrowhead-size row, stated in percent of the size the stroke width alone gives */
+	propertyPanelRowArrowScale: string;
 	/** Label of the font-size row */
 	propertyPanelRowSize: string;
 	/** Label of the layout row holding the frame's X / Y fields */
@@ -233,6 +235,8 @@ export type CanvasMessageStrings = {
 	menuStartArrow: string;
 	menuEndArrow: string;
 	menuSwapArrows: string;
+	/** Accessible name of the field stating both arrowheads' size, in percent */
+	menuArrowScale: string;
 	menuLabelBold: string;
 	menuLabelFontSize: string;
 	menuLabelFontFamily: string;

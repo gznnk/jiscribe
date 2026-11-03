@@ -22,6 +22,7 @@ const SHAPE_STYLE_FIELD_GUARDS: Record<
 	rx: isNumber,
 	startArrow: isArrowType,
 	endArrow: isArrowType,
+	arrowScale: isNumber,
 };
 
 /**

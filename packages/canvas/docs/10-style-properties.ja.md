@@ -111,7 +111,7 @@ index signature に入る（値型はエンジンが知らないので `unknown`
 | `features.fill`              | `fill`, `fillOpacity`                                      |
 | `features.stroke`            | `stroke`, `strokeWidth`, `strokeDashType`, `strokeOpacity` |
 | `features.radius`            | `cornerRadius`（格納先は `rx`）                            |
-| `features.arrow`             | `startArrow`, `endArrow`                                   |
+| `features.arrow`             | `startArrow`, `endArrow`, `arrowScale`                     |
 | `features.transform`         | `lockAspectRatio`                                          |
 | `features.text`              | `textStyleTable(features.text)`                            |
 | `features.textVerticalBasis` | `textVerticalBasis`                                        |

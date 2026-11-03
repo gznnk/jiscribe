@@ -142,5 +142,25 @@ describe("PolylineMapper", () => {
 			expect(convertedDoc.startArrow).toBe(originalDoc.startArrow);
 			expect(convertedDoc.endArrow).toBe(originalDoc.endArrow);
 		});
+
+		it("carries arrowScale through, and leaves it out when it was left out", () => {
+			const scaledDoc = {
+				id: "polyline-scaled",
+				type: "polyline",
+				points: [
+					{ x: 0, y: 0 },
+					{ x: 50, y: 50 },
+				],
+				endArrow: "FilledTriangle",
+				arrowScale: 1.5,
+			} as unknown as PolylineDoc;
+			expect(polylineToDoc(polylineToState(scaledDoc)).arrowScale).toBe(1.5);
+
+			const { arrowScale: _omitted, ...unscaledDoc } = scaledDoc;
+			expect("arrowScale" in polylineToState(unscaledDoc)).toBe(false);
+			expect("arrowScale" in polylineToDoc(polylineToState(unscaledDoc))).toBe(
+				false,
+			);
+		});
 	});
 });

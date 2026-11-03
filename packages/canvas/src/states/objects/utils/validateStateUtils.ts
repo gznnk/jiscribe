@@ -5,6 +5,10 @@ import {
 	isString,
 } from "@jiscribe/basic-validators";
 import type { ArrowStyleDoc } from "@jiscribe/doc/model/objects/base/ArrowStyleDoc";
+import {
+	ARROW_SCALE_MAX,
+	ARROW_SCALE_MIN,
+} from "@jiscribe/doc/model/objects/base/ArrowStyleDoc";
 import type { FillStyleDoc } from "@jiscribe/doc/model/objects/base/FillStyleDoc";
 import type { RadiusStyleDoc } from "@jiscribe/doc/model/objects/base/RadiusStyleDoc";
 import { CORNER_RADIUS_MIN } from "@jiscribe/doc/model/objects/base/RadiusStyleDoc";
@@ -212,6 +216,7 @@ const radiusStyleValidators = {
 const arrowStyleValidators = {
 	startArrow: isArrowType,
 	endArrow: isArrowType,
+	arrowScale: numberRangeValidator(ARROW_SCALE_MIN, ARROW_SCALE_MAX),
 } as const satisfies Record<keyof ArrowStyleDoc, StateFieldValidator>;
 
 /**
@@ -334,7 +339,7 @@ export const isValidTextStyleState = (
 export const isValidRadiusStyleState = (o: StateRecord): boolean =>
 	hasValidFields(o, radiusStyleValidators);
 
-/** Validates arrow ends (startArrow / endArrow) as ArrowType when present. */
+/** Validates arrow ends (startArrow / endArrow) as ArrowType and arrowScale within its range when present. */
 export const isValidArrowFields = (o: StateRecord): boolean =>
 	hasValidFields(o, arrowStyleValidators);
 
