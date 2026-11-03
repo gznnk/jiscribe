@@ -136,12 +136,14 @@ so a host can set the shape ink (e.g. pure black on a light theme) without chang
 A connector label's background (`fill`) is the exception: it bypasses `resolveAutoColor`, and
 `resolveLabelFill` (`rendering/objects/connector/ConnectorLabel/utils/resolveLabelFill.ts`) resolves auto
 and an unspecified value to the canvas surface color, `theme.canvasBg` (so the label knocks out the line
-behind it). That is the document's `background`, or the theme's canvas colour when the document sets none:
+behind it). That is the document's `background` when it is opaque, otherwise the theme's canvas colour:
 when `background` is an opaque color, the Canvas root (`controllers/Canvas.tsx`) overrides
 `--jiscribe-canvas-bg` with it, so everything reading `theme.canvasBg` — the label, its inline editor, the
-label-fill swatches and image export's baked styles — follows the page. A see-through `background`
-(`transparent`, alpha below 1) or a value the browser does not parse keeps the theme value, since that is
-what shows through it (`foundation/color/isOpaqueCssColor.ts`).
+label-fill swatches and image export's baked styles — follows the page. Opaque means the browser resolves
+it to an `rgb()` color with alpha 1. Anything else keeps the theme value, since that is what shows through
+it: a see-through `background` (`transparent`, alpha below 1 in any spelling), one resolved per element
+(`var()`, `currentColor`), one the browser keeps in another color space (`oklch()`, `color-mix()`), and a
+value it does not parse (`foundation/color/isOpaqueCssColor.ts`).
 
 **Single rule**: "auto resolves to the role's theme token, and color is applied via CSS." Because
 `var(--jiscribe-*)` is not resolved by SVG presentation attributes, **color is never applied via attributes**,

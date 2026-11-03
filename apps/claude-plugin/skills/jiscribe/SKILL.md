@@ -3,7 +3,7 @@ name: jiscribe
 description: Use when creating or editing a Jiscribe canvas diagram — a .jis / .jiscribe file, or a flowchart, architecture diagram, sticky-note board or chart the user wants drawn on a Jiscribe canvas.
 ---
 
-<!-- jiscribe guide 0.12.2+ba43e5b1 -->
+<!-- jiscribe guide 0.12.2+8bc49bc9 -->
 
 # Drawing on a Jiscribe canvas
 

@@ -1,68 +1,53 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { isOpaqueCssColor } from "../isOpaqueCssColor";
 
-// Node has no `CSS`; stand in for the browser's parser with a list of what it
-// accepts, so only the opacity rule is under test here.
-const BROWSER_ACCEPTED_COLORS = new Set([
-	"#0b1220",
-	"#fff",
-	"#ffffff80",
-	"#fff8",
-	"rgb(220, 38, 38)",
-	"rgba(220, 38, 38, 1)",
-	"rgba(220, 38, 38, 0.5)",
-	"rgba(0, 0, 0, 0)",
-	"rgb(220 38 38 / 50%)",
-	"transparent",
-	"red",
-	"hsl(0 72% 51%)",
-]);
+// Node has no canvas; stand in for the browser's serialization so only the
+// opacity rule is under test here (normalizeCssColor.test covers the probe).
+const BROWSER_SPELLINGS: Record<string, string> = {
+	"#0b1220": "#0b1220",
+	red: "#ff0000",
+	"hsl(0 72% 51%)": "#dc2828",
+	"rgba(220, 38, 38, 1)": "#dc2626",
+	transparent: "rgba(0, 0, 0, 0)",
+	"rgba(220, 38, 38, 0.5)": "rgba(220, 38, 38, 0.5)",
+	"#ffffff80": "rgba(255, 255, 255, 0.5)",
+	"hsl(0 72% 51% / 0.5)": "rgba(220, 40, 40, 0.5)",
+	"oklch(0.6 0.2 30)": "oklch(0.6 0.2 30)",
+	"color-mix(in srgb, red 50%, transparent)":
+		"color-mix(in srgb, red 50%, transparent)",
+};
+
+vi.mock("../normalizeCssColor", () => ({
+	normalizeCssColor: (color: string) => BROWSER_SPELLINGS[color] ?? null,
+}));
 
 describe("isOpaqueCssColor", () => {
-	beforeEach(() => {
-		vi.stubGlobal("CSS", {
-			supports: (_property: string, value: string) =>
-				BROWSER_ACCEPTED_COLORS.has(value),
-		});
-	});
-
-	afterEach(() => {
-		vi.unstubAllGlobals();
-	});
-
-	it.each(["#0b1220", "#fff", "rgb(220, 38, 38)", "rgba(220, 38, 38, 1)"])(
-		"treats %s (alpha 1) as opaque",
+	it.each(["#0b1220", "red", "hsl(0 72% 51%)", "rgba(220, 38, 38, 1)"])(
+		"treats %s, which the browser spells with alpha 1, as opaque",
 		(color) => {
 			expect(isOpaqueCssColor(color)).toBe(true);
 		},
 	);
 
-	it.each(["red", "hsl(0 72% 51%)"])(
-		"treats %s (alpha not read) as opaque",
-		(color) => {
-			expect(isOpaqueCssColor(color)).toBe(true);
-		},
-	);
+	it.each([
+		"transparent",
+		"rgba(220, 38, 38, 0.5)",
+		"#ffffff80",
+		"hsl(0 72% 51% / 0.5)",
+	])("rejects %s, whose resolved alpha is below 1", (color) => {
+		expect(isOpaqueCssColor(color)).toBe(false);
+	});
 
-	it.each(["transparent", "rgba(0, 0, 0, 0)"])(
-		"rejects %s, which paints nothing",
+	it.each(["oklch(0.6 0.2 30)", "color-mix(in srgb, red 50%, transparent)"])(
+		"rejects %s, which the browser keeps in a spelling that is not read",
 		(color) => {
 			expect(isOpaqueCssColor(color)).toBe(false);
 		},
 	);
 
-	it.each([
-		"rgba(220, 38, 38, 0.5)",
-		"rgb(220 38 38 / 50%)",
-		"#ffffff80",
-		"#fff8",
-	])("rejects %s, which is semi-transparent", (color) => {
-		expect(isOpaqueCssColor(color)).toBe(false);
-	});
-
-	it.each(["auto", "", "not-a-color"])(
-		"rejects %j, which the browser does not parse as a color",
+	it.each(["auto", "", "var(--x)", "currentColor"])(
+		"rejects %j, which the browser does not resolve to one color",
 		(color) => {
 			expect(isOpaqueCssColor(color)).toBe(false);
 		},

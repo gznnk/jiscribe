@@ -10,8 +10,10 @@ import { selectors } from "../../support/selectors";
  * - Without a background the box is the harness theme's canvas color
  * - Setting the background from the properties sidebar paints the box in it, and
  *   undo or picking Auto takes the box back to the theme color
- * - A see-through background (`transparent`, alpha below 1) or one the browser
- *   does not parse as a color leaves the theme color in place
+ * - An opaque background in a spelling other than hex counts too (`hsl()`)
+ * - A see-through background (`transparent`, alpha below 1 in any spelling), one
+ *   that resolves per element (`var()`, `currentColor`) or one the browser does
+ *   not parse as a color leaves the theme color in place
  * - A label with a `fill` of its own keeps it
  * - The inline label editor draws its box in the same color as the label
  */
@@ -169,6 +171,9 @@ test.describe("connector label background follows the document background", () =
 		"transparent",
 		"rgba(220, 38, 38, 0.5)",
 		"#dc262680",
+		"hsl(0 72% 51% / 0.5)",
+		"var(--jiscribe-undeclared)",
+		"currentColor",
 		"auto",
 	]) {
 		test(`keeps the theme color under the background ${background}`, async ({
@@ -181,6 +186,16 @@ test.describe("connector label background follows the document background", () =
 			);
 		});
 	}
+
+	test("paints an unset label fill under an opaque hsl() background", async ({
+		canvas,
+	}) => {
+		await loadDoc(canvas, buildDocText("hsl(0 72% 51%)"));
+		await expect(labelBoxOf(canvas, DEFAULT_LABEL_CONNECTOR_ID)).toHaveCSS(
+			"background-color",
+			"rgb(220, 40, 40)",
+		);
+	});
 
 	test("draws the inline label editor in the document background", async ({
 		canvas,
