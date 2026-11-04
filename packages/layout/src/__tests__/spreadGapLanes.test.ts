@@ -34,16 +34,64 @@ describe("spreadGapLanes", () => {
 	});
 
 	it("packs lanes closer when the gap is too narrow for the preferred spacing", () => {
-		const paths = [
-			routeThroughGap(0, 10),
-			routeThroughGap(20, 30),
-			routeThroughGap(40, 50),
+		const threeOverlapping = () => [
+			routeThroughGap(0, 100),
+			routeThroughGap(20, 120),
+			routeThroughGap(40, 140),
 		];
+		const laneYs = (paths: ReturnType<typeof threeOverlapping>) =>
+			paths.map((path) => path[1].y).sort((a, b) => a - b);
 
-		spreadGapLanes(paths, "TB", 20);
+		// Boxes 40 either side of the midline leave 80 - 2 * 16 = 48 for the stack: the
+		// preferred 16px steps fit.
+		const roomy = threeOverlapping();
+		for (const path of roomy) {
+			path[0].y = 60;
+			path[3].y = 140;
+		}
+		spreadGapLanes(roomy, "TB", 80);
+		expect(laneYs(roomy)).toEqual([84, 100, 116]);
 
-		const lanes = paths.map((path) => path[1].y).sort((a, b) => a - b);
-		expect(lanes).toEqual([95, 100, 105]);
+		// Boxes 20 either side leave 8: the same stack shrinks to fit.
+		const tight = threeOverlapping();
+		for (const path of tight) {
+			path[0].y = 80;
+			path[3].y = 120;
+		}
+		spreadGapLanes(tight, "TB", 40);
+		expect(laneYs(tight)).toEqual([96, 100, 104]);
+	});
+
+	it("keeps runs that do not overlap sideways on the midline together", () => {
+		const leftward = routeThroughGap(200, 0);
+		const rightward = routeThroughGap(260, 500);
+
+		spreadGapLanes([leftward, rightward], "TB", 80);
+
+		expect(leftward[1].y).toBe(100);
+		expect(rightward[1].y).toBe(100);
+	});
+
+	it("keeps a lane carrying a label clear of the next by the label's height", () => {
+		const wide = routeThroughGap(0, 200);
+		const narrow = routeThroughGap(100, 300);
+
+		spreadGapLanes([wide, narrow], "TB", 80, [
+			{ point: { x: 100, y: 100 }, alongExtent: 24 },
+			undefined,
+		]);
+
+		// 24 / 2 + 4 = 16 either side of the label... the lanes sit 16px apart at
+		// least, here (24 + 0) / 2 + 4 = 16 as well; with a taller label they part more.
+		expect(Math.abs(wide[1].y - narrow[1].y)).toBe(16);
+
+		const tall = routeThroughGap(0, 200);
+		const other = routeThroughGap(100, 300);
+		spreadGapLanes([tall, other], "TB", 80, [
+			{ point: { x: 100, y: 100 }, alongExtent: 40 },
+			undefined,
+		]);
+		expect(Math.abs(tall[1].y - other[1].y)).toBe(24);
 	});
 
 	it("spreads along x for a left-to-right flow", () => {

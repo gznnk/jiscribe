@@ -8,7 +8,7 @@
 import { Graph, layout } from "@dagrejs/dagre";
 import type { Point, Rect } from "@jiscribe/geometry";
 
-import { calcPositionAlongPath } from "./calcPositionAlongPath";
+import { calcLabelPosition } from "./calcLabelPosition";
 import { type LayoutDirection, isVerticalFlow } from "./LayoutDirection";
 import { spreadGapLanes } from "./spreadGapLanes";
 
@@ -77,6 +77,9 @@ export const EDGE_ANCHOR_STRAIGHT_RANGE = { min: 0.05, max: 0.95 } as const;
 
 /** How far along a side the anchors of several edges sharing it may spread. */
 export const EDGE_ANCHOR_FAN_RANGE = { min: 0.2, max: 0.8 } as const;
+
+/** Least distance in px between two edges joining the same pair of boxes. */
+export const EDGE_BUNDLE_SPACING = 12;
 
 export type LaidOutEdge = {
 	id: string;
@@ -375,7 +378,7 @@ export const computeLayeredLayout = (
 	const isOnlyEdgeOnSide = (nodeId: string, side: LayoutSide): boolean =>
 		edgeCountBySide.get(sideKey(nodeId, side)) === 1;
 
-	const routedEdges = sidedEdges.map(
+	const anchoredEdges = sidedEdges.map(
 		({ edge, sourceBounds, targetBounds, sourceSide, targetSide }) => {
 			const routed = graph.edge(edge.sourceId, edge.targetId, edge.id) as {
 				points?: Point[];
@@ -450,9 +453,13 @@ export const computeLayeredLayout = (
 				);
 			}
 			return {
-				id: edge.id,
+				edge,
 				source,
 				target,
+				sourceBounds,
+				targetBounds,
+				dagrePoints,
+				isAdjacent: slotColumns.length === 0,
 				// Where dagre put the label: a spot on its own polyline, which the
 				// right-angled route passes through or beside.
 				labelPoint:
@@ -461,26 +468,105 @@ export const computeLayeredLayout = (
 					routed.y !== undefined
 						? { x: routed.x - originX, y: routed.y - originY }
 						: undefined,
-				path: calcOrthogonalPath(
-					calcAnchorPoint(sourceBounds, source),
-					calcAnchorPoint(targetBounds, target),
-					dagrePoints,
-					direction,
-				),
 			};
 		},
 	);
+
+	// Edges joining the same two boxes in neighbouring ranks would land on one column;
+	// slide each sideways by a share of the bundle's width, labels included, so they
+	// run side by side.
+	const bundles = new Map<string, typeof anchoredEdges>();
+	for (const anchored of anchoredEdges) {
+		if (!anchored.isAdjacent) {
+			continue;
+		}
+		const key = [anchored.edge.sourceId, anchored.edge.targetId]
+			.sort()
+			.join("\u0000");
+		bundles.set(key, [...(bundles.get(key) ?? []), anchored]);
+	}
+	const labelExtentOf = (edge: LayoutGraphEdge): number => {
+		if (edge.label === undefined) {
+			return 0;
+		}
+		return isVerticalFlow(direction) ? edge.label.width : edge.label.height;
+	};
+	for (const bundle of bundles.values()) {
+		if (bundle.length < 2) {
+			continue;
+		}
+		const offsets: number[] = [0];
+		for (let index = 1; index < bundle.length; index += 1) {
+			offsets.push(
+				offsets[index - 1] +
+					Math.max(
+						EDGE_BUNDLE_SPACING,
+						(labelExtentOf(bundle[index - 1].edge) +
+							labelExtentOf(bundle[index].edge)) /
+							2 +
+							EDGE_BUNDLE_SPACING / 2,
+					),
+			);
+		}
+		const centre = offsets[offsets.length - 1] / 2;
+		bundle.forEach((anchored, index) => {
+			const shift = offsets[index] - centre;
+			const shiftAnchor = (
+				anchor: LayoutEdgeAnchor,
+				bounds: Rect,
+			): LayoutEdgeAnchor => ({
+				side: anchor.side,
+				t: clampRatio(
+					anchor.t +
+						shift / (isVerticalFlow(direction) ? bounds.width : bounds.height),
+					{ min: 0, max: 1 },
+				),
+			});
+			anchored.source = shiftAnchor(anchored.source, anchored.sourceBounds);
+			anchored.target = shiftAnchor(anchored.target, anchored.targetBounds);
+		});
+	}
+
+	const routedEdges = anchoredEdges.map((anchored) => ({
+		...anchored,
+		path: calcOrthogonalPath(
+			calcAnchorPoint(anchored.sourceBounds, anchored.source),
+			calcAnchorPoint(anchored.targetBounds, anchored.target),
+			anchored.dagrePoints,
+			direction,
+		),
+	}));
 	spreadGapLanes(
 		routedEdges.map(({ path }) => path),
 		direction,
 		rankSpacing,
+		routedEdges.map(({ edge, labelPoint }) =>
+			labelPoint !== undefined && edge.label !== undefined
+				? {
+						point: labelPoint,
+						alongExtent: isVerticalFlow(direction)
+							? edge.label.height
+							: edge.label.width,
+					}
+				: undefined,
+		),
 	);
 	const laidOutEdges: LaidOutEdge[] = routedEdges.map(
-		({ path, labelPoint, ...edge }) => ({
-			...edge,
+		({ edge, source, target, path, labelPoint }) => ({
+			id: edge.id,
+			source,
+			target,
 			points: path.slice(1, -1),
 			...(labelPoint !== undefined
-				? { labelPosition: calcPositionAlongPath(path, labelPoint) }
+				? {
+						labelPosition: calcLabelPosition(
+							path,
+							labelPoint,
+							labelExtentOf(edge),
+							direction,
+							rankSpacing,
+						),
+					}
 				: {}),
 		}),
 	);

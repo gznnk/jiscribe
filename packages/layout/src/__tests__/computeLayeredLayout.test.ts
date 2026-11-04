@@ -208,6 +208,27 @@ describe("computeLayeredLayout", () => {
 		expect(result.edges[0].labelPosition).toBeCloseTo(0.5, 5);
 	});
 
+	it("runs two edges between the same boxes side by side", () => {
+		const result = computeLayeredLayout(
+			[box("a"), box("b")],
+			[
+				{ id: "down", sourceId: "a", targetId: "b" },
+				{ id: "back", sourceId: "b", targetId: "a" },
+			],
+		);
+
+		const byId = new Map(result.edges.map((edge) => [edge.id, edge]));
+		const down = byId.get("down");
+		const back = byId.get("back");
+		// Each is still a straight line, 12px to one side of the shared column.
+		expect(down?.points).toEqual([]);
+		expect(back?.points).toEqual([]);
+		expect(down?.source.t).toBe(down?.target.t);
+		expect(
+			Math.abs(((down?.source.t ?? 0) - (back?.target.t ?? 0)) * 160),
+		).toBeCloseTo(12, 6);
+	});
+
 	it("rejects an edge naming a node that is not there", () => {
 		expect(() =>
 			computeLayeredLayout(
