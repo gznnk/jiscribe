@@ -341,6 +341,21 @@ describe("createCanvasToolDescriptors", () => {
 			z.safeParse(rect, { x: 0, y: 0, width: 200, height: 120 }).success,
 		).toBe(true);
 	});
+
+	it("carries includeContained of find_overlaps through the schema into the operation", () => {
+		const findOverlaps = findDescriptor(
+			createCanvasToolDescriptors(capabilities),
+			"find_overlaps",
+		);
+		const parsed = z.parse(z.object(findOverlaps.inputSchema), {
+			includeContained: true,
+		});
+
+		expect(findOverlaps.toOp(parsed)).toEqual({
+			kind: "findOverlaps",
+			includeContained: true,
+		});
+	});
 });
 
 describe("CanvasToolDescriptor.toOp", () => {

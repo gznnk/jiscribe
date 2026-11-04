@@ -207,14 +207,74 @@ const applyFitView = (
 	}
 };
 
-/** One overlapping pair. Containment is usually deliberate, so which of the two this is always comes with it */
-const describeOverlap = ({ ids, overlap, covers }: ObjectOverlap): string => {
-	const [first, second] = ids;
-	const coverNote =
-		covers === null
-			? "neither contains the other, so this is usually a layout mistake"
-			: `"${covers === "first" ? first : second}" contains the other entirely, which is usually deliberate`;
-	return `- "${first}" and "${second}" share ${formatRect(overlap)}; ${coverNote}`;
+/** An overlapping pair whose two boxes are identical */
+type CoincidingOverlap = ObjectOverlap & { covers: "both" };
+
+/** An overlapping pair where neither box covers the other */
+type PartialOverlap = ObjectOverlap & { covers: null };
+
+/** An overlapping pair where one box covers the other, which `covers` names */
+type Containment = ObjectOverlap & { covers: "first" | "second" };
+
+const isCoincidingOverlap = (
+	value: ObjectOverlap,
+): value is CoincidingOverlap => value.covers === "both";
+
+const isPartialOverlap = (value: ObjectOverlap): value is PartialOverlap =>
+	value.covers === null;
+
+const isContainment = (value: ObjectOverlap): value is Containment =>
+	value.covers === "first" || value.covers === "second";
+
+/** The pairs whose boxes are identical */
+const describeCoincidingOverlaps = (
+	coincidingOverlaps: CoincidingOverlap[],
+): string[] =>
+	coincidingOverlaps.length === 0
+		? []
+		: [
+				`${coincidingOverlaps.length} pair(s) occupying the same box:`,
+				...coincidingOverlaps.map(
+					({ ids: [first, second], overlap }) =>
+						`- "${first}" and "${second}" both occupy ${formatRect(overlap)}`,
+				),
+			];
+
+/** The pairs that share area without either box containing the other */
+const describePartialOverlaps = (
+	partialOverlaps: PartialOverlap[],
+): string[] =>
+	partialOverlaps.length === 0
+		? []
+		: [
+				`${partialOverlaps.length} partly overlapping pair(s), widest overlap first:`,
+				...partialOverlaps.map(
+					({ ids: [first, second], overlap }) =>
+						`- "${first}" and "${second}" share ${formatRect(overlap)}`,
+				),
+			];
+
+/** The pairs where one box contains the other: a count, or with includeContained one line each naming which contains which */
+const describeContainments = (
+	containments: Containment[],
+	includeContained: boolean,
+): string[] => {
+	if (containments.length === 0) {
+		return [];
+	}
+	if (!includeContained) {
+		return [
+			`${containments.length} pair(s) where one box contains the other are not listed (includeContained: true lists them).`,
+		];
+	}
+	return [
+		`${containments.length} pair(s) where one box contains the other, widest overlap first:`,
+		...containments.map(({ ids: [first, second], overlap, covers }) => {
+			const [outerId, innerId] =
+				covers === "first" ? [first, second] : [second, first];
+			return `- "${first}" and "${second}" share ${formatRect(overlap)}; "${outerId}" contains "${innerId}" entirely`;
+		}),
+	];
 };
 
 /**
@@ -313,12 +373,26 @@ export const applyHandleOp = async (
 							: `none of the ${op.ids.length} shape(s) named overlaps another (connectors, groups and ids that are not on the canvas are skipped, so check the ids if you expected an overlap)`,
 				};
 			}
+			// filter keeps the canvas's order (widest shared area first) within each group
+			const coincidingOverlaps = overlaps.filter(isCoincidingOverlap);
+			const partialOverlaps = overlaps.filter(isPartialOverlap);
+			const containments = overlaps.filter(isContainment);
+			const hasUncontainedOverlap =
+				coincidingOverlaps.length > 0 || partialOverlaps.length > 0;
 			return {
 				ok: true,
 				text: [
-					`${overlaps.length} overlapping pair(s), widest overlap first:`,
-					...overlaps.map(describeOverlap),
-					"Open the layout up with translate_objects, or re-place shapes with set_positions.",
+					...describeCoincidingOverlaps(coincidingOverlaps),
+					...describePartialOverlaps(partialOverlaps),
+					...(hasUncontainedOverlap
+						? []
+						: ["no pair(s) occupying the same box or partly overlapping"]),
+					...describeContainments(containments, op.includeContained ?? false),
+					...(hasUncontainedOverlap
+						? [
+								"Overlaps are allowed; where one was not meant, open the layout up with translate_objects, re-place shapes with set_positions, or remove a shape placed twice with delete_objects.",
+							]
+						: []),
 				].join("\n"),
 			};
 		}

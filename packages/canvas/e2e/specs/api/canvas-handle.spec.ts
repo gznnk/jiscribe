@@ -480,8 +480,7 @@ test.describe("canvas handle / measure", () => {
 		);
 
 		expect(result.pairs).toEqual([[back, front].sort()]);
-		// Neither box contains the other, so this is the partial overlap a layout
-		// check is looking for.
+		// Neither box contains the other, so the overlap is partial.
 		expect(result.covers).toEqual([null]);
 		expect(result.shared?.width).toBeGreaterThan(0);
 		expect(result.shared?.height).toBeGreaterThan(0);

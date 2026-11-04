@@ -1,3 +1,4 @@
+import type { ObjectOverlap } from "@jiscribe/canvas";
 import { describe, expect, it } from "vitest";
 
 import { MAX_SVG_CHARS } from "../../canvasOps";
@@ -173,34 +174,107 @@ describe("applyHandleOp (measuring)", () => {
 		expect(result.text).toContain("describe_canvas");
 	});
 
-	it("reports overlaps with the pair, the rect, and whether one contains the other", async () => {
+	// Canvas order (widest shared area first) interleaves the three groups
+	const mixedOverlaps: ObjectOverlap[] = [
+		{
+			ids: ["client", "client-dup"],
+			overlap: { x: 80, y: 420, width: 160, height: 80 },
+			covers: "both",
+		},
+		{
+			ids: ["frame", "box-c"],
+			overlap: { x: 0, y: 0, width: 100, height: 100 },
+			covers: "first",
+		},
+		{
+			ids: ["box-a", "box-b"],
+			overlap: { x: 30, y: 40, width: 50, height: 20 },
+			covers: null,
+		},
+		{
+			ids: ["icon", "card"],
+			overlap: { x: 200, y: 0, width: 20, height: 20 },
+			covers: "second",
+		},
+		{
+			ids: ["box-d", "box-e"],
+			overlap: { x: 300, y: 0, width: 10, height: 10 },
+			covers: null,
+		},
+	];
+	const containedOnly: ObjectOverlap[] = [
+		{
+			ids: ["frame", "box-c"],
+			overlap: { x: 0, y: 0, width: 40, height: 10 },
+			covers: "first",
+		},
+	];
+	const OVERLAP_ACTIONS_LINE =
+		"Overlaps are allowed; where one was not meant, open the layout up with translate_objects, re-place shapes with set_positions, or remove a shape placed twice with delete_objects.";
+
+	it("reports same-box pairs, then partial overlaps, and only counts containments, with no verdict on any", async () => {
 		const result = await applyHandleOp(
 			{ kind: "findOverlaps" },
-			createFakeHandleControl({
-				findOverlaps: () => [
-					{
-						ids: ["box-a", "box-b"],
-						overlap: { x: 30, y: 40, width: 50, height: 20 },
-						covers: null,
-					},
-					{
-						ids: ["frame", "box-c"],
-						overlap: { x: 0, y: 0, width: 40, height: 10 },
-						covers: "first",
-					},
-				],
-			}),
+			createFakeHandleControl({ findOverlaps: () => mixedOverlaps }),
 		);
 
 		expect(result.ok).toBe(true);
-		expect(result.text).toContain("2 overlapping pair(s)");
-		expect(result.text).toContain(
-			'"box-a" and "box-b" share (30, 40) 50 x 20 px',
-		);
-		expect(result.text).toContain("usually a layout mistake");
-		expect(result.text).toContain('"frame" contains the other entirely');
-		expect(result.text).toContain("translate_objects");
+		expect(result.text.split("\n")).toEqual([
+			"1 pair(s) occupying the same box:",
+			'- "client" and "client-dup" both occupy (80, 420) 160 x 80 px',
+			"2 partly overlapping pair(s), widest overlap first:",
+			'- "box-a" and "box-b" share (30, 40) 50 x 20 px',
+			'- "box-d" and "box-e" share (300, 0) 10 x 10 px',
+			"2 pair(s) where one box contains the other are not listed (includeContained: true lists them).",
+			OVERLAP_ACTIONS_LINE,
+		]);
+		expect(result.text).not.toMatch(/usually|mistake|deliberate|duplicate/);
 	});
+
+	it("lists the containments last, naming which box contains which, with includeContained", async () => {
+		const result = await applyHandleOp(
+			{ kind: "findOverlaps", includeContained: true },
+			createFakeHandleControl({ findOverlaps: () => mixedOverlaps }),
+		);
+
+		expect(result.ok).toBe(true);
+		expect(result.text.split("\n").slice(5)).toEqual([
+			"2 pair(s) where one box contains the other, widest overlap first:",
+			'- "frame" and "box-c" share (0, 0) 100 x 100 px; "frame" contains "box-c" entirely',
+			'- "icon" and "card" share (200, 0) 20 x 20 px; "card" contains "icon" entirely',
+			OVERLAP_ACTIONS_LINE,
+		]);
+	});
+
+	it.each([
+		[
+			false,
+			[
+				"1 pair(s) where one box contains the other are not listed (includeContained: true lists them).",
+			],
+		],
+		[
+			true,
+			[
+				"1 pair(s) where one box contains the other, widest overlap first:",
+				'- "frame" and "box-c" share (0, 0) 40 x 10 px; "frame" contains "box-c" entirely',
+			],
+		],
+	])(
+		"says nothing else overlaps and offers no fix when only containments are found (includeContained: %s)",
+		async (includeContained, containmentLines) => {
+			const result = await applyHandleOp(
+				{ kind: "findOverlaps", includeContained },
+				createFakeHandleControl({ findOverlaps: () => containedOnly }),
+			);
+
+			expect(result.ok).toBe(true);
+			expect(result.text.split("\n")).toEqual([
+				"no pair(s) occupying the same box or partly overlapping",
+				...containmentLines,
+			]);
+		},
+	);
 
 	it("succeeds on no overlaps at all, and names what it never compared", async () => {
 		const all = await applyHandleOp(
