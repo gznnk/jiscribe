@@ -3,65 +3,115 @@ import type { Point } from "@jiscribe/geometry";
 import { calcPositionAlongPath } from "./calcPositionAlongPath";
 import { type LayoutDirection, isVerticalFlow } from "./LayoutDirection";
 
-/** Room a label needs beyond its own extent on the run it sits on, in px. */
-const LABEL_RUN_MARGIN = 8;
+/** Room kept between a label's box and the nearest corner of its own route, in px. */
+const LABEL_CORNER_CLEARANCE = 8;
+
+/** Room kept between a label set beside its line and the line itself, in px. */
+const LABEL_BESIDE_CLEARANCE = 6;
+
+/** Where a label sits relative to its route, in the terms a connector label stores. */
+export type LabelPlacement = {
+	/** 0 at the route's start, 1 at its end. */
+	position: number;
+	/** Signed distance from the line, in px; 0 puts the label on it. */
+	offset: number;
+};
+
+type Segment = {
+	start: Point;
+	end: Point;
+	length: number;
+	isHorizontal: boolean;
+};
 
 /**
- * Where along a right-angled route its label goes: on the run that crosses the gap
- * dagre kept the label in, when the run is long enough to carry the label clear of
- * both corners, level with where dagre put it (dagre keeps the labels of one gap
- * apart sideways) and no nearer a corner than half the label; else at the spot on
- * the route nearest to where dagre put the label.
+ * Where a right-angled route's label goes, so that its box never covers a corner of
+ * the route (the box knocks the line out behind it, and a corner half hidden reads
+ * as a line gone thin). In order of preference: on the run through the gap dagre
+ * kept the label in, level with where dagre put it; else on the longest segment
+ * that can hold it; else beside the longest segment there is.
  *
  * @param path - The whole route, both ends included
  * @param labelPoint - Where dagre centred the label, in the same frame as `path`
- * @param labelExtent - The label box's size across the rank axis (its width in a
- *   top-to-bottom flow), which a sideways run has to exceed to hold it
+ * @param labelSize - The label box; a horizontal segment has to hold its width and a
+ *   vertical one its height, each plus {@link LABEL_CORNER_CLEARANCE} on both sides
  * @param direction - Decides which axis is the rank axis
  * @param rankSpacing - Width of a gap in px; a run further than this from the label
  *   lies in another gap and is not the label's
- * @returns 0 at the route's start, 1 at its end
  */
 export const calcLabelPosition = (
 	path: readonly Point[],
 	labelPoint: Point,
-	labelExtent: number,
+	labelSize: { width: number; height: number },
 	direction: LayoutDirection,
 	rankSpacing: number,
-): number => {
+): LabelPlacement => {
 	const vertical = isVerticalFlow(direction);
 	const along = (point: Point): number => (vertical ? point.y : point.x);
-	const across = (point: Point): number => (vertical ? point.x : point.y);
-	let bestIndex = -1;
-	let bestDistance = rankSpacing;
-	for (let index = 0; index + 1 < path.length; index += 1) {
+	const segments: Segment[] = path.slice(1).map((end, index) => {
 		const start = path[index];
-		const end = path[index + 1];
+		return {
+			start,
+			end,
+			length: Math.abs(end.x - start.x) + Math.abs(end.y - start.y),
+			isHorizontal: start.y === end.y,
+		};
+	});
+	const extentAlong = (segment: Segment): number =>
+		segment.isHorizontal ? labelSize.width : labelSize.height;
+	const holds = (segment: Segment): boolean =>
+		segment.length >= extentAlong(segment) + 2 * LABEL_CORNER_CLEARANCE;
+	const onLine = (point: Point): LabelPlacement => ({
+		position: calcPositionAlongPath(path, point),
+		offset: 0,
+	});
+
+	// 1. The run through the label's own gap, level with dagre's spot.
+	let gapRun: Segment | undefined;
+	let gapDistance = rankSpacing;
+	for (const segment of segments) {
 		const isSidewaysRun =
-			along(start) === along(end) && across(start) !== across(end);
-		const distance = Math.abs(along(start) - along(labelPoint));
-		if (isSidewaysRun && distance < bestDistance) {
-			bestIndex = index;
-			bestDistance = distance;
+			along(segment.start) === along(segment.end) && segment.length > 0;
+		const distance = Math.abs(along(segment.start) - along(labelPoint));
+		if (isSidewaysRun && distance < gapDistance) {
+			gapRun = segment;
+			gapDistance = distance;
 		}
 	}
-	if (bestIndex >= 0) {
-		const start = path[bestIndex];
-		const end = path[bestIndex + 1];
-		if (
-			Math.abs(across(end) - across(start)) >=
-			labelExtent + LABEL_RUN_MARGIN
-		) {
-			const lower = Math.min(across(start), across(end)) + labelExtent / 2;
-			const upper = Math.max(across(start), across(end)) - labelExtent / 2;
-			const acrossValue = Math.min(upper, Math.max(lower, across(labelPoint)));
-			return calcPositionAlongPath(
-				path,
-				vertical
-					? { x: acrossValue, y: along(start) }
-					: { x: along(start), y: acrossValue },
-			);
-		}
+	if (gapRun !== undefined && holds(gapRun)) {
+		const inset = extentAlong(gapRun) / 2 + LABEL_CORNER_CLEARANCE;
+		const clampAcross = (value: number, a: number, b: number): number =>
+			Math.min(Math.max(a, b) - inset, Math.max(Math.min(a, b) + inset, value));
+		return onLine(
+			gapRun.isHorizontal
+				? {
+						x: clampAcross(labelPoint.x, gapRun.start.x, gapRun.end.x),
+						y: gapRun.start.y,
+					}
+				: {
+						x: gapRun.start.x,
+						y: clampAcross(labelPoint.y, gapRun.start.y, gapRun.end.y),
+					},
+		);
 	}
-	return calcPositionAlongPath(path, labelPoint);
+
+	// 2. The longest segment that can hold the label, at its midpoint.
+	const longestFirst = [...segments].sort((a, b) => b.length - a.length);
+	const midpointOf = (segment: Segment): Point => ({
+		x: (segment.start.x + segment.end.x) / 2,
+		y: (segment.start.y + segment.end.y) / 2,
+	});
+	const holding = longestFirst.find(holds);
+	if (holding !== undefined) {
+		return onLine(midpointOf(holding));
+	}
+
+	// 3. Beside the longest segment, so the box leaves the line alone.
+	const longest = longestFirst[0];
+	return {
+		position: calcPositionAlongPath(path, midpointOf(longest)),
+		offset:
+			(longest.isHorizontal ? labelSize.height : labelSize.width) / 2 +
+			LABEL_BESIDE_CLEARANCE,
+	};
 };

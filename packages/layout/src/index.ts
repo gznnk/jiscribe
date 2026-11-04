@@ -1,3 +1,4 @@
+export { type LabelPlacement, calcLabelPosition } from "./calcLabelPosition";
 export { calcPositionAlongPath } from "./calcPositionAlongPath";
 export { GAP_LANE_SPACING } from "./spreadGapLanes";
 export {

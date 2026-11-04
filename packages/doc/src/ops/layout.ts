@@ -203,10 +203,10 @@ export const layoutObjects = (
 			connector.label !== undefined &&
 			laidOutEdge?.labelPosition !== undefined
 		) {
-			// On the line, at the spot the layout kept free; the knockout hides the line
-			// behind the text.
+			// On the line where the layout found room for it, beside the line when the
+			// route is too short to hold it anywhere.
 			connector.label.position = laidOutEdge.labelPosition;
-			connector.label.offset = 0;
+			connector.label.offset = laidOutEdge.labelOffset ?? 0;
 		}
 		// A straight line is what a centre anchor defaults to; between the facing sides
 		// the arrangement was made for, the right-angled route is the one that reads.

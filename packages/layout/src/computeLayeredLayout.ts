@@ -8,7 +8,7 @@
 import { Graph, layout } from "@dagrejs/dagre";
 import type { Point, Rect } from "@jiscribe/geometry";
 
-import { calcLabelPosition } from "./calcLabelPosition";
+import { type LabelPlacement, calcLabelPosition } from "./calcLabelPosition";
 import { type LayoutDirection, isVerticalFlow } from "./LayoutDirection";
 import { spreadGapLanes } from "./spreadGapLanes";
 
@@ -96,9 +96,15 @@ export type LaidOutEdge = {
 	points: Point[];
 	/**
 	 * Where along the route the label sits, 0 at the source and 1 at the target: the spot
-	 * the layout kept free for it. Only for an edge given a `label`.
+	 * the layout kept free for it, or the nearest stretch that holds it clear of every
+	 * corner (see calcLabelPosition). Only for an edge given a `label`.
 	 */
 	labelPosition?: number;
+	/**
+	 * Signed distance in px the label is set off its line; 0 but for a route too short
+	 * to hold the label on any segment. Only for an edge given a `label`.
+	 */
+	labelOffset?: number;
 };
 
 export type LayeredLayoutResult = {
@@ -551,22 +557,29 @@ export const computeLayeredLayout = (
 				: undefined,
 		),
 	);
+	const toLabelFields = ({
+		position,
+		offset,
+	}: LabelPlacement): Pick<LaidOutEdge, "labelPosition" | "labelOffset"> => ({
+		labelPosition: position,
+		labelOffset: offset,
+	});
 	const laidOutEdges: LaidOutEdge[] = routedEdges.map(
 		({ edge, source, target, path, labelPoint }) => ({
 			id: edge.id,
 			source,
 			target,
 			points: path.slice(1, -1),
-			...(labelPoint !== undefined
-				? {
-						labelPosition: calcLabelPosition(
+			...(labelPoint !== undefined && edge.label !== undefined
+				? toLabelFields(
+						calcLabelPosition(
 							path,
 							labelPoint,
-							labelExtentOf(edge),
+							edge.label,
 							direction,
 							rankSpacing,
 						),
-					}
+					)
 				: {}),
 		}),
 	);

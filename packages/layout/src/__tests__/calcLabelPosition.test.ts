@@ -10,23 +10,48 @@ describe("calcLabelPosition", () => {
 		{ x: 100, y: 50 },
 		{ x: 100, y: 100 },
 	];
+	const size = { width: 40, height: 20 };
 
 	it("puts the label on the run through its gap, level with dagre's spot", () => {
-		expect(calcLabelPosition(path, { x: 50, y: 50 }, 40, "TB", 80)).toBe(0.5);
-		expect(calcLabelPosition(path, { x: 70, y: 50 }, 40, "TB", 80)).toBe(0.6);
+		expect(calcLabelPosition(path, { x: 50, y: 50 }, size, "TB", 80)).toEqual({
+			position: 0.5,
+			offset: 0,
+		});
+		expect(
+			calcLabelPosition(path, { x: 70, y: 50 }, size, "TB", 80).position,
+		).toBe(0.6);
 	});
 
-	it("keeps the label half its extent clear of the run's corners", () => {
-		// Dagre's spot lies past the run's end; the label stops 20px short of the corner.
-		expect(calcLabelPosition(path, { x: 300, y: 50 }, 40, "TB", 80)).toBe(0.65);
+	it("keeps the label's box clear of the run's corners", () => {
+		// Dagre's spot lies past the run's end; the label stops 20 + 8 short of the corner.
+		expect(
+			calcLabelPosition(path, { x: 300, y: 50 }, size, "TB", 80).position,
+		).toBe(0.61);
 	});
 
-	it("falls back to the nearest spot on the route when the run is too short", () => {
-		// A label wider than the run: the nearest spot to dagre's point is the first corner.
-		expect(calcLabelPosition(path, { x: 20, y: 50 }, 120, "TB", 80)).toBe(0.35);
+	it("moves to the longest segment that holds it when the run is too short", () => {
+		// A label wider than the 100px run goes to a vertical segment: both are 50 long
+		// and hold a 20px-high label, so the first one, at its midpoint.
+		const wide = { width: 120, height: 20 };
+		expect(calcLabelPosition(path, { x: 50, y: 50 }, wide, "TB", 80)).toEqual({
+			position: 0.125,
+			offset: 0,
+		});
+	});
+
+	it("sets the label beside the longest segment when none can hold it", () => {
+		const huge = { width: 120, height: 60 };
+		expect(calcLabelPosition(path, { x: 50, y: 50 }, huge, "TB", 80)).toEqual({
+			position: 0.5,
+			offset: 36,
+		});
 	});
 
 	it("ignores a run in another gap", () => {
-		expect(calcLabelPosition(path, { x: 0, y: 200 }, 40, "TB", 80)).toBe(1);
+		// The label belongs to a gap at y = 200: no run there, so the longest holding
+		// segment (the run, 100 long) takes it.
+		expect(
+			calcLabelPosition(path, { x: 0, y: 200 }, size, "TB", 80).position,
+		).toBe(0.5);
 	});
 });
