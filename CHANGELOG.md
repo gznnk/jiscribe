@@ -19,7 +19,9 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   AI tool over it) arranges objects as a layered graph the way a flowchart renderer
   does: the connectors between them decide the layers, each layer is ordered to
   reduce crossings, and every connector between two placed objects is re-anchored
-  onto the facing sides (fanned out along a side several of them share) and given
+  onto the facing sides (straight on the column it travels in where that crosses
+  the side, at the midpoint when it is the side's only connector, fanned out
+  along a side several of them share) and given
   a right-angled route around the objects between them, on a lane of its own where
   several routes cross one gap sideways; a labelled connector gets room for its
   label, which moves onto the line at that spot. Direction (`TB` /

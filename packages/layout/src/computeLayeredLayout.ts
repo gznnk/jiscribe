@@ -61,14 +61,22 @@ export type LayoutEdgeAnchor = {
 	side: LayoutSide;
 	/**
 	 * Position along the side, 0..1 measured left to right on `top` / `bottom` and top to
-	 * bottom on `left` / `right`; 0.5 is the side's midpoint. Kept within
-	 * {@link EDGE_ANCHOR_T_RANGE} so an edge never leaves at a corner.
+	 * bottom on `left` / `right`; 0.5 is the side's midpoint. Within
+	 * {@link EDGE_ANCHOR_STRAIGHT_RANGE} when that lets the edge leave in a straight line,
+	 * otherwise 0.5 for the only edge on its side and within {@link EDGE_ANCHOR_FAN_RANGE}
+	 * for one of several (see calcEndAnchor).
 	 */
 	t: number;
 };
 
-/** How far along a side an anchor may sit, so edges fan out without reaching the corners. */
-export const EDGE_ANCHOR_T_RANGE = { min: 0.2, max: 0.8 } as const;
+/**
+ * How far along a side an anchor may sit when it puts the edge straight on the column
+ * it travels in, so a short jog in the gap is traded for a line near the corner.
+ */
+export const EDGE_ANCHOR_STRAIGHT_RANGE = { min: 0.05, max: 0.95 } as const;
+
+/** How far along a side the anchors of several edges sharing it may spread. */
+export const EDGE_ANCHOR_FAN_RANGE = { min: 0.2, max: 0.8 } as const;
 
 export type LaidOutEdge = {
 	id: string;
@@ -135,26 +143,52 @@ const calcAnchorPoint = (bounds: Rect, anchor: LayoutEdgeAnchor): Point => {
 	}
 };
 
+/** A side of one box, as the key the anchor rules count edges on. */
+const sideKey = (nodeId: string, side: LayoutSide): string =>
+	`${nodeId}:${side}`;
+
+const clampRatio = (
+	ratio: number,
+	range: { readonly min: number; readonly max: number },
+): number => Math.min(range.max, Math.max(range.min, ratio));
+
+const isWithin = (
+	ratio: number,
+	range: { readonly min: number; readonly max: number },
+): boolean => ratio >= range.min && ratio <= range.max;
+
+/** Where `column` (a coordinate across the rank axis) falls along the box's side, 0..1. */
+const calcSideRatio = (
+	bounds: Rect,
+	column: number,
+	direction: LayoutDirection,
+): number =>
+	isVerticalFlow(direction)
+		? (column - bounds.x) / bounds.width
+		: (column - bounds.y) / bounds.height;
+
 /**
- * The anchor on `side` closest to `toward` (a coordinate across the rank axis), so
- * edges leaving or entering one box fan out toward where each of them goes.
+ * The anchor for one end of an edge, given the column the edge travels in beyond
+ * that end. On the column itself when the column crosses the side, so the edge
+ * leaves straight; else at the side's midpoint when this is the side's only edge,
+ * since a jog in the gap is then unavoidable and a centred one reads best; else
+ * leaning toward the column, so the edges sharing the side fan out.
  */
-const calcAnchorToward = (
+const calcEndAnchor = (
 	bounds: Rect,
 	side: LayoutSide,
-	toward: number,
+	column: number,
+	isOnlyEdgeOnSide: boolean,
 	direction: LayoutDirection,
 ): LayoutEdgeAnchor => {
-	const start = isVerticalFlow(direction) ? bounds.x : bounds.y;
-	const extent = isVerticalFlow(direction) ? bounds.width : bounds.height;
-	const ratio = (toward - start) / extent;
-	return {
-		side,
-		t: Math.min(
-			EDGE_ANCHOR_T_RANGE.max,
-			Math.max(EDGE_ANCHOR_T_RANGE.min, ratio),
-		),
-	};
+	const ratio = calcSideRatio(bounds, column, direction);
+	if (isWithin(ratio, EDGE_ANCHOR_STRAIGHT_RANGE)) {
+		return { side, t: ratio };
+	}
+	if (isOnlyEdgeOnSide) {
+		return { side, t: 0.5 };
+	}
+	return { side, t: clampRatio(ratio, EDGE_ANCHOR_FAN_RANGE) };
 };
 
 /**
@@ -312,40 +346,109 @@ export const computeLayeredLayout = (
 		laidOutNodes.map(({ id, bounds }) => [id, bounds] as const),
 	);
 
-	const routedEdges = edges
+	const centreOf = (bounds: Rect): number =>
+		isVerticalFlow(direction)
+			? bounds.x + bounds.width / 2
+			: bounds.y + bounds.height / 2;
+	const sidedEdges = edges
 		.filter((edge) => laidOutEdgeIds.includes(edge.id))
 		.map((edge) => {
+			const sourceBounds = boundsById.get(edge.sourceId) as Rect;
+			const targetBounds = boundsById.get(edge.targetId) as Rect;
+			return {
+				edge,
+				sourceBounds,
+				targetBounds,
+				...calcFacingSides(sourceBounds, targetBounds, direction),
+			};
+		});
+	// How many edges meet each side, which decides whether an end may sit at its midpoint.
+	const edgeCountBySide = new Map<string, number>();
+	for (const { edge, sourceSide, targetSide } of sidedEdges) {
+		for (const key of [
+			sideKey(edge.sourceId, sourceSide),
+			sideKey(edge.targetId, targetSide),
+		]) {
+			edgeCountBySide.set(key, (edgeCountBySide.get(key) ?? 0) + 1);
+		}
+	}
+	const isOnlyEdgeOnSide = (nodeId: string, side: LayoutSide): boolean =>
+		edgeCountBySide.get(sideKey(nodeId, side)) === 1;
+
+	const routedEdges = sidedEdges.map(
+		({ edge, sourceBounds, targetBounds, sourceSide, targetSide }) => {
 			const routed = graph.edge(edge.sourceId, edge.targetId, edge.id) as {
 				points?: Point[];
 				x?: number;
 				y?: number;
 			};
-			const sourceBounds = boundsById.get(edge.sourceId) as Rect;
-			const targetBounds = boundsById.get(edge.targetId) as Rect;
-			const sides = calcFacingSides(sourceBounds, targetBounds, direction);
 			const dagrePoints = (routed.points ?? []).map(({ x, y }) => ({
 				x: x - originX,
 				y: y - originY,
 			}));
-			// Each end leans toward the first column the edge travels in beyond it: the
-			// nearest dummy slot, or the other box's centre when there is none.
 			const slotColumns = readSlotColumns(dagrePoints, direction);
-			const centreOf = (bounds: Rect): number =>
-				isVerticalFlow(direction)
-					? bounds.x + bounds.width / 2
-					: bounds.y + bounds.height / 2;
-			const source = calcAnchorToward(
-				sourceBounds,
-				sides.sourceSide,
-				slotColumns[0] ?? centreOf(targetBounds),
-				direction,
-			);
-			const target = calcAnchorToward(
-				targetBounds,
-				sides.targetSide,
-				slotColumns[slotColumns.length - 1] ?? centreOf(sourceBounds),
-				direction,
-			);
+			const sourceAlone = isOnlyEdgeOnSide(edge.sourceId, sourceSide);
+			const targetAlone = isOnlyEdgeOnSide(edge.targetId, targetSide);
+			let source: LayoutEdgeAnchor;
+			let target: LayoutEdgeAnchor;
+			if (slotColumns.length === 0) {
+				// Boxes in neighbouring ranks: one straight line when either centre crosses
+				// the other side and that other side is not shared, else each end on its own.
+				const targetCentreRatio = calcSideRatio(
+					sourceBounds,
+					centreOf(targetBounds),
+					direction,
+				);
+				const sourceCentreRatio = calcSideRatio(
+					targetBounds,
+					centreOf(sourceBounds),
+					direction,
+				);
+				if (
+					targetAlone &&
+					isWithin(targetCentreRatio, EDGE_ANCHOR_STRAIGHT_RANGE)
+				) {
+					source = { side: sourceSide, t: targetCentreRatio };
+					target = { side: targetSide, t: 0.5 };
+				} else if (
+					sourceAlone &&
+					isWithin(sourceCentreRatio, EDGE_ANCHOR_STRAIGHT_RANGE)
+				) {
+					source = { side: sourceSide, t: 0.5 };
+					target = { side: targetSide, t: sourceCentreRatio };
+				} else {
+					source = calcEndAnchor(
+						sourceBounds,
+						sourceSide,
+						centreOf(targetBounds),
+						sourceAlone,
+						direction,
+					);
+					target = calcEndAnchor(
+						targetBounds,
+						targetSide,
+						centreOf(sourceBounds),
+						targetAlone,
+						direction,
+					);
+				}
+			} else {
+				// Each end meets the slot column the edge travels in next to it.
+				source = calcEndAnchor(
+					sourceBounds,
+					sourceSide,
+					slotColumns[0],
+					sourceAlone,
+					direction,
+				);
+				target = calcEndAnchor(
+					targetBounds,
+					targetSide,
+					slotColumns[slotColumns.length - 1],
+					targetAlone,
+					direction,
+				);
+			}
 			return {
 				id: edge.id,
 				source,
@@ -365,7 +468,8 @@ export const computeLayeredLayout = (
 					direction,
 				),
 			};
-		});
+		},
+	);
 	spreadGapLanes(
 		routedEdges.map(({ path }) => path),
 		direction,
