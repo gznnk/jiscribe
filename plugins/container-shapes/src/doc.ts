@@ -4,14 +4,13 @@
 // diagnostics of the VSCode extension, and the like. It imports only ./schema/** and
 // @jiscribe/doc / @jiscribe/canvas-sdk/doc, and never pulls in
 // presentation / state / stencil.
-import { isNumber } from "@jiscribe/basic-validators";
 import { createFrameObjectDoc } from "@jiscribe/canvas-sdk/doc";
 import type { CanvasDocPlugin, ObjectDocDefinition } from "@jiscribe/doc";
 
+import { readContainerHeaderHeight } from "./schema/calcContainerHeaderHeight";
 import type { ContainerDoc } from "./schema/ContainerDoc";
 import {
 	CONTAINER_DOC_DEFAULTS,
-	CONTAINER_HEADER_HEIGHT,
 	ContainerFeatures,
 } from "./schema/ContainerDoc";
 import { calcContainerTextRegion } from "./schema/textRegions";
@@ -26,19 +25,7 @@ export const containerDocDefinition: ObjectDocDefinition = createFrameObjectDoc(
 			"headerHeight",
 		] satisfies readonly (keyof ContainerDoc)[],
 		textRegion: calcContainerTextRegion,
-		// The band as the document sizes it, uncapped: a layout grows the box past it
-		// anyway, and a value the validator would refuse falls back to the default.
-		container: (doc) => {
-			const { headerHeight } = doc as Partial<
-				Pick<ContainerDoc, "headerHeight">
-			>;
-			return {
-				titleHeight:
-					isNumber(headerHeight) && headerHeight >= 1
-						? headerHeight
-						: CONTAINER_HEADER_HEIGHT,
-			};
-		},
+		container: (doc) => ({ titleHeight: readContainerHeaderHeight(doc) }),
 		// The region is the title band, so sizing the box from the text would give
 		// the height of the title and swallow whatever the container frames.
 		autoHeight: false,

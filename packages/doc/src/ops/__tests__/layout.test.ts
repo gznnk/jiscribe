@@ -264,6 +264,48 @@ describe("layoutObjects with container shapes and declared connect points", () =
 		expectValid(doc);
 	});
 
+	it.each([-5, Number.NaN])(
+		"treats a title band of %s as none, keeping every box finite",
+		(headerHeight) => {
+			const doc = emptyDoc();
+			regionDocOps.addObject(doc, "region", {
+				x: 0,
+				y: 0,
+				width: 400,
+				height: 300,
+			});
+			(readObject(doc, "region-1") as { headerHeight?: number }).headerHeight =
+				headerHeight;
+			regionDocOps.addObject(doc, "rect", {
+				x: 20,
+				y: 40,
+				width: 100,
+				height: 50,
+			});
+			regionDocOps.addObject(doc, "rect", {
+				x: 20,
+				y: 200,
+				width: 100,
+				height: 50,
+			});
+			regionDocOps.connect(doc, { sourceId: "rect-1", targetId: "rect-2" });
+
+			regionDocOps.layoutObjects(doc, undefined, { rankSpacing: 60 });
+
+			for (const id of ["region-1", "rect-1", "rect-2"]) {
+				for (const value of Object.values(box(doc, id))) {
+					expect(Number.isFinite(value)).toBe(true);
+				}
+			}
+			// Less room than the fixture's 20px band leaves, by that band's height.
+			const banded = regionDoc();
+			regionDocOps.layoutObjects(banded, undefined, { rankSpacing: 60 });
+			expect(box(doc, "rect-1").y - box(doc, "region-1").y).toBe(
+				box(banded, "rect-1").y - box(banded, "region-1").y - 20,
+			);
+		},
+	);
+
 	it("nests container shapes, the smallest around a box being its parent", () => {
 		const doc = emptyDoc();
 		regionDocOps.addObject(doc, "region", {
