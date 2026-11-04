@@ -1,7 +1,7 @@
 // 生成物。編集しないこと（pnpm generate:schema で再生成）。
 // 正本は engine/packages/doc-schema/parts/ にある。
 
-export const GENERATED_CANVAS_PROMPT = `<!-- jiscribe guide 0.12.2+f157d51a -->
+export const GENERATED_CANVAS_PROMPT = `<!-- jiscribe guide 0.12.2+6325239b -->
 
 # Drawing on a Jiscribe canvas
 
@@ -13,7 +13,7 @@ What follows is what the canvas can hold, and how to draw on it well.
 - The canvas is an **infinite plane**. Coordinates follow the SVG convention: **x increases to the right, y increases downward** (the opposite of math; screen coordinates). Unit is **px**.
 - Coordinate values are arbitrary (**negatives are allowed**). The origin \`(0, 0)\` is **not** pinned to the top-left of the screen (the view pans and zooms).
 - Objects have a **stacking order** (z-order): one is drawn on top of another, and overlapping is allowed.
-- Nothing is laid out by itself. You compute coordinates yourself (see "Layout"), or build the nodes and connectors first and let \`layout_objects\` arrange them as a layered graph.
+- Nothing is laid out by itself. A diagram whose structure the connectors give (a flow, an architecture, dependencies, states, classes, entities) is arranged by \`layout_objects\` once its nodes and connectors are in; everything else you place yourself (see "Layout").
 
 ## Colors, lines, fill and text
 
@@ -144,7 +144,12 @@ Use \`erEntity\` for every entity of an ER diagram, never \`record\`. The title 
   \`columns\` from 0. Draw it with \`connect_many\`, passing those ids as
   \`sourceAnchor\` / \`targetAnchor\`. \`startArrow\` is the FK side's cardinality (usually
   \`"CrowFootZeroMany"\`), \`endArrow\` the PK side's (\`"CrowFootOne"\`). An
-  identifying relationship is solid, a non-identifying one \`"dashed"\`.
+  identifying relationship is solid, a non-identifying one \`"dashed"\`, set with
+  \`set_style\` afterwards. \`layout_objects\` leaves an end on a column where it is, so
+  pick the sides for the direction you will lay the diagram out in: with \`LR\` the FK
+  entity lands left of the one it references, so FK \`:right\` to PK \`:left\`. Two FK
+  columns pointing at entities above and below can share one trunk unless the column
+  nearer the top points at the entity above (\`er_entity_move_columns\`).
 - Resolve a many-to-many relationship through a junction entity holding both
   foreign keys.
 
@@ -331,12 +336,44 @@ where its text actually goes.
 These are guidelines for readability, not part of the spec. Overlapping itself is
 allowed (see "The canvas"); what these avoid is the overlap nobody meant.
 
+### A diagram the connectors structure: build it, then \`layout_objects\`
+
+A flow, an architecture, a dependency graph, a state machine, a class diagram or an
+entity-relationship model is arranged by \`layout_objects\`, not by hand:
+
+1. Add the nodes. Their coordinates are placeholders — any value, even one spot for all
+   of them — since the arrangement keeps only the top-left corner they occupy together.
+   The exception is a container shape (a titled region other shapes sit inside, such as
+   \`container\` or an AWS boundary): what sits inside its box when \`layout_objects\` is
+   called is what it holds, so draw its members inside it and every other node outside
+   it. The container keeps its members and is resized around them.
+2. Draw the connectors between them. Leave the connect points and label positions to
+   the layout: on an ordinary connector it sets both, replacing any you gave.
+3. Call \`layout_objects\` with the flow direction (\`TB\` for a process read top to bottom,
+   \`LR\` for a pipeline or an architecture). It layers the nodes along the connectors,
+   orders each layer to reduce crossings, re-attaches every connector to the sides that
+   face each other, routes it around the objects in between and seats its label.
+   Omit \`ids\` for a canvas that is the diagram alone; on a canvas that also holds things
+   that are not part of it (a legend, a note, a sticky), name the diagram's ids, a
+   container together with its contents.
+4. Read the canvas back and finish by hand what the layout leaves to you: a self loop
+   and a connector end on a connect point the owner's type declares (an entity's column
+   in an ER diagram) keep their place; a label may still sit where it reads badly. Move,
+   align, resize only where it is still needed — the numbers below say how far apart.
+
+Run it again on a diagram that got tangled while you edited it.
+
+### Everything else: place it yourself
+
+A board of sticky notes, a table, a chart, a legend, an article laid out as a page, and
+any drawing where the user says where things go, is placed by hand. The same numbers,
+but not the connect points, guide the adjustments after \`layout_objects\`.
+
 - Standard node: \`width: 160\`, \`height: 80\`.
 - Spacing between nodes: horizontal **80–120px**, vertical **60–100px**. Lay the shapes out on a grid with gaps that generous so connectors stay readable.
 - Keep a single flow direction (left→right or top→bottom).
 - Choose connect points to match the connection direction (for left→right, source = \`rightCenter\`, target = \`leftCenter\`).
 - Do not overlap objects that are already there.
-- For a flow or a graph, \`layout_objects\` does this arithmetic for you: add the nodes, connect them, then call it (direction \`TB\` or \`LR\`). It layers the nodes along the connectors, orders each layer to reduce crossings, and re-attaches every connector to the sides that face each other. A container shape (a titled region other shapes sit inside, such as \`container\` or an AWS boundary) with nodes inside it keeps them inside and is resized around them, so draw it, put the nodes in it, then call \`layout_objects\` on the whole canvas or on the container and its contents together. Use it instead of a hand-made grid, and again on a drawing that got tangled.
 
 ## Choosing what to draw with
 
@@ -360,8 +397,8 @@ Add the nodes first, then draw the connectors between them.
 Everything you draw stays editable:
 
 - **Wrong shape, wrong label, wrong color**: delete or restyle the object itself. Never leave a mistake standing and put a second object beside it.
-- **A line that crosses a shape**: fix the connector — pin both ends to the edges that face each other, or give the corners as route points. Do not redraw the diagram to dodge it.
-- **A layout that got tight**: move shapes to open space up, align and distribute to tidy rows and columns, resize a shape when a label no longer fits.
+- **A line that crosses a shape**: on a diagram the connectors structure, run \`layout_objects\` again first. Otherwise fix the connector — pin both ends to the edges that face each other, or give the corners as route points. Do not redraw the diagram to dodge it.
+- **A layout that got tight**: on a diagram the connectors structure, run \`layout_objects\` again first. Otherwise move shapes to open space up, align and distribute to tidy rows and columns, resize a shape when a label no longer fits.
 - **Text on a line belongs to the line**: it is the connector's own label. Never place a text shape next to a connector to fake a label.
 - **A free path** — a chart line, a bracket, a detour around a shape — is one connector: \`routing\` \`"straight"\` plus every corner in \`points\`, as many as it takes. Never put an invisible shape at each bend, and never stack narrow rectangles to fake a line or a filled area.
 - **A line that hangs on nothing** is a \`polyline\` instead: a connector keeps at least one end on an object, and the other may stand at a free coordinate.

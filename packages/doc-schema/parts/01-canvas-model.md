@@ -3,7 +3,7 @@
 - The canvas is an **infinite plane**. Coordinates follow the SVG convention: **x increases to the right, y increases downward** (the opposite of math; screen coordinates). Unit is **px**.
 - Coordinate values are arbitrary (**negatives are allowed**). The origin `(0, 0)` is **not** pinned to the top-left of the screen (the view pans and zooms).
 - Objects have a **stacking order** (z-order): one is drawn on top of another, and overlapping is allowed.
-- Nothing is laid out by itself. You compute coordinates yourself (see "Layout"), or build the nodes and connectors first and let `layout_objects` arrange them as a layered graph.
+- Nothing is laid out by itself. A diagram whose structure the connectors give (a flow, an architecture, dependencies, states, classes, entities) is arranged by `layout_objects` once its nodes and connectors are in; everything else you place yourself (see "Layout").
 
 ## Colors, lines, fill and text
 
@@ -134,7 +134,12 @@ Use `erEntity` for every entity of an ER diagram, never `record`. The title is
   `columns` from 0. Draw it with `connect_many`, passing those ids as
   `sourceAnchor` / `targetAnchor`. `startArrow` is the FK side's cardinality (usually
   `"CrowFootZeroMany"`), `endArrow` the PK side's (`"CrowFootOne"`). An
-  identifying relationship is solid, a non-identifying one `"dashed"`.
+  identifying relationship is solid, a non-identifying one `"dashed"`, set with
+  `set_style` afterwards. `layout_objects` leaves an end on a column where it is, so
+  pick the sides for the direction you will lay the diagram out in: with `LR` the FK
+  entity lands left of the one it references, so FK `:right` to PK `:left`. Two FK
+  columns pointing at entities above and below can share one trunk unless the column
+  nearer the top points at the entity above (`er_entity_move_columns`).
 - Resolve a many-to-many relationship through a junction entity holding both
   foreign keys.
 
