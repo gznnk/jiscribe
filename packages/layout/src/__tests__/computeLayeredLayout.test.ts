@@ -258,7 +258,7 @@ describe("computeLayeredLayout", () => {
 		expect(new Set(positions).size).toBe(3);
 	});
 
-	it("keeps a frame's members inside it and routes an edge into it in right angles", () => {
+	it("keeps a container's members inside it and routes an edge into it in right angles", () => {
 		const result = computeLayeredLayout(
 			[
 				box("outside"),
@@ -273,17 +273,18 @@ describe("computeLayeredLayout", () => {
 			[{ id: "vpc" }],
 		);
 
-		const frame = result.frames.find(({ id }) => id === "vpc")?.bounds as Rect;
+		const container = result.containers.find(({ id }) => id === "vpc")
+			?.bounds as Rect;
 		const within = (inner: Rect) =>
-			inner.x > frame.x &&
-			inner.y > frame.y &&
-			inner.x + inner.width < frame.x + frame.width &&
-			inner.y + inner.height < frame.y + frame.height;
+			inner.x > container.x &&
+			inner.y > container.y &&
+			inner.x + inner.width < container.x + container.width &&
+			inner.y + inner.height < container.y + container.height;
 		const byId = new Map(result.nodes.map(({ id, bounds }) => [id, bounds]));
 		expect(within(byId.get("first") as Rect)).toBe(true);
 		expect(within(byId.get("second") as Rect)).toBe(true);
 		expect(within(byId.get("outside") as Rect)).toBe(false);
-		// The edge from outside crosses the frame's top border; its route is right-angled.
+		// The edge from outside crosses the container's top border; its route is right-angled.
 		const inEdge = result.edges.find(({ id }) => id === "in");
 		const outside = byId.get("outside") as Rect;
 		const first = byId.get("first") as Rect;
@@ -303,7 +304,7 @@ describe("computeLayeredLayout", () => {
 		}
 	});
 
-	it("keeps a frame's title band clear of its members, moving what lies below", () => {
+	it("keeps a container's title band clear of its members, moving what lies below", () => {
 		const plain = computeLayeredLayout(
 			[{ ...box("a"), parentId: "f" }, box("b")],
 			[{ id: "ab", sourceId: "a", targetId: "b" }],
@@ -317,27 +318,27 @@ describe("computeLayeredLayout", () => {
 			[{ id: "f", titleHeight: 30 }],
 		);
 
-		const frameOf = (result: typeof plain) => result.frames[0].bounds;
+		const containerOf = (result: typeof plain) => result.containers[0].bounds;
 		const nodeOf = (result: typeof plain, id: string) =>
 			result.nodes.find((node) => node.id === id)?.bounds as Rect;
-		// The frame's top edge stays; its member and the node below both move down by
-		// the band, and the frame grows by it.
-		expect(frameOf(titled).y).toBe(frameOf(plain).y);
-		expect(frameOf(titled).height).toBe(frameOf(plain).height + 30);
+		// The container's top edge stays; its member and the node below both move down by
+		// the band, and the container grows by it.
+		expect(containerOf(titled).y).toBe(containerOf(plain).y);
+		expect(containerOf(titled).height).toBe(containerOf(plain).height + 30);
 		expect(nodeOf(titled, "a").y).toBe(nodeOf(plain, "a").y + 30);
 		expect(nodeOf(titled, "b").y).toBe(nodeOf(plain, "b").y + 30);
-		expect(nodeOf(titled, "a").y - frameOf(titled).y).toBeGreaterThanOrEqual(
-			30,
-		);
+		expect(
+			nodeOf(titled, "a").y - containerOf(titled).y,
+		).toBeGreaterThanOrEqual(30);
 	});
 
-	it("refuses a frame that holds nothing", () => {
+	it("refuses a container that holds nothing", () => {
 		expect(() =>
 			computeLayeredLayout([box("a"), box("b")], [], {}, [{ id: "empty" }]),
-		).toThrow("frame empty holds nothing");
+		).toThrow("container empty holds nothing");
 	});
 
-	it("refuses an edge that ends on a frame", () => {
+	it("refuses an edge that ends on a container", () => {
 		expect(() =>
 			computeLayeredLayout(
 				[{ ...box("a"), parentId: "f" }],
@@ -345,7 +346,7 @@ describe("computeLayeredLayout", () => {
 				{},
 				[{ id: "f" }],
 			),
-		).toThrow("ends on a frame: f");
+		).toThrow("ends on a container: f");
 	});
 
 	it("rejects an edge naming a node that is not there", () => {

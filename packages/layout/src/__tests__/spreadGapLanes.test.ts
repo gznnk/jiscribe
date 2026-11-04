@@ -62,13 +62,13 @@ describe("spreadGapLanes", () => {
 		}
 		const farBox = { x: 0, y: 120, width: 100, height: 50 };
 		const nearBox = { x: 0, y: 30, width: 100, height: 50 };
-		const frame = { x: -10, y: 20, width: 120, height: 160 };
-		spreadGapLanes(tight, "TB", 40, [], [farBox, nearBox, frame]);
+		const container = { x: -10, y: 20, width: 120, height: 160 };
+		spreadGapLanes(tight, "TB", 40, [], [farBox, nearBox, container]);
 		expect(laneYs(tight)).toEqual([104, 120, 136]);
 		expect(tight[0][3].y).toBe(160);
 		expect(farBox.y).toBe(160);
 		expect(nearBox.y).toBe(30);
-		expect(frame).toEqual({ x: -10, y: 20, width: 120, height: 200 });
+		expect(container).toEqual({ x: -10, y: 20, width: 120, height: 200 });
 	});
 
 	it("keeps runs that do not overlap sideways on the midline together", () => {

@@ -74,7 +74,7 @@ export const AwsGroupFeatures = {
 	text: "body",
 	connectable: true,
 	// The corner icon and the label row, as calcAwsGroupLabelTextRegion lays them out.
-	frame: {
+	container: {
 		titleHeight:
 			AWS_GROUP_PADDING + AWS_GROUP_CORNER_ICON_SIZE + AWS_GROUP_LABEL_GAP,
 	},

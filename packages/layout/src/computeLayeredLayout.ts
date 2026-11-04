@@ -1,10 +1,3 @@
-// dagre ships one declaration file, typed as ESM. Under the Node16 resolution the VSCode
-// extension typechecks with, this file counts as CommonJS and the static import is
-// reported (TS1479) although the exports map serves a require build; every other
-// consumer resolves in bundler mode and sees no error, so the directive is ts-ignore
-// (ts-expect-error would then be the unused one).
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
 import { Graph, layout } from "@dagrejs/dagre";
 import type { Point, Rect } from "@jiscribe/geometry";
 
@@ -19,7 +12,7 @@ import { spreadSideEnds } from "./spreadSideEnds";
 
 export { LayoutDirections, type LayoutDirection } from "./LayoutDirection";
 
-/** Side of a node's box an edge leaves from or arrives at, in the node's own frame. */
+/** Side of a node's box an edge leaves from or arrives at, in the node's own container. */
 export type LayoutSide = "top" | "right" | "bottom" | "left";
 
 export type LayoutGraphNode = {
@@ -28,20 +21,20 @@ export type LayoutGraphNode = {
 	width: number;
 	/** Height of the box, in px. */
 	height: number;
-	/** Id of the frame the node sits inside, when it does; must be among the frames. */
+	/** Id of the container the node sits inside, when it does; must be among the containers. */
 	parentId?: string;
 };
 
 /**
- * A frame other nodes sit inside: the layout keeps its members together inside it
+ * A container other nodes sit inside: the layout keeps its members together inside it
  * and sizes it to them. It has no size of its own on input, and no edge may end on it.
  */
-export type LayoutGraphFrame = {
+export type LayoutGraphContainer = {
 	id: string;
-	/** Id of the frame this one sits inside, when it does. */
+	/** Id of the container this one sits inside, when it does. */
 	parentId?: string;
 	/**
-	 * Height in px of the title band along the frame's top edge; the layout keeps that
+	 * Height in px of the title band along the container's top edge; the layout keeps that
 	 * much clear below the edge, whichever way the ranks run. Defaults to 0.
 	 */
 	titleHeight?: number;
@@ -132,9 +125,9 @@ export type LaidOutEdge = {
 	labelOffset?: number;
 };
 
-export type LaidOutFrame = {
+export type LaidOutContainer = {
 	id: string;
-	/** The box the frame's members fit in, with the layout's own margin around them. */
+	/** The box the container's members fit in, with the layout's own margin around them. */
 	bounds: Rect;
 };
 
@@ -142,8 +135,8 @@ export type LayeredLayoutResult = {
 	nodes: LaidOutNode[];
 	/** Every edge given, except self loops, which the layout leaves to the caller. */
 	edges: LaidOutEdge[];
-	/** Every frame given, sized and placed around its members. */
-	frames: LaidOutFrame[];
+	/** Every container given, sized and placed around its members. */
+	containers: LaidOutContainer[];
 };
 
 /** Which sides face each other along the rank axis, read off the two boxes' centres. */
@@ -165,7 +158,7 @@ const calcFacingSides = (
 		: { sourceSide: "left", targetSide: "right" };
 };
 
-/** Where an anchor sits on a box, in the same frame as `bounds`. */
+/** Where an anchor sits on a box, in the same container as `bounds`. */
 const calcAnchorPoint = (bounds: Rect, anchor: LayoutEdgeAnchor): Point => {
 	switch (anchor.side) {
 		case "top":
@@ -244,7 +237,7 @@ const calcEndAnchor = (
 
 /**
  * Whether a rank coordinate is a row boxes sit on (a rank of nodes, or the border
- * rank dagre gives a frame), as opposed to the middle of a gap between rows.
+ * rank dagre gives a container), as opposed to the middle of a gap between rows.
  */
 type IsSlotRow = (along: number) => boolean;
 
@@ -282,7 +275,7 @@ const dropCollinearPoints = (path: readonly Point[]): Point[] =>
 /**
  * Turn the polyline dagre routed into a right-angled one that stays clear of the
  * boxes. Dagre's interior points sit either in the middle of a gap between two rows
- * or in the slot a dummy node holds on a row (a rank of nodes, or a frame's border),
+ * or in the slot a dummy node holds on a row (a rank of nodes, or a container's border),
  * so the route changes column only in the gaps, to the column of the next slot it
  * passes, and crosses a row only in that slot, where no box is.
  *
@@ -337,11 +330,11 @@ const calcOrthogonalPath = (
  *   kept apart; an edge naming an id not in `nodes` is an error. An edge with a `label`
  *   gets room for it, in the gap it crosses or beside a rank it passes
  * @param options - Direction and gaps; see {@link LAYERED_LAYOUT_DEFAULTS}
- * @param frames - Frames nodes may sit inside (see {@link LayoutGraphFrame}); ids must be
- *   distinct from the nodes' and each other's, a parent must be another frame, every
- *   frame must hold a node or a frame, and an edge ending on a frame is an error. A
- *   frame's `titleHeight` is kept clear below its top edge
- * @returns Every node's new top-left, every frame's box, and, for every edge that is not
+ * @param containers - Containers nodes may sit inside (see {@link LayoutGraphContainer}); ids must be
+ *   distinct from the nodes' and each other's, a parent must be another container, every
+ *   container must hold a node or a container, and an edge ending on a container is an error. A
+ *   container's `titleHeight` is kept clear below its top edge
+ * @returns Every node's new top-left, every container's box, and, for every edge that is not
  *   a self loop, where it meets each box (on the facing sides, fanned out toward where it
  *   goes) and the corners of a route between them
  */
@@ -349,7 +342,7 @@ export const computeLayeredLayout = (
 	nodes: readonly LayoutGraphNode[],
 	edges: readonly LayoutGraphEdge[],
 	options: LayeredLayoutOptions = {},
-	frames: readonly LayoutGraphFrame[] = [],
+	containers: readonly LayoutGraphContainer[] = [],
 ): LayeredLayoutResult => {
 	const { direction, nodeSpacing, rankSpacing } = {
 		...LAYERED_LAYOUT_DEFAULTS,
@@ -364,48 +357,48 @@ export const computeLayeredLayout = (
 		marginy: 0,
 	});
 	graph.setDefaultEdgeLabel(() => ({}));
-	const frameIds = new Set<string>();
-	for (const frame of frames) {
-		if (frameIds.has(frame.id)) {
-			throw new Error(`duplicate frame id: ${frame.id}`);
+	const containerIds = new Set<string>();
+	for (const container of containers) {
+		if (containerIds.has(container.id)) {
+			throw new Error(`duplicate container id: ${container.id}`);
 		}
-		frameIds.add(frame.id);
-		graph.setNode(frame.id, {});
+		containerIds.add(container.id);
+		graph.setNode(container.id, {});
 	}
-	const requireFrame = (ownerId: string, parentId: string): void => {
-		if (!frameIds.has(parentId)) {
-			throw new Error(`${ownerId} names an unknown frame: ${parentId}`);
+	const requireContainer = (ownerId: string, parentId: string): void => {
+		if (!containerIds.has(parentId)) {
+			throw new Error(`${ownerId} names an unknown container: ${parentId}`);
 		}
 	};
-	for (const frame of frames) {
-		if (frame.parentId !== undefined) {
-			requireFrame(frame.id, frame.parentId);
-			graph.setParent(frame.id, frame.parentId);
+	for (const container of containers) {
+		if (container.parentId !== undefined) {
+			requireContainer(container.id, container.parentId);
+			graph.setParent(container.id, container.parentId);
 		}
 	}
 	const nodeIds = new Set<string>();
 	for (const node of nodes) {
-		if (nodeIds.has(node.id) || frameIds.has(node.id)) {
+		if (nodeIds.has(node.id) || containerIds.has(node.id)) {
 			throw new Error(`duplicate node id: ${node.id}`);
 		}
 		nodeIds.add(node.id);
 		graph.setNode(node.id, { width: node.width, height: node.height });
 		if (node.parentId !== undefined) {
-			requireFrame(node.id, node.parentId);
+			requireContainer(node.id, node.parentId);
 			graph.setParent(node.id, node.parentId);
 		}
 	}
-	// dagre sizes a frame from what it holds, so an empty one has no size to give.
-	for (const frame of frames) {
-		if (graph.children(frame.id).length === 0) {
-			throw new Error(`frame ${frame.id} holds nothing`);
+	// dagre sizes a container from what it holds, so an empty one has no size to give.
+	for (const container of containers) {
+		if (graph.children(container.id).length === 0) {
+			throw new Error(`container ${container.id} holds nothing`);
 		}
 	}
 	const laidOutEdgeIds: string[] = [];
 	for (const edge of edges) {
 		for (const endId of [edge.sourceId, edge.targetId]) {
-			if (frameIds.has(endId)) {
-				throw new Error(`edge ${edge.id} ends on a frame: ${endId}`);
+			if (containerIds.has(endId)) {
+				throw new Error(`edge ${edge.id} ends on a container: ${endId}`);
 			}
 			if (!nodeIds.has(endId)) {
 				throw new Error(`edge ${edge.id} names an unknown node: ${endId}`);
@@ -428,7 +421,7 @@ export const computeLayeredLayout = (
 	layout(graph);
 
 	// dagre hands back centres, offset by whatever margin its ranking left; pin the
-	// drawing's top-left to the origin so the caller works in one known frame.
+	// drawing's top-left to the origin so the caller works in one known container.
 	const centred = nodes.map((node) => {
 		const placed = graph.node(node.id) as { x: number; y: number };
 		return {
@@ -441,15 +434,15 @@ export const computeLayeredLayout = (
 			},
 		};
 	});
-	const centredFrames = frames.map((frame) => {
-		const placed = graph.node(frame.id) as {
+	const centredContainers = containers.map((container) => {
+		const placed = graph.node(container.id) as {
 			x: number;
 			y: number;
 			width: number;
 			height: number;
 		};
 		return {
-			id: frame.id,
+			id: container.id,
 			bounds: {
 				x: placed.x - placed.width / 2,
 				y: placed.y - placed.height / 2,
@@ -458,22 +451,26 @@ export const computeLayeredLayout = (
 			},
 		};
 	});
-	const everyBox = [...centred, ...centredFrames].map(({ bounds }) => bounds);
+	const everyBox = [...centred, ...centredContainers].map(
+		({ bounds }) => bounds,
+	);
 	const originX = Math.min(...everyBox.map((bounds) => bounds.x));
 	const originY = Math.min(...everyBox.map((bounds) => bounds.y));
 	const laidOutNodes = centred.map(({ id, bounds }) => ({
 		id,
 		bounds: { ...bounds, x: bounds.x - originX, y: bounds.y - originY },
 	}));
-	const laidOutFrames: LaidOutFrame[] = centredFrames.map(({ id, bounds }) => ({
-		id,
-		bounds: { ...bounds, x: bounds.x - originX, y: bounds.y - originY },
-	}));
+	const laidOutContainers: LaidOutContainer[] = centredContainers.map(
+		({ id, bounds }) => ({
+			id,
+			bounds: { ...bounds, x: bounds.x - originX, y: bounds.y - originY },
+		}),
+	);
 	const boundsById = new Map(
 		laidOutNodes.map(({ id, bounds }) => [id, bounds] as const),
 	);
 	// The rows boxes sit on: every rank of nodes. The border ranks dagre adds around a
-	// frame hold nothing a route could hit, and the half gaps beside them are too
+	// container hold nothing a route could hit, and the half gaps beside them are too
 	// narrow to bend in, so their points are dropped from every route: a route then
 	// crosses a border wherever its column is and bends in the gaps between ranks.
 	const alongStart = (bounds: Rect): number =>
@@ -485,7 +482,7 @@ export const computeLayeredLayout = (
 	);
 	const isSlotRow: IsSlotRow = (along) =>
 		slotRows.some((row) => isSameCoordinate(row, along));
-	const borderRows = laidOutFrames.flatMap(({ bounds }) => [
+	const borderRows = laidOutContainers.flatMap(({ bounds }) => [
 		alongStart(bounds),
 		alongStart(bounds) + alongExtent(bounds),
 	]);
@@ -776,7 +773,7 @@ export const computeLayeredLayout = (
 					}
 				: undefined,
 		),
-		[...laidOutNodes, ...laidOutFrames].map(({ bounds }) => bounds),
+		[...laidOutNodes, ...laidOutContainers].map(({ bounds }) => bounds),
 	);
 	const toLabelFields = ({
 		position,
@@ -785,12 +782,14 @@ export const computeLayeredLayout = (
 		labelPosition: position,
 		labelOffset: offset,
 	});
-	// Room for every frame's title band: everything below a frame's top edge, its own
-	// members first of all, moves down by the band's height, and the frames spanning
-	// that edge grow by it. Top to bottom, so a frame inside another is moved by the
+	// Room for every container's title band: everything below a container's top edge, its own
+	// members first of all, moves down by the band's height, and the containers spanning
+	// that edge grow by it. Top to bottom, so a container inside another is moved by the
 	// outer band before it makes room for its own.
 	const titleHeightById = new Map(
-		frames.map((frame) => [frame.id, frame.titleHeight ?? 0] as const),
+		containers.map(
+			(container) => [container.id, container.titleHeight ?? 0] as const,
+		),
 	);
 	const movablePoints = new Set<Point>();
 	for (const { path, labelPoint } of routedEdges) {
@@ -801,17 +800,17 @@ export const computeLayeredLayout = (
 			movablePoints.add(labelPoint);
 		}
 	}
-	const movableBoxes = [...laidOutNodes, ...laidOutFrames].map(
+	const movableBoxes = [...laidOutNodes, ...laidOutContainers].map(
 		({ bounds }) => bounds,
 	);
-	for (const frame of [...laidOutFrames].sort(
+	for (const container of [...laidOutContainers].sort(
 		(a, b) => a.bounds.y - b.bounds.y,
 	)) {
-		const titleHeight = titleHeightById.get(frame.id) ?? 0;
+		const titleHeight = titleHeightById.get(container.id) ?? 0;
 		if (titleHeight <= 0) {
 			continue;
 		}
-		const edgeY = frame.bounds.y;
+		const edgeY = container.bounds.y;
 		const isBelowEdge = (y: number): boolean =>
 			y > edgeY && !isSameCoordinate(y, edgeY);
 		for (const point of movablePoints) {
@@ -861,5 +860,9 @@ export const computeLayeredLayout = (
 		}),
 	);
 
-	return { nodes: laidOutNodes, edges: laidOutEdges, frames: laidOutFrames };
+	return {
+		nodes: laidOutNodes,
+		edges: laidOutEdges,
+		containers: laidOutContainers,
+	};
 };

@@ -30,10 +30,10 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   boxes it joins (beside the line when none does). A route leaves a box straight
   for at least a stub's length before it first bends, and a gap too narrow for the
   routes crossing it is widened. A group, and a shape whose type declares the new
-  `features.frame` (`container`, `awsGroup`), is a frame: what lies inside it is
-  laid out inside it, the frame is resized around them, and the `titleHeight` the
-  type declares is kept clear below its top edge; a connector with an end on a
-  frame shape is redrawn between the facing sides afterwards. An end on a connect
+  `features.container` (`container`, `awsGroup`), is a container: what lies inside
+  it is laid out inside it, the container is resized around them, and the
+  `titleHeight` the type declares is kept clear below its top edge; a connector
+  with an end on a container shape is redrawn between the facing sides afterwards. An end on a connect
   point the owner's type declares (an ER entity's column) stays where it is, with
   that connector's route left to the engine. Direction (`TB` /
   `LR` / `BT` / `RL`) and the two gaps are parameters; omitting ids lays out the

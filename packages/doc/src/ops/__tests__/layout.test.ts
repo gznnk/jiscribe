@@ -34,7 +34,7 @@ describe("layoutObjects", () => {
 
 		expect(result).toEqual({
 			nodeIds: ["rect-1", "rect-2", "rect-3"],
-			frameIds: [],
+			containerIds: [],
 			connectorIds: ["connector-1", "connector-2"],
 		});
 		expect(readObject(doc, "rect-1")).toMatchObject({ x: 40, y: 20 });
@@ -123,12 +123,12 @@ describe("layoutObjects", () => {
 
 		const result = docOps.layoutObjects(doc, undefined, { rankSpacing: 60 });
 
-		expect(result.frameIds).toEqual(["group-1"]);
+		expect(result.containerIds).toEqual(["group-1"]);
 		expect(result.nodeIds).toEqual(["rect-1", "rect-2", "rect-3"]);
 		const second = readObject(doc, "rect-2") as { x: number; y: number };
 		const third = readObject(doc, "rect-3") as { x: number; y: number };
 		// The two children stack under rect-1, inside their group; both moved from where
-		// they were and the group's box tracks them (a group stores no frame of its own).
+		// they were and the group's box tracks them (a group stores no container of its own).
 		expect(third.y).toBeGreaterThan(second.y);
 		expect(second).not.toMatchObject({ x: 900, y: 900 });
 		expectValid(doc);

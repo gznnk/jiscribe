@@ -58,3 +58,6 @@ allowBuilds:
   "@vscode/vsce-sign": false
   esbuild: false
   keytar: false
+
+patchedDependencies:
+  "@dagrejs/dagre@3.1.3": patches/@dagrejs__dagre@3.1.3.patch

@@ -4,7 +4,7 @@ import {
 	computeLayeredLayout,
 	type LayoutDirection,
 	type LayoutGraphEdge,
-	type LayoutGraphFrame,
+	type LayoutGraphContainer,
 	type LayoutGraphNode,
 } from "@jiscribe/layout";
 
@@ -53,8 +53,8 @@ export type LayoutObjectsParams = {
 export type LayoutObjectsResult = {
 	/** Ids of the objects that were placed, in the order they were given (or found). */
 	nodeIds: string[];
-	/** Ids of the frames (groups, and shapes whose type declares `features.frame`) sized around their members. */
-	frameIds: string[];
+	/** Ids of the containers (groups, and shapes whose type declares `features.container`) sized around their members. */
+	containerIds: string[];
 	/** Ids of the connectors whose ends were re-anchored and whose routes were rewritten. */
 	connectorIds: string[];
 };
@@ -162,17 +162,17 @@ const calcFacingSides = (
 		: { source: { side: "top", t: 0.5 }, target: { side: "bottom", t: 0.5 } };
 };
 
-/** A shape whose type declares itself a frame other objects sit inside (`features.frame`). */
-const isFrameShape = (
+/** A shape whose type declares itself a container other objects sit inside (`features.container`). */
+const isContainerShape = (
 	object: ObjectRecord,
 	definitions: DocDefinitions,
-): boolean => definitions.get(object.type)?.features.frame !== undefined;
+): boolean => definitions.get(object.type)?.features.container !== undefined;
 
-/** Room the frame's type keeps for its title band; a group has none. */
+/** Room the container's type keeps for its title band; a group has none. */
 const readTitleHeight = (
 	object: ObjectRecord,
 	definitions: DocDefinitions,
-): number => definitions.get(object.type)?.features.frame?.titleHeight ?? 0;
+): number => definitions.get(object.type)?.features.container?.titleHeight ?? 0;
 
 const isGroupObject = (object: ObjectRecord): boolean =>
 	object.type === GroupFeatures.type;
@@ -183,7 +183,7 @@ const contains = (outer: Rect, inner: Rect): boolean =>
 	inner.x + inner.width <= outer.x + outer.width &&
 	inner.y + inner.height <= outer.y + outer.height;
 
-/** `level` is the group the object was found in; `parentId` the frame it ends up inside. */
+/** `level` is the group the object was found in; `parentId` the container it ends up inside. */
 type PlacedNode = {
 	object: ObjectRecord;
 	bounds: Rect;
@@ -191,8 +191,8 @@ type PlacedNode = {
 	parentId?: string;
 };
 
-/** A group (members: its children) or a frame shape (members: what lies inside it). */
-type PlacedFrame = {
+/** A group (members: its children) or a container shape (members: what lies inside it). */
+type PlacedContainer = {
 	object: ObjectRecord;
 	bounds?: Rect;
 	level?: string;
@@ -200,26 +200,26 @@ type PlacedFrame = {
 };
 
 /**
- * Sort the candidates into the nodes to place and the frames around them. A group's
- * members are its children; a frame shape's members are the candidates at its own level
- * that lie inside it, the smallest such frame winning when they nest.
+ * Sort the candidates into the nodes to place and the containers around them. A group's
+ * members are its children; a container shape's members are the candidates at its own level
+ * that lie inside it, the smallest such container winning when they nest.
  */
 const collectPlacements = (
 	candidates: readonly ObjectRecord[],
 	definitions: DocDefinitions,
-): { nodes: PlacedNode[]; frames: PlacedFrame[] } => {
+): { nodes: PlacedNode[]; containers: PlacedContainer[] } => {
 	const nodes: PlacedNode[] = [];
-	const frames: PlacedFrame[] = [];
+	const containers: PlacedContainer[] = [];
 	const visit = (objects: readonly ObjectRecord[], parentId?: string): void => {
 		for (const object of objects) {
 			if (isConnectorObject(object)) {
 				continue;
 			}
 			if (isGroupObject(object)) {
-				frames.push({ object, level: parentId, parentId });
+				containers.push({ object, level: parentId, parentId });
 				visit(readChildren(object), object.id);
-			} else if (isFrameShape(object, definitions)) {
-				frames.push({
+			} else if (isContainerShape(object, definitions)) {
+				containers.push({
 					object,
 					bounds: requireObjectBounds(object, definitions),
 					level: parentId,
@@ -236,61 +236,64 @@ const collectPlacements = (
 		}
 	};
 	visit(candidates);
-	// Geometry decides what a frame shape holds: among what sits at its level, the
-	// smallest frame around a box is its parent.
-	const frameShapes = frames.filter(
-		(frame): frame is PlacedFrame & { bounds: Rect } =>
-			frame.bounds !== undefined,
+	// Geometry decides what a container shape holds: among what sits at its level, the
+	// smallest container around a box is its parent.
+	const containerShapes = containers.filter(
+		(container): container is PlacedContainer & { bounds: Rect } =>
+			container.bounds !== undefined,
 	);
-	const adopt = (placed: PlacedNode | PlacedFrame, bounds: Rect): void => {
-		let smallest: (PlacedFrame & { bounds: Rect }) | undefined;
-		for (const frame of frameShapes) {
+	const adopt = (placed: PlacedNode | PlacedContainer, bounds: Rect): void => {
+		let smallest: (PlacedContainer & { bounds: Rect }) | undefined;
+		for (const container of containerShapes) {
 			if (
-				frame.object === placed.object ||
-				frame.level !== placed.level ||
-				!contains(frame.bounds, bounds)
+				container.object === placed.object ||
+				container.level !== placed.level ||
+				!contains(container.bounds, bounds)
 			) {
 				continue;
 			}
 			if (
 				smallest === undefined ||
-				frame.bounds.width * frame.bounds.height <
+				container.bounds.width * container.bounds.height <
 					smallest.bounds.width * smallest.bounds.height
 			) {
-				smallest = frame;
+				smallest = container;
 			}
 		}
 		if (smallest !== undefined) {
 			placed.parentId = smallest.object.id;
 		}
 	};
-	// Frames first, so a node inside a nested frame is adopted by the inner one at the
+	// Containers first, so a node inside a nested container is adopted by the inner one at the
 	// inner one's level rather than by both.
-	const byArea = [...frameShapes].sort(
+	const byArea = [...containerShapes].sort(
 		(a, b) =>
 			a.bounds.width * a.bounds.height - b.bounds.width * b.bounds.height,
 	);
-	for (const frame of byArea) {
-		adopt(frame, frame.bounds);
+	for (const container of byArea) {
+		adopt(container, container.bounds);
 	}
 	for (const node of nodes) {
 		adopt(node, node.bounds);
 	}
-	// A frame holding nothing to place (an empty group, a frame shape nothing lies in) is
+	// A container holding nothing to place (an empty group, a container shape nothing lies in) is
 	// left where it is: the layout has nothing to size it around.
-	const holdsNodes = (frameId: string): boolean =>
-		nodes.some((node) => node.parentId === frameId) ||
-		frames.some(
-			(frame) => frame.parentId === frameId && holdsNodes(frame.object.id),
+	const holdsNodes = (containerId: string): boolean =>
+		nodes.some((node) => node.parentId === containerId) ||
+		containers.some(
+			(container) =>
+				container.parentId === containerId && holdsNodes(container.object.id),
 		);
-	const occupied = frames.filter((frame) => holdsNodes(frame.object.id));
+	const occupied = containers.filter((container) =>
+		holdsNodes(container.object.id),
+	);
 	const occupiedIds = new Set(occupied.map(({ object }) => object.id));
 	for (const placed of [...nodes, ...occupied]) {
 		if (placed.parentId !== undefined && !occupiedIds.has(placed.parentId)) {
 			placed.parentId = undefined;
 		}
 	}
-	return { nodes, frames: occupied };
+	return { nodes, containers: occupied };
 };
 
 /** The box a connector's label is drawn in (see calcTextBlockSize), or undefined without a label. */
@@ -322,11 +325,11 @@ const measureLabelBox = (
  *
  * @param doc - Mutated in place
  * @param ids - Objects to place; omitted means every top-level object. Connectors among
- *   them are skipped (they follow their ends). A group is a frame around its children, and
- *   a shape whose type declares `features.frame` (a container, a VPC) is a frame around
- *   the objects lying inside it: members are laid out inside their frame, and a frame
+ *   them are skipped (they follow their ends). A group is a container around its children, and
+ *   a shape whose type declares `features.container` (a container, a VPC) is a container around
+ *   the objects lying inside it: members are laid out inside their container, and a container
  *   shape is moved and resized to the box the layout draws around them. A connector with
- *   an end on a frame shape is no edge of the graph, but is redrawn between the facing
+ *   an end on a container shape is no edge of the graph, but is redrawn between the facing
  *   sides afterwards. An end on a connect point the owner's type declares (an ER
  *   entity's column) stays there, and that connector's route is left to the engine
  * @param params - Direction and gaps; see {@link LayoutObjectsParams}
@@ -345,7 +348,7 @@ export const layoutObjects = (
 		ids === undefined
 			? (doc.root as ObjectRecord[])
 			: requireObjects(doc, [...new Set(ids)]).map(({ object }) => object);
-	const { nodes: measured, frames } = collectPlacements(
+	const { nodes: measured, containers } = collectPlacements(
 		candidates,
 		definitions,
 	);
@@ -384,7 +387,7 @@ export const layoutObjects = (
 			...(parentId !== undefined ? { parentId } : {}),
 		}),
 	);
-	const graphFrames: LayoutGraphFrame[] = frames.map(
+	const graphContainers: LayoutGraphContainer[] = containers.map(
 		({ object, parentId }) => ({
 			id: object.id,
 			...(parentId !== undefined ? { parentId } : {}),
@@ -404,7 +407,7 @@ export const layoutObjects = (
 		graphNodes,
 		graphEdges,
 		params,
-		graphFrames,
+		graphContainers,
 	);
 
 	// Resolve every endpoint before any write, so an owner that does not offer the
@@ -444,11 +447,11 @@ export const layoutObjects = (
 		};
 	});
 
-	const framed = frames.filter(
-		(frame): frame is PlacedFrame & { bounds: Rect } =>
-			frame.bounds !== undefined,
+	const containerd = containers.filter(
+		(container): container is PlacedContainer & { bounds: Rect } =>
+			container.bounds !== undefined,
 	);
-	const everyBox = [...measured, ...framed].map(({ bounds }) => bounds);
+	const everyBox = [...measured, ...containerd].map(({ bounds }) => bounds);
 	const originX = Math.min(...everyBox.map((bounds) => bounds.x));
 	const originY = Math.min(...everyBox.map((bounds) => bounds.y));
 	const boundsById = new Map(
@@ -466,13 +469,15 @@ export const layoutObjects = (
 			definitions,
 		);
 	}
-	// A frame shape takes the box the layout drew around its members; a group has no
+	// A container shape takes the box the layout drew around its members; a group has no
 	// box of its own and simply follows its children.
-	const laidOutFrameById = new Map(
-		laidOut.frames.map((frame) => [frame.id, frame.bounds] as const),
+	const laidOutContainerById = new Map(
+		laidOut.containers.map(
+			(container) => [container.id, container.bounds] as const,
+		),
 	);
-	for (const { object } of framed) {
-		const bounds = laidOutFrameById.get(object.id);
+	for (const { object } of containerd) {
+		const bounds = laidOutContainerById.get(object.id);
 		if (bounds === undefined) {
 			continue;
 		}
@@ -509,23 +514,23 @@ export const layoutObjects = (
 		delete connector.routing;
 	}
 
-	// A connector with an end on a frame shape is no edge of the graph, but it is
-	// redrawn between the facing sides of where the frame and its other end ended up,
+	// A connector with an end on a container shape is no edge of the graph, but it is
+	// redrawn between the facing sides of where the container and its other end ended up,
 	// clear of the ends already on those sides, its route left to the engine.
-	const framedIds = new Set(framed.map(({ object }) => object.id));
+	const containerdIds = new Set(containerd.map(({ object }) => object.id));
 	const boxOf = (id: string): Rect | undefined => {
 		const placed =
 			measured.find(({ object }) => object.id === id) ??
-			framed.find(({ object }) => object.id === id);
+			containerd.find(({ object }) => object.id === id);
 		return placed === undefined
 			? undefined
 			: requireObjectBounds(placed.object, definitions);
 	};
-	const locatedFrameOwners = locateObjects(
+	const locatedContainerOwners = locateObjects(
 		doc,
-		new Set([...nodeIds, ...framedIds]),
+		new Set([...nodeIds, ...containerdIds]),
 	);
-	const frameConnectorIds: string[] = [];
+	const containerConnectorIds: string[] = [];
 	const takenEnds = collectTakenEnds(
 		endpointWrites.map(({ connector }) => connector),
 	);
@@ -553,7 +558,7 @@ export const layoutObjects = (
 		if (
 			sourceId === undefined ||
 			targetId === undefined ||
-			!(framedIds.has(sourceId) || framedIds.has(targetId))
+			!(containerdIds.has(sourceId) || containerdIds.has(targetId))
 		) {
 			return;
 		}
@@ -564,28 +569,28 @@ export const layoutObjects = (
 		}
 		const sides = calcFacingSides(sourceBox, targetBox);
 		connector.source = buildEndpoint(
-			locatedFrameOwners,
+			locatedContainerOwners,
 			sourceId,
 			placeEnd(sourceId, sides.source, sourceBox),
 			definitions,
 		);
 		connector.target = buildEndpoint(
-			locatedFrameOwners,
+			locatedContainerOwners,
 			targetId,
 			placeEnd(targetId, sides.target, targetBox),
 			definitions,
 		);
 		connector.points = [];
 		delete connector.routing;
-		frameConnectorIds.push(connector.id);
+		containerConnectorIds.push(connector.id);
 	});
 
 	return {
 		nodeIds: measured.map(({ object }) => object.id),
-		frameIds: frames.map(({ object }) => object.id),
+		containerIds: containers.map(({ object }) => object.id),
 		connectorIds: [
 			...endpointWrites.map(({ connector }) => connector.id),
-			...frameConnectorIds,
+			...containerConnectorIds,
 		],
 	};
 };

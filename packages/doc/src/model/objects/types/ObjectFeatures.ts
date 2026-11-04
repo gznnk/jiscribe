@@ -40,7 +40,7 @@ export type ObjectFeatures = {
 	 * it to them, instead of moving it as one box among the others, and keeps
 	 * `titleHeight` px below the top edge clear for the title band.
 	 */
-	frame?: { titleHeight: number };
+	container?: { titleHeight: number };
 };
 
 /** Boolean flag keys of ObjectFeatures (excludes the structural `type` / `geometry`). */

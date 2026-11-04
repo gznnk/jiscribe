@@ -276,7 +276,7 @@ export const spreadGapLanes = (
 		for (const [point, delta] of deltaByPoint) {
 			move(point, delta);
 		}
-		// A box beyond a gap moves whole; one spanning it (a frame around ranks on both
+		// A box beyond a gap moves whole; one spanning it (a container around ranks on both
 		// sides) grows by the widening instead.
 		for (const box of boxes) {
 			const start = vertical ? box.y : box.x;
