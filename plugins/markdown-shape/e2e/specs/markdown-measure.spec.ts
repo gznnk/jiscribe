@@ -2,7 +2,11 @@ import type * as CanvasModule from "@jiscribe/canvas";
 import { test, expect } from "@jiscribe/canvas-sdk/testing/e2e";
 import type { Page } from "@playwright/test";
 
-import { loadHarnessDoc, readCanvasHandle } from "../support/harnessPage";
+import {
+	loadHarnessDoc,
+	readCanvasHandle,
+	readDrawnBodyBox,
+} from "../support/harnessPage";
 
 /**
  * `measure.textSlot` on a markdown card measures the body as it is drawn —
@@ -79,6 +83,52 @@ test.describe("Markdown measurement", () => {
 		// Blocks fill the region's width; the height is the same body's either way.
 		expect(large!.textSize.width).toBeCloseTo(300, 0);
 		expect(large!.textSize.height).toBeCloseTo(small!.textSize.height, 0);
+	});
+
+	test("measures the same extent the browser gives the body drawn on screen", async ({
+		canvas,
+	}) => {
+		// The measurement is taken off screen, in a frame of its own, so this is
+		// the check that it is the drawn layout and not a near copy of it: the
+		// on-screen content element's scroll extent, read after the same fonts
+		// have settled, must match to the pixel scrollHeight rounds to.
+		await loadHarnessDoc(
+			canvas.page,
+			docTextOf([
+				card("clipped", HEADING_AND_PARAGRAPHS, { width: 300, height: 80 }),
+				card("roomy", HEADING_AND_PARAGRAPHS, { width: 300, height: 400 }),
+			]),
+		);
+		await canvas.page.evaluate(() => document.fonts.ready);
+		const [clipped, roomy] = await measureBodies(canvas.page, [
+			"clipped",
+			"roomy",
+		]);
+		const drawnClipped = await readDrawnBodyBox(canvas.page, "clipped");
+		const drawnRoomy = await readDrawnBodyBox(canvas.page, "roomy");
+
+		expect(drawnClipped).not.toBeNull();
+		expect(drawnRoomy).not.toBeNull();
+		// scrollHeight is a whole px, the measurement a fraction of one.
+		expect(
+			Math.abs(clipped!.textSize.height - drawnClipped!.scrollHeight),
+		).toBeLessThanOrEqual(1);
+		expect(
+			Math.abs(roomy!.textSize.height - drawnRoomy!.scrollHeight),
+		).toBeLessThanOrEqual(1);
+		expect(clipped!.textSize.width).toBeCloseTo(drawnClipped!.regionWidth, 0);
+		expect(clipped!.regionSize.height).toBeCloseTo(
+			drawnClipped!.regionHeight,
+			0,
+		);
+		// The verdict is what a reader sees: the drawn body runs past the box that
+		// clips it exactly where the measurement says it is clipped.
+		expect(drawnClipped!.scrollHeight).toBeGreaterThan(
+			drawnClipped!.regionHeight,
+		);
+		expect(drawnRoomy!.scrollHeight).toBeLessThanOrEqual(
+			drawnRoomy!.regionHeight,
+		);
 	});
 
 	test("catches what a plain-text layout of the source would let through", async ({
