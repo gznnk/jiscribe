@@ -1,24 +1,20 @@
-export { type LabelPlacement, calcLabelPosition } from "./calcLabelPosition";
-export { calcPositionAlongPath } from "./calcPositionAlongPath";
-export { GAP_LANE_SPACING } from "./spreadGapLanes";
-export { type SideEnd, spreadSideEnds } from "./spreadSideEnds";
 export {
 	computeLayeredLayout,
 	EDGE_ANCHOR_FAN_RANGE,
+	EDGE_ANCHOR_STRAIGHT_RANGE,
 	EDGE_BUNDLE_SPACING,
 	EDGE_END_SPACING,
-	EDGE_ANCHOR_STRAIGHT_RANGE,
 	LAYERED_LAYOUT_DEFAULTS,
-	LayoutDirections,
-	type LaidOutEdge,
 	type LaidOutContainer,
+	type LaidOutEdge,
 	type LaidOutNode,
 	type LayeredLayoutOptions,
 	type LayeredLayoutResult,
-	type LayoutDirection,
 	type LayoutEdgeAnchor,
-	type LayoutGraphEdge,
 	type LayoutGraphContainer,
+	type LayoutGraphEdge,
 	type LayoutGraphNode,
 	type LayoutSide,
 } from "./computeLayeredLayout";
+export { LayoutDirections, type LayoutDirection } from "./LayoutDirection";
+export { GAP_LANE_SPACING, LANE_STUB_LENGTH } from "./spreadGapLanes";

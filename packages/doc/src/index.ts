@@ -220,6 +220,8 @@ export {
 	type EdgeAnchorHandle,
 	type EdgeAnchorSide,
 	type InlineTextStyleParams,
+	LAYERED_LAYOUT_DEFAULTS,
+	LayoutDirections,
 	type LayoutDirection,
 	type LayoutObjectsParams,
 	type LayoutObjectsResult,

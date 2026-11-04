@@ -18,6 +18,7 @@ import { resolveAwsGroupStroke } from "./resolveAwsGroupStroke";
 import { AWS_ICON_DRAWINGS } from "../drawing/iconDrawings.generated";
 import {
 	AWS_GROUP_CORNER_ICON_SIZE,
+	AWS_GROUP_HEADER_HEIGHT,
 	AWS_GROUP_PADDING,
 } from "../schema/AwsGroupDoc";
 import { readAwsGroupKindStyle } from "../schema/awsGroupKinds";
@@ -46,7 +47,7 @@ export const AwsGroup = createFrameObject<AwsGroupState>((state, shape) => {
 	const labelRegion = calcAwsGroupLabelTextRegion(state, BODY_TEXT_SLOT_ID);
 	const headerTop = Math.min(top + AWS_GROUP_PADDING, labelRegion.y);
 	const headerBottom = Math.max(
-		top + AWS_GROUP_PADDING + AWS_GROUP_CORNER_ICON_SIZE,
+		top + AWS_GROUP_HEADER_HEIGHT,
 		labelRegion.y + labelRegion.height,
 	);
 	const cornerIconName = readAwsGroupKindStyle(state.kind).cornerIcon;

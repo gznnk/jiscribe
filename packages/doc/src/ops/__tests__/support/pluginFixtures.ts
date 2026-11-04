@@ -269,3 +269,23 @@ export const columnCardDefinition: ObjectDocDefinition = {
 		columns: 4,
 	}),
 };
+
+/**
+ * A titled region other shapes sit inside, declaring `features.container` the way the
+ * container and AWS group shapes do (which a doc test cannot import). Its title band is
+ * 20px tall. Created 400 by 300.
+ */
+export const regionDefinition: ObjectDocDefinition = {
+	features: {
+		type: "region",
+		geometry: "rect",
+		connectable: true,
+		container: { titleHeight: 20 },
+	},
+	validateDoc: () => [],
+	factory: createFrameObjectFactory({
+		type: "region",
+		width: 400,
+		height: 300,
+	}),
+};

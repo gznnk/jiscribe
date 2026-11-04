@@ -33,9 +33,11 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   `features.container` (`container`, `awsGroup`), is a container: what lies inside
   it is laid out inside it, the container is resized around them, and the
   `titleHeight` the type declares is kept clear below its top edge; a connector
-  with an end on a container shape is redrawn between the facing sides afterwards. An end on a connect
-  point the owner's type declares (an ER entity's column) stays where it is, with
-  that connector's route left to the engine. Direction (`TB` /
+  with an end on a container shape is redrawn between the facing sides afterwards;
+  one holding nothing is placed as a box of its own. An end on a connect point the
+  owner's type declares (an ER entity's column) stays where it is, with that
+  connector's route left to the engine, as is a self loop's. A spacing below 0 or a
+  direction outside `LayoutDirections` is refused before anything moves. Direction (`TB` /
   `LR` / `BT` / `RL`) and the two gaps are parameters; omitting ids lays out the
   whole canvas, and the drawing keeps its top-left corner. The algorithm is dagre's,
   wrapped in the new headless `@jiscribe/layout` package.

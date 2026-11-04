@@ -1,10 +1,11 @@
 import type { Rect } from "@jiscribe/geometry";
 import {
 	EDGE_END_SPACING,
+	LayoutDirections,
 	computeLayeredLayout,
 	type LayoutDirection,
-	type LayoutGraphEdge,
 	type LayoutGraphContainer,
+	type LayoutGraphEdge,
 	type LayoutGraphNode,
 } from "@jiscribe/layout";
 
@@ -13,6 +14,7 @@ import {
 	type EdgeAnchorHandle,
 	buildEndpoint,
 } from "./utils/connectorEndpoints";
+import { requireFiniteNumber } from "./utils/numberArgs";
 import {
 	type ObjectLocation,
 	type ObjectRecord,
@@ -23,6 +25,7 @@ import {
 } from "./utils/objectAccess";
 import {
 	type DocDefinitions,
+	getObjectBounds,
 	isConnectorObject,
 	requireObjectBounds,
 	translateObject,
@@ -34,19 +37,20 @@ import {
 } from "../model/objects/connector/ConnectorDoc";
 import { GroupFeatures } from "../model/objects/primitives/group/GroupDoc";
 import {
-	ConnectPointIds,
 	type EndpointRef,
+	isConnectPointId,
+	toEquivalentEdgeAnchor,
 } from "../model/objects/types/EndpointRef";
 import { calcTextBlockSize } from "../text/block/calcTextBlockSize";
 
 export type { LayoutDirection } from "@jiscribe/layout";
 
 export type LayoutObjectsParams = {
-	/** Which way the flow runs; defaults to `TB` (sources above targets). */
+	/** Which way the flow runs (sources above their targets for `TB`); defaults to `LAYERED_LAYOUT_DEFAULTS` (exported alongside). */
 	direction?: LayoutDirection;
-	/** Gap in px between neighbours of one rank; defaults to 80. */
+	/** Gap in px between neighbours of one rank, 0 or more; defaults to `LAYERED_LAYOUT_DEFAULTS` (exported alongside). */
 	nodeSpacing?: number;
-	/** Gap in px between one rank and the next; defaults to 80. */
+	/** Gap in px between one rank and the next, 0 or more; defaults to `LAYERED_LAYOUT_DEFAULTS` (exported alongside). */
 	rankSpacing?: number;
 };
 
@@ -55,8 +59,29 @@ export type LayoutObjectsResult = {
 	nodeIds: string[];
 	/** Ids of the containers (groups, and shapes whose type declares `features.container`) sized around their members. */
 	containerIds: string[];
-	/** Ids of the connectors whose ends were re-anchored and whose routes were rewritten. */
+	/** Ids of the connectors whose ends were re-anchored or whose routes were rewritten. */
 	connectorIds: string[];
+};
+
+/** Check the parameters before anything is read, so a bad one changes nothing. */
+const requireLayoutParams = (params: LayoutObjectsParams): void => {
+	for (const name of ["nodeSpacing", "rankSpacing"] as const) {
+		const value = params[name];
+		if (value === undefined) {
+			continue;
+		}
+		if (requireFiniteNumber(value, name) < 0) {
+			throw new DocOperationError(`${name} must be 0 or more, got ${value}`);
+		}
+	}
+	if (
+		params.direction !== undefined &&
+		!LayoutDirections.includes(params.direction)
+	) {
+		throw new DocOperationError(
+			`direction must be one of ${LayoutDirections.join(" / ")}, got ${String(params.direction)}`,
+		);
+	}
 };
 
 const readOwnerId = (endpoint: EndpointRef): string | undefined =>
@@ -69,15 +94,19 @@ const readOwnerId = (endpoint: EndpointRef): string | undefined =>
  */
 const keepsOwnAnchor = (endpoint: EndpointRef): boolean =>
 	endpoint.anchor.kind === "connectPoint" &&
-	!(ConnectPointIds as readonly string[]).includes(endpoint.anchor.id);
+	!isConnectPointId(endpoint.anchor.id);
 
 const centreOf = (bounds: Rect): { x: number; y: number } => ({
 	x: bounds.x + bounds.width / 2,
 	y: bounds.y + bounds.height / 2,
 });
 
+/** Key of one side of one object in the taken-end bookkeeping. */
+const sideKey = (ownerId: string, side: EdgeAnchorHandle["side"]): string =>
+	`${ownerId}:${side}`;
+
 /**
- * Where ends already sit on each side of each object, as `<id>:<side>` → positions
+ * Where ends already sit on each side of each object, as {@link sideKey} → positions
  * along the side; read off the endpoints just written, so a line added afterwards
  * can keep clear of them.
  */
@@ -87,30 +116,17 @@ const collectTakenEnds = (
 	const taken = new Map<string, number[]>();
 	const note = (endpoint: EndpointRef): void => {
 		const ownerId = readOwnerId(endpoint);
-		if (ownerId === undefined) {
+		const edgeAnchor = toEquivalentEdgeAnchor(endpoint.anchor);
+		if (ownerId === undefined || edgeAnchor === null) {
 			return;
 		}
-		const { anchor } = endpoint;
-		let side: EdgeAnchorHandle["side"] | undefined;
-		let t = 0.5;
-		if (anchor.kind === "edge") {
-			side = anchor.side;
-			t = anchor.t;
-		} else if (anchor.kind === "connectPoint") {
-			side = (
-				{
-					topCenter: "top",
-					rightCenter: "right",
-					bottomCenter: "bottom",
-					leftCenter: "left",
-				} as const
-			)[anchor.id as string];
+		const key = sideKey(ownerId, edgeAnchor.side);
+		const positions = taken.get(key);
+		if (positions === undefined) {
+			taken.set(key, [edgeAnchor.t]);
+		} else {
+			positions.push(edgeAnchor.t);
 		}
-		if (side === undefined) {
-			return;
-		}
-		const key = `${ownerId}:${side}`;
-		taken.set(key, [...(taken.get(key) ?? []), t]);
 	};
 	for (const connector of connectors) {
 		note(connector.source);
@@ -145,8 +161,8 @@ const findFreeEnd = (
 	return 0.5;
 };
 
-/** The sides of two boxes that face each other, by the larger offset between their centres. */
-const calcFacingSides = (
+/** The midpoints of the sides of two boxes that face each other, by the larger offset between their centres. */
+const calcFacingEdgeAnchors = (
 	source: Rect,
 	target: Rect,
 ): { source: EdgeAnchorHandle; target: EdgeAnchorHandle } => {
@@ -177,86 +193,109 @@ const readTitleHeight = (
 const isGroupObject = (object: ObjectRecord): boolean =>
 	object.type === GroupFeatures.type;
 
-const contains = (outer: Rect, inner: Rect): boolean =>
+const isRectInside = (outer: Rect, inner: Rect): boolean =>
 	inner.x >= outer.x &&
 	inner.y >= outer.y &&
 	inner.x + inner.width <= outer.x + outer.width &&
 	inner.y + inner.height <= outer.y + outer.height;
 
-/** `level` is the group the object was found in; `parentId` the container it ends up inside. */
+/** `groupId` is the group the object was found in; `parentId` the container it ends up inside. */
 type PlacedNode = {
 	object: ObjectRecord;
 	bounds: Rect;
-	level?: string;
+	groupId?: string;
 	parentId?: string;
 };
 
-/** A group (members: its children) or a container shape (members: what lies inside it). */
+/**
+ * A group (members: its children) or a container shape (members: what lies inside it).
+ * `bounds` is the container shape's own box, or the box a group's children occupy.
+ */
 type PlacedContainer = {
 	object: ObjectRecord;
-	bounds?: Rect;
-	level?: string;
+	bounds: Rect;
+	isShape: boolean;
+	groupId?: string;
 	parentId?: string;
 };
 
 /**
  * Sort the candidates into the nodes to place and the containers around them. A group's
  * members are its children; a container shape's members are the candidates at its own level
- * that lie inside it, the smallest such container winning when they nest.
+ * that lie inside it, the smallest such container winning when they nest. A container
+ * holding nothing to place is a node like any other, so it still moves with the drawing.
+ *
+ * @param candidates - The objects named, or the root's objects; an object reached twice
+ *   (a group and a child of it both named) counts once
+ * @param definitions - Type table `features.container` and `features.geometry` are read from
+ * @param skipsUnmeasurable - True when the candidates were not named: an object the build
+ *   cannot measure (an unknown type) is then left out instead of failing the call
  */
 const collectPlacements = (
 	candidates: readonly ObjectRecord[],
 	definitions: DocDefinitions,
+	skipsUnmeasurable: boolean,
 ): { nodes: PlacedNode[]; containers: PlacedContainer[] } => {
 	const nodes: PlacedNode[] = [];
 	const containers: PlacedContainer[] = [];
-	const visit = (objects: readonly ObjectRecord[], parentId?: string): void => {
+	const seenIds = new Set<string>();
+	const measure = (object: ObjectRecord): Rect | undefined => {
+		if (!skipsUnmeasurable) {
+			return requireObjectBounds(object, definitions);
+		}
+		return getObjectBounds(object, definitions) ?? undefined;
+	};
+	const visit = (objects: readonly ObjectRecord[], groupId?: string): void => {
 		for (const object of objects) {
-			if (isConnectorObject(object)) {
+			if (isConnectorObject(object) || seenIds.has(object.id)) {
+				continue;
+			}
+			seenIds.add(object.id);
+			const bounds = measure(object);
+			if (bounds === undefined) {
 				continue;
 			}
 			if (isGroupObject(object)) {
-				containers.push({ object, level: parentId, parentId });
+				containers.push({
+					object,
+					bounds,
+					isShape: false,
+					groupId,
+					parentId: groupId,
+				});
 				visit(readChildren(object), object.id);
 			} else if (isContainerShape(object, definitions)) {
 				containers.push({
 					object,
-					bounds: requireObjectBounds(object, definitions),
-					level: parentId,
-					parentId,
+					bounds,
+					isShape: true,
+					groupId,
+					parentId: groupId,
 				});
 			} else {
-				nodes.push({
-					object,
-					bounds: requireObjectBounds(object, definitions),
-					level: parentId,
-					parentId,
-				});
+				nodes.push({ object, bounds, groupId, parentId: groupId });
 			}
 		}
 	};
 	visit(candidates);
 	// Geometry decides what a container shape holds: among what sits at its level, the
-	// smallest container around a box is its parent.
-	const containerShapes = containers.filter(
-		(container): container is PlacedContainer & { bounds: Rect } =>
-			container.bounds !== undefined,
-	);
-	const adopt = (placed: PlacedNode | PlacedContainer, bounds: Rect): void => {
-		let smallest: (PlacedContainer & { bounds: Rect }) | undefined;
+	// smallest container around a box is its parent. Containers first, so a container
+	// inside a nested container is adopted by the inner one at the inner one's level
+	// rather than by both.
+	const containerShapes = containers.filter(({ isShape }) => isShape);
+	const area = ({ bounds }: PlacedContainer): number =>
+		bounds.width * bounds.height;
+	const adopt = (placed: PlacedNode | PlacedContainer): void => {
+		let smallest: PlacedContainer | undefined;
 		for (const container of containerShapes) {
 			if (
 				container.object === placed.object ||
-				container.level !== placed.level ||
-				!contains(container.bounds, bounds)
+				container.groupId !== placed.groupId ||
+				!isRectInside(container.bounds, placed.bounds)
 			) {
 				continue;
 			}
-			if (
-				smallest === undefined ||
-				container.bounds.width * container.bounds.height <
-					smallest.bounds.width * smallest.bounds.height
-			) {
+			if (smallest === undefined || area(container) < area(smallest)) {
 				smallest = container;
 			}
 		}
@@ -264,30 +303,43 @@ const collectPlacements = (
 			placed.parentId = smallest.object.id;
 		}
 	};
-	// Containers first, so a node inside a nested container is adopted by the inner one at the
-	// inner one's level rather than by both.
-	const byArea = [...containerShapes].sort(
-		(a, b) =>
-			a.bounds.width * a.bounds.height - b.bounds.width * b.bounds.height,
-	);
-	for (const container of byArea) {
-		adopt(container, container.bounds);
+	for (const container of [...containers].sort((a, b) => area(a) - area(b))) {
+		adopt(container);
 	}
 	for (const node of nodes) {
-		adopt(node, node.bounds);
+		adopt(node);
 	}
-	// A container holding nothing to place (an empty group, a container shape nothing lies in) is
-	// left where it is: the layout has nothing to size it around.
-	const holdsNodes = (containerId: string): boolean =>
-		nodes.some((node) => node.parentId === containerId) ||
-		containers.some(
-			(container) =>
-				container.parentId === containerId && holdsNodes(container.object.id),
-		);
-	const occupied = containers.filter((container) =>
-		holdsNodes(container.object.id),
+	// A container holds something to place when a node sits in it, or in a container
+	// in it: mark the containers of every node, then every ancestor of a marked one.
+	const containerById = new Map(
+		containers.map((container) => [container.object.id, container] as const),
 	);
-	const occupiedIds = new Set(occupied.map(({ object }) => object.id));
+	const occupiedIds = new Set<string>();
+	const markUpward = (containerId: string | undefined): void => {
+		let current = containerId;
+		while (current !== undefined && !occupiedIds.has(current)) {
+			occupiedIds.add(current);
+			current = containerById.get(current)?.parentId;
+		}
+	};
+	for (const node of nodes) {
+		markUpward(node.parentId);
+	}
+	const occupied = containers.filter(({ object }) =>
+		occupiedIds.has(object.id),
+	);
+	// An empty container shape is placed as a box of its own; an empty group holds
+	// nothing to place at all.
+	for (const container of containers) {
+		if (!occupiedIds.has(container.object.id) && container.isShape) {
+			nodes.push({
+				object: container.object,
+				bounds: container.bounds,
+				groupId: container.groupId,
+				parentId: container.parentId,
+			});
+		}
+	}
 	for (const placed of [...nodes, ...occupied]) {
 		if (placed.parentId !== undefined && !occupiedIds.has(placed.parentId)) {
 			placed.parentId = undefined;
@@ -319,24 +371,33 @@ const measureLabelBox = (
  * are ordered to reduce crossings, and every connector between two placed objects is
  * re-anchored onto the sides that now face each other (an edge anchor, placed toward where
  * the connector goes so several on one side fan out), with a right-angled route around the
- * objects in between written as its corners (none when it runs straight). A labelled connector
- * gets room for its label, which is moved onto the line at that spot. The arrangement keeps the top-left corner the objects occupied together, so the
- * drawing stays where it was.
+ * objects in between written as its corners (none when it runs straight). A labelled
+ * connector gets room for its label, which is moved onto the line at that spot. The
+ * arrangement keeps the top-left corner the objects occupied together, so the drawing
+ * stays where it was.
  *
  * @param doc - Mutated in place
- * @param ids - Objects to place; omitted means every top-level object. Connectors among
- *   them are skipped (they follow their ends). A group is a container around its children, and
- *   a shape whose type declares `features.container` (a container, a VPC) is a container around
- *   the objects lying inside it: members are laid out inside their container, and a container
- *   shape is moved and resized to the box the layout draws around them. A connector with
- *   an end on a container shape is no edge of the graph, but is redrawn between the facing
- *   sides afterwards. An end on a connect point the owner's type declares (an ER
- *   entity's column) stays there, and that connector's route is left to the engine
+ * @param ids - Objects to place; omitted means every top-level object the build can
+ *   measure. Connectors among them are skipped (they follow their ends), and an object
+ *   named together with a group it sits in counts once. A group is a container around its
+ *   children, and a shape whose type declares `features.container` (a VPC, a subsystem
+ *   boundary) is a container around the objects lying inside it when the call is made,
+ *   so to lay out a container shape's contents name the contents as well: members are laid
+ *   out inside their container, and a container shape is moved and resized to the box the
+ *   layout draws around them; one holding nothing is placed as a box of its own. A
+ *   connector with an end on a container shape is no edge of the graph, but is redrawn
+ *   between the facing sides afterwards. An end on a connect point the owner's type
+ *   declares (an ER entity's column) stays there, and that connector's route is left to
+ *   the engine, as is a self loop's
  * @param params - Direction and gaps; see {@link LayoutObjectsParams}
- * @param definitions - Type table `features.geometry` and the offered connect points are read from
- * @returns Which objects moved and which connectors were re-anchored
- * @throws {@link DocOperationError} for fewer than 2 placeable objects, an id that is missing,
- *   or an object with no position of its own — before anything is moved
+ * @param definitions - Type table `features.geometry`, `features.container` and the
+ *   offered connect points are read from
+ * @returns Which objects moved, which containers were sized around them, and which
+ *   connectors were re-anchored or rerouted
+ * @throws {@link DocOperationError} for a spacing that is not a finite number of 0 or
+ *   more, a direction outside `LayoutDirections`, fewer than 2 placeable objects, an id
+ *   that is missing, or a named object with no position of its own — before anything is
+ *   moved
  */
 export const layoutObjects = (
 	doc: CanvasDoc,
@@ -344,6 +405,7 @@ export const layoutObjects = (
 	params: LayoutObjectsParams,
 	definitions: DocDefinitions,
 ): LayoutObjectsResult => {
+	requireLayoutParams(params);
 	const candidates: ObjectRecord[] =
 		ids === undefined
 			? (doc.root as ObjectRecord[])
@@ -351,6 +413,7 @@ export const layoutObjects = (
 	const { nodes: measured, containers } = collectPlacements(
 		candidates,
 		definitions,
+		ids === undefined,
 	);
 	if (measured.length < 2) {
 		throw new DocOperationError(
@@ -360,8 +423,9 @@ export const layoutObjects = (
 	const nodeIds = new Set(measured.map(({ object }) => object.id));
 
 	// Every connector in the document whose both ends sit on placed objects is an edge,
-	// wherever the connector itself lives.
+	// wherever the connector itself lives; a self loop is no edge, but is rerouted.
 	const connectors: ConnectorDoc[] = [];
+	const selfLoops: ConnectorDoc[] = [];
 	visitObjects(doc.root, (object) => {
 		if (!isConnectorObject(object)) {
 			return;
@@ -370,13 +434,14 @@ export const layoutObjects = (
 		const sourceId = readOwnerId(connector.source);
 		const targetId = readOwnerId(connector.target);
 		if (
-			sourceId !== undefined &&
-			targetId !== undefined &&
-			nodeIds.has(sourceId) &&
-			nodeIds.has(targetId)
+			sourceId === undefined ||
+			targetId === undefined ||
+			!nodeIds.has(sourceId) ||
+			!nodeIds.has(targetId)
 		) {
-			connectors.push(connector);
+			return;
 		}
+		(sourceId === targetId ? selfLoops : connectors).push(connector);
 	});
 
 	const graphNodes: LayoutGraphNode[] = measured.map(
@@ -447,11 +512,10 @@ export const layoutObjects = (
 		};
 	});
 
-	const containerd = containers.filter(
-		(container): container is PlacedContainer & { bounds: Rect } =>
-			container.bounds !== undefined,
+	const containerShapes = containers.filter(({ isShape }) => isShape);
+	const everyBox = [...measured, ...containerShapes].map(
+		({ bounds }) => bounds,
 	);
-	const everyBox = [...measured, ...containerd].map(({ bounds }) => bounds);
 	const originX = Math.min(...everyBox.map((bounds) => bounds.x));
 	const originY = Math.min(...everyBox.map((bounds) => bounds.y));
 	const boundsById = new Map(
@@ -460,31 +524,43 @@ export const layoutObjects = (
 	const objectById = new Map(
 		measured.map(({ object }) => [object.id, object] as const),
 	);
+	// Every coordinate written lands on a whole pixel, the nodes' as well as the
+	// corners', so a route's straight stretches stay straight.
 	for (const { id, bounds } of laidOut.nodes) {
-		const before = boundsById.get(id) as { x: number; y: number };
+		const before = boundsById.get(id) as Rect;
 		translateObject(
 			objectById.get(id) as ObjectRecord,
-			originX + bounds.x - before.x,
-			originY + bounds.y - before.y,
+			Math.round(originX + bounds.x) - before.x,
+			Math.round(originY + bounds.y) - before.y,
 			definitions,
 		);
 	}
-	// A container shape takes the box the layout drew around its members; a group has no
-	// box of its own and simply follows its children.
+	// A container shape takes the box the layout drew around its members, moved and
+	// resized when its geometry is a rect's; a group has no box of its own and simply
+	// follows its children.
 	const laidOutContainerById = new Map(
 		laidOut.containers.map(
 			(container) => [container.id, container.bounds] as const,
 		),
 	);
-	for (const { object } of containerd) {
+	for (const { object, bounds: before } of containerShapes) {
 		const bounds = laidOutContainerById.get(object.id);
 		if (bounds === undefined) {
 			continue;
 		}
-		object.x = Math.round(originX + bounds.x);
-		object.y = Math.round(originY + bounds.y);
-		object.width = Math.round(bounds.width);
-		object.height = Math.round(bounds.height);
+		if (definitions.get(object.type)?.features.geometry === "rect") {
+			object.x = Math.round(originX + bounds.x);
+			object.y = Math.round(originY + bounds.y);
+			object.width = Math.round(bounds.width);
+			object.height = Math.round(bounds.height);
+		} else {
+			translateObject(
+				object,
+				Math.round(originX + bounds.x) - before.x,
+				Math.round(originY + bounds.y) - before.y,
+				definitions,
+			);
+		}
 	}
 	const laidOutEdgeById = new Map(
 		laidOut.edges.map((edge) => [edge.id, edge] as const),
@@ -513,22 +589,33 @@ export const layoutObjects = (
 		// the arrangement was made for, the right-angled route is the one that reads.
 		delete connector.routing;
 	}
+	// A self loop keeps its ends; its stored corners belong to where the owner was.
+	for (const connector of selfLoops) {
+		connector.points = [];
+		delete connector.routing;
+	}
 
 	// A connector with an end on a container shape is no edge of the graph, but it is
 	// redrawn between the facing sides of where the container and its other end ended up,
-	// clear of the ends already on those sides, its route left to the engine.
-	const containerdIds = new Set(containerd.map(({ object }) => object.id));
+	// clear of the ends already on those sides, its route left to the engine. An end on
+	// a declared connect point stays there as above.
+	const containerShapeIds = new Set(
+		containerShapes.map(({ object }) => object.id),
+	);
+	const placedById = new Map(
+		[...measured, ...containerShapes].map(
+			({ object }) => [object.id, object] as const,
+		),
+	);
 	const boxOf = (id: string): Rect | undefined => {
-		const placed =
-			measured.find(({ object }) => object.id === id) ??
-			containerd.find(({ object }) => object.id === id);
-		return placed === undefined
+		const object = placedById.get(id);
+		return object === undefined
 			? undefined
-			: requireObjectBounds(placed.object, definitions);
+			: requireObjectBounds(object, definitions);
 	};
 	const locatedContainerOwners = locateObjects(
 		doc,
-		new Set([...nodeIds, ...containerdIds]),
+		new Set([...nodeIds, ...containerShapeIds]),
 	);
 	const containerConnectorIds: string[] = [];
 	const takenEnds = collectTakenEnds(
@@ -539,13 +626,15 @@ export const layoutObjects = (
 		handle: EdgeAnchorHandle,
 		box: Rect,
 	): EdgeAnchorHandle => {
-		const key = `${ownerId}:${handle.side}`;
+		const key = sideKey(ownerId, handle.side);
 		const extent =
 			handle.side === "top" || handle.side === "bottom"
 				? box.width
 				: box.height;
-		const t = findFreeEnd(takenEnds.get(key) ?? [], extent);
-		takenEnds.set(key, [...(takenEnds.get(key) ?? []), t]);
+		const positions = takenEnds.get(key) ?? [];
+		const t = findFreeEnd(positions, extent);
+		positions.push(t);
+		takenEnds.set(key, positions);
 		return { side: handle.side, t };
 	};
 	visitObjects(doc.root, (object) => {
@@ -558,7 +647,7 @@ export const layoutObjects = (
 		if (
 			sourceId === undefined ||
 			targetId === undefined ||
-			!(containerdIds.has(sourceId) || containerdIds.has(targetId))
+			!(containerShapeIds.has(sourceId) || containerShapeIds.has(targetId))
 		) {
 			return;
 		}
@@ -567,19 +656,23 @@ export const layoutObjects = (
 		if (sourceBox === undefined || targetBox === undefined) {
 			return;
 		}
-		const sides = calcFacingSides(sourceBox, targetBox);
-		connector.source = buildEndpoint(
-			locatedContainerOwners,
-			sourceId,
-			placeEnd(sourceId, sides.source, sourceBox),
-			definitions,
-		);
-		connector.target = buildEndpoint(
-			locatedContainerOwners,
-			targetId,
-			placeEnd(targetId, sides.target, targetBox),
-			definitions,
-		);
+		const sides = calcFacingEdgeAnchors(sourceBox, targetBox);
+		if (!keepsOwnAnchor(connector.source)) {
+			connector.source = buildEndpoint(
+				locatedContainerOwners,
+				sourceId,
+				placeEnd(sourceId, sides.source, sourceBox),
+				definitions,
+			);
+		}
+		if (!keepsOwnAnchor(connector.target)) {
+			connector.target = buildEndpoint(
+				locatedContainerOwners,
+				targetId,
+				placeEnd(targetId, sides.target, targetBox),
+				definitions,
+			);
+		}
 		connector.points = [];
 		delete connector.routing;
 		containerConnectorIds.push(connector.id);
@@ -590,6 +683,7 @@ export const layoutObjects = (
 		containerIds: containers.map(({ object }) => object.id),
 		connectorIds: [
 			...endpointWrites.map(({ connector }) => connector.id),
+			...selfLoops.map(({ id }) => id),
 			...containerConnectorIds,
 		],
 	};

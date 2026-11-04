@@ -2,11 +2,8 @@ import { Graph, layout } from "@dagrejs/dagre";
 import type { Point, Rect } from "@jiscribe/geometry";
 
 import { type LabelPlacement, calcLabelPosition } from "./calcLabelPosition";
-import {
-	type LayoutDirection,
-	isSameCoordinate,
-	isVerticalFlow,
-} from "./LayoutDirection";
+import { isSameCoordinate } from "./isSameCoordinate";
+import { type LayoutDirection, isVerticalFlow } from "./LayoutDirection";
 import { spreadGapLanes } from "./spreadGapLanes";
 import { spreadSideEnds } from "./spreadSideEnds";
 
@@ -98,6 +95,15 @@ export const EDGE_END_SPACING = 20;
 
 /** Least distance in px between two edges joining the same pair of boxes. */
 export const EDGE_BUNDLE_SPACING = EDGE_END_SPACING;
+
+/** Share of the shorter side a bundle of parallel edges may spread over. */
+const BUNDLE_SIDE_SHARE = 0.8;
+
+/** How far along the lines the labels of a bundle are staggered from each other. */
+const BUNDLE_LABEL_STAGGER = 0.15;
+
+/** Where along a line a bundle's label may sit, so the stagger keeps clear of the ends. */
+const BUNDLE_LABEL_RANGE = { min: 0.2, max: 0.8 } as const;
 
 export type LaidOutEdge = {
 	id: string;
@@ -203,18 +209,18 @@ const calcSideRatio = (
 		: (column - bounds.y) / bounds.height;
 
 /**
+ * An end's anchor, with where along the side the edge is headed (the unclamped ratio
+ * of the column it travels in next), which orders the ends sharing a side.
+ */
+type EndAnchor = { anchor: LayoutEdgeAnchor; heading: number };
+
+/**
  * The anchor for one end of an edge, given the column the edge travels in beyond
  * that end. On the column itself when the column crosses the side, so the edge
  * leaves straight; else at the side's midpoint when this is the side's only edge,
  * since a jog in the gap is then unavoidable and a centred one reads best; else
  * leaning toward the column, so the edges sharing the side fan out.
  */
-/**
- * An end's anchor, with where along the side the edge is headed (the unclamped ratio
- * of the column it travels in next), which orders the ends sharing a side.
- */
-type EndAnchor = { anchor: LayoutEdgeAnchor; heading: number };
-
 const calcEndAnchor = (
 	bounds: Rect,
 	side: LayoutSide,
@@ -240,6 +246,9 @@ const calcEndAnchor = (
  * rank dagre gives a container), as opposed to the middle of a gap between rows.
  */
 type IsSlotRow = (along: number) => boolean;
+
+/** A rank coordinate as a lookup key: rows that are the same to the routing share one. */
+const toRowKey = (along: number): number => Math.round(along * 1000);
 
 /**
  * The columns (coordinates across the rank axis) an edge travels in, between its
@@ -304,13 +313,21 @@ const calcOrthogonalPath = (
 
 	const path: Point[] = [start];
 	let column = across(start);
+	// The slot each gap point hands the route on to: the next slot point after it,
+	// found in one pass from the back.
+	const nextSlotAfter: (Point | undefined)[] = new Array(interior.length);
+	let upcomingSlot: Point | undefined;
+	for (let index = interior.length - 1; index >= 0; index -= 1) {
+		nextSlotAfter[index] = upcomingSlot;
+		if (isSlotRow(along(interior[index]))) {
+			upcomingSlot = interior[index];
+		}
+	}
 	interior.forEach((point, index) => {
 		if (isSlotRow(along(point))) {
 			return;
 		}
-		const nextSlot = interior
-			.slice(index + 1)
-			.find((candidate) => isSlotRow(along(candidate)));
+		const nextSlot = nextSlotAfter[index];
 		path.push(make(column, along(point)));
 		column = nextSlot === undefined ? across(end) : across(nextSlot);
 		path.push(make(column, along(point)));
@@ -394,7 +411,7 @@ export const computeLayeredLayout = (
 			throw new Error(`container ${container.id} holds nothing`);
 		}
 	}
-	const laidOutEdgeIds: string[] = [];
+	const laidOutEdgeIds = new Set<string>();
 	for (const edge of edges) {
 		for (const endId of [edge.sourceId, edge.targetId]) {
 			if (containerIds.has(endId)) {
@@ -415,7 +432,7 @@ export const computeLayeredLayout = (
 				: { width: edge.label.width, height: edge.label.height, labelpos: "c" },
 			edge.id,
 		);
-		laidOutEdgeIds.push(edge.id);
+		laidOutEdgeIds.add(edge.id);
 	}
 
 	layout(graph);
@@ -477,24 +494,29 @@ export const computeLayeredLayout = (
 		isVerticalFlow(direction) ? bounds.y : bounds.x;
 	const alongExtent = (bounds: Rect): number =>
 		isVerticalFlow(direction) ? bounds.height : bounds.width;
-	const slotRows = laidOutNodes.map(
-		({ bounds }) => alongStart(bounds) + alongExtent(bounds) / 2,
+	// Every node of a rank shares one row, so the rows are a handful of distinct
+	// coordinates, looked up by the same rounded key spreadGapLanes groups gaps by.
+	const slotRows = new Set(
+		laidOutNodes.map(({ bounds }) =>
+			toRowKey(alongStart(bounds) + alongExtent(bounds) / 2),
+		),
 	);
-	const isSlotRow: IsSlotRow = (along) =>
-		slotRows.some((row) => isSameCoordinate(row, along));
-	const borderRows = laidOutContainers.flatMap(({ bounds }) => [
-		alongStart(bounds),
-		alongStart(bounds) + alongExtent(bounds),
-	]);
+	const isSlotRow: IsSlotRow = (along) => slotRows.has(toRowKey(along));
+	const borderRows = new Set(
+		laidOutContainers.flatMap(({ bounds }) => [
+			toRowKey(alongStart(bounds)),
+			toRowKey(alongStart(bounds) + alongExtent(bounds)),
+		]),
+	);
 	const isBorderRow = (along: number): boolean =>
-		borderRows.some((row) => isSameCoordinate(row, along));
+		borderRows.has(toRowKey(along));
 
 	const centreOf = (bounds: Rect): number =>
 		isVerticalFlow(direction)
 			? bounds.x + bounds.width / 2
 			: bounds.y + bounds.height / 2;
 	const sidedEdges = edges
-		.filter((edge) => laidOutEdgeIds.includes(edge.id))
+		.filter((edge) => laidOutEdgeIds.has(edge.id))
 		.map((edge) => {
 			const sourceBounds = boundsById.get(edge.sourceId) as Rect;
 			const targetBounds = boundsById.get(edge.targetId) as Rect;
@@ -642,7 +664,12 @@ export const computeLayeredLayout = (
 		const key = [anchored.edge.sourceId, anchored.edge.targetId]
 			.sort()
 			.join("\u0000");
-		bundles.set(key, [...(bundles.get(key) ?? []), anchored]);
+		const bundle = bundles.get(key);
+		if (bundle === undefined) {
+			bundles.set(key, [anchored]);
+		} else {
+			bundle.push(anchored);
+		}
 	}
 	const labelExtentOf = (edge: LayoutGraphEdge): number => {
 		if (edge.label === undefined) {
@@ -671,7 +698,7 @@ export const computeLayeredLayout = (
 		const sideExtent = (bounds: Rect): number =>
 			isVerticalFlow(direction) ? bounds.width : bounds.height;
 		const usable =
-			0.8 *
+			BUNDLE_SIDE_SHARE *
 			Math.min(
 				sideExtent(bundle[0].sourceBounds),
 				sideExtent(bundle[0].targetBounds),
@@ -686,8 +713,8 @@ export const computeLayeredLayout = (
 			if (labelled.length > 1 && anchored.edge.label !== undefined) {
 				const rank = labelled.indexOf(anchored);
 				const position = clampRatio(
-					0.5 + (rank - (labelled.length - 1) / 2) * 0.15,
-					{ min: 0.2, max: 0.8 },
+					0.5 + (rank - (labelled.length - 1) / 2) * BUNDLE_LABEL_STAGGER,
+					BUNDLE_LABEL_RANGE,
 				);
 				// A position is measured from the edge's own source, so an edge running
 				// the other way takes the mirror image to land beside the others.
@@ -724,7 +751,12 @@ export const computeLayeredLayout = (
 			const nodeId =
 				end === "source" ? anchored.edge.sourceId : anchored.edge.targetId;
 			const key = sideKey(nodeId, anchored[end].side);
-			endsBySide.set(key, [...(endsBySide.get(key) ?? []), { anchored, end }]);
+			const ends = endsBySide.get(key);
+			if (ends === undefined) {
+				endsBySide.set(key, [{ anchored, end }]);
+			} else {
+				ends.push({ anchored, end });
+			}
 		}
 	}
 	for (const refs of endsBySide.values()) {

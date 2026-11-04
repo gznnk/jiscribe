@@ -161,6 +161,7 @@ that is the package to take.
 | `@jiscribe/doc`              | The headless document layer: the `CanvasDoc` model, its parser, its editing ops and its `.jis.*` file I/O                              |
 | `@jiscribe/canvas-sdk`       | Shape-authoring kit for plugin authors, written against the canvas public API                                                          |
 | `@jiscribe/geometry`         | Geometry types and calculations (rects, ellipses, transforms, intersections)                                                           |
+| `@jiscribe/layout`           | Automatic layout of a graph of boxes: dagre's layered scheme with right-angled routes, behind `docOps.layoutObjects`                   |
 | `@jiscribe/markdown`         | Markdown rendering used by the markdown shape                                                                                          |
 | `@jiscribe/basic-validators` | Primitive runtime validators                                                                                                           |
 | `@jiscribe/utility-types`    | Shared TypeScript utility types                                                                                                        |

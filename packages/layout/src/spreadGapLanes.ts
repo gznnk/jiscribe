@@ -1,10 +1,7 @@
 import type { Point, Rect } from "@jiscribe/geometry";
 
-import {
-	type LayoutDirection,
-	isSameCoordinate,
-	isVerticalFlow,
-} from "./LayoutDirection";
+import { isSameCoordinate } from "./isSameCoordinate";
+import { type LayoutDirection, isVerticalFlow } from "./LayoutDirection";
 
 /** Preferred distance in px between two routes running side by side through one gap. */
 export const GAP_LANE_SPACING = 16;
@@ -85,7 +82,7 @@ const overlapsSideways = (left: GapRun, right: GapRun): boolean =>
 /**
  * Collect the runs of every path that cross a gap sideways. A run is two consecutive
  * points on one rank coordinate, which only a gap midline produces (see
- * calcOrthogonalCorners); the path's ends themselves never start one.
+ * calcOrthogonalPath); the path's ends themselves never start one.
  */
 const collectGapRuns = (
 	paths: readonly Point[][],
@@ -135,7 +132,7 @@ const collectGapRuns = (
  * widened, moving the ranks beyond it. Mutates the paths and boxes in place.
  *
  * @param paths - Full routes, each from the point on the source box to the point on the
- *   target box, as calcOrthogonalCorners builds them; only the points of a sideways run
+ *   target box, as calcOrthogonalPath builds them; only the points of a sideways run
  *   are moved, and only along the rank axis
  * @param direction - Decides which axis is the rank axis
  * @param rankSpacing - Width of a gap in px; lanes stay inside it, closer than
@@ -160,7 +157,12 @@ export const spreadGapLanes = (
 		// Gap midlines come out of one subtraction each, so equal gaps compare equal to
 		// well under a thousandth of a pixel.
 		const key = Math.round(run.along * 1000);
-		runsByGap.set(key, [...(runsByGap.get(key) ?? []), run]);
+		const runs = runsByGap.get(key);
+		if (runs === undefined) {
+			runsByGap.set(key, [run]);
+		} else {
+			runs.push(run);
+		}
 	}
 	// Each gap's lanes, with how much wider than it is the gap has to be for them.
 	type GapPlan = {
@@ -241,14 +243,26 @@ export const spreadGapLanes = (
 	const widenings = plans
 		.filter(({ widening }) => widening > 0)
 		.sort((a, b) => a.along - b.along);
+	// Running totals over the widenings, so a coordinate's shift is one scan of the
+	// few gaps that grew rather than a filter over them per point.
+	const cumulative = widenings.reduce<number[]>((sums, plan) => {
+		sums.push((sums[sums.length - 1] ?? 0) + plan.widening);
+		return sums;
+	}, []);
+	const sumWhere = (keeps: (planAlong: number) => boolean): number => {
+		let total = 0;
+		for (let index = 0; index < widenings.length; index += 1) {
+			if (!keeps(widenings[index].along)) {
+				break;
+			}
+			total = cumulative[index];
+		}
+		return total;
+	};
 	const shiftBeyond = (along: number): number =>
-		widenings
-			.filter((plan) => plan.along < along)
-			.reduce((sum, plan) => sum + plan.widening, 0);
+		sumWhere((planAlong) => planAlong < along);
 	const shiftedBefore = (along: number): number =>
-		widenings
-			.filter((plan) => plan.along <= along)
-			.reduce((sum, plan) => sum + plan.widening, 0);
+		sumWhere((planAlong) => planAlong <= along);
 	if (widenings.length > 0) {
 		const alongOf = (point: Point): number => (vertical ? point.y : point.x);
 		const move = (point: Point, delta: number): void => {
