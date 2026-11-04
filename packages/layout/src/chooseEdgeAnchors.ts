@@ -1,7 +1,7 @@
 import type { Point, Rect } from "@jiscribe/geometry";
 
-import type { LayoutAxis } from "./axis";
-import { type RowIndex, readSlotColumns } from "./rows";
+import type { LayoutAxis } from "./LayoutAxis";
+import { type RowIndex, readSlotColumns } from "./RowIndex";
 import { spreadSideEnds } from "./spreadSideEnds";
 import type { LayoutEdgeAnchor, LayoutGraphEdge, LayoutSide } from "./types";
 
@@ -62,20 +62,14 @@ const calcFacingSides = (
 	source: Rect,
 	target: Rect,
 	axis: LayoutAxis,
-	vertical: boolean,
 ): { sourceSide: LayoutSide; targetSide: LayoutSide } => {
 	const delta =
 		axis.alongStart(target) +
 		axis.alongExtent(target) / 2 -
 		(axis.alongStart(source) + axis.alongExtent(source) / 2);
-	if (vertical) {
-		return delta >= 0
-			? { sourceSide: "bottom", targetSide: "top" }
-			: { sourceSide: "top", targetSide: "bottom" };
-	}
 	return delta >= 0
-		? { sourceSide: "right", targetSide: "left" }
-		: { sourceSide: "left", targetSide: "right" };
+		? { sourceSide: axis.aheadSide, targetSide: axis.behindSide }
+		: { sourceSide: axis.behindSide, targetSide: axis.aheadSide };
 };
 
 /** A side of one box, as the key the anchor rules count edges on. */
@@ -143,11 +137,10 @@ const anchorEnds = (
 	edges: readonly EdgeToAnchor[],
 	rows: RowIndex,
 	axis: LayoutAxis,
-	vertical: boolean,
 ): WorkingEdge[] => {
 	const sided = edges.map((edge) => ({
 		...edge,
-		...calcFacingSides(edge.sourceBounds, edge.targetBounds, axis, vertical),
+		...calcFacingSides(edge.sourceBounds, edge.targetBounds, axis),
 	}));
 	// How many edges meet each side, which decides whether an end may sit at its midpoint.
 	const edgeCountBySide = new Map<string, number>();
@@ -257,7 +250,6 @@ const anchorEnds = (
 const spreadBundles = (
 	edges: readonly WorkingEdge[],
 	axis: LayoutAxis,
-	vertical: boolean,
 ): void => {
 	const bundles = new Map<string, WorkingEdge[]>();
 	for (const working of edges) {
@@ -274,12 +266,8 @@ const spreadBundles = (
 			bundle.push(working);
 		}
 	}
-	const labelExtentOf = (edge: LayoutGraphEdge): number => {
-		if (edge.label === undefined) {
-			return 0;
-		}
-		return vertical ? edge.label.width : edge.label.height;
-	};
+	const labelExtentOf = (edge: LayoutGraphEdge): number =>
+		edge.label === undefined ? 0 : axis.acrossSize(edge.label);
 	for (const bundle of bundles.values()) {
 		if (bundle.length < 2) {
 			continue;
@@ -395,18 +383,16 @@ const spreadEndsOnSides = (
  *
  * @param edges - Dagre's routes, container borders dropped, with the boxes they join
  * @param rows - Tells a slot column from a gap on a route
- * @param axis - The rank axis
- * @param vertical - Whether the ranks run top to bottom (`TB` / `BT`)
+ * @param axis - The rank axis, which also names the facing sides
  * @returns One entry per edge, in the order given
  */
 export const chooseEdgeAnchors = (
 	edges: readonly EdgeToAnchor[],
 	rows: RowIndex,
 	axis: LayoutAxis,
-	vertical: boolean,
 ): AnchoredEdge[] => {
-	const working = anchorEnds(edges, rows, axis, vertical);
-	spreadBundles(working, axis, vertical);
+	const working = anchorEnds(edges, rows, axis);
+	spreadBundles(working, axis);
 	spreadEndsOnSides(working, axis);
 	return working.map(({ source, target, labelPosition }) => ({
 		source,

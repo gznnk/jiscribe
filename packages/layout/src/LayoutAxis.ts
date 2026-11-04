@@ -1,6 +1,7 @@
 import type { Point, Rect } from "@jiscribe/geometry";
 
 import { type LayoutDirection, isVerticalFlow } from "./LayoutDirection";
+import type { LayoutSide } from "./types";
 
 /**
  * The two axes of a layered layout, named by their role rather than by x / y: `along`
@@ -25,6 +26,24 @@ export type LayoutAxis = {
 	acrossExtent: (bounds: Rect) => number;
 	/** The centre of a box across the rank axis. */
 	acrossCentre: (bounds: Rect) => number;
+	/** A size's extent along the rank axis (a label's height in a top-to-bottom flow). */
+	alongSize: (size: { width: number; height: number }) => number;
+	/** A size's extent across the rank axis (a label's width in a top-to-bottom flow). */
+	acrossSize: (size: { width: number; height: number }) => number;
+	/** The side of a box that faces the next rank (`bottom` in a top-to-bottom flow). */
+	aheadSide: LayoutSide;
+	/** The side of a box that faces the previous rank. */
+	behindSide: LayoutSide;
+	/** Put a point on the given rank coordinate, in place. */
+	setAlong: (point: Point, along: number) => void;
+	/** Move a point along the rank axis, in place. */
+	shiftAlong: (point: Point, delta: number) => void;
+	/** Move a box's start along the rank axis and change its extent, in place. */
+	shiftBoxAlong: (
+		bounds: Rect,
+		startDelta: number,
+		extentDelta: number,
+	) => void;
 };
 
 export const createLayoutAxis = (direction: LayoutDirection): LayoutAxis => {
@@ -40,12 +59,32 @@ export const createLayoutAxis = (direction: LayoutDirection): LayoutAxis => {
 		acrossExtent: (bounds) => (vertical ? bounds.width : bounds.height),
 		acrossCentre: (bounds) =>
 			vertical ? bounds.x + bounds.width / 2 : bounds.y + bounds.height / 2,
+		alongSize: (size) => (vertical ? size.height : size.width),
+		acrossSize: (size) => (vertical ? size.width : size.height),
+		aheadSide: vertical ? "bottom" : "right",
+		behindSide: vertical ? "top" : "left",
+		setAlong: (point, along) => {
+			if (vertical) {
+				point.y = along;
+			} else {
+				point.x = along;
+			}
+		},
+		shiftAlong: (point, delta) => {
+			if (vertical) {
+				point.y += delta;
+			} else {
+				point.x += delta;
+			}
+		},
+		shiftBoxAlong: (bounds, startDelta, extentDelta) => {
+			if (vertical) {
+				bounds.y += startDelta;
+				bounds.height += extentDelta;
+			} else {
+				bounds.x += startDelta;
+				bounds.width += extentDelta;
+			}
+		},
 	};
 };
-
-/**
- * A rank coordinate as a lookup key: rows and gaps that are the same to the routing
- * share one, their coordinates coming out of one subtraction each and so agreeing to
- * well under a thousandth of a pixel.
- */
-export const toRowKey = (along: number): number => Math.round(along * 1000);

@@ -1,8 +1,9 @@
 import type { Point, Rect } from "@jiscribe/geometry";
 
-import { createLayoutAxis } from "./axis";
 import { isSameCoordinate } from "./isSameCoordinate";
-import { type LayoutDirection, isVerticalFlow } from "./LayoutDirection";
+import { createLayoutAxis } from "./LayoutAxis";
+import type { LayoutDirection } from "./LayoutDirection";
+import { toRowKey } from "./RowIndex";
 
 /** Preferred distance in px between two routes running side by side through one gap. */
 export const GAP_LANE_SPACING = 16;
@@ -151,13 +152,10 @@ export const spreadGapLanes = (
 	labels: readonly (GapLaneLabel | undefined)[] = [],
 	boxes: Rect[] = [],
 ): void => {
-	const vertical = isVerticalFlow(direction);
 	const axis = createLayoutAxis(direction);
 	const runsByGap = new Map<number, GapRun[]>();
 	for (const run of collectGapRuns(paths, direction, rankSpacing, labels)) {
-		// Gap midlines come out of one subtraction each, so equal gaps compare equal to
-		// well under a thousandth of a pixel.
-		const key = Math.round(run.along * 1000);
+		const key = toRowKey(run.along);
 		const runs = runsByGap.get(key);
 		if (runs === undefined) {
 			runsByGap.set(key, [run]);
@@ -265,13 +263,6 @@ export const spreadGapLanes = (
 	const shiftedBefore = (along: number): number =>
 		sumWhere((planAlong) => planAlong <= along);
 	if (widenings.length > 0) {
-		const move = (point: Point, delta: number): void => {
-			if (vertical) {
-				point.y += delta;
-			} else {
-				point.x += delta;
-			}
-		};
 		const pointsToMove = new Set<Point>();
 		for (const path of paths) {
 			for (const point of path) {
@@ -288,22 +279,15 @@ export const spreadGapLanes = (
 			deltaByPoint.set(point, shiftBeyond(axis.along(point)));
 		}
 		for (const [point, delta] of deltaByPoint) {
-			move(point, delta);
+			axis.shiftAlong(point, delta);
 		}
 		// A box beyond a gap moves whole; one spanning it (a container around ranks on both
 		// sides) grows by the widening instead.
 		for (const box of boxes) {
-			const start = vertical ? box.y : box.x;
-			const extent = vertical ? box.height : box.width;
+			const start = axis.alongStart(box);
 			const startDelta = shiftBeyond(start);
-			const endDelta = shiftBeyond(start + extent);
-			if (vertical) {
-				box.y += startDelta;
-				box.height += endDelta - startDelta;
-			} else {
-				box.x += startDelta;
-				box.width += endDelta - startDelta;
-			}
+			const endDelta = shiftBeyond(start + axis.alongExtent(box));
+			axis.shiftBoxAlong(box, startDelta, endDelta - startDelta);
 		}
 	}
 
@@ -315,11 +299,7 @@ export const spreadGapLanes = (
 		for (const [run, laneIndex] of laneOf) {
 			const lane = midline + offsets[laneIndex] - span / 2;
 			for (const point of [run.path[run.index], run.path[run.index + 1]]) {
-				if (vertical) {
-					point.y = lane;
-				} else {
-					point.x = lane;
-				}
+				axis.setAlong(point, lane);
 			}
 		}
 	}

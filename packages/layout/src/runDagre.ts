@@ -151,13 +151,13 @@ export const runDagre = (
 	);
 	const originX = Math.min(...everyBox.map((bounds) => bounds.x));
 	const originY = Math.min(...everyBox.map((bounds) => bounds.y));
-	const shift = ({ id, bounds }: LaidOutNode): LaidOutNode => ({
+	const toOrigin = ({ id, bounds }: LaidOutNode): LaidOutNode => ({
 		id,
 		bounds: { ...bounds, x: bounds.x - originX, y: bounds.y - originY },
 	});
 	return {
-		nodes: centredNodes.map(shift),
-		containers: centredContainers.map(shift),
+		nodes: centredNodes.map(toOrigin),
+		containers: centredContainers.map(toOrigin),
 		edges: routedEdges.map((edge) => {
 			const routed = graph.edge(edge.sourceId, edge.targetId, edge.id) as {
 				points?: Point[];

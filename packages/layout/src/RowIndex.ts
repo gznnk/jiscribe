@@ -1,7 +1,14 @@
 import type { Point } from "@jiscribe/geometry";
 
-import { type LayoutAxis, toRowKey } from "./axis";
+import type { LayoutAxis } from "./LayoutAxis";
 import type { LaidOutContainer, LaidOutNode } from "./types";
+
+/**
+ * A rank coordinate as a lookup key: rows and gaps that are the same to the routing
+ * share one, their coordinates coming out of one subtraction each and so agreeing to
+ * well under a thousandth of a pixel.
+ */
+export const toRowKey = (along: number): number => Math.round(along * 1000);
 
 /**
  * The rows of a layout along the rank axis, which the routing has to tell apart from

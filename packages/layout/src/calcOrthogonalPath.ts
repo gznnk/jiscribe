@@ -1,8 +1,8 @@
 import type { Point, Rect } from "@jiscribe/geometry";
 
-import type { LayoutAxis } from "./axis";
 import { isSameCoordinate } from "./isSameCoordinate";
-import type { RowIndex } from "./rows";
+import type { LayoutAxis } from "./LayoutAxis";
+import type { RowIndex } from "./RowIndex";
 import type { LayoutEdgeAnchor } from "./types";
 
 /** Where an anchor sits on a box, in the same coordinates as `bounds`. */

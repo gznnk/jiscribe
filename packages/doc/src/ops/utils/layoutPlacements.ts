@@ -10,7 +10,7 @@ import {
 import { GroupFeatures } from "../../model/objects/primitives/group/GroupDoc";
 
 /** A shape whose type declares itself a container other objects sit inside (`features.container`). */
-export const isContainerShape = (
+const isContainerShape = (
 	object: ObjectRecord,
 	definitions: DocDefinitions,
 ): boolean => definitions.get(object.type)?.features.container !== undefined;
@@ -61,7 +61,8 @@ export type PlacedContainer = {
  * @param definitions - Type table `features.container` and `features.geometry` are read from
  * @param skipsUnmeasurable - True when the candidates were not named: an object the build
  *   cannot measure (an unknown type) is then left out instead of failing the call
- * @returns The nodes in the order found, and only the containers that hold one
+ * @returns The nodes in the order found, then the container shapes that hold nothing
+ *   (laid out as nodes), and the containers that hold something
  */
 export const collectPlacements = (
 	candidates: readonly ObjectRecord[],

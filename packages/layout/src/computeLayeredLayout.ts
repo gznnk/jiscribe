@@ -1,12 +1,11 @@
 import type { Point, Rect } from "@jiscribe/geometry";
 
-import { createLayoutAxis } from "./axis";
 import { type LabelPlacement, calcLabelPosition } from "./calcLabelPosition";
 import { calcAnchorPoint, calcOrthogonalPath } from "./calcOrthogonalPath";
 import { chooseEdgeAnchors } from "./chooseEdgeAnchors";
-import { isVerticalFlow } from "./LayoutDirection";
+import { createLayoutAxis } from "./LayoutAxis";
 import { reserveTitleBands } from "./reserveTitleBands";
-import { createRowIndex, dropBorderPoints } from "./rows";
+import { createRowIndex, dropBorderPoints } from "./RowIndex";
 import { runDagre } from "./runDagre";
 import { spreadGapLanes } from "./spreadGapLanes";
 import {
@@ -51,11 +50,10 @@ export const computeLayeredLayout = (
 	options: LayeredLayoutOptions = {},
 	containers: readonly LayoutGraphContainer[] = [],
 ): LayeredLayoutResult => {
-	const resolved = { ...LAYERED_LAYOUT_DEFAULTS, ...options };
-	const axis = createLayoutAxis(resolved.direction);
-	const vertical = isVerticalFlow(resolved.direction);
+	const resolvedOptions = { ...LAYERED_LAYOUT_DEFAULTS, ...options };
+	const axis = createLayoutAxis(resolvedOptions.direction);
 
-	const placed = runDagre(nodes, edges, resolved, containers);
+	const placed = runDagre(nodes, edges, resolvedOptions, containers);
 	const rows = createRowIndex(placed.nodes, placed.containers, axis);
 	const boundsById = new Map(
 		placed.nodes.map(({ id, bounds }) => [id, bounds] as const),
@@ -68,7 +66,7 @@ export const computeLayeredLayout = (
 		labelPoint: dagreEdge.labelPoint,
 	}));
 
-	const anchors = chooseEdgeAnchors(routes, rows, axis, vertical);
+	const anchors = chooseEdgeAnchors(routes, rows, axis);
 	const paths = routes.map((route, index) =>
 		calcOrthogonalPath(
 			calcAnchorPoint(route.sourceBounds, anchors[index].source),
@@ -84,14 +82,11 @@ export const computeLayeredLayout = (
 	);
 	spreadGapLanes(
 		paths,
-		resolved.direction,
-		resolved.rankSpacing,
+		resolvedOptions.direction,
+		resolvedOptions.rankSpacing,
 		routes.map(({ edge, labelPoint }) =>
 			labelPoint !== undefined && edge.label !== undefined
-				? {
-						point: labelPoint,
-						alongExtent: vertical ? edge.label.height : edge.label.width,
-					}
+				? { point: labelPoint, alongExtent: axis.alongSize(edge.label) }
 				: undefined,
 		),
 		everyBox,
@@ -116,7 +111,7 @@ export const computeLayeredLayout = (
 	reserveTitleBands(
 		placed.containers.map((container) => ({
 			...container,
-			titleHeight: titleHeightById.get(container.id) ?? 0,
+			titleHeight: titleHeightById.get(container.id) as number,
 		})),
 		movablePoints,
 		everyBox,
@@ -140,8 +135,8 @@ export const computeLayeredLayout = (
 			path,
 			labelPoint,
 			label,
-			resolved.direction,
-			resolved.rankSpacing,
+			resolvedOptions.direction,
+			resolvedOptions.rankSpacing,
 			obstacles,
 		);
 	};
