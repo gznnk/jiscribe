@@ -32,7 +32,10 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   routes crossing it is widened. A group, and a shape whose type declares the new
   `features.frame` (`container`, `awsGroup`), is a frame: what lies inside it is
   laid out inside it, the frame is resized around them, and the `titleHeight` the
-  type declares is kept clear below its top edge. Direction (`TB` /
+  type declares is kept clear below its top edge; a connector with an end on a
+  frame shape is redrawn between the facing sides afterwards. An end on a connect
+  point the owner's type declares (an ER entity's column) stays where it is, with
+  that connector's route left to the engine. Direction (`TB` /
   `LR` / `BT` / `RL`) and the two gaps are parameters; omitting ids lays out the
   whole canvas, and the drawing keeps its top-left corner. The algorithm is dagre's,
   wrapped in the new headless `@jiscribe/layout` package.

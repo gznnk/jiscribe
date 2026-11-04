@@ -621,6 +621,7 @@ export const computeLayeredLayout = (
 				targetBounds,
 				dagrePoints,
 				isAdjacent: slotColumns.length === 0,
+				labelPositionOverride: undefined as number | undefined,
 				// Where dagre put the label: a spot on its own polyline, which the
 				// right-angled route passes through or beside.
 				labelPoint:
@@ -669,9 +670,35 @@ export const computeLayeredLayout = (
 					),
 			);
 		}
-		const centre = offsets[offsets.length - 1] / 2;
+		// The stack has to fit the shorter of the two sides, with a margin at each end.
+		const sideExtent = (bounds: Rect): number =>
+			isVerticalFlow(direction) ? bounds.width : bounds.height;
+		const usable =
+			0.8 *
+			Math.min(
+				sideExtent(bundle[0].sourceBounds),
+				sideExtent(bundle[0].targetBounds),
+			);
+		const span = offsets[offsets.length - 1];
+		const scale = span > usable ? usable / span : 1;
+		const centre = span / 2;
+		const labelled = bundle.filter(({ edge }) => edge.label !== undefined);
 		bundle.forEach((anchored, index) => {
-			const shift = offsets[index] - centre;
+			const shift = (offsets[index] - centre) * scale;
+			// Labels of parallel lines are staggered along them, so they do not stack.
+			if (labelled.length > 1 && anchored.edge.label !== undefined) {
+				const rank = labelled.indexOf(anchored);
+				const position = clampRatio(
+					0.5 + (rank - (labelled.length - 1) / 2) * 0.15,
+					{ min: 0.2, max: 0.8 },
+				);
+				// A position is measured from the edge's own source, so an edge running
+				// the other way takes the mirror image to land beside the others.
+				anchored.labelPositionOverride =
+					anchored.edge.sourceId === bundle[0].edge.sourceId
+						? position
+						: 1 - position;
+			}
 			const shiftAnchor = (
 				anchor: LayoutEdgeAnchor,
 				bounds: Rect,
@@ -811,6 +838,7 @@ export const computeLayeredLayout = (
 			labelPoint,
 			sourceBounds,
 			targetBounds,
+			labelPositionOverride,
 		}) => ({
 			id: edge.id,
 			source,
@@ -818,14 +846,16 @@ export const computeLayeredLayout = (
 			points: path.slice(1, -1),
 			...(labelPoint !== undefined && edge.label !== undefined
 				? toLabelFields(
-						calcLabelPosition(
-							path,
-							labelPoint,
-							edge.label,
-							direction,
-							rankSpacing,
-							[sourceBounds, targetBounds],
-						),
+						labelPositionOverride !== undefined
+							? { position: labelPositionOverride, offset: 0 }
+							: calcLabelPosition(
+									path,
+									labelPoint,
+									edge.label,
+									direction,
+									rankSpacing,
+									[sourceBounds, targetBounds],
+								),
 					)
 				: {}),
 		}),

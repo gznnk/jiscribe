@@ -8,7 +8,10 @@ import {
 } from "@jiscribe/layout";
 
 import { DocOperationError } from "./errors";
-import { buildEndpoint } from "./utils/connectorEndpoints";
+import {
+	type EdgeAnchorHandle,
+	buildEndpoint,
+} from "./utils/connectorEndpoints";
 import {
 	type ObjectLocation,
 	type ObjectRecord,
@@ -29,7 +32,10 @@ import {
 	type ConnectorDoc,
 } from "../model/objects/connector/ConnectorDoc";
 import { GroupFeatures } from "../model/objects/primitives/group/GroupDoc";
-import type { EndpointRef } from "../model/objects/types/EndpointRef";
+import {
+	ConnectPointIds,
+	type EndpointRef,
+} from "../model/objects/types/EndpointRef";
 import { calcTextBlockSize } from "../text/block/calcTextBlockSize";
 
 export type { LayoutDirection } from "@jiscribe/layout";
@@ -54,6 +60,37 @@ export type LayoutObjectsResult = {
 
 const readOwnerId = (endpoint: EndpointRef): string | undefined =>
 	endpoint.owner?.id;
+
+/**
+ * Whether an end sits on a connect point the owner's type declares beyond the four
+ * edge midpoints (an ER entity's column), which says where on the owner the line
+ * belongs and so is kept as the author set it.
+ */
+const keepsOwnAnchor = (endpoint: EndpointRef): boolean =>
+	endpoint.anchor.kind === "connectPoint" &&
+	!(ConnectPointIds as readonly string[]).includes(endpoint.anchor.id);
+
+const centreOf = (bounds: Rect): { x: number; y: number } => ({
+	x: bounds.x + bounds.width / 2,
+	y: bounds.y + bounds.height / 2,
+});
+
+/** The sides of two boxes that face each other, by the larger offset between their centres. */
+const calcFacingSides = (
+	source: Rect,
+	target: Rect,
+): { source: EdgeAnchorHandle; target: EdgeAnchorHandle } => {
+	const deltaX = centreOf(target).x - centreOf(source).x;
+	const deltaY = centreOf(target).y - centreOf(source).y;
+	if (Math.abs(deltaX) >= Math.abs(deltaY)) {
+		return deltaX >= 0
+			? { source: { side: "right", t: 0.5 }, target: { side: "left", t: 0.5 } }
+			: { source: { side: "left", t: 0.5 }, target: { side: "right", t: 0.5 } };
+	}
+	return deltaY >= 0
+		? { source: { side: "bottom", t: 0.5 }, target: { side: "top", t: 0.5 } }
+		: { source: { side: "top", t: 0.5 }, target: { side: "bottom", t: 0.5 } };
+};
 
 /** A shape whose type declares itself a frame other objects sit inside (`features.frame`). */
 const isFrameShape = (
@@ -219,7 +256,9 @@ const measureLabelBox = (
  *   a shape whose type declares `features.frame` (a container, a VPC) is a frame around
  *   the objects lying inside it: members are laid out inside their frame, and a frame
  *   shape is moved and resized to the box the layout draws around them. A connector with
- *   an end on a frame is left as it is
+ *   an end on a frame shape is no edge of the graph, but is redrawn between the facing
+ *   sides afterwards. An end on a connect point the owner's type declares (an ER
+ *   entity's column) stays there, and that connector's route is left to the engine
  * @param params - Direction and gaps; see {@link LayoutObjectsParams}
  * @param definitions - Type table `features.geometry` and the offered connect points are read from
  * @returns Which objects moved and which connectors were re-anchored
@@ -309,20 +348,29 @@ export const layoutObjects = (
 	);
 	const endpointWrites = laidOut.edges.map((edge) => {
 		const connector = connectorById.get(edge.id) as ConnectorDoc;
+		const sourceKept = keepsOwnAnchor(connector.source);
+		const targetKept = keepsOwnAnchor(connector.target);
 		return {
 			connector,
-			source: buildEndpoint(
-				locatedOwners,
-				readOwnerId(connector.source) as string,
-				edge.source,
-				definitions,
-			),
-			target: buildEndpoint(
-				locatedOwners,
-				readOwnerId(connector.target) as string,
-				edge.target,
-				definitions,
-			),
+			// An end on a declared connect point stays there; the line is then routed
+			// by the engine, since the corners here were made for the end the layout chose.
+			keepsRoute: !(sourceKept || targetKept),
+			source: sourceKept
+				? connector.source
+				: buildEndpoint(
+						locatedOwners,
+						readOwnerId(connector.source) as string,
+						edge.source,
+						definitions,
+					),
+			target: targetKept
+				? connector.target
+				: buildEndpoint(
+						locatedOwners,
+						readOwnerId(connector.target) as string,
+						edge.target,
+						definitions,
+					),
 		};
 	});
 
@@ -366,15 +414,18 @@ export const layoutObjects = (
 	const laidOutEdgeById = new Map(
 		laidOut.edges.map((edge) => [edge.id, edge] as const),
 	);
-	for (const { connector, source, target } of endpointWrites) {
+	for (const { connector, source, target, keepsRoute } of endpointWrites) {
 		const laidOutEdge = laidOutEdgeById.get(connector.id);
 		connector.source = source;
 		connector.target = target;
-		connector.points = (laidOutEdge?.points ?? []).map(({ x, y }) => ({
-			x: Math.round(originX + x),
-			y: Math.round(originY + y),
-		}));
+		connector.points = keepsRoute
+			? (laidOutEdge?.points ?? []).map(({ x, y }) => ({
+					x: Math.round(originX + x),
+					y: Math.round(originY + y),
+				}))
+			: [];
 		if (
+			keepsRoute &&
 			connector.label !== undefined &&
 			laidOutEdge?.labelPosition !== undefined
 		) {
@@ -388,9 +439,66 @@ export const layoutObjects = (
 		delete connector.routing;
 	}
 
+	// A connector with an end on a frame shape is no edge of the graph, but it is
+	// redrawn between the facing sides of where the frame and its other end ended up,
+	// its route left to the engine.
+	const framedIds = new Set(framed.map(({ object }) => object.id));
+	const boxOf = (id: string): Rect | undefined => {
+		const placed =
+			measured.find(({ object }) => object.id === id) ??
+			framed.find(({ object }) => object.id === id);
+		return placed === undefined
+			? undefined
+			: requireObjectBounds(placed.object, definitions);
+	};
+	const locatedFrameOwners = locateObjects(
+		doc,
+		new Set([...nodeIds, ...framedIds]),
+	);
+	const frameConnectorIds: string[] = [];
+	visitObjects(doc.root, (object) => {
+		if (!isConnectorObject(object)) {
+			return;
+		}
+		const connector = object as unknown as ConnectorDoc;
+		const sourceId = readOwnerId(connector.source);
+		const targetId = readOwnerId(connector.target);
+		if (
+			sourceId === undefined ||
+			targetId === undefined ||
+			!(framedIds.has(sourceId) || framedIds.has(targetId))
+		) {
+			return;
+		}
+		const sourceBox = boxOf(sourceId);
+		const targetBox = boxOf(targetId);
+		if (sourceBox === undefined || targetBox === undefined) {
+			return;
+		}
+		const sides = calcFacingSides(sourceBox, targetBox);
+		connector.source = buildEndpoint(
+			locatedFrameOwners,
+			sourceId,
+			sides.source,
+			definitions,
+		);
+		connector.target = buildEndpoint(
+			locatedFrameOwners,
+			targetId,
+			sides.target,
+			definitions,
+		);
+		connector.points = [];
+		delete connector.routing;
+		frameConnectorIds.push(connector.id);
+	});
+
 	return {
 		nodeIds: measured.map(({ object }) => object.id),
 		frameIds: frames.map(({ object }) => object.id),
-		connectorIds: endpointWrites.map(({ connector }) => connector.id),
+		connectorIds: [
+			...endpointWrites.map(({ connector }) => connector.id),
+			...frameConnectorIds,
+		],
 	};
 };

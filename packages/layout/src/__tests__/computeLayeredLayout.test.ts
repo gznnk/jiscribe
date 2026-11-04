@@ -230,6 +230,34 @@ describe("computeLayeredLayout", () => {
 		).toBeCloseTo(20, 6);
 	});
 
+	it("fits a labelled bundle on its side and staggers the labels", () => {
+		const label = { width: 120, height: 24 };
+		const result = computeLayeredLayout(
+			[
+				{ id: "a", width: 140, height: 70 },
+				{ id: "b", width: 140, height: 70 },
+			],
+			[
+				{ id: "one", sourceId: "a", targetId: "b", label },
+				{ id: "two", sourceId: "a", targetId: "b", label },
+				{ id: "three", sourceId: "b", targetId: "a", label },
+			],
+			{ direction: "LR" },
+		);
+
+		for (const { source, target } of result.edges) {
+			expect(source.t).toBeGreaterThanOrEqual(0.09);
+			expect(source.t).toBeLessThanOrEqual(0.91);
+			expect(target.t).toBeGreaterThanOrEqual(0.09);
+			expect(target.t).toBeLessThanOrEqual(0.91);
+		}
+		// Measured from a's side, the three labels sit at different spots.
+		const positions = result.edges.map(({ id, labelPosition }) =>
+			id === "three" ? 1 - (labelPosition ?? 0) : labelPosition,
+		);
+		expect(new Set(positions).size).toBe(3);
+	});
+
 	it("keeps a frame's members inside it and routes an edge into it in right angles", () => {
 		const result = computeLayeredLayout(
 			[
