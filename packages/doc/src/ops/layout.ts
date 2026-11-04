@@ -1,5 +1,6 @@
 import type { Rect } from "@jiscribe/geometry";
 import {
+	EDGE_END_SPACING,
 	computeLayeredLayout,
 	type LayoutDirection,
 	type LayoutGraphEdge,
@@ -74,6 +75,75 @@ const centreOf = (bounds: Rect): { x: number; y: number } => ({
 	x: bounds.x + bounds.width / 2,
 	y: bounds.y + bounds.height / 2,
 });
+
+/**
+ * Where ends already sit on each side of each object, as `<id>:<side>` → positions
+ * along the side; read off the endpoints just written, so a line added afterwards
+ * can keep clear of them.
+ */
+const collectTakenEnds = (
+	connectors: readonly ConnectorDoc[],
+): Map<string, number[]> => {
+	const taken = new Map<string, number[]>();
+	const note = (endpoint: EndpointRef): void => {
+		const ownerId = readOwnerId(endpoint);
+		if (ownerId === undefined) {
+			return;
+		}
+		const { anchor } = endpoint;
+		let side: EdgeAnchorHandle["side"] | undefined;
+		let t = 0.5;
+		if (anchor.kind === "edge") {
+			side = anchor.side;
+			t = anchor.t;
+		} else if (anchor.kind === "connectPoint") {
+			side = (
+				{
+					topCenter: "top",
+					rightCenter: "right",
+					bottomCenter: "bottom",
+					leftCenter: "left",
+				} as const
+			)[anchor.id as string];
+		}
+		if (side === undefined) {
+			return;
+		}
+		const key = `${ownerId}:${side}`;
+		taken.set(key, [...(taken.get(key) ?? []), t]);
+	};
+	for (const connector of connectors) {
+		note(connector.source);
+		note(connector.target);
+	}
+	return taken;
+};
+
+/**
+ * The position along a side nearest its midpoint that keeps {@link EDGE_END_SPACING}
+ * from every end already there, within a tenth of the side at either end; the
+ * midpoint itself when nothing fits.
+ */
+const findFreeEnd = (
+	takenPositions: readonly number[],
+	extent: number,
+): number => {
+	const gap = extent > 0 ? EDGE_END_SPACING / extent : 0;
+	const isFree = (t: number): boolean =>
+		takenPositions.every((taken) => Math.abs(taken - t) >= gap);
+	if (isFree(0.5)) {
+		return 0.5;
+	}
+	for (let step = gap; 0.5 + step <= 0.9; step += gap) {
+		if (isFree(0.5 - step)) {
+			return 0.5 - step;
+		}
+		if (isFree(0.5 + step)) {
+			return 0.5 + step;
+		}
+	}
+	return 0.5;
+};
 
 /** The sides of two boxes that face each other, by the larger offset between their centres. */
 const calcFacingSides = (
@@ -441,7 +511,7 @@ export const layoutObjects = (
 
 	// A connector with an end on a frame shape is no edge of the graph, but it is
 	// redrawn between the facing sides of where the frame and its other end ended up,
-	// its route left to the engine.
+	// clear of the ends already on those sides, its route left to the engine.
 	const framedIds = new Set(framed.map(({ object }) => object.id));
 	const boxOf = (id: string): Rect | undefined => {
 		const placed =
@@ -456,6 +526,23 @@ export const layoutObjects = (
 		new Set([...nodeIds, ...framedIds]),
 	);
 	const frameConnectorIds: string[] = [];
+	const takenEnds = collectTakenEnds(
+		endpointWrites.map(({ connector }) => connector),
+	);
+	const placeEnd = (
+		ownerId: string,
+		handle: EdgeAnchorHandle,
+		box: Rect,
+	): EdgeAnchorHandle => {
+		const key = `${ownerId}:${handle.side}`;
+		const extent =
+			handle.side === "top" || handle.side === "bottom"
+				? box.width
+				: box.height;
+		const t = findFreeEnd(takenEnds.get(key) ?? [], extent);
+		takenEnds.set(key, [...(takenEnds.get(key) ?? []), t]);
+		return { side: handle.side, t };
+	};
 	visitObjects(doc.root, (object) => {
 		if (!isConnectorObject(object)) {
 			return;
@@ -479,13 +566,13 @@ export const layoutObjects = (
 		connector.source = buildEndpoint(
 			locatedFrameOwners,
 			sourceId,
-			sides.source,
+			placeEnd(sourceId, sides.source, sourceBox),
 			definitions,
 		);
 		connector.target = buildEndpoint(
 			locatedFrameOwners,
 			targetId,
-			sides.target,
+			placeEnd(targetId, sides.target, targetBox),
 			definitions,
 		);
 		connector.points = [];
