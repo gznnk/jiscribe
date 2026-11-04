@@ -127,6 +127,29 @@ describe("computeLayeredLayout", () => {
 		}
 	});
 
+	it("keeps room for a label in the gap it crosses and says where on the route it sits", () => {
+		const result = computeLayeredLayout(
+			[box("a"), box("b")],
+			[
+				{
+					id: "e",
+					sourceId: "a",
+					targetId: "b",
+					label: { width: 60, height: 30 },
+				},
+			],
+			{ rankSpacing: 60 },
+		);
+
+		const b = result.nodes.find(({ id }) => id === "b")?.bounds;
+		// The gap grew by the label's height, so the label never touches a box.
+		expect(b?.y).toBe(80 + 60 + 30);
+		const position = result.edges[0].labelPosition ?? NaN;
+		expect(position).toBeGreaterThan(0);
+		expect(position).toBeLessThan(1);
+		expect(result.edges[0].labelPosition).toBeCloseTo(0.5, 5);
+	});
+
 	it("rejects an edge naming a node that is not there", () => {
 		expect(() =>
 			computeLayeredLayout(

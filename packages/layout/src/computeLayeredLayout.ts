@@ -8,6 +8,7 @@
 import { Graph, layout } from "@dagrejs/dagre";
 import type { Point, Rect } from "@jiscribe/geometry";
 
+import { calcPositionAlongPath } from "./calcPositionAlongPath";
 import { type LayoutDirection, isVerticalFlow } from "./LayoutDirection";
 import { spreadGapLanes } from "./spreadGapLanes";
 
@@ -30,6 +31,8 @@ export type LayoutGraphEdge = {
 	sourceId: string;
 	/** Id of the node the edge ends at; must be among the nodes. */
 	targetId: string;
+	/** Size of the label box drawn on the edge, in px; the layout keeps that much room free for it. */
+	label?: { width: number; height: number };
 };
 
 export type LayeredLayoutOptions = {
@@ -80,6 +83,11 @@ export type LaidOutEdge = {
 	 * straight.
 	 */
 	points: Point[];
+	/**
+	 * Where along the route the label sits, 0 at the source and 1 at the target: the spot
+	 * the layout kept free for it. Only for an edge given a `label`.
+	 */
+	labelPosition?: number;
 };
 
 export type LayeredLayoutResult = {
@@ -225,7 +233,8 @@ const calcOrthogonalPath = (
  *
  * @param nodes - The boxes to place, each with the size it keeps; ids must be distinct
  * @param edges - Directed edges between those ids. Several edges between the same pair are
- *   kept apart; an edge naming an id not in `nodes` is an error
+ *   kept apart; an edge naming an id not in `nodes` is an error. An edge with a `label`
+ *   gets room for it, in the gap it crosses or beside a rank it passes
  * @param options - Direction and gaps; see {@link LAYERED_LAYOUT_DEFAULTS}
  * @returns Every node's new top-left and, for every edge that is not a self loop, which
  *   sides of the two boxes now face each other
@@ -266,7 +275,14 @@ export const computeLayeredLayout = (
 		if (edge.sourceId === edge.targetId) {
 			continue;
 		}
-		graph.setEdge(edge.sourceId, edge.targetId, {}, edge.id);
+		graph.setEdge(
+			edge.sourceId,
+			edge.targetId,
+			edge.label === undefined
+				? {}
+				: { width: edge.label.width, height: edge.label.height, labelpos: "c" },
+			edge.id,
+		);
 		laidOutEdgeIds.push(edge.id);
 	}
 
@@ -301,6 +317,8 @@ export const computeLayeredLayout = (
 		.map((edge) => {
 			const routed = graph.edge(edge.sourceId, edge.targetId, edge.id) as {
 				points?: Point[];
+				x?: number;
+				y?: number;
 			};
 			const sourceBounds = boundsById.get(edge.sourceId) as Rect;
 			const targetBounds = boundsById.get(edge.targetId) as Rect;
@@ -332,6 +350,14 @@ export const computeLayeredLayout = (
 				id: edge.id,
 				source,
 				target,
+				// Where dagre put the label: a spot on its own polyline, which the
+				// right-angled route passes through or beside.
+				labelPoint:
+					edge.label !== undefined &&
+					routed.x !== undefined &&
+					routed.y !== undefined
+						? { x: routed.x - originX, y: routed.y - originY }
+						: undefined,
 				path: calcOrthogonalPath(
 					calcAnchorPoint(sourceBounds, source),
 					calcAnchorPoint(targetBounds, target),
@@ -345,10 +371,15 @@ export const computeLayeredLayout = (
 		direction,
 		rankSpacing,
 	);
-	const laidOutEdges = routedEdges.map(({ path, ...edge }) => ({
-		...edge,
-		points: path.slice(1, -1),
-	}));
+	const laidOutEdges: LaidOutEdge[] = routedEdges.map(
+		({ path, labelPoint, ...edge }) => ({
+			...edge,
+			points: path.slice(1, -1),
+			...(labelPoint !== undefined
+				? { labelPosition: calcPositionAlongPath(path, labelPoint) }
+				: {}),
+		}),
+	);
 
 	return { nodes: laidOutNodes, edges: laidOutEdges };
 };

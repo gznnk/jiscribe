@@ -21,7 +21,8 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   reduce crossings, and every connector between two placed objects is re-anchored
   onto the facing sides (fanned out along a side several of them share) and given
   a right-angled route around the objects between them, on a lane of its own where
-  several routes cross one gap sideways. Direction (`TB` /
+  several routes cross one gap sideways; a labelled connector gets room for its
+  label, which moves onto the line at that spot. Direction (`TB` /
   `LR` / `BT` / `RL`) and the two gaps are parameters; omitting ids lays out the
   whole canvas, and the drawing keeps its top-left corner. The algorithm is dagre's,
   wrapped in the new headless `@jiscribe/layout` package.

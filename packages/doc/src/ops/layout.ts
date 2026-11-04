@@ -21,8 +21,12 @@ import {
 	translateObject,
 } from "./utils/objectGeometry";
 import type { CanvasDoc } from "../model/canvas/CanvasDoc";
-import type { ConnectorDoc } from "../model/objects/connector/ConnectorDoc";
+import {
+	CONNECTOR_LABEL_DEFAULTS,
+	type ConnectorDoc,
+} from "../model/objects/connector/ConnectorDoc";
 import type { EndpointRef } from "../model/objects/types/EndpointRef";
+import { calcTextBlockSize } from "../text/block/calcTextBlockSize";
 
 export type { LayoutDirection } from "@jiscribe/layout";
 
@@ -45,13 +49,31 @@ export type LayoutObjectsResult = {
 const readOwnerId = (endpoint: EndpointRef): string | undefined =>
 	endpoint.owner?.id;
 
+/** The box a connector's label is drawn in (see calcTextBlockSize), or undefined without a label. */
+const measureLabelBox = (
+	connector: ConnectorDoc,
+): { width: number; height: number } | undefined => {
+	const { label } = connector;
+	if (label === undefined || label.text === "") {
+		return undefined;
+	}
+	const border = (label.strokeWidth ?? 0) * 2;
+	const { width, height } = calcTextBlockSize(label.text, {
+		fontSize: label.fontSize ?? CONNECTOR_LABEL_DEFAULTS.fontSize,
+		fontFamily: label.fontFamily ?? CONNECTOR_LABEL_DEFAULTS.fontFamily,
+		fontWeight: label.fontWeight ?? CONNECTOR_LABEL_DEFAULTS.fontWeight,
+	});
+	return { width: width + border, height: height + border };
+};
+
 /**
  * Arrange objects as a layered graph, mutating `doc` in place: the connectors between
  * them decide the ranks (a source sits above, or left of, its targets), nodes of one rank
  * are ordered to reduce crossings, and every connector between two placed objects is
  * re-anchored onto the sides that now face each other (an edge anchor, placed toward where
  * the connector goes so several on one side fan out), with a right-angled route around the
- * objects in between written as its corners (none when it runs straight). The arrangement keeps the top-left corner the objects occupied together, so the
+ * objects in between written as its corners (none when it runs straight). A labelled connector
+ * gets room for its label, which is moved onto the line at that spot. The arrangement keeps the top-left corner the objects occupied together, so the
  * drawing stays where it was.
  *
  * @param doc - Mutated in place
@@ -110,11 +132,15 @@ export const layoutObjects = (
 		width: bounds.width,
 		height: bounds.height,
 	}));
-	const graphEdges: LayoutGraphEdge[] = connectors.map((connector) => ({
-		id: connector.id,
-		sourceId: readOwnerId(connector.source) as string,
-		targetId: readOwnerId(connector.target) as string,
-	}));
+	const graphEdges: LayoutGraphEdge[] = connectors.map((connector) => {
+		const label = measureLabelBox(connector);
+		return {
+			id: connector.id,
+			sourceId: readOwnerId(connector.source) as string,
+			targetId: readOwnerId(connector.target) as string,
+			...(label !== undefined ? { label } : {}),
+		};
+	});
 	const laidOut = computeLayeredLayout(graphNodes, graphEdges, params);
 
 	// Resolve every endpoint before any write, so an owner that does not offer the
@@ -162,18 +188,26 @@ export const layoutObjects = (
 			definitions,
 		);
 	}
-	const cornersByEdgeId = new Map(
-		laidOut.edges.map((edge) => [edge.id, edge.points] as const),
+	const laidOutEdgeById = new Map(
+		laidOut.edges.map((edge) => [edge.id, edge] as const),
 	);
 	for (const { connector, source, target } of endpointWrites) {
+		const laidOutEdge = laidOutEdgeById.get(connector.id);
 		connector.source = source;
 		connector.target = target;
-		connector.points = (cornersByEdgeId.get(connector.id) ?? []).map(
-			({ x, y }) => ({
-				x: Math.round(originX + x),
-				y: Math.round(originY + y),
-			}),
-		);
+		connector.points = (laidOutEdge?.points ?? []).map(({ x, y }) => ({
+			x: Math.round(originX + x),
+			y: Math.round(originY + y),
+		}));
+		if (
+			connector.label !== undefined &&
+			laidOutEdge?.labelPosition !== undefined
+		) {
+			// On the line, at the spot the layout kept free; the knockout hides the line
+			// behind the text.
+			connector.label.position = laidOutEdge.labelPosition;
+			connector.label.offset = 0;
+		}
 		// A straight line is what a centre anchor defaults to; between the facing sides
 		// the arrangement was made for, the right-angled route is the one that reads.
 		delete connector.routing;

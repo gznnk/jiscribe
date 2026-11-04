@@ -90,6 +90,27 @@ describe("layoutObjects", () => {
 		});
 	});
 
+	it("keeps room for a label and moves it onto the line there", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "rect", { x: 0, y: 0, width: 160, height: 80 });
+		docOps.addObject(doc, "rect", { x: 0, y: 300, width: 160, height: 80 });
+		docOps.connect(doc, {
+			sourceId: "rect-1",
+			targetId: "rect-2",
+			label: "yes",
+			labelPosition: 0.9,
+			labelOffset: 20,
+		});
+
+		docOps.layoutObjects(doc, undefined, { rankSpacing: 60 });
+
+		// The gap holds the label's box as well as the rank spacing.
+		expect(readObject(doc, "rect-2").y as number).toBeGreaterThan(140);
+		expect(readObject(doc, "connector-1")).toMatchObject({
+			label: { text: "yes", position: 0.5, offset: 0 },
+		});
+	});
+
 	it("needs two placeable objects and names a missing id", () => {
 		const doc = scatteredChain();
 
