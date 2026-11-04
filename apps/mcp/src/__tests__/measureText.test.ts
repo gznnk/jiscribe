@@ -43,6 +43,23 @@ describe("measure_text", () => {
 		expect(result.text).toContain("fits yes");
 	});
 
+	it("gives no verdict and says the numbers are a lower bound for a markdown card", async () => {
+		const result = await client.callTool("measure_text", {
+			text: "# 見出し\n\nこの箱には到底入りきらない長さの本文",
+			shape: "markdown",
+			width: 120,
+			height: 40,
+			fontSize: 14,
+		});
+		const lines = result.text.split("\n");
+		expect(lines[0]).toBe("shape markdown 120x40");
+		expect(lines[3]).toMatch(/^content [\d.]+x[\d.]+$/);
+		expect(lines[4]).toBe(
+			"note: shape markdown lays its body out as HTML (headings, lists and spacing), so these plain-text numbers are only a lower bound on what it takes; to measure it as drawn, open the canvas in the jiscribe MCP viewer and call measure_rendered_text",
+		);
+		expect(result.text).not.toContain("fits");
+	});
+
 	it("gives no verdict and adds a note for a type that draws its label outside the box", async () => {
 		const result = await client.callTool("measure_text", {
 			text: "分岐点のラベル",

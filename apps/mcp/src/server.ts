@@ -1,3 +1,4 @@
+import { realpath } from "node:fs/promises";
 import path from "node:path";
 
 import {
@@ -12,11 +13,13 @@ import {
 	type CanvasToolDescriptor,
 } from "@jiscribe/ai-tools";
 import { DocOperationError } from "@jiscribe/doc";
-import type { Diagnostic } from "@jiscribe/doc-tools";
+import type { Diagnostic, MeasuredSourceText } from "@jiscribe/doc-tools";
 import {
 	resolveContentBox,
 	diagnoseDoc,
 	formatDiagnostics,
+	formatSourceTextMeasureNote,
+	listSourceTextObjects,
 	measureWrappedText,
 	validateDoc,
 } from "@jiscribe/doc-tools";
@@ -42,8 +45,11 @@ import {
 } from "./exportImageOutput";
 import type { CanvasHost } from "./host/canvasHost";
 import { CanvasHostError } from "./host/canvasHostError";
+import { calcDocRevision } from "./host/docRevision";
+import { resolveWorkspacePathReal } from "./host/workspacePaths";
 import { createJiscribeMcpRuntime, type JiscribeMcpRuntime } from "./runtime";
 import {
+	DRAWN_REVISION_WAIT_MS,
 	MAX_EXPORT_PIXEL_SIZE,
 	type ExportImageOp,
 } from "./shared/canvasHostProtocol";
@@ -141,6 +147,21 @@ const MAX_EXPORT_SCALE = 8;
  * longer to draw and encode than a capture_canvas picture does
  */
 const EXPORT_IMAGE_TIMEOUT_MS = 60_000;
+
+/**
+ * Room diagnose_canvas leaves past the viewer's drawn-revision hold for the
+ * measurement itself: the off-screen layout and, while faces are still
+ * loading, the wait for them and a second layout
+ */
+const DIAGNOSE_MEASURE_OP_MARGIN_MS = 3_000;
+
+/**
+ * How long diagnose_canvas waits for the viewer to measure one markdown body:
+ * the viewer's hold for a person's drag, plus the margin for the op.
+ * Shorter than the 15 s default, since the measurements run one per card
+ */
+const DIAGNOSE_MEASURE_TIMEOUT_MS =
+	DRAWN_REVISION_WAIT_MS + DIAGNOSE_MEASURE_OP_MARGIN_MS;
 
 /**
  * What the server tells a client about itself at handshake time. It stays in the
@@ -282,17 +303,33 @@ export function createJiscribeMcpServer(
 				"Check an existing .jis file: validation with the canvas parser plus a diagnosis of whether each shape's text actually fits inside it.",
 				"Names the file by path, so a large diagram never has to be sent through the conversation; this is the only validation entry point, and it reports JSON syntax errors too.",
 				"Overflow is only diagnosed when the file itself validates, since a shape with an invalid size has no meaningful content box.",
+				"A markdown card's body is laid out as HTML, so it is measured as the viewer draws it, and only while this file is open in the viewer drawing the same text as the file (a person's unsaved edits there included); otherwise it is reported as not checked.",
 				"Returns one line per finding, or valid: true when there is nothing to report.",
 			].join(" "),
 			inputSchema: z.object({ path: pathArg }).strict(),
 		},
 		async ({ path }) =>
 			runTool(async () => {
-				const text = await runtime.withCanvasFileLock(path, readCanvasFileText);
+				const { filePath, text } = await runtime.withCanvasFileLock(
+					path,
+					async (lockedPath) => ({
+						filePath: lockedPath,
+						text: await readCanvasFileText(lockedPath),
+					}),
+				);
 				const result = validateDoc(text);
 				const diagnostics: Diagnostic[] = [...result.diagnostics];
 				if (result.ok && result.doc !== undefined) {
-					diagnostics.push(...diagnoseDoc(result.doc));
+					// Asked only now, outside the lock and outside the call the barrier
+					// tracks: the viewer's round trip re-reads the file under the same
+					// lock, and a screen op waiting on the barrier would wait on this call
+					const measuredSourceText = await measureSourceTextOnViewer(
+						runtime.getHost(),
+						filePath,
+						text,
+						listSourceTextObjects(result.doc).map(({ id }) => id),
+					);
+					diagnostics.push(...diagnoseDoc(result.doc, { measuredSourceText }));
 				}
 				return formatDiagnostics(diagnostics);
 			}),
@@ -306,6 +343,7 @@ export function createJiscribeMcpServer(
 				"width / height are the shape's own bounding box, the same numbers a document holds; the content box is what the outline and the shared text padding leave of them.",
 				"height may be omitted only for rect, whose content width follows from its width alone, and for types that draw their label outside their box.",
 				"Returns the line count, the box the wrapped lines take, the content box, and whether the text fits.",
+				"A markdown card lays its body out as HTML, so for it the numbers are a plain-text lower bound with no verdict; measure_rendered_text measures it as drawn.",
 				"Use this before sizing a shape, so a label is not written into a box too small for it.",
 			].join(" "),
 			inputSchema: z
@@ -643,6 +681,69 @@ function round(value: number): number {
 }
 
 /**
+ * Has the viewer measure the `"source"` bodies (markdown) of the file being
+ * diagnosed as it draws them, for diagnoseDoc to judge. Asked only when the
+ * viewer shows that very file, and one object at a time; the first answer that
+ * cannot be taken (a failure, a timeout, a tab too old to send the numbers, or
+ * one drawn from other text than was diagnosed) ends the asking, and the
+ * objects not measured stay in diagnoseDoc's unchecked warning.
+ *
+ * @param host The current host; null (no open_canvas) measures nothing
+ * @param filePath The diagnosed file as toCanvasFilePath resolved it, compared
+ *   with the file on display
+ * @param docText The text diagnosed, read under the file's lock; a measurement
+ *   is taken only from a window that drew this text's revision
+ * @param objectIds The objects to measure, as listSourceTextObjects lists them
+ * @returns The measurements taken, keyed by object id; empty when nothing could be
+ */
+async function measureSourceTextOnViewer(
+	host: CanvasHost | null,
+	filePath: string,
+	docText: string,
+	objectIds: readonly string[],
+): Promise<Map<string, MeasuredSourceText>> {
+	const measured = new Map<string, MeasuredSourceText>();
+	if (objectIds.length === 0 || host === null) {
+		return measured;
+	}
+	const openPath = host.getOpenPath();
+	if (openPath === null) {
+		return measured;
+	}
+	try {
+		// resolveWorkspacePathReal answers with the lexical path, and filePath has
+		// been through every link (toCanvasFilePath), so the two are compared as
+		// where they lead
+		const displayedPath = await realpath(
+			await resolveWorkspacePathReal(host.workspaceRoot, openPath),
+		);
+		if (displayedPath !== filePath) {
+			return measured;
+		}
+	} catch {
+		// A path on display that no longer resolves is not the diagnosed file
+		return measured;
+	}
+	const diagnosedRevision = calcDocRevision(docText);
+	for (const objectId of objectIds) {
+		const outcome = await host.runHandleOp(
+			{ kind: "measureText", id: objectId },
+			DIAGNOSE_MEASURE_TIMEOUT_MS,
+		);
+		if (
+			!outcome.ok ||
+			outcome.textMeasurement === undefined ||
+			outcome.relPath !== openPath ||
+			outcome.revision !== diagnosedRevision
+		) {
+			break;
+		}
+		measured.set(objectId, outcome.textMeasurement);
+	}
+	return measured;
+}
+
+/**
  * Read one guide off disk (see readDrawingGuide in @jiscribe/doc-tools/guides,
  * whose files `build.mjs` stages beside `dist/index.mjs`).
  *
@@ -669,7 +770,8 @@ function readDrawingGuide(guide: DrawingGuideName): string {
  * given the height is not judged). The wording is kept in line with the CLI too
  * (engine/apps/cli/src/measureCommand.ts): a type that draws outside its box is
  * only measured and gets no fit verdict, and a type outside the shipped set comes
- * back as an error.
+ * back as an error, and a type that lays its body out itself (markdown) gets a
+ * note in place of the verdict.
  */
 function measureTextInShape(params: {
 	text: string;
@@ -716,19 +818,27 @@ function measureTextInShape(params: {
 
 	const box = resolution.rect;
 	const metrics = measureWrappedText(text, font, box.width);
+	const measuredLines = [
+		`shape ${shape} ${width}x${height ?? "-"}`,
+		`lines ${metrics.lines}`,
+		`text ${round(metrics.width)}x${round(metrics.height)}`,
+		`content ${round(box.width)}x${height === undefined ? "-" : round(box.height)}`,
+	];
+	// The plain-text lines only bound what an HTML body takes from below, so no
+	// verdict is given on them
+	if (resolution.isSourceText) {
+		return [
+			...measuredLines,
+			`note: ${formatSourceTextMeasureNote(shape)}`,
+		].join("\n");
+	}
 	// The wrap width is only exceeded when a single character is wider than the box.
 	// A rounding difference of 0.5px is tolerated.
 	const fits =
 		metrics.width <= box.width + 0.5 &&
 		(height === undefined || metrics.height <= box.height);
 
-	return [
-		`shape ${shape} ${width}x${height ?? "-"}`,
-		`lines ${metrics.lines}`,
-		`text ${round(metrics.width)}x${round(metrics.height)}`,
-		`content ${round(box.width)}x${height === undefined ? "-" : round(box.height)}`,
-		`fits ${fits ? "yes" : "no"}`,
-	].join("\n");
+	return [...measuredLines, `fits ${fits ? "yes" : "no"}`].join("\n");
 }
 
 /**

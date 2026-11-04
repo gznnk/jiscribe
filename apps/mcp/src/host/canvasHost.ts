@@ -242,6 +242,9 @@ export async function startCanvasHost(
 					...(frame.exportedImageBase64 === undefined
 						? {}
 						: { exportedImageBase64: frame.exportedImageBase64 }),
+					...(frame.textMeasurement === undefined
+						? {}
+						: { textMeasurement: frame.textMeasurement }),
 				});
 				return;
 			}
@@ -311,7 +314,7 @@ export async function startCanvasHost(
 					text: "no canvas viewer is connected, so there is nothing on screen to capture, move, select, or measure; open one with open_canvas and keep the browser tab open",
 				};
 			}
-			return await handleOpBroker.ask({
+			const outcome = await handleOpBroker.ask({
 				askedSockets,
 				calcFrame: (requestId) => ({
 					type: "handleOpRequest",
@@ -331,6 +334,9 @@ export async function startCanvasHost(
 					text: "the canvas viewer was closed before it could answer",
 				}),
 			});
+			return fileSync.kind === "synced"
+				? { ...outcome, relPath: fileSync.relPath, revision: fileSync.revision }
+				: outcome;
 		},
 		closeViewers: () =>
 			viewerRegistry.closeSockets(viewerRegistry.openSockets()),

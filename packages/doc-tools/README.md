@@ -18,7 +18,8 @@ the answers an AI gets and the answers CI gets cannot drift.
 | `validateDoc(text)`                               | Is this a sound document? Reads it with the canvas parser and returns what it found.                                                                                                                                  |
 | `measureWrappedText(text, font, availableWidth?)` | How many lines does this text become, and how big is the block?                                                                                                                                                       |
 | `resolveContentBox(shape)`                        | How much of a shape's box is its text actually laid out in — or is there no box to lay it in?                                                                                                                         |
-| `diagnoseDoc(doc)`                                | Does any text land where it should not — overflowing its shape, a connector label wider than the gap it sits in, a line opening on a closing mark (行頭禁則), a frame-based body running over the shape's decoration? |
+| `diagnoseDoc(doc, options?)`                      | Does any text land where it should not — overflowing its shape, a connector label wider than the gap it sits in, a line opening on a closing mark (行頭禁則), a frame-based body running over the shape's decoration? |
+| `listSourceTextObjects(doc)`                      | Which objects hold a body only a drawn canvas can measure (markdown), for a host to measure and hand back as `options.measuredSourceText`?                                                                            |
 | `formatDiagnostics(diagnostics)`                  | What do those findings read as, one line each, for a person or an AI?                                                                                                                                                 |
 
 ### Canvas files: `@jiscribe/doc-tools/file`
@@ -117,7 +118,11 @@ that cannot tell "this shape holds no text" from "you misspelled the type" canno
 report either one usefully:
 
 - **`{ kind: "region", rect }`** — the region, in the shape's own coordinates,
-  with the shared text-box padding already subtracted.
+  with the shared text-box padding already subtracted. `isSourceText` marks a
+  type that lays its body out itself (markdown, as HTML): plain text measured
+  into the region only bounds what that body takes from below, so
+  `jiscribe measure` and the MCP `measure_text` give no verdict for it, and
+  `diagnoseDoc` judges it only from a measurement taken on a drawn canvas.
 - **`{ kind: "outside" }`** — the box does not hold the text: the shape draws its
   label outside the outline (the pictograms, the group markers), or divides the
   box into bands each sized from their own text (`record`), or carries no text at

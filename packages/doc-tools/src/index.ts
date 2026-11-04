@@ -16,13 +16,17 @@ export type { ValidateDocResult } from "./validateDoc";
 export { measureWrappedText } from "./measureWrappedText";
 export type { TextMeasureFont, WrappedTextMetrics } from "./measureWrappedText";
 
-export { resolveContentBox } from "./resolveContentBox";
+export {
+	formatSourceTextMeasureNote,
+	resolveContentBox,
+} from "./resolveContentBox";
 export type {
 	ContentBoxResolution,
 	ContentBoxShape,
 } from "./resolveContentBox";
 
-export { diagnoseDoc } from "./diagnoseDoc";
+export { diagnoseDoc, listSourceTextObjects } from "./diagnoseDoc";
+export type { DiagnoseDocOptions, MeasuredSourceText } from "./diagnoseDoc";
 
 export { formatDiagnostics } from "./formatDiagnostics";
 

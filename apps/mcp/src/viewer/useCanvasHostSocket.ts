@@ -253,6 +253,9 @@ export function useCanvasHostSocket(
 								...(outcome.exportedImageBase64 === undefined
 									? {}
 									: { exportedImageBase64: outcome.exportedImageBase64 }),
+								...(outcome.textMeasurement === undefined
+									? {}
+									: { textMeasurement: outcome.textMeasurement }),
 							});
 						});
 						break;

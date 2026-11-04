@@ -1349,6 +1349,7 @@ export const createCanvasToolDescriptors = (
 			'This is the exact answer to "does the label fit?" that capture_canvas can only suggest — call it after putting text on a shape you did not size for it, instead of judging the fit from a picture.',
 			"describe_canvas cannot answer it either: the document holds the text and the shape size, not the wrapping between them.",
 			"When the text does not fit, the result says how much room is missing, so you can resize_objects, drop the fontSize or shorten the text by a known amount.",
+			"A markdown card is measured as the HTML it renders to (headings, lists and spacing included), and reports no line count.",
 		].join(" "),
 		{
 			id: z.string().describe("id of the object whose label is measured."),

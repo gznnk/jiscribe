@@ -43,9 +43,11 @@ export type CanvasHitTestOptions = {
  * out, an agent drawing one) needs the second kind to check its own work, and
  * every method here is a read: none of them touches the document.
  *
- * Everything is measured from the committed state rather than from the DOM, so
- * an object the current view has scrolled past (and viewport culling has
- * dropped) measures the same as one on screen.
+ * Everything is measured from the committed state rather than from the elements
+ * on screen, so an object the current view has scrolled past (and viewport
+ * culling has dropped) measures the same as one on screen, at any zoom. A type
+ * that draws its text body itself (Markdown) has that body laid out off screen
+ * from the same state to be measured (see ObjectTextMeasurerRegistry).
  */
 export type CanvasMeasureHandle = {
 	/**
@@ -60,7 +62,7 @@ export type CanvasMeasureHandle = {
 	 */
 	visualBounds(ids: readonly string[]): Rect | null;
 	/**
-	 * How one text slot came out: the box it is drawn in, the size the wrapped
+	 * How one text slot came out: the box it is drawn in, the size the laid-out
 	 * text takes, and whether the shape is clipping it
 	 * (see {@link TextSlotMeasurement}).
 	 *
@@ -69,6 +71,10 @@ export type CanvasMeasureHandle = {
 	 *   one editing opens by default. An unknown slot yields null
 	 * @returns The measurement, or null for a missing object, a shape with no
 	 *   text region (a connector, a poly shape), or an absent slot
+	 * @throws for a type that measures its body itself (Markdown) when called
+	 *   while React is rendering or committing — from a render or an effect
+	 *   body — since its body is laid out off screen by a synchronous render
+	 *   (see measureTextOverlayContent). Call it from an event handler or a task
 	 */
 	textSlot(id: string, slotId?: string): TextSlotMeasurement | null;
 	/**
@@ -110,8 +116,8 @@ export type CanvasMeasureHandle = {
  * @param canvasState - Current controller state, read at call time (not at
  *   render time) so the handle stays referentially stable
  * @param registries - The canvas's registry bundle, supplying the per-type
- *   silhouettes, text regions and style defaults every measurement resolves
- *   through; a plugin type is measured like a built-in one because of it
+ *   silhouettes, text regions, style defaults and text measurers every
+ *   measurement resolves through; a plugin type is measured like a built-in one because of it
  */
 export const useMeasureHandle = (
 	canvasState: CanvasControllerState,

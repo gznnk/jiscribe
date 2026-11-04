@@ -6,6 +6,7 @@
 // answer — a document, or a canvas that is mounted — because that is what decides
 // where the host has to send it.
 
+import type { TextSlotMeasurement } from "@jiscribe/canvas";
 import type {
 	AddObjectParams,
 	AlignEdge,
@@ -342,6 +343,12 @@ export type AiCanvasOpOutcome = {
 	 * including a failure and an undo that brings deleted objects back
 	 */
 	createdIds?: string[];
+	/**
+	 * The measurement `measureText` answered with, as numbers, so a host can act
+	 * on it beyond the text (the MCP server's `diagnose_canvas` turns it into a
+	 * finding). Absent for every other op and for a failed measurement
+	 */
+	textMeasurement?: TextSlotMeasurement;
 };
 
 /**

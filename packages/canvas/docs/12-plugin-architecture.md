@@ -242,6 +242,15 @@ narrows the built-in types only: a plugin's types, and their `svgDefs` with them
 always registered once the plugin is in `plugins`. Export clones the live SVG, so
 plugin-provided defs are included automatically.
 
+**`textMeasurer`** (`features.text: "source"`). `measure.textSlot` measures a
+slot as plain text with `layoutVisualLines`, which is wrong for a body the type
+draws itself (Markdown: headings at `em` multiples, block margins, tables). Such a
+type declares `textMeasurer` (`ObjectTextMeasurer`), which lays the body out the
+way its overlay draws it — `measureTextOverlayContent` renders it into the same
+`TextOverlayFrame` off screen — and returns its size with `lineCount: null`. Core
+adds the region and the overflow verdict, so the answer is shaped like every
+other type's. It runs in the browser only, when a host asks.
+
 **Text slots** (`features.text: "slots"`). Do not use integer-like slot ids
 (`"0"`, `"1"`). JavaScript enumerates integer-like own keys in ascending numeric
 order before insertion order, so the key order of `state.text` — which decides the

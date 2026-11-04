@@ -29,6 +29,10 @@ export type { TextEditable } from "./rendering/objects/base/TextOverlay/TextOver
 export { TextOverlayFrame } from "./rendering/objects/base/TextOverlay/TextOverlayFrame";
 export type { TextOverlayFrameProps } from "./rendering/objects/base/TextOverlay/TextOverlayFrame";
 
+// Lays content out in that same box off screen and reports its size, for a
+// type's textMeasurer (ObjectTypeDefinition) to measure the body it draws itself.
+export { measureTextOverlayContent } from "./rendering/objects/base/TextOverlay/measureTextOverlayContent";
+
 // For shapes that keep plain-text bodies but vary typography per slot (a record's title
 // band, say). Pass the props from renderTextOverlay straight through and override only
 // what needs to change.
