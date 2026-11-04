@@ -1,10 +1,8 @@
 import type { CanvasDoc } from "@jiscribe/doc";
-import { standardObjectDocDefinitions } from "@jiscribe/standard-shapes/doc";
 import { describe, expect, it } from "vitest";
 
 import { diagnoseDoc } from "../diagnoseDoc";
 import type { Diagnostic } from "../Diagnostic";
-import { BOX_FILLING_TYPES } from "../occludedObjects";
 import { validateDoc } from "../validateDoc";
 
 /** Parses the objects as a document's root, failing on anything the parser reports. */
@@ -53,15 +51,6 @@ const opaqueCover = (extra: Record<string, unknown> = {}) => ({
 	height: 100,
 	fill: "#ffffff",
 	...extra,
-});
-
-describe("BOX_FILLING_TYPES", () => {
-	it.each([...BOX_FILLING_TYPES])(
-		"%s is a shipped type with a fill",
-		(type) => {
-			expect(standardObjectDocDefinitions.get(type)?.features.fill).toBe(true);
-		},
-	);
 });
 
 describe("an object hidden under an opaque fill", () => {
@@ -327,6 +316,26 @@ describe("an object hidden under an opaque fill", () => {
 		expect(diagnostics.map((diagnostic) => diagnostic.objectId)).toEqual([
 			"under",
 			"cramped",
+		]);
+	});
+
+	it("stops with one document-wide warning when too many shapes share one column", () => {
+		// 4,500 shapes in one column are compared every one with every other —
+		// over ten million pairs — so the check stops rather than run on, and
+		// reports nothing about hidden shapes, the one hidden here included.
+		const column = Array.from({ length: 4_500 }, (_, index) =>
+			square(`row${index}`, 0, 200 + index * 10, 5),
+		);
+		const diagnostics = diagnoseDoc(
+			docOf(square("under", 10, 10, 50), opaqueCover(), ...column),
+		);
+		expect(diagnostics).toEqual([
+			{
+				severity: "warning",
+				message: expect.stringMatching(
+					/^the check for shapes hidden under another's opaque fill stopped after comparing 10000000 pairs/,
+				),
+			},
 		]);
 	});
 

@@ -4,17 +4,17 @@ import type {
 	ObjectDocDefinition,
 	ObjectShapeStyleDefaults,
 	ObjectSummary,
+	ResolvedShapeStyle,
 } from "@jiscribe/doc";
 import {
 	createDocOps,
-	extractShapeStyleDefaults,
 	isRichText,
 	isSingleBodyText,
 	richTextToPlain,
 } from "@jiscribe/doc";
 import {
 	BODY_TEXT_SLOT_ID,
-	SHAPE_STYLE_FALLBACK,
+	createObjectShapeStyleDefaultsRegistry,
 } from "@jiscribe/doc/unstable";
 import type { BoundingBox, Ellipse, Point } from "@jiscribe/geometry";
 import { convertRectToBoundingBox } from "@jiscribe/geometry";
@@ -38,9 +38,11 @@ import { offerNodeTextMeasurement } from "./measureWrappedText";
  *   compartments tile the box, a table and an entity paint a body under their
  *   cells, a container's body runs under its header).
  *
- * The silhouette lives on the rendering side (`ObjectTypeDefinition.outline`),
- * which this package cannot see, so the list is kept here by hand; a test holds
- * every entry to the shipped set and to `features.fill`. Package-internal.
+ * The silhouette is declared on the rendering side
+ * (`ObjectTypeDefinition.outline`), which this headless package does not
+ * import, so the list is kept here by hand; `boxFillingTypes.test.ts` holds
+ * every entry to `features.fill` and to declaring no `outline`, against the
+ * canvas built-ins and the standard set's plugins. Package-internal.
  */
 export const BOX_FILLING_TYPES: ReadonlySet<string> = new Set([
 	"rect",
@@ -63,59 +65,14 @@ export const BOX_FILLING_TYPES: ReadonlySet<string> = new Set([
  */
 const occlusionDocOps = createDocOps({ plugins: standardDocPlugins });
 
-/** A type's own shape-style defaults, read once per definition. */
-const shapeStyleDefaultsByDefinition = new Map<
-	ObjectDocDefinition,
-	ObjectShapeStyleDefaults | undefined
->();
-
-const readShapeStyleDefaults = (
-	definition: ObjectDocDefinition,
-): ObjectShapeStyleDefaults | undefined => {
-	if (!shapeStyleDefaultsByDefinition.has(definition)) {
-		shapeStyleDefaultsByDefinition.set(
-			definition,
-			extractShapeStyleDefaults(definition.features, definition.defaults),
-		);
-	}
-	return shapeStyleDefaultsByDefinition.get(definition);
-};
-
-/** The shape-style fields read here, with the type their value has. */
-type ShapeStyleNumberField =
-	"fillOpacity" | "strokeOpacity" | "strokeWidth" | "rx";
-type ShapeStyleStringField = "fill" | "stroke" | "startArrow" | "endArrow";
-
 /**
- * A shape-style field as it is drawn: the object's own, over its type's
- * default, over the shared last resort — the chain the renderers resolve
- * through (`resolveShapeStyle`). A value of the wrong type on the object reads
- * as unset.
+ * Every shipped type's shape-style defaults, which an object's style resolves
+ * through the way the renderers resolve it (`resolveShapeStyle`).
  */
-const resolveShapeStyleNumber = (
-	object: ObjectDoc,
-	definition: ObjectDocDefinition,
-	field: ShapeStyleNumberField,
-): number => {
-	const own = (object as Record<string, unknown>)[field];
-	return typeof own === "number"
-		? own
-		: (readShapeStyleDefaults(definition)?.[field] ??
-				SHAPE_STYLE_FALLBACK[field]);
-};
-
-/** {@link resolveShapeStyleNumber} for the fields holding a string. */
-const resolveShapeStyleString = (
-	object: ObjectDoc,
-	definition: ObjectDocDefinition,
-	field: ShapeStyleStringField,
-): string => {
-	const own = (object as Record<string, unknown>)[field];
-	return typeof own === "string"
-		? own
-		: (readShapeStyleDefaults(definition)?.[field] ??
-				SHAPE_STYLE_FALLBACK[field]);
-};
+const shapeStyleRegistry = createObjectShapeStyleDefaultsRegistry();
+for (const [type, definition] of standardObjectDocDefinitions) {
+	shapeStyleRegistry.registerDefinition(type, definition);
+}
 
 /** What a box-filling shape paints over, in world coordinates. */
 type FilledSilhouette = {
@@ -152,6 +109,7 @@ const isFiniteBox = (box: BoundingBox): boolean =>
 const resolveFilledSilhouette = (
 	object: ObjectDoc,
 	definition: ObjectDocDefinition,
+	style: ResolvedShapeStyle,
 	box: BoundingBox,
 ): FilledSilhouette | null => {
 	if (
@@ -162,11 +120,8 @@ const resolveFilledSilhouette = (
 	) {
 		return null;
 	}
-	const fill = resolveShapeStyleString(object, definition, "fill");
-	if (
-		!isOpaqueDocColor(fill) ||
-		resolveShapeStyleNumber(object, definition, "fillOpacity") < 1
-	) {
+	const { fill } = style;
+	if (!isOpaqueDocColor(fill) || style.fillOpacity < 1) {
 		return null;
 	}
 	const isEllipse = definition.features.geometry === "ellipse";
@@ -175,7 +130,7 @@ const resolveFilledSilhouette = (
 		outline: isEllipse ? "ellipse" : "rect",
 		cornerRadius:
 			!isEllipse && definition.features.radius === true
-				? Math.max(0, resolveShapeStyleNumber(object, definition, "rx"))
+				? Math.max(0, style.rx)
 				: 0,
 		fill,
 	};
@@ -189,16 +144,16 @@ const resolveFilledSilhouette = (
 const drawsPastItsBox = (
 	object: ObjectDoc,
 	definition: ObjectDocDefinition,
+	style: ResolvedShapeStyle,
 	box: BoundingBox,
 ): boolean => {
 	const { features } = definition;
-	if (features.geometry === "poly" && features.arrow === true) {
-		const hasArrowHead = (["startArrow", "endArrow"] as const).some(
-			(field) => resolveShapeStyleString(object, definition, field) !== "None",
-		);
-		if (hasArrowHead) {
-			return true;
-		}
+	if (
+		features.geometry === "poly" &&
+		features.arrow === true &&
+		(style.startArrow !== "None" || style.endArrow !== "None")
+	) {
+		return true;
 	}
 	// A slotted type's `text` is a map of its slots, laid out inside the box.
 	if (!isSingleBodyText(features.text)) {
@@ -244,6 +199,7 @@ const isInvisiblePaint = (color: string, opacity: number): boolean =>
 const drawsNothing = (
 	object: ObjectDoc,
 	definition: ObjectDocDefinition,
+	style: ResolvedShapeStyle,
 ): boolean => {
 	if (!PAINT_ONLY_TYPES.has(object.type)) {
 		return false;
@@ -254,32 +210,24 @@ const drawsNothing = (
 		return false;
 	}
 	const isFillInvisible =
-		features.fill !== true ||
-		isInvisiblePaint(
-			resolveShapeStyleString(object, definition, "fill"),
-			resolveShapeStyleNumber(object, definition, "fillOpacity"),
-		);
+		features.fill !== true || isInvisiblePaint(style.fill, style.fillOpacity);
 	const isStrokeInvisible =
 		features.stroke !== true ||
-		resolveShapeStyleNumber(object, definition, "strokeWidth") <= 0 ||
-		isInvisiblePaint(
-			resolveShapeStyleString(object, definition, "stroke"),
-			resolveShapeStyleNumber(object, definition, "strokeOpacity"),
-		);
+		style.strokeWidth <= 0 ||
+		isInvisiblePaint(style.stroke, style.strokeOpacity);
 	return isFillInvisible && isStrokeInvisible;
 };
 
 /** The box grown by half the object's stroke on every side, for a type that strokes its outline. */
 const calcDrawnRange = (
-	object: ObjectDoc,
 	definition: ObjectDocDefinition,
+	style: ResolvedShapeStyle,
 	box: BoundingBox,
 ): BoundingBox => {
 	if (definition.features.stroke !== true) {
 		return box;
 	}
-	const halfStroke =
-		Math.max(0, resolveShapeStyleNumber(object, definition, "strokeWidth")) / 2;
+	const halfStroke = Math.max(0, style.strokeWidth) / 2;
 	return {
 		left: box.left - halfStroke,
 		top: box.top - halfStroke,
@@ -322,11 +270,18 @@ const toOcclusionCandidate = (
 	if (!isFiniteBox(box)) {
 		return null;
 	}
-	const silhouette = resolveFilledSilhouette(object, definition, box);
+	// A validated doc holds each style field in its own type, so the object's
+	// fields are read as the overrides they are.
+	const style = shapeStyleRegistry.resolveShapeStyle(
+		object.type,
+		object as ObjectShapeStyleDefaults,
+	);
+	const silhouette = resolveFilledSilhouette(object, definition, style, box);
 	const drawnRange =
-		drawsPastItsBox(object, definition, box) || drawsNothing(object, definition)
+		drawsPastItsBox(object, definition, style, box) ||
+		drawsNothing(object, definition, style)
 			? null
-			: calcDrawnRange(object, definition, box);
+			: calcDrawnRange(definition, style, box);
 	if (silhouette === null && drawnRange === null) {
 		return null;
 	}
@@ -417,6 +372,26 @@ const isRangeUnderSilhouette = (
 	);
 };
 
+/**
+ * How many pairs of shapes the check compares before it gives up. The sweep
+ * only skips pairs set apart left to right, so shapes sharing one column are
+ * compared every one with every other — about 4,500 of them reach this. A
+ * drawing of 4,000 shapes spread over a page compares
+ * under half a million.
+ */
+const MAX_COMPARED_PAIRS = 10_000_000;
+
+/** What {@link diagnoseOccludedObjects} found. */
+export type OcclusionFindings = {
+	/** One warning per hidden object, keyed by the object itself. */
+	hiddenObjects: ReadonlyMap<ObjectDoc, Diagnostic>;
+	/**
+	 * The document-wide warning saying the check stopped at
+	 * {@link MAX_COMPARED_PAIRS} and reported nothing, or null when it ran to the end.
+	 */
+	stopped: Diagnostic | null;
+};
+
 const describeOcclusion = (
 	hidden: ObjectDoc,
 	cover: ObjectDoc,
@@ -445,12 +420,12 @@ const describeOcclusion = (
  *
  * @param doc - The document, read through the doc-ops for its boxes
  * @param objects - The same document flattened in drawing order (flattenObjects), which `listObjects` matches index for index
- * @returns One warning per hidden object, keyed by the object itself and naming the cover drawn directly over it — the earliest-drawn of those hiding it — when several do
+ * @returns One warning per hidden object, keyed by the object itself and naming the cover drawn directly over it — the earliest-drawn of those hiding it — when several do; or, past {@link MAX_COMPARED_PAIRS} comparisons, no hidden object and one document-wide warning saying the check stopped
  */
 export const diagnoseOccludedObjects = (
 	doc: CanvasDoc,
 	objects: readonly ObjectDoc[],
-): ReadonlyMap<ObjectDoc, Diagnostic> => {
+): OcclusionFindings => {
 	// A box left to be derived from the text is measured.
 	offerNodeTextMeasurement();
 	const summaries = occlusionDocOps.listObjects(doc);
@@ -487,6 +462,7 @@ export const diagnoseOccludedObjects = (
 			coverByHidden.set(under, { cover: over, fill: over.silhouette.fill });
 		}
 	};
+	let comparedPairs = 0;
 	for (let i = 0; i < candidates.length; i++) {
 		const current = candidates[i];
 		for (let j = i + 1; j < candidates.length; j++) {
@@ -497,12 +473,24 @@ export const diagnoseOccludedObjects = (
 			if (other.extent.left > current.extent.right) {
 				break;
 			}
+			comparedPairs++;
+			if (comparedPairs > MAX_COMPARED_PAIRS) {
+				// What was found so far may name a cover that is not the one drawn
+				// directly over, so none of it is reported.
+				return {
+					hiddenObjects: new Map(),
+					stopped: {
+						severity: "warning",
+						message: `the check for shapes hidden under another's opaque fill stopped after comparing ${MAX_COMPARED_PAIRS} pairs of overlapping shapes, so nothing is reported about hidden shapes in this document; look at the rendered canvas instead`,
+					},
+				};
+			}
 			recordIfHidden(current, other);
 			recordIfHidden(other, current);
 		}
 	}
 
-	return new Map(
+	const hiddenObjects = new Map<ObjectDoc, Diagnostic>(
 		[...coverByHidden].map(([hidden, { cover, fill }]) => [
 			hidden.object,
 			{
@@ -512,4 +500,5 @@ export const diagnoseOccludedObjects = (
 			},
 		]),
 	);
+	return { hiddenObjects, stopped: null };
 };

@@ -108,6 +108,16 @@ describe("svg markup sharing an id with an svg drawn before it", () => {
 		).toEqual([]);
 	});
 
+	it("reads a long run of unclosed url(# references in linear time", () => {
+		// 100 KB that the pattern once rescanned to its end at every `url(`: seconds
+		// of backtracking then, a few milliseconds now.
+		const markup = "url(#".repeat(20_000);
+		const doc = docOf(svg("first", 0, markup), svg("second", 100, markup));
+		const startedAt = performance.now();
+		expect(diagnoseDoc(doc)).toEqual([]);
+		expect(performance.now() - startedAt).toBeLessThan(1_000);
+	});
+
 	it("names the svg drawn first among several defining the id, a group's children included", () => {
 		const markup = `${GRADIENT_DEF}<rect fill="url(#shade)"/>`;
 		const diagnostics = diagnoseDoc(

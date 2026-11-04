@@ -8,8 +8,12 @@ import type { Diagnostic } from "./Diagnostic";
  */
 const ID_ATTRIBUTE_PATTERN = /(?:^|\s)id\s*=\s*(?:"([^"]*)"|'([^']*)')/g;
 
-/** A reference by fragment: `url(#x)`, quoted or not. */
-const URL_REFERENCE_PATTERN = /url\(\s*["']?#([^"')\s]+)["']?\s*\)/g;
+/**
+ * A reference by fragment: `url(#x)`, quoted or not. The name stops at a `(` as
+ * well, so a run of `url(#url(#…` with no closing parenthesis is scanned once
+ * rather than once per `url(`.
+ */
+const URL_REFERENCE_PATTERN = /url\(\s*["']?#([^"'()\s]+)["']?\s*\)/g;
 
 /** A reference by fragment through `href` or `xlink:href`. */
 const HREF_REFERENCE_PATTERN =

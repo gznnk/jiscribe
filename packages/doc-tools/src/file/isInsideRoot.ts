@@ -12,10 +12,10 @@ const normalizeForComparison = (value: string): string =>
  * lexical: resolve both through their links first (realpathDeepestExisting) when
  * a link must not count as a way out.
  *
- * @param rootPath The directory to stay within, absolute and normalized
+ * @param rootPath - The directory to stay within, absolute and normalized
  *   (`path.resolve`). The filesystem root (`/`) is the one root spelled with a
  *   trailing separator, and nothing but itself counts as inside it
- * @param targetPath The path to test, absolute and normalized the same way.
+ * @param targetPath - The path to test, absolute and normalized the same way.
  *   A different directory sharing the root's name as a prefix ("/work2" against
  *   "/work") is outside; case is ignored on win32 only
  */
