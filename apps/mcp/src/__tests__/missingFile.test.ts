@@ -27,7 +27,7 @@ afterAll(async () => {
 describe("a document tool on a file that does not exist", () => {
 	it.each([
 		["get_object", { id: "box" }],
-		["add_rect", { x: 0, y: 0 }],
+		["add_ellipses", { entries: [{ cx: 0, cy: 0 }] }],
 		["diagnose_canvas", {}],
 	])("%s points at open_canvas and creates nothing", async (name, args) => {
 		const missingPath = join(workspace.dirPath, `${name}.jis.json`);

@@ -15,6 +15,7 @@ import {
 } from "./utils/connectorEndpoints";
 import { type AllocateId, createIdAllocator } from "./utils/ids";
 import {
+	findRepeatedIds,
 	locateObjects,
 	type ObjectLocation,
 	type ObjectRecord,
@@ -577,20 +578,6 @@ const applyConnectorUpdate = ({
 	if (params.arrowScale !== undefined) {
 		connector.arrowScale = params.arrowScale;
 	}
-};
-
-/** Ids listed more than once, each named once, in the order they were first repeated. */
-const findRepeatedIds = (ids: readonly string[]): string[] => {
-	const seenIds = new Set<string>();
-	const repeatedIds = new Set<string>();
-	for (const id of ids) {
-		if (seenIds.has(id)) {
-			repeatedIds.add(id);
-		} else {
-			seenIds.add(id);
-		}
-	}
-	return [...repeatedIds];
 };
 
 /**

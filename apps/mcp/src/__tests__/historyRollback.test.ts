@@ -70,23 +70,15 @@ beforeEach(async () => {
 
 describe("a write-back that fails", () => {
 	it("leaves undo able to take back the last change that did get written", async () => {
-		await client.callTool("add_object", {
+		await client.callTool("add_objects", {
 			path: targetPath,
-			type: "rect",
-			x: 0,
-			y: 0,
-			width: 100,
-			height: 50,
+			objects: [{ type: "rect", x: 0, y: 0, width: 100, height: 50 }],
 		});
 
 		injection.shouldFailNextSave = true;
-		const refused = await client.callTool("add_object", {
+		const refused = await client.callTool("add_objects", {
 			path: targetPath,
-			type: "rect",
-			x: 200,
-			y: 0,
-			width: 100,
-			height: 50,
+			objects: [{ type: "rect", x: 200, y: 0, width: 100, height: 50 }],
 		});
 		expect(refused.text).toMatch(/^error: failed to write file:/);
 		expect((await workspace.readDoc(targetPath)).root).toHaveLength(1);
@@ -98,13 +90,9 @@ describe("a write-back that fails", () => {
 	});
 
 	it("leaves an undo that could not be written to be tried again", async () => {
-		await client.callTool("add_object", {
+		await client.callTool("add_objects", {
 			path: targetPath,
-			type: "rect",
-			x: 0,
-			y: 0,
-			width: 100,
-			height: 50,
+			objects: [{ type: "rect", x: 0, y: 0, width: 100, height: 50 }],
 		});
 
 		injection.shouldFailNextSave = true;
@@ -132,15 +120,17 @@ describe.skipIf(!isPermissionEnforced)(
 			await mkdir(readOnlyDir);
 			const lockedPath = join(readOnlyDir, "locked.jis.json");
 			await writeFile(lockedPath, `${JSON.stringify(emptyDoc)}\n`, "utf8");
-			await client.callTool("add_rect", { path: lockedPath, x: 0, y: 0 });
+			await client.callTool("add_objects", {
+				path: lockedPath,
+				objects: [{ type: "rect", x: 0, y: 0 }],
+			});
 
 			await chmod(readOnlyDir, 0o500);
 			let refused: { text: string };
 			try {
-				refused = await client.callTool("add_rect", {
+				refused = await client.callTool("add_objects", {
 					path: lockedPath,
-					x: 200,
-					y: 0,
+					objects: [{ type: "rect", x: 200, y: 0 }],
 				});
 			} finally {
 				// Put back whatever happened, or the teardown cannot remove the directory

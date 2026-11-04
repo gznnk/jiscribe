@@ -58,13 +58,18 @@ test("merges an edit whose write a tool's write overtook onto the newer file", a
 	await canvas.nudge("right", { large: true });
 	await writeSent;
 
-	const added = await mcp.callTool("add_rect", {
+	const added = await mcp.callTool("add_objects", {
 		path: filePath,
-		x: 240,
-		y: 40,
-		width: 100,
-		height: 60,
-		text: "from the AI",
+		objects: [
+			{
+				type: "rect",
+				x: 240,
+				y: 40,
+				width: 100,
+				height: 60,
+				text: "from the AI",
+			},
+		],
 	});
 	expect(added.isError).toBe(false);
 	const addedId = String((await workspace.readDoc(filePath)).root[1].id);

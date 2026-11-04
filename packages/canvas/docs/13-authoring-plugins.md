@@ -174,7 +174,7 @@ A type's properties-sidebar sections are declared as `propertyPanel`, and a row 
 
 ## Offering AI tools for your shapes
 
-The generic tools (`set_text`, `set_extra_props`, …) cannot express an edit that
+The generic tools (`set_texts`, `set_extra_props`, …) cannot express an edit that
 only makes sense for one type — inserting a table row, say. A plugin offers those
 as tools of its own: each acts on the one object the call names by `id` and either
 rebuilds it (`apply`) or reads it (`read`). Write them against
@@ -232,10 +232,10 @@ writing it (the document keeps `"normal"` / `"bold"`). Both come from
 `@jiscribe/canvas-sdk/tools`; the table's `table_set_cell_style` is the example.
 
 A tool that decorates part of a text of its own does the same with what the
-built-in `set_text_style` declares: `textMatchSchema` (`match` / `occurrence`,
+built-in `set_text_styles` declares: `textMatchSchema` (`match` / `occurrence`,
 the stretch named by its characters) and `inlineTextStyleSchema` (the typography
 a run carries on its own). `styleRichTextMatches` from `@jiscribe/doc` finds and
-styles the stretch, the same function behind `set_text_style`, and reports what
+styles the stretch, the same function behind `set_text_styles`, and reports what
 it could not find for the tool to word. The table's `table_set_text_style` is
 the example.
 

@@ -9,23 +9,18 @@
 import type {
 	AddObjectParams,
 	AlignEdge,
-	AnchorHandleId,
-	ArrowType,
 	ConnectParams,
-	ConnectorRouting,
 	DistributeAxis,
-	InlineTextStyleParams,
 	ObjectFilter,
 	Rect,
+	ResizeObjectEntry,
 	SetInlineTextStyleEntry,
 	SetHeightModeParams,
 	SetPointsEntry,
 	SetPositionEntry,
 	SetTextEntry,
 	StyleParams,
-	TextLayout,
 	UpdateConnectorEntry,
-	UpdateConnectorParams,
 	ZOrderPlacement,
 } from "@jiscribe/doc";
 
@@ -175,7 +170,6 @@ export type AiDocOp =
 	| { kind: "getConnectors"; id: string }
 	| { kind: "getConnectedObjects"; id: string }
 	| { kind: "listTypes" }
-	| ({ kind: "addObject"; type: string } & AiAddObjectParams)
 	| {
 			kind: "addObjects";
 			objects: readonly AiNewObject[];
@@ -184,46 +178,14 @@ export type AiDocOp =
 			/** Existing group to add into; omitted adds at the front (root) */
 			parentGroupId?: string;
 	  }
-	| {
-			kind: "connect";
-			/** Object the source end attaches to. Exclusive with sourcePoint */
-			sourceId?: string;
-			/** Object the target end attaches to. Exclusive with targetPoint */
-			targetId?: string;
-			/** Unattached source end at a world coordinate. Both ends cannot be bare */
-			sourcePoint?: AiPoint;
-			/** Unattached target end at a world coordinate. Both ends cannot be bare */
-			targetPoint?: AiPoint;
-			sourceAnchor?: AnchorHandleId;
-			targetAnchor?: AnchorHandleId;
-			startArrow?: AiArrowType;
-			endArrow?: AiArrowType;
-			/** Factor on both arrowheads' size, 0.2..4; omitted draws them at 1 */
-			arrowScale?: number;
-			label?: string;
-			/** 0 at the source to 1 at the target. Needs label text */
-			labelPosition?: number;
-			/** Px off the line, the sign picking the side. Needs label text */
-			labelOffset?: number;
-			routing?: AiRouting;
-			points?: AiPoint[];
-	  }
 	// Endpoints are resolved against the doc as it already stands, so an object added
 	// in the same turn must be added before this runs
 	| { kind: "connectMany"; entries: readonly AiConnectEntry[] }
 	| { kind: "deleteObjects"; ids: string[] }
-	| { kind: "setPosition"; id: string; x?: number; y?: number }
 	| { kind: "setPositions"; entries: readonly AiSetPositionEntry[] }
 	| { kind: "translateObjects"; ids: string[]; deltaX: number; deltaY: number }
-	| { kind: "resizeObject"; id: string; width?: number; height?: number }
-	| {
-			kind: "resizeObjects";
-			ids: string[];
-			/** One width for every id; omitted keeps each object's own */
-			width?: number;
-			/** One height for every id; omitted keeps each object's own */
-			height?: number;
-	  }
+	// An id may appear only once, each entry holding both axes for that object
+	| { kind: "resizeObjects"; entries: readonly AiResizeObjectEntry[] }
 	| {
 			kind: "setHeightMode";
 			ids: string[];
@@ -237,13 +199,6 @@ export type AiDocOp =
 			ids: string[];
 			/** Clockwise degrees about the shape's own centre; absolute, not a step */
 			rotation: number;
-	  }
-	| {
-			kind: "setPoints";
-			/** id of a polygon or polyline; no other type is accepted */
-			id: string;
-			/** The whole new outline in world coordinates; the shape follows its vertices */
-			points: AiPoint[];
 	  }
 	| { kind: "setPointsMany"; entries: readonly AiSetPointsEntry[] }
 	| {
@@ -283,11 +238,8 @@ export type AiDocOp =
 			id: string;
 			extraProps: Readonly<Record<string, unknown>>;
 	  }
-	| { kind: "setText"; id: string; text: string; slot?: string }
 	| { kind: "setTexts"; entries: readonly AiSetTextEntry[] }
-	| ({ kind: "setTextStyle"; id: string } & AiInlineTextStyleParams)
 	| { kind: "setTextStyles"; entries: readonly AiSetTextStyleEntry[] }
-	| ({ kind: "updateConnector"; id: string } & UpdateConnectorParams)
 	// An id may appear only once, each entry holding every change to that connector
 	| { kind: "updateConnectors"; entries: readonly AiUpdateConnectorEntry[] }
 	| { kind: "alignObjects"; ids: string[]; edge: AiAlignEdge }
@@ -298,7 +250,6 @@ export type AiDocOp =
 			spacing?: number;
 	  }
 	| { kind: "groupObjects"; ids: string[] }
-	| { kind: "dissolveGroup"; id: string }
 	| { kind: "dissolveGroups"; ids: string[] }
 	| { kind: "addToGroup"; groupId: string; ids: string[] }
 	| { kind: "removeFromGroup"; ids: string[] }
@@ -317,47 +268,38 @@ export type AiDocOp =
 /** The conditions find_objects narrows by; every one given must hold */
 export type AiObjectFilter = ObjectFilter;
 
-/** One object as add_object / add_objects takes it: place, size, text and style */
+/** One object as an add_objects entry takes it, less the type: place, size, text and style */
 export type AiAddObjectParams = AddObjectParams;
 
 /** One element of add_objects: the same as {@link AiAddObjectParams} plus the type name */
 export type AiNewObject = { type: string } & AiAddObjectParams;
 
-/** One element of connect_many: the endpoint pair and options connect itself takes */
+/** One element of connect_many: the endpoint pair, anchors, arrowheads, label and route */
 export type AiConnectEntry = ConnectParams;
 
-/** One element of set_positions: an id and the absolute top-left set_position takes */
+/** One element of set_positions: an id and the absolute top-left it moves to */
 export type AiSetPositionEntry = SetPositionEntry;
 
-/** One element of set_points_many: an id and the whole outline set_points takes */
+/** One element of resize_objects: an id and the size it takes, either axis optional */
+export type AiResizeObjectEntry = ResizeObjectEntry;
+
+/** One element of set_points_many: an id and the whole new outline, in world coordinates */
 export type AiSetPointsEntry = SetPointsEntry;
 
-/** One element of set_texts: an id and the text and slot set_text takes */
+/** One element of set_texts: an id, the new text and the optional slot it goes in */
 export type AiSetTextEntry = SetTextEntry;
 
-/** One element of update_connectors: an id and the changes update_connector takes */
+/** One element of update_connectors: an id and the changes to that connector */
 export type AiUpdateConnectorEntry = UpdateConnectorEntry;
 
 /**
- * What set_text_style decorates and how: the characters to match, which occurrence
- * of them, the slot they sit in, and the inline typography to lay over them
+ * One element of set_text_styles: an id, the characters to match, which occurrence of
+ * them, the slot they sit in, and the inline typography to lay over them
  */
-export type AiInlineTextStyleParams = InlineTextStyleParams;
-
-/** One element of set_text_styles: an id and one {@link AiInlineTextStyleParams} */
 export type AiSetTextStyleEntry = SetInlineTextStyleEntry;
 
 /** Which way set_height_mode switches a height: stated by the document, or derived from the text */
 export type AiHeightMode = SetHeightModeParams["mode"];
-
-/** The text layout add_object may create a shape in; the tool declarations enumerate it from doc's TextLayouts */
-export type AiTextLayout = TextLayout;
-
-/** Arrowhead kind; the tool declarations enumerate it from doc's ArrowTypes */
-export type AiArrowType = ArrowType;
-
-/** How a connector line bends; the tool declarations enumerate it from doc's ConnectorRoutings */
-export type AiRouting = ConnectorRouting;
 
 /** A bend on a connector route; geometry's Point borrowed through canvas */
 export type AiPoint = NonNullable<ConnectParams["points"]>[number];
@@ -365,7 +307,7 @@ export type AiPoint = NonNullable<ConnectParams["points"]>[number];
 /** A world region: top-left plus size, the same form every bounds result is read in */
 export type AiRect = Rect;
 
-/** The whole style vocabulary set_style and add_object accept */
+/** The whole style vocabulary set_style and add_objects accept */
 export type AiStyle = StyleParams;
 
 export type AiAlignEdge = AlignEdge;

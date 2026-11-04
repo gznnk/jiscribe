@@ -34,7 +34,7 @@ describe("diagnoseRecordOverflow", () => {
 		const requiredHeight = requiredHeightOf(threeRows);
 		const height = requiredHeight - 35;
 		expect(diagnoseRecordOverflow(recordDoc(height, threeRows))).toEqual([
-			`rows overflow record 180x${height}: its compartments need ${requiredHeight}px but the box is ${height}px tall, 35px short, so the bottom rows are drawn past its edge; record_set_compartments refits the height to them, or resize_object it to height ${requiredHeight}`,
+			`rows overflow record 180x${height}: its compartments need ${requiredHeight}px but the box is ${height}px tall, 35px short, so the bottom rows are drawn past its edge; record_set_compartments refits the height to them, or give it height ${requiredHeight} with resize_objects`,
 		]);
 	});
 

@@ -192,54 +192,115 @@ describe("resizeObject", () => {
 });
 
 describe("resizeObjects", () => {
-	it("gives every id the same size and keeps the omitted axis per object", () => {
+	it("gives each entry its own size and keeps the omitted axis per object", () => {
 		const doc = emptyDoc();
 		docOps.addObject(doc, "rect", { x: 0, y: 0, width: 100, height: 100 });
 		docOps.addObject(doc, "rect", { x: 300, y: 0, width: 100, height: 40 });
 
-		docOps.resizeObjects(doc, ["rect-1", "rect-2"], { width: 200 });
+		docOps.resizeObjects(doc, [
+			{ id: "rect-1", width: 200 },
+			{ id: "rect-2", width: 80, height: 60 },
+		]);
 
 		expect(readObject(doc, "rect-1")).toMatchObject({
+			x: 0,
+			y: 0,
 			width: 200,
 			height: 100,
 		});
-		expect(readObject(doc, "rect-2")).toMatchObject({ width: 200, height: 40 });
+		expect(readObject(doc, "rect-2")).toMatchObject({
+			x: 300,
+			y: 0,
+			width: 80,
+			height: 60,
+		});
 		expectValid(doc);
 	});
 
-	it("counts a repeated id once, rather than scaling it twice", () => {
+	it("leaves an entry naming neither axis as it is", () => {
 		const doc = twoRects();
+		const before = structuredClone(readObject(doc, "rect-1"));
 
-		docOps.resizeObjects(doc, ["rect-1", "rect-1"], { width: 200 });
+		docOps.resizeObjects(doc, [{ id: "rect-1" }, { id: "rect-2", width: 50 }]);
 
-		expect(readObject(doc, "rect-1")).toMatchObject({
-			width: 200,
-			height: 100,
-		});
+		expect(readObject(doc, "rect-1")).toEqual(before);
+		expect(readObject(doc, "rect-2")).toMatchObject({ width: 50 });
 	});
 
-	it("leaves the doc untouched when one id cannot be sized", () => {
-		const doc = twoConnectedRects();
+	it("refuses an id given twice, leaving the doc untouched", () => {
+		const doc = twoRects();
 		const before = JSON.stringify(doc);
 
 		expect(() =>
-			docOps.resizeObjects(doc, ["rect-1", "connector-1"], { width: 20 }),
+			docOps.resizeObjects(doc, [
+				{ id: "rect-1", width: 200 },
+				{ id: "rect-1", height: 50 },
+			]),
 		).toThrow(
-			"ids[1] (connector-1): connector-1 is a connector: it follows the objects it joins, so move or resize those instead — the document was left unchanged",
+			"rect-1: given more than once; put both axes of one object in a single entry",
 		);
 		expect(JSON.stringify(doc)).toBe(before);
 	});
 
-	// The repeat is dropped before the objects are planned, so the reported index has to
-	// be looked up in the caller's array rather than taken from the deduplicated one.
-	it("reports the failing entry at its place in the caller's own array", () => {
-		const doc = twoConnectedRects();
+	it("refuses a group named together with a member, naming both and writing nothing", () => {
+		const doc = twoRects();
+		const groupId = docOps.groupObjects(doc, ["rect-1", "rect-2"]);
+		const before = JSON.stringify(doc);
 
 		expect(() =>
-			docOps.resizeObjects(doc, ["rect-1", "rect-1", "connector-1"], {
-				width: 20,
-			}),
-		).toThrow("ids[2] (connector-1): ");
+			docOps.resizeObjects(doc, [
+				{ id: groupId, width: 400 },
+				{ id: "rect-2", width: 50 },
+			]),
+		).toThrow(
+			`rect-2 (inside ${groupId}): given together with a group holding it; resize the group or what it holds, not both`,
+		);
+		expect(JSON.stringify(doc)).toBe(before);
+	});
+
+	it("refuses a member nested two groups down, whichever comes first", () => {
+		const doc = twoRects();
+		docOps.addObject(doc, "rect", { x: 600, y: 0, width: 100, height: 100 });
+		const innerId = docOps.groupObjects(doc, ["rect-1", "rect-2"]);
+		const outerId = docOps.groupObjects(doc, [innerId, "rect-3"]);
+		const before = JSON.stringify(doc);
+
+		expect(() =>
+			docOps.resizeObjects(doc, [
+				{ id: "rect-1", height: 20 },
+				{ id: outerId, width: 900 },
+			]),
+		).toThrow(`rect-1 (inside ${outerId}): given together with a group`);
+		expect(JSON.stringify(doc)).toBe(before);
+	});
+
+	it("names every missing id at once, without an index", () => {
+		const doc = twoRects();
+		const before = JSON.stringify(doc);
+
+		expect(() =>
+			docOps.resizeObjects(doc, [
+				{ id: "a", width: 10 },
+				{ id: "rect-1", width: 10 },
+				{ id: "b", width: 10 },
+			]),
+		).toThrow("object not found: a, b");
+		expect(JSON.stringify(doc)).toBe(before);
+	});
+
+	it("leaves the doc untouched when one entry cannot be sized", () => {
+		const doc = twoConnectedRects();
+		const before = JSON.stringify(doc);
+
+		expect(() =>
+			docOps.resizeObjects(doc, [
+				{ id: "rect-1", width: 20 },
+				{ id: "connector-1", width: 20 },
+			]),
+		).toThrow(
+			"entries[1] (connector-1): connector-1 is a connector: it follows the objects it joins, so move or resize those instead — the document was left unchanged",
+		);
+		expect(JSON.stringify(doc)).toBe(before);
 	});
 
 	it("leaves the doc untouched for a size that is not greater than 0", () => {
@@ -247,9 +308,12 @@ describe("resizeObjects", () => {
 		const before = JSON.stringify(doc);
 
 		expect(() =>
-			docOps.resizeObjects(doc, ["rect-1", "rect-2"], { height: 0 }),
+			docOps.resizeObjects(doc, [
+				{ id: "rect-1", width: 50 },
+				{ id: "rect-2", height: 0 },
+			]),
 		).toThrow(
-			"ids[0] (rect-1): rect-1 cannot be resized to 100x0: both sides must be greater than 0 — the document was left unchanged",
+			"entries[1] (rect-2): rect-2 cannot be resized to 100x0: both sides must be greater than 0 — the document was left unchanged",
 		);
 		expect(JSON.stringify(doc)).toBe(before);
 	});
@@ -258,17 +322,17 @@ describe("resizeObjects", () => {
 		const doc = twoRects();
 		const before = JSON.stringify(doc);
 
-		docOps.resizeObjects(doc, [], { width: 200 });
+		docOps.resizeObjects(doc, []);
 
 		expect(JSON.stringify(doc)).toBe(before);
 	});
 
-	it("matches resizeObject for a single id", () => {
+	it("matches resizeObject for a single entry", () => {
 		const singleDoc = twoRects();
 		docOps.resizeObject(singleDoc, "rect-2", { width: 250, height: 30 });
 
 		const batchDoc = twoRects();
-		docOps.resizeObjects(batchDoc, ["rect-2"], { width: 250, height: 30 });
+		docOps.resizeObjects(batchDoc, [{ id: "rect-2", width: 250, height: 30 }]);
 
 		expect(JSON.stringify(batchDoc)).toBe(JSON.stringify(singleDoc));
 	});
@@ -581,8 +645,11 @@ describe("place: a point-geometry shape", () => {
 		const textId = docOps.addObject(doc, "text", { x: 300, y: 0, text: "hi" });
 
 		expect(() =>
-			docOps.resizeObjects(doc, ["rect-1", textId], { width: 200 }),
-		).toThrow(/ids\[1\]/);
+			docOps.resizeObjects(doc, [
+				{ id: "rect-1", width: 200 },
+				{ id: textId, width: 200 },
+			]),
+		).toThrow(/entries\[1\]/);
 
 		expect(readObject(doc, "rect-1")).toMatchObject({ width: 100 });
 	});
@@ -620,17 +687,32 @@ describe("place: a block text's wrap width", () => {
 		expect(readObject(doc, id)).toEqual(before);
 	});
 
+	it("leaves a block text as it was for a batch entry naming no width", () => {
+		const { doc, id } = blockTextDoc();
+		const before = structuredClone(readObject(doc, id));
+
+		docOps.resizeObjects(doc, [{ id }]);
+
+		expect(readObject(doc, id)).toEqual(before);
+	});
+
 	it("gives a block text the width of a batch, and refuses the batch for a height", () => {
 		const { doc, id } = blockTextDoc();
 		docOps.addObject(doc, "rect", { x: 300, y: 0, width: 100, height: 50 });
 
-		docOps.resizeObjects(doc, ["rect-1", id], { width: 260 });
+		docOps.resizeObjects(doc, [
+			{ id: "rect-1", width: 260 },
+			{ id, width: 260 },
+		]);
 
 		expect(readObject(doc, "rect-1")).toMatchObject({ width: 260, height: 50 });
 		expect(readObject(doc, id)).toMatchObject({ x: 10, y: 20, width: 260 });
 		expect(() =>
-			docOps.resizeObjects(doc, ["rect-1", id], { height: 80 }),
-		).toThrow(/ids\[1\].*has no height of its own to set/);
+			docOps.resizeObjects(doc, [
+				{ id: "rect-1", height: 80 },
+				{ id, height: 80 },
+			]),
+		).toThrow(/entries\[1\].*has no height of its own to set/);
 		expect(readObject(doc, "rect-1")).toMatchObject({ height: 50 });
 		expectValid(doc);
 	});

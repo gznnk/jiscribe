@@ -136,11 +136,9 @@ describe("a file already carrying a diagnose_canvas finding of its own", () => {
 			root: [rectWithUnknownKey],
 		});
 
-		const result = await client.callTool("add_object", {
+		const result = await client.callTool("add_objects", {
 			path: targetPath,
-			type: "rect",
-			x: 0,
-			y: 0,
+			objects: [{ type: "rect", x: 0, y: 0 }],
 		});
 
 		expect(result.text).not.toMatch(/^error:/);
@@ -180,11 +178,9 @@ describe("a file already carrying a diagnose_canvas finding of its own", () => {
 			'{"version":1,"__proto__":{"polluted":true},"root":[]}\n',
 		);
 
-		const result = await client.callTool("add_object", {
+		const result = await client.callTool("add_objects", {
 			path: targetPath,
-			type: "rect",
-			x: 0,
-			y: 0,
+			objects: [{ type: "rect", x: 0, y: 0 }],
 		});
 
 		expect(result.text).not.toMatch(/^error:/);

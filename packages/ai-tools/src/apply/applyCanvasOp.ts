@@ -258,14 +258,6 @@ const applyDocCreate = (
 	docOps: DocOps,
 ): DocCreateResult | null => {
 	switch (op.kind) {
-		case "addObject": {
-			const { kind: _kind, type, ...params } = op;
-			const newId = docOps.addObject(draftDoc, type, params);
-			return {
-				text: `added ${type} "${newId}" at (${params.x}, ${params.y})`,
-				createdIds: [newId],
-			};
-		}
 		case "addObjects": {
 			if (op.groupNewObjects === true && op.parentGroupId !== undefined) {
 				throw new DocOperationError(
@@ -293,16 +285,6 @@ const applyDocCreate = (
 			return {
 				text: `added ${addedIds.length} objects: ${added}`,
 				createdIds: addedIds,
-			};
-		}
-		case "connect": {
-			const { kind: _kind, ...params } = op;
-			const newId = docOps.connect(draftDoc, params);
-			const source = endpointLabel(params.sourceId, params.sourcePoint);
-			const target = endpointLabel(params.targetId, params.targetPoint);
-			return {
-				text: `connected ${source} → ${target} as "${newId}"`,
-				createdIds: [newId],
 			};
 		}
 		case "connectMany": {
@@ -354,10 +336,6 @@ const applyDocChange = (
 					: ` (${quoteIds(cascadedIds)} went with them: a connector loses its endpoint, a group its last child)`;
 			return `deleted ${quoteIds(deletedIds)}${cascadeNote}`;
 		}
-		case "setPosition": {
-			docOps.setPosition(draftDoc, op.id, { x: op.x, y: op.y });
-			return `moved "${op.id}" to (${op.x ?? "unchanged"}, ${op.y ?? "unchanged"})`;
-		}
 		case "setPositions": {
 			docOps.setPositions(draftDoc, op.entries);
 			const moved = op.entries
@@ -372,19 +350,15 @@ const applyDocChange = (
 			docOps.translateObjects(draftDoc, op.ids, op.deltaX, op.deltaY);
 			return `moved ${quoteIds(op.ids)} by (${op.deltaX}, ${op.deltaY})`;
 		}
-		case "resizeObject": {
-			docOps.resizeObject(draftDoc, op.id, {
-				width: op.width,
-				height: op.height,
-			});
-			return `resized "${op.id}" to ${op.width ?? "unchanged"} x ${op.height ?? "unchanged"}`;
-		}
 		case "resizeObjects": {
-			docOps.resizeObjects(draftDoc, op.ids, {
-				width: op.width,
-				height: op.height,
-			});
-			return `resized ${quoteIds(op.ids)} to ${op.width ?? "unchanged"} x ${op.height ?? "unchanged"} each`;
+			docOps.resizeObjects(draftDoc, op.entries);
+			const resized = op.entries
+				.map(
+					({ id, width, height }) =>
+						`"${id}" to ${width ?? "unchanged"} x ${height ?? "unchanged"}`,
+				)
+				.join(", ");
+			return `resized ${op.entries.length} object(s): ${resized}`;
 		}
 		case "setHeightMode": {
 			if (op.mode === "auto") {
@@ -417,10 +391,6 @@ const applyDocChange = (
 			return rotatedIds.length === 0
 				? `nothing turned: none of ${quoteIds(op.ids)} has a rotation of its own`
 				: `turned ${quoteIds(rotatedIds)} to ${op.rotation}°${ignoredNote}`;
-		}
-		case "setPoints": {
-			docOps.setPoints(draftDoc, op.id, op.points);
-			return `reshaped "${op.id}" to ${op.points.length} vertices`;
 		}
 		case "setPointsMany": {
 			docOps.setPointsMany(draftDoc, op.entries);
@@ -508,12 +478,6 @@ const applyDocChange = (
 				? `nothing to set on "${op.id}": every value was empty`
 				: `set ${written.join(" / ")} on "${op.id}"`;
 		}
-		case "setText": {
-			docOps.setText(draftDoc, op.id, op.text, op.slot);
-			return op.text === ""
-				? `cleared the text of "${op.id}"`
-				: `set the text of "${op.id}" to "${op.text}"`;
-		}
 		case "setTexts": {
 			docOps.setTexts(draftDoc, op.entries);
 			const written = op.entries
@@ -525,11 +489,6 @@ const applyDocChange = (
 				.join(", ");
 			return `set the text of ${op.entries.length} object(s): ${written}`;
 		}
-		case "setTextStyle": {
-			const { kind: _kind, id, ...params } = op;
-			docOps.setInlineTextStyle(draftDoc, id, params);
-			return `styled ${matchLabel(params.match, params.occurrence)} in ${textSlotLabel(id, params.slot)}`;
-		}
 		case "setTextStyles": {
 			docOps.setInlineTextStyles(draftDoc, op.entries);
 			const styled = op.entries
@@ -539,11 +498,6 @@ const applyDocChange = (
 				)
 				.join(", ");
 			return `styled ${op.entries.length} stretch(es) of text: ${styled}`;
-		}
-		case "updateConnector": {
-			const { kind: _kind, id, ...params } = op;
-			docOps.updateConnector(draftDoc, id, params);
-			return `updated connector "${id}"`;
 		}
 		case "updateConnectors": {
 			docOps.updateConnectors(draftDoc, op.entries);
@@ -557,10 +511,6 @@ const applyDocChange = (
 		case "distributeObjects": {
 			docOps.distributeObjects(draftDoc, op.ids, op.axis, op.spacing);
 			return `distributed ${quoteIds(op.ids)} ${op.axis}ly`;
-		}
-		case "dissolveGroup": {
-			const releasedIds = docOps.dissolveGroup(draftDoc, op.id);
-			return `dissolved "${op.id}", releasing ${quoteIds(releasedIds)}`;
 		}
 		case "dissolveGroups": {
 			const releasedIds = docOps.dissolveGroups(draftDoc, op.ids);

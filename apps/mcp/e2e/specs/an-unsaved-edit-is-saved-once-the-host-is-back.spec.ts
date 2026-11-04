@@ -136,10 +136,9 @@ test("says so when a tool's write to the same object wins over an edit that coul
 	await canvas.nudge("right", { large: true });
 	await expect(page.locator(".viewer-error")).toContainText(SAVE_FAILED_PREFIX);
 
-	const edited = await mcp.callTool("set_text", {
+	const edited = await mcp.callTool("set_texts", {
 		path: filePath,
-		id: SINGLE_RECT.id,
-		text: "from the AI",
+		entries: [{ id: SINGLE_RECT.id, text: "from the AI" }],
 	});
 	expect(edited.isError).toBe(false);
 

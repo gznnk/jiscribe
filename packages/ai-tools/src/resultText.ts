@@ -16,7 +16,7 @@ export const quoteIds = (ids: readonly string[]): string =>
 export const formatNumber = (value: number): string =>
 	String(Math.round(value * 10) / 10);
 
-/** A point in world coordinates; the unit is px and the form is the same order as addObject's x / y */
+/** A point in world coordinates; the unit is px and the form is the same order as an add_objects entry's x / y */
 export const formatPoint = ({ x, y }: Point): string =>
 	`(${formatNumber(x)}, ${formatNumber(y)})`;
 

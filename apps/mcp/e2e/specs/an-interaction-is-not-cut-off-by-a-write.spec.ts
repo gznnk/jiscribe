@@ -32,10 +32,9 @@ test("keeps the text editor open through a tool's write, and saves both", async 
 	await openInViewer(filePath);
 
 	await canvas.typeTextAt(await objectCenter(canvas, SINGLE_RECT.id), " typed");
-	const moved = await mcp.callTool("set_position", {
+	const moved = await mcp.callTool("set_positions", {
 		path: filePath,
-		id: SECOND_RECT.id,
-		...TOOL_POSITION,
+		entries: [{ id: SECOND_RECT.id, ...TOOL_POSITION }],
 	});
 	expect(moved.text).not.toContain("error:");
 	await page.waitForTimeout(PAST_FILE_WATCH_MS);
@@ -74,10 +73,9 @@ test("lets a drag in progress finish through a tool's write, and saves both", as
 	const halfway = { x: from.x + 60, y: from.y + 40 };
 	const to = { x: from.x + 150, y: from.y + 100 };
 	await canvas.dragInspecting(from, halfway, async () => {
-		const moved = await mcp.callTool("set_position", {
+		const moved = await mcp.callTool("set_positions", {
 			path: filePath,
-			id: SECOND_RECT.id,
-			...TOOL_POSITION,
+			entries: [{ id: SECOND_RECT.id, ...TOOL_POSITION }],
 		});
 		expect(moved.text).not.toContain("error:");
 		await page.waitForTimeout(PAST_FILE_WATCH_MS);

@@ -70,8 +70,8 @@ they hold.
 
 - **Every `path` goes through `toCanvasFilePath`** (`@jiscribe/doc-tools/file`):
   absolute, a canvas extension, resolved through symlinks. Its result is the lock
-  key, the undo-history key and the path read and written. `add_rect` / `add_ellipse` go
-  through `applyDocOpToFile` as `addObject`, so they share the lock and undo.
+  key, the undo-history key and the path read and written. `add_ellipses` goes
+  through `applyDocOpToFile` as `addObjects`, so it shares the lock and undo.
 - **Calls on one file are serialised** (`pathLock.ts`, entered through
   `canvasFileLock.ts`, which also admits calls in arrival order while their
   paths resolve). Every tool is load → modify → write back, and the AI sends

@@ -197,6 +197,20 @@ export const dropEmptyGroups = (doc: CanvasDoc): string[] => {
 	return droppedIds;
 };
 
+/** Ids listed more than once, each named once, in the order they were first repeated. */
+export const findRepeatedIds = (ids: readonly string[]): string[] => {
+	const seenIds = new Set<string>();
+	const repeatedIds = new Set<string>();
+	for (const id of ids) {
+		if (seenIds.has(id)) {
+			repeatedIds.add(id);
+		} else {
+			seenIds.add(id);
+		}
+	}
+	return [...repeatedIds];
+};
+
 /** Reject the ids the caller may not touch, with one message listing all of them. */
 export const rejectIds = (
 	ids: readonly string[],

@@ -17,7 +17,7 @@ export {
 	textSlotStyleSchema,
 } from "./textSlotStyleSchema";
 // The vocabulary a tool decorating part of a text shares with the built-in
-// set_text_style: which characters, and the typography they may carry on their own.
+// set_text_styles: which characters, and the typography they may carry on their own.
 export {
 	inlineTextStyleSchema,
 	textMatchSchema,

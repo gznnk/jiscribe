@@ -5,7 +5,7 @@ import { umlDocPlugin } from "../doc";
 
 const docOps = createDocOps({ plugins: [umlDocPlugin] });
 
-// A record keeps its texts as slots under `text`, which is where add_object's
+// A record keeps its texts as slots under `text`, which is where add_objects'
 // typography goes: every slot the new record holds, nothing at the root.
 describe("a record created with typography", () => {
 	it("carries it on every slot it is created with, and nowhere else", () => {

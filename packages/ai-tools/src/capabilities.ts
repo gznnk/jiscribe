@@ -12,9 +12,9 @@ import {
  * the UI side, and only this list is handed to the host.
  */
 export type AiCanvasCapabilities = {
-	/** Types that can be created programmatically; used as the add_object enum */
+	/** Types that can be created programmatically; used as the add_objects type enum */
 	creatableObjectTypes: readonly string[];
-	/** Types either end of a connector may attach to; named in the connect description */
+	/** Types either end of a connector may attach to; named in the connect_many description */
 	connectableObjectTypes: readonly string[];
 };
 

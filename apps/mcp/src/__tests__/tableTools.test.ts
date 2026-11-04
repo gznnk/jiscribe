@@ -1,5 +1,5 @@
 // The table's tools as the shipped server offers them: the real standard set,
-// nothing mocked, so a table added by add_object is edited, read, taken back and
+// nothing mocked, so a table added by add_objects is edited, read, taken back and
 // diagnosed through the same file.
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -23,17 +23,15 @@ afterAll(async () => {
 });
 
 describe("the table tools", () => {
-	it("edit a table add_object placed, undo takes the last edit back, and the file diagnoses clean", async () => {
+	it("edit a table add_objects placed, undo takes the last edit back, and the file diagnoses clean", async () => {
 		const targetPath = await workspace.writeDoc("table.jis.json", {
 			version: 1,
 			root: [],
 		});
 
-		const added = await client.callTool("add_object", {
+		const added = await client.callTool("add_objects", {
 			path: targetPath,
-			type: "table",
-			x: 0,
-			y: 0,
+			objects: [{ type: "table", x: 0, y: 0 }],
 		});
 		expect(added.isError).toBe(false);
 		const tableId = (await workspace.readDoc(targetPath)).root[0]?.id;

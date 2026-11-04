@@ -83,7 +83,7 @@ const checkObjectTool = (
  * same way on every host.
  *
  * @param capabilities - The shape types to name in the schemas. null means "not
- *   received yet": the add_object type becomes a free string and every plugin tool
+ *   received yet": the add_objects type becomes a free string and every plugin tool
  *   is left out, there being no way yet to tell whether its type is offered
  * @param aiToolPlugins - The plugins' tool bundles (`standardAiToolPlugins` for the
  *   shipped set); empty for a host offering the built-ins alone. A tool whose

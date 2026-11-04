@@ -15,7 +15,7 @@ export const ER_ENTITY_ADDRESSING_NOTE =
 
 /** What the text tools say of the generic text tools, which an entity's texts are out of reach of. */
 export const ER_ENTITY_GENERIC_TOOLS_NOTE =
-	"An entity keeps its texts in name and columns rather than in text slots, so set_text, set_texts, set_text_style and set_style do not reach them: these entity tools are the way.";
+	"An entity keeps its texts in name and columns rather than in text slots, so set_texts, set_text_styles and set_style do not reach them: these entity tools are the way.";
 
 /**
  * A count of columns in words, singular where it is one.

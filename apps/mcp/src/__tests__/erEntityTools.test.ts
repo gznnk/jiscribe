@@ -169,12 +169,16 @@ describe("er_entity_* tools", () => {
 			unconnected,
 		);
 
-		const connected = await client.callTool("connect", {
+		const connected = await client.callTool("connect_many", {
 			path: targetPath,
-			sourceId: "orders",
-			targetId: "users",
-			sourceAnchor: "col:1:left",
-			targetAnchor: "col:0:right",
+			entries: [
+				{
+					sourceId: "orders",
+					targetId: "users",
+					sourceAnchor: "col:1:left",
+					targetAnchor: "col:0:right",
+				},
+			],
 		});
 		expect(connected.isError).toBe(false);
 
@@ -190,14 +194,14 @@ describe("er_entity_* tools", () => {
 			anchor: { kind: "connectPoint", id: "col:0:right" },
 		});
 
-		const refused = await client.callTool("connect", {
+		const refused = await client.callTool("connect_many", {
 			path: targetPath,
-			sourceId: "orders",
-			targetId: "users",
-			sourceAnchor: "col:2:left",
+			entries: [
+				{ sourceId: "orders", targetId: "users", sourceAnchor: "col:2:left" },
+			],
 		});
 		expect(refused.text).toMatch(
-			/^error: "col:2:left" is not a connect point of "orders" \(erEntity\)/,
+			/^error: entries\[0\]: "col:2:left" is not a connect point of "orders" \(erEntity\)/,
 		);
 	});
 

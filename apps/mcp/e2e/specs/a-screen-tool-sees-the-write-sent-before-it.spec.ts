@@ -58,12 +58,9 @@ test("finds a shape added in the same batch as the query", async ({
 	await openInViewer(filePath);
 
 	const [added, hit] = await Promise.all([
-		mcp.callTool("add_rect", {
+		mcp.callTool("add_objects", {
 			path: filePath,
-			x: 240,
-			y: 300,
-			width: 100,
-			height: 60,
+			objects: [{ type: "rect", x: 240, y: 300, width: 100, height: 60 }],
 		}),
 		mcp.callTool("hit_test", { point: { x: 290, y: 330 } }),
 	]);
@@ -86,11 +83,9 @@ test("says the drawing is not current rather than answering from it while a pers
 	const from = await objectCenter(canvas, SINGLE_RECT.id);
 	const halfway = { x: from.x + 60, y: from.y + 40 };
 	await canvas.dragInspecting(from, halfway, async () => {
-		const moved = await mcp.callTool("set_position", {
+		const moved = await mcp.callTool("set_positions", {
 			path: filePath,
-			id: SECOND_RECT.id,
-			x: 700,
-			y: 400,
+			entries: [{ id: SECOND_RECT.id, x: 700, y: 400 }],
 		});
 		expect(moved.text).not.toContain("error:");
 		const viewed = await mcp.callTool("get_view", {});

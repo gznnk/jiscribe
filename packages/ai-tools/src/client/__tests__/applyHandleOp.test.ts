@@ -156,9 +156,9 @@ describe("applyHandleOp (measuring)", () => {
 		expect(result.ok).toBe(true);
 		expect(result.text).toContain("clipping");
 		expect(result.text).toContain("60 px of width and 14 px of height");
-		expect(result.text).toContain("resize_object");
+		expect(result.text).toContain("resize_objects");
 		expect(result.text).toContain("fontSize");
-		expect(result.text).toContain("set_text");
+		expect(result.text).toContain("set_texts");
 	});
 
 	it("fails listing every reason when there is no text to measure", async () => {

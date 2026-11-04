@@ -52,19 +52,14 @@ describe("createCanvasToolDescriptors", () => {
 			"to_svg",
 			"to_world",
 			"to_client",
-			"add_object",
 			"add_objects",
-			"connect",
 			"connect_many",
 			"delete_objects",
-			"set_position",
 			"set_positions",
 			"translate_objects",
-			"resize_object",
 			"resize_objects",
 			"set_height_mode",
 			"set_rotation",
-			"set_points",
 			"set_points_many",
 			"reorder_objects",
 			"set_style",
@@ -72,16 +67,12 @@ describe("createCanvasToolDescriptors", () => {
 			"set_document_view",
 			"set_meta",
 			"set_extra_props",
-			"set_text",
 			"set_texts",
-			"set_text_style",
 			"set_text_styles",
-			"update_connector",
 			"update_connectors",
 			"align_objects",
 			"distribute_objects",
 			"group_objects",
-			"dissolve_group",
 			"dissolve_groups",
 			"add_to_group",
 			"remove_from_group",
@@ -135,46 +126,51 @@ describe("createCanvasToolDescriptors", () => {
 			).not.toThrow();
 		}
 
-		const addObjectJsonSchema = z.toJSONSchema(
+		const addObjectsJsonSchema = z.toJSONSchema(
 			z.object(
-				findDescriptor(createCanvasToolDescriptors(capabilities), "add_object")
+				findDescriptor(createCanvasToolDescriptors(capabilities), "add_objects")
 					.inputSchema,
 			),
 		);
 
-		expect(addObjectJsonSchema).toMatchObject({
+		expect(addObjectsJsonSchema).toMatchObject({
 			type: "object",
-			required: ["type", "x", "y"],
+			required: ["objects"],
+			properties: { objects: { items: { required: ["type", "x", "y"] } } },
 		});
 	});
 
-	it("accepts only the shape types it was given as the add_object type", () => {
-		const descriptors = createCanvasToolDescriptors(capabilities);
+	/** Whether add_objects, as declared for these capabilities, takes one object of this type */
+	const takesObjectType = (
+		toolCapabilities: AiCanvasCapabilities | null,
+		type: string,
+	): boolean =>
+		z
+			.object(
+				findDescriptor(
+					createCanvasToolDescriptors(toolCapabilities),
+					"add_objects",
+				).inputSchema,
+			)
+			.safeParse({ objects: [{ type, x: 0, y: 0 }] }).success;
 
-		const typeSchema = findDescriptor(descriptors, "add_object").inputSchema
-			.type;
-
-		expect(z.safeParse(typeSchema, "diamond").success).toBe(true);
-		expect(z.safeParse(typeSchema, "unknown-shape").success).toBe(false);
+	it("accepts only the shape types it was given as the add_objects type", () => {
+		expect(takesObjectType(capabilities, "diamond")).toBe(true);
+		expect(takesObjectType(capabilities, "unknown-shape")).toBe(false);
 	});
 
 	it("falls back to a free string when no type list arrived (docOps reports the mistake)", () => {
-		const descriptors = createCanvasToolDescriptors(null);
-
-		const typeSchema = findDescriptor(descriptors, "add_object").inputSchema
-			.type;
-
-		expect(z.safeParse(typeSchema, "unknown-shape").success).toBe(true);
+		expect(takesObjectType(null, "unknown-shape")).toBe(true);
 	});
 
-	it("names the connectable types in the connect description", () => {
+	it("names the connectable types in the connect_many description", () => {
 		const withTypes = findDescriptor(
 			createCanvasToolDescriptors(capabilities),
-			"connect",
+			"connect_many",
 		).description;
 		const withoutTypes = findDescriptor(
 			createCanvasToolDescriptors(null),
-			"connect",
+			"connect_many",
 		).description;
 
 		expect(withTypes).toContain("Connectable types: rect, ellipse.");
@@ -188,53 +184,58 @@ describe("createCanvasToolDescriptors", () => {
 				.success;
 		const anchors = { sourceAnchor: "col:1:left", targetAnchor: "col:0:right" };
 
-		expect(parse("connect", { sourceId: "a", targetId: "b", ...anchors })).toBe(
-			true,
-		);
 		expect(
 			parse("connect_many", {
 				entries: [{ sourceId: "a", targetId: "b", ...anchors }],
 			}),
 		).toBe(true);
-		expect(parse("update_connector", { id: "c", ...anchors })).toBe(true);
 		expect(
 			parse("update_connectors", { entries: [{ id: "c", ...anchors }] }),
 		).toBe(true);
 		expect(
-			parse("connect", { sourceId: "a", targetId: "b", sourceAnchor: "" }),
+			parse("connect_many", {
+				entries: [{ sourceId: "a", targetId: "b", sourceAnchor: "" }],
+			}),
+		).toBe(false);
+		expect(
+			parse("update_connectors", { entries: [{ id: "c", targetAnchor: "" }] }),
 		).toBe(false);
 	});
 
-	it("takes poly vertices and a rotation on add_object", () => {
-		const descriptors = createCanvasToolDescriptors(capabilities);
-
-		const { points, rotation } = findDescriptor(
-			descriptors,
-			"add_object",
-		).inputSchema;
+	it("takes poly vertices and a rotation on an add_objects entry", () => {
+		const addObjectsSchema = z.object(
+			findDescriptor(createCanvasToolDescriptors(capabilities), "add_objects")
+				.inputSchema,
+		);
+		const takesPolygon = (points: readonly { x: number; y: number }[]) =>
+			addObjectsSchema.safeParse({
+				objects: [{ type: "rect", x: 0, y: 0, points, rotation: 90 }],
+			}).success;
 
 		expect(
-			z.safeParse(points, [
+			takesPolygon([
 				{ x: 0, y: 0 },
 				{ x: 40, y: 0 },
 				{ x: 20, y: 40 },
-			]).success,
+			]),
 		).toBe(true);
 		// One vertex is not a shape
-		expect(z.safeParse(points, [{ x: 0, y: 0 }]).success).toBe(false);
-		expect(z.safeParse(rotation, 90).success).toBe(true);
+		expect(takesPolygon([{ x: 0, y: 0 }])).toBe(false);
 	});
 
-	it("lets one end of connect be a bare coordinate (an id is not required)", () => {
-		const descriptors = createCanvasToolDescriptors(capabilities);
+	it("lets one end of a connect_many entry be a bare coordinate (an id is not required)", () => {
+		const result = z
+			.object(
+				findDescriptor(
+					createCanvasToolDescriptors(capabilities),
+					"connect_many",
+				).inputSchema,
+			)
+			.safeParse({
+				entries: [{ sourcePoint: { x: 10, y: 20 }, targetId: "rect-1" }],
+			});
 
-		const { sourceId, sourcePoint } = findDescriptor(
-			descriptors,
-			"connect",
-		).inputSchema;
-
-		expect(z.safeParse(sourceId, undefined).success).toBe(true);
-		expect(z.safeParse(sourcePoint, { x: 10, y: 20 }).success).toBe(true);
+		expect(result.success).toBe(true);
 	});
 
 	it("takes one type or several on find_objects, and a whole rect to search inside", () => {
@@ -347,13 +348,13 @@ describe("CanvasToolDescriptor.toOp", () => {
 		const descriptors = createCanvasToolDescriptors(capabilities);
 
 		expect(
-			findDescriptor(descriptors, "add_object").toOp({
-				type: "rect",
-				x: 10,
-				y: 20,
-				fill: "#fff",
+			findDescriptor(descriptors, "add_objects").toOp({
+				objects: [{ type: "rect", x: 10, y: 20, fill: "#fff" }],
 			}),
-		).toEqual({ kind: "addObject", type: "rect", x: 10, y: 20, fill: "#fff" });
+		).toEqual({
+			kind: "addObjects",
+			objects: [{ type: "rect", x: 10, y: 20, fill: "#fff" }],
+		});
 		expect(
 			findDescriptor(descriptors, "reorder_objects").toOp({
 				ids: ["rect-1"],
@@ -476,15 +477,19 @@ describe("CanvasToolDescriptor.inputSchema", () => {
 		path: readonly (string | number)[];
 	}[] = [
 		{
-			tool: "set_points",
+			tool: "set_points_many",
 			args: {
-				id: "poly-1",
-				points: [
-					{ x: 0, y: 0, z: 0 },
-					{ x: 10, y: 10 },
+				entries: [
+					{
+						id: "poly-1",
+						points: [
+							{ x: 0, y: 0, z: 0 },
+							{ x: 10, y: 10 },
+						],
+					},
 				],
 			},
-			path: ["points", 0],
+			path: ["entries", 0, "points", 0],
 		},
 		{
 			tool: "find_objects",
@@ -499,6 +504,11 @@ describe("CanvasToolDescriptor.inputSchema", () => {
 		{
 			tool: "set_positions",
 			args: { entries: [{ id: "a", x: 10, deltaY: 5 }] },
+			path: ["entries", 0],
+		},
+		{
+			tool: "resize_objects",
+			args: { entries: [{ id: "a", width: 10, depth: 5 }] },
 			path: ["entries", 0],
 		},
 		{
@@ -576,12 +586,10 @@ describe("CanvasToolDescriptor.inputSchema", () => {
 
 	it.each([
 		["set_style", { ids: ["a"], arrowScale: 1.5 }],
-		["connect", { sourceId: "a", targetId: "b", arrowScale: 1.5 }],
 		[
 			"connect_many",
 			{ entries: [{ sourceId: "a", targetId: "b", arrowScale: 1.5 }] },
 		],
-		["update_connector", { id: "c", arrowScale: 1.5 }],
 		["update_connectors", { entries: [{ id: "c", arrowScale: 1.5 }] }],
 	] as const)(
 		"takes arrowScale on %s and keeps it in the op",
@@ -604,8 +612,11 @@ describe("CanvasToolDescriptor.inputSchema", () => {
 		(arrowScale) => {
 			for (const [toolName, args] of [
 				["set_style", { ids: ["a"], arrowScale }],
-				["connect", { sourceId: "a", targetId: "b", arrowScale }],
-				["update_connector", { id: "c", arrowScale }],
+				[
+					"connect_many",
+					{ entries: [{ sourceId: "a", targetId: "b", arrowScale }] },
+				],
+				["update_connectors", { entries: [{ id: "c", arrowScale }] }],
 			] as const) {
 				expect(parseArgs(toolName, args).success, toolName).toBe(false);
 			}
@@ -652,17 +663,16 @@ describe("CanvasToolDescriptor.inputSchema", () => {
 		).toBe(true);
 	});
 
-	it("holds the connect labelPosition to 0..1", () => {
-		const result = parseArgs("connect", {
-			sourceId: "a",
-			targetId: "b",
-			label: "yes",
-			labelPosition: 2,
+	it("holds the connect_many labelPosition to 0..1", () => {
+		const result = parseArgs("connect_many", {
+			entries: [
+				{ sourceId: "a", targetId: "b", label: "yes", labelPosition: 2 },
+			],
 		});
 
 		expect(result.success).toBe(false);
 		expect(result.error?.issues[0]).toMatchObject({
-			path: ["labelPosition"],
+			path: ["entries", 0, "labelPosition"],
 		});
 	});
 
@@ -694,32 +704,29 @@ describe("CanvasToolDescriptor.inputSchema", () => {
 	it("takes a weight as a number as well as a word, both spellings of the ladder being real arguments", () => {
 		for (const fontWeight of ["normal", "400", "500", "600", "700", "bold"]) {
 			expect(
-				parseArgs("add_object", { type: "rect", x: 0, y: 0, fontWeight })
-					.success,
-				`add_object should take fontWeight ${fontWeight}`,
+				parseArgs("add_objects", {
+					objects: [{ type: "rect", x: 0, y: 0, fontWeight }],
+				}).success,
+				`add_objects should take fontWeight ${fontWeight}`,
 			).toBe(true);
 			expect(
-				parseArgs("set_text_style", { id: "a", match: "hi", fontWeight })
-					.success,
-				`set_text_style should take fontWeight ${fontWeight}`,
+				parseArgs("set_text_styles", {
+					entries: [{ id: "a", match: "hi", fontWeight }],
+				}).success,
+				`set_text_styles should take fontWeight ${fontWeight}`,
 			).toBe(true);
 		}
 	});
 
 	it("refuses a weight off the shipped ladder, numeric or not", () => {
 		expect(
-			parseArgs("add_object", {
-				type: "rect",
-				x: 0,
-				y: 0,
-				fontWeight: "800",
+			parseArgs("add_objects", {
+				objects: [{ type: "rect", x: 0, y: 0, fontWeight: "800" }],
 			}).success,
 		).toBe(false);
 		expect(
-			parseArgs("set_text_style", {
-				id: "a",
-				match: "hi",
-				fontWeight: "bolder",
+			parseArgs("set_text_styles", {
+				entries: [{ id: "a", match: "hi", fontWeight: "bolder" }],
 			}).success,
 		).toBe(false);
 	});
@@ -727,9 +734,10 @@ describe("CanvasToolDescriptor.inputSchema", () => {
 	it("takes a paint opacity anywhere in 0..1 and refuses one outside it", () => {
 		for (const fillOpacity of [0, 0.5, 1]) {
 			expect(
-				parseArgs("add_object", { type: "rect", x: 0, y: 0, fillOpacity })
-					.success,
-				`add_object should take fillOpacity ${fillOpacity}`,
+				parseArgs("add_objects", {
+					objects: [{ type: "rect", x: 0, y: 0, fillOpacity }],
+				}).success,
+				`add_objects should take fillOpacity ${fillOpacity}`,
 			).toBe(true);
 		}
 		expect(
