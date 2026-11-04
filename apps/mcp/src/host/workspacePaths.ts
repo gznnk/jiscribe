@@ -1,6 +1,9 @@
 import path from "node:path";
 
-import { realpathDeepestExisting } from "@jiscribe/doc-tools/file";
+import {
+	isInsideRoot,
+	realpathDeepestExisting,
+} from "@jiscribe/doc-tools/file";
 
 /**
  * An error standing for a request to reach outside the workspace. The HTTP layer
@@ -12,25 +15,6 @@ export class WorkspacePathError extends Error {
 		this.name = "WorkspacePathError";
 	}
 }
-
-/**
- * win32 does not distinguish case in paths, so the boundary check follows the same
- * rule
- */
-const normalizeForComparison = (value: string): string =>
-	process.platform === "win32" ? value.toLowerCase() : value;
-
-/** Whether a resolved path is the root itself or something under it */
-const isInsideRoot = (rootPath: string, targetPath: string): boolean => {
-	const comparableRoot = normalizeForComparison(rootPath);
-	const comparableTarget = normalizeForComparison(targetPath);
-	if (comparableTarget === comparableRoot) {
-		return true;
-	}
-	// Always compare with the separator on the boundary, to reject a different
-	// directory that matches on the prefix, such as "/work" against "/work2"
-	return comparableTarget.startsWith(comparableRoot + path.sep);
-};
 
 /**
  * Resolves a workspace-relative path to an absolute one. Input that leads outside

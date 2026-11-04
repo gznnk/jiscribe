@@ -15,6 +15,25 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Added
 
+- **`diagnoseDoc` reports four more things a reader cannot see as written**,
+  and `jiscribe diagnose` with it. A shape whose whole box is under a later
+  shape's opaque fill is a warning naming the cover: the covers are the shipped
+  types whose fill paints their whole box or ellipse (`rect`, `ellipse`,
+  `container`, `sticky`, `markdown`, `record`, `umlComponent`, `table`,
+  `erEntity`, `awsGroup`), and partial overlaps are left to `find_overlaps`.
+  An `svg` that references an internal id an earlier `svg` also defines is a
+  warning, all markup sharing one page. A Japanese line-start prohibition is
+  now looked for in text nothing wraps too — a `text` in its label layout and a
+  label drawn outside its shape — at the breaks the author typed. And a font
+  stack naming no family the canvas ships (or none installed) is one
+  document-wide warning, since text in it is measured by estimate.
+- **`@jiscribe/doc-tools/file` exports `diagnoseImageSources`**, which checks
+  the file each `image` `src` names against the `.jis` file's directory: a
+  missing file, a `src` no host accepts or an extension no host serves is an
+  error (the canvas draws a placeholder), and a link leading out of the
+  directory is a warning (the MCP viewer refuses it, other hosts follow it).
+  `jiscribe diagnose` runs it; `validate` does not. `isInsideRoot`, the
+  containment test the MCP host already used, moves here with it.
 - **Automatic layout for graphs.** `docOps.layoutObjects` (and the `layout_objects`
   AI tool over it) arranges objects as a layered graph the way a flowchart renderer
   does: the connectors between them decide the layers, each layer is ordered to

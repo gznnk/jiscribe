@@ -165,11 +165,31 @@ describe("line-start prohibition", () => {
 		/** A hand-typed newline that opens the next line with a full stop. */
 		const HAND_BROKEN_TEXT = "手で折り返した行\n。続きの行";
 
-		it("passes over a text whose width nothing stores, break and all", () => {
-			// A `text` in its label layout is measured from its own content, so it
-			// has no wrap width and `diagnoseObjectText` returns before it reaches
-			// the line-start check — the break the author typed included, which no
-			// width would have changed.
+		it("warns about a text whose width nothing stores, at the break the author typed", () => {
+			// A `text` in its label layout is measured from its own content, so
+			// nothing wraps it: its lines are the authored ones, and a line opening
+			// on a full stop is still one.
+			const diagnostics = diagnoseDoc(
+				docOf({
+					id: "note",
+					type: "text",
+					x: 0,
+					y: 0,
+					text: HAND_BROKEN_TEXT,
+					fontSize: 16,
+				}),
+			);
+			expect(diagnostics).toHaveLength(1);
+			expect(diagnostics[0]).toMatchObject({
+				severity: "warning",
+				objectId: "note",
+			});
+			expect(diagnostics[0].message).toMatch(
+				/line 2 starts with "。" \(nothing wraps it, font 16px\)/,
+			);
+		});
+
+		it("passes over the same text once it ends where its authored line does", () => {
 			expect(
 				diagnoseDoc(
 					docOf({
@@ -177,7 +197,7 @@ describe("line-start prohibition", () => {
 						type: "text",
 						x: 0,
 						y: 0,
-						text: HAND_BROKEN_TEXT,
+						text: "手で折り返した行。\n続きの行",
 						fontSize: 16,
 					}),
 				),
@@ -185,9 +205,7 @@ describe("line-start prohibition", () => {
 		});
 
 		it("warns about the very same break in a connector label", () => {
-			// Nothing wraps a label either, and it is checked anyway: the two paths
-			// disagree about whether an authored break is worth a remark, which is
-			// pinned here rather than argued with.
+			// Nothing wraps a label either, and it is checked the same way.
 			const result = validateDoc(
 				JSON.stringify({
 					version: 1,
@@ -220,6 +238,54 @@ describe("line-start prohibition", () => {
 			});
 			expect(diagnostics[0].message).toMatch(/line 2 starts with "。"/);
 		});
+	});
+
+	describe("a label its type hangs outside the box", () => {
+		const actorWith = (text: string) =>
+			docOf({
+				id: "person",
+				type: "actor",
+				x: 0,
+				y: 0,
+				width: 40,
+				height: 60,
+				text,
+			});
+
+		it("warns about a line the author opened on a full stop, nothing wrapping the label", () => {
+			const diagnostics = diagnoseDoc(actorWith("利用者\n。管理者"));
+			expect(diagnostics).toHaveLength(1);
+			expect(diagnostics[0]).toMatchObject({
+				severity: "warning",
+				objectId: "person",
+			});
+			// Measured at the type's own size (16px), which is what the label is drawn at.
+			expect(diagnostics[0].message).toMatch(
+				/^text in actor breaks a line .*line 2 starts with "。" \(nothing wraps it, font 16px\)$/,
+			);
+		});
+
+		it("does not wrap a label longer than the box, so finds no break in it", () => {
+			expect(
+				diagnoseDoc(actorWith("ずっと長い名前のついた登場人物。続きの説明。")),
+			).toEqual([]);
+		});
+	});
+
+	it("still passes over an ellipse, whose doc stores no width to wrap at", () => {
+		expect(
+			diagnoseDoc(
+				docOf({
+					id: "oval",
+					type: "ellipse",
+					cx: 0,
+					cy: 0,
+					rx: 100,
+					ry: 50,
+					text: "手で折り返した行\n。続きの行",
+				}),
+			),
+		).toEqual([]);
 	});
 
 	it("warns about a connector label broken before a closing bracket", () => {

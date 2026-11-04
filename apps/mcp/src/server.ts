@@ -31,6 +31,7 @@ import { z } from "zod";
 import { canvasToolSet } from "./canvasDefinitions";
 import {
 	CanvasFileError,
+	diagnoseImageSources,
 	readCanvasFileText,
 	writeFileAtomically,
 	CANVAS_FILE_EXTENSIONS,
@@ -154,7 +155,7 @@ const SERVER_INSTRUCTIONS = [
 	`Every document tool takes an absolute \`path\` naming the file it acts on, and the file has to be a canvas file: ${CANVAS_FILE_EXTENSIONS.join(", ")}. There is no concept of a currently open document, and a tool that only reads does not write the file back.`,
 	"An image shape is the one path that is not absolute: its `src` is read relative to the .jis file's own directory and cannot leave it, so the image file has to be somewhere under the diagram's own directory before you point at it.",
 	"`open_canvas` puts a file in a viewer: a window the user watches and can edit by hand, or a window-less one with `headless: true`. The tools for capture, image export, camera, selection and on-screen measurement have nothing to work with until a viewer is connected, so call it first; everything else works without one.",
-	"`diagnose_canvas` is the only validation entry point. Give it a path and it reports what would stop the file from opening, what the parser would drop from it on the next save, and text that does not fit; run it before telling the user a diagram is finished.",
+	"`diagnose_canvas` is the only validation entry point. Give it a path and it reports what is wrong with the file, from what would stop it opening to what a reader cannot see; run it before telling the user a diagram is finished.",
 	"`undo` steps back through edits you made and keeps its history per file, so it cannot take back what a person changed in the viewer.",
 	"Call `read_drawing_guide` before you start drawing: `drawing` is what the canvas can hold and how to draw on it well, and `json-format` is for when you have decided to edit a .jis file directly instead of through these tools.",
 ].join("\n\n");
@@ -279,20 +280,31 @@ export function createJiscribeMcpServer(
 		registerName("diagnose_canvas"),
 		{
 			description: [
-				"Check an existing .jis file: validation with the canvas parser plus a diagnosis of whether each shape's text actually fits inside it.",
+				"Check an existing .jis file: validation with the canvas parser plus a diagnosis of whether each shape's text actually fits inside it, and of what a reader cannot see — a shape hidden under another's opaque fill, an image whose file is missing.",
 				"Names the file by path, so a large diagram never has to be sent through the conversation; this is the only validation entry point, and it reports JSON syntax errors too.",
-				"Overflow is only diagnosed when the file itself validates, since a shape with an invalid size has no meaningful content box.",
+				"The diagnosis only runs when the file itself validates, since a shape with an invalid size has no meaningful content box.",
 				"Returns one line per finding, or valid: true when there is nothing to report.",
 			].join(" "),
 			inputSchema: z.object({ path: pathArg }).strict(),
 		},
 		async ({ path }) =>
 			runTool(async () => {
-				const text = await runtime.withCanvasFileLock(path, readCanvasFileText);
+				const { filePath, text } = await runtime.withCanvasFileLock(
+					path,
+					async (filePath) => ({
+						filePath,
+						text: await readCanvasFileText(filePath),
+					}),
+				);
 				const result = validateDoc(text);
 				const diagnostics: Diagnostic[] = [...result.diagnostics];
 				if (result.ok && result.doc !== undefined) {
 					diagnostics.push(...diagnoseDoc(result.doc));
+					// The image files are not the lock's to guard, so they are read
+					// after it is released.
+					diagnostics.push(
+						...(await diagnoseImageSources(result.doc, filePath)),
+					);
 				}
 				return formatDiagnostics(diagnostics);
 			}),
