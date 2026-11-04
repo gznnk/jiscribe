@@ -165,6 +165,11 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Changed
 
+- **Breaking: `ObjectOverlap.covers` gains `"both"`, for two boxes with all four
+  edges equal.** `CanvasHandle.measure.findOverlaps` used to report such a pair as
+  `"first"`; it now reports `"both"`. Code that reads the containing shape as
+  `covers === "first" ? ids[0] : ids[1]`, or switches over `covers` with a
+  `never` default, has to handle the new value.
 - **Breaking: `DocOps.resizeObjects` takes one entry per object.**
   `resizeObjects(doc, entries)` takes `ResizeObjectEntry[]` (an `id` with an
   optional `width` and `height`, exported from `@jiscribe/doc`) in place of

@@ -12,12 +12,14 @@ export type ObjectOverlap = {
 	/** The shared area, in world coordinates; never zero-sized. */
 	overlap: Rect;
 	/**
-	 * Which of the two covers the other's box entirely, or null when they only
-	 * partly overlap. `"first"` means `ids[0]` covers `ids[1]`. Full cover is
-	 * usually deliberate (a shape placed inside a container), partial cover
-	 * usually is not — which is the distinction a layout check turns on.
+	 * How the two boxes relate:
+	 * - `"first"`: `ids[0]`'s box covers `ids[1]`'s entirely
+	 * - `"second"`: `ids[1]`'s box covers `ids[0]`'s entirely
+	 * - `"both"`: the two boxes are the same, all four edges equal with no
+	 *   tolerance
+	 * - `null`: they only partly overlap, neither covering the other
 	 */
-	covers: "first" | "second" | null;
+	covers: "first" | "second" | "both" | null;
 };
 
 /** Whether the outer box covers every part of the inner one. */
@@ -32,10 +34,15 @@ const resolveCovers = (
 	firstBox: BoundingBox,
 	secondBox: BoundingBox,
 ): ObjectOverlap["covers"] => {
-	if (doesCover(firstBox, secondBox)) {
+	const doesFirstCover = doesCover(firstBox, secondBox);
+	const doesSecondCover = doesCover(secondBox, firstBox);
+	if (doesFirstCover && doesSecondCover) {
+		return "both";
+	}
+	if (doesFirstCover) {
 		return "first";
 	}
-	return doesCover(secondBox, firstBox) ? "second" : null;
+	return doesSecondCover ? "second" : null;
 };
 
 /** An object whose box takes part in the comparison, paired with that box. */
@@ -66,13 +73,10 @@ const collectBoxedObjects = (
 };
 
 /**
- * Finds the shapes that sit on top of one another — the check a generated
- * layout is verified with, where nothing else reveals that two boxes were
- * placed in the same spot.
+ * Finds the pairs of shapes whose boxes share area.
  *
  * Comparison is by geometry box, not by silhouette: two diamonds whose corners
- * interlock without their drawn outlines touching are still reported, which is
- * the conservative direction for a layout check.
+ * interlock without their drawn outlines touching are still reported.
  *
  * @param ids - The shapes to compare, or every object in `objects` when
  *   omitted. Ids that are missing, grouped-only or connectors are skipped

@@ -60,7 +60,12 @@ export type AiHandleOp =
 			slot?: string;
 	  }
 	// Omitting ids compares every object on the canvas
-	| { kind: "findOverlaps"; ids?: string[] }
+	| {
+			kind: "findOverlaps";
+			ids?: string[];
+			/** Whether pairs where one box contains the other are listed line by line; false (the default) only counts them */
+			includeContained?: boolean;
+	  }
 	| { kind: "measureConnectorPath"; id: string }
 	// The result is one rectangle: the union of what all of them draw
 	| { kind: "measureVisualBounds"; ids: string[] }

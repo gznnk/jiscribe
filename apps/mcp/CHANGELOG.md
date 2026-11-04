@@ -74,6 +74,16 @@ covers that.
 - **A markdown card reads as rendered in `capture_canvas` and in
   `export_image`'s PNG** — headings, lists, tables, code and math — rather
   than as plain text. `export_image`'s SVG still holds plain text.
+- **`find_overlaps` is a measurement for when overlap is suspected, not a
+  check to run after every edit.** Its description no longer asks for a call
+  after `add_objects` and after each move, and says overlapping is allowed: a
+  text on a shape, an icon on a card and a node in a container overlap on
+  purpose. The reply drops its verdicts ("usually a layout mistake", "usually
+  deliberate") and sorts the pairs into three groups, widest first within each:
+  pairs whose boxes are identical (a shape placed twice, or a text sized to its
+  shape), then partial overlaps, then pairs where one box contains the other.
+  The containments are only counted unless the new `includeContained: true`
+  asks for them, which lists them last and names which shape holds the other.
 
 ### Removed
 

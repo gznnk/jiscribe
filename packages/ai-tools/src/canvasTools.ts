@@ -1367,17 +1367,27 @@ export const createCanvasToolDescriptors = (
 		"find_overlaps",
 		[
 			"List the shapes sitting on top of one another, with the rectangle each pair shares and how big it is.",
-			"This is the numeric form of the overlap check you would otherwise make by eye on capture_canvas: call it after add_objects and after moving things about, and trust it over the picture.",
-			"Shapes are compared by bounding box, so a pair whose drawn outlines only come close is still reported; a pair where one fully contains the other is marked as such, since that is usually deliberate.",
+			"Overlapping is allowed, and much of it is meant: a text on a shape, an icon on a card and a node inside a container all overlap on purpose.",
+			"Use it when you suspect shapes landed on each other by accident — after placing many shapes without looking, or when a capture_canvas picture looks crowded — to get the exact pairs the picture can only hint at.",
+			"Shapes are compared by bounding box, so a pair whose drawn outlines only come close is still reported.",
+			"Pairs whose boxes are identical come first — a shape placed twice at the same position and size, or a text sized exactly to the shape it sits on, both land here.",
+			"Pairs that partly overlap come next.",
+			"Pairs where one box contains the other entirely, such as a node inside a container or an icon inside a card, are only counted by default; includeContained: true lists them last, each naming which one contains which.",
 			"Connectors and groups are never compared — a line crossing a shape is how connectors are drawn.",
-			"An empty result means the layout is clean, not that the call failed.",
+			"An empty result means no two boxes overlap, not that the call failed.",
 		].join(" "),
 		{
 			ids: z
 				.array(z.string())
 				.optional()
 				.describe(
-					"Shapes to compare; omit to compare everything on the canvas, which is what you want after a batch of edits.",
+					"Shapes to compare, with one another only; omit to compare everything on the canvas.",
+				),
+			includeContained: z
+				.boolean()
+				.optional()
+				.describe(
+					"Defaults to false, which reports only how many pairs have one box containing the other; true also lists those pairs, after the others.",
 				),
 		},
 		(args) => ({ kind: "findOverlaps", ...args }),
