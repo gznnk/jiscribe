@@ -10,6 +10,7 @@ packages:
 # private ルートと 2 つのロックファイルが独立に浮動し、同じ ^ が別の版に解決されて
 # THIRD-PARTY-NOTICES が両方で同時に緑にならなくなるため。両ルートで同じ版を書く。
 catalog:
+  "@dagrejs/dagre": 3.1.3
   "@emotion/react": 11.14.0
   "@emotion/styled": 11.14.1
   "@types/node": ^22.20.1
@@ -57,3 +58,9 @@ allowBuilds:
   "@vscode/vsce-sign": false
   esbuild: false
   keytar: false
+
+# dagre ships one declaration file, typed as ESM by its package.json; the patch marks
+# dist/types/ CommonJS so the VSCode extension's Node16 resolution can import it from
+# a CommonJS-typed file. private ルートにも同じ patch を置き、同じ内容を保つ。
+patchedDependencies:
+  "@dagrejs/dagre@3.1.3": patches/@dagrejs__dagre@3.1.3.patch

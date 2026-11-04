@@ -11,6 +11,14 @@ export {
 export { type AddObjectEntry, type AddObjectParams } from "./create";
 export { type DeleteObjectsResult } from "./delete";
 export { type RemoveObjectsFromGroupResult } from "./grouping";
+export {
+	type LayoutDirection,
+	type LayoutObjectsParams,
+	type LayoutObjectsResult,
+} from "./layout";
+// Re-exported so a consumer can name the layout's defaults and directions without
+// taking a dependency on @jiscribe/layout.
+export { LAYERED_LAYOUT_DEFAULTS, LayoutDirections } from "@jiscribe/layout";
 export { type GetZOrderResult, type ZOrderPlacement } from "./order";
 export {
 	type ResizeObjectEntry,

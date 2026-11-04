@@ -1,4 +1,3 @@
-import { isNumber } from "@jiscribe/basic-validators";
 import type { ObjectTypeDefinition } from "@jiscribe/canvas";
 import { createFrameObjectDefinition } from "@jiscribe/canvas-sdk";
 
@@ -9,6 +8,7 @@ import { HeaderColorMenu } from "./menu/HeaderColorMenu";
 import { Container } from "./presentation/Container";
 import { HeaderColorProperty } from "./propertyPanel/HeaderColorProperty";
 import { HeaderHeightProperty } from "./propertyPanel/HeaderHeightProperty";
+import { isContainerHeaderHeight } from "./schema/calcContainerHeaderHeight";
 import type { ContainerDoc } from "./schema/ContainerDoc";
 import { calcContainerTextRegion } from "./schema/textRegions";
 import type { ContainerState } from "./state/ContainerState";
@@ -39,11 +39,9 @@ export const containerDefinition: ObjectTypeDefinition<
 	doc: containerDocDefinition,
 	component: Container,
 	textRegion: calcContainerTextRegion,
-	// The headerHeight bound (>= 1) matches validateContainerHeaderFields and the
-	// JSON schema.
 	isExtraStateValid: (state) =>
 		state.headerHeight === undefined ||
-		(isNumber(state.headerHeight) && state.headerHeight >= 1),
+		isContainerHeaderHeight(state.headerHeight),
 	selectionControls: [
 		{
 			name: "headerHeight",

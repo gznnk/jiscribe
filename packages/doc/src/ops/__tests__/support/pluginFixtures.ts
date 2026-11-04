@@ -269,3 +269,44 @@ export const columnCardDefinition: ObjectDocDefinition = {
 		columns: 4,
 	}),
 };
+
+/**
+ * A titled region other shapes sit inside, declaring `container` the way the container
+ * and AWS group shapes do (which a doc test cannot import). Its title band is 20px tall
+ * unless the doc sets `headerHeight`. Created 400 by 300.
+ */
+export const regionDefinition: ObjectDocDefinition = {
+	features: {
+		type: "region",
+		geometry: "rect",
+		connectable: true,
+	},
+	validateDoc: () => [],
+	extraKeys: ["headerHeight"],
+	container: (doc) => {
+		const { headerHeight } = doc as { headerHeight?: unknown };
+		return {
+			titleHeight: typeof headerHeight === "number" ? headerHeight : 20,
+		};
+	},
+	factory: createFrameObjectFactory({
+		type: "region",
+		width: 400,
+		height: 300,
+	}),
+};
+
+/**
+ * A container whose geometry is an ellipse's, so the layout can only move it, never
+ * resize it to its members. Written by hand (`cx` / `cy` / `rx` / `ry`), as it has no
+ * factory.
+ */
+export const ovalRegionDefinition: ObjectDocDefinition = {
+	features: {
+		type: "oval-region",
+		geometry: "ellipse",
+		connectable: true,
+	},
+	validateDoc: () => [],
+	container: () => ({ titleHeight: 0 }),
+};

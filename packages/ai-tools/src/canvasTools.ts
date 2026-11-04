@@ -24,6 +24,8 @@ import {
 	OPACITY_MAX,
 	OPACITY_MIN,
 	TextLayouts,
+	LAYERED_LAYOUT_DEFAULTS,
+	LayoutDirections,
 } from "@jiscribe/doc";
 import { z } from "zod";
 
@@ -1257,6 +1259,44 @@ export const createCanvasToolDescriptors = (
 		{ drives: ["docOps.distributeObjects"] },
 	);
 
+	const layoutObjectsTool = defineCanvasTool(
+		"layout_objects",
+		[
+			"Arrange objects automatically as a layered graph, the way a flowchart renderer does: the connectors between them decide the layers (a source sits above, or left of, its targets), objects of one layer are ordered to reduce crossings, and every connector between two placed objects is re-attached onto the sides that now face each other (fanned out along the side when several share it) and given a right-angled route that goes around the objects in between; a labelled connector gets room for its label, which is moved onto the line there.",
+			"Omit ids to lay out the whole canvas; give ids to rearrange just those (connectors among the ids are skipped since they follow their ends). A group, and a container shape (a type that is a titled region other shapes sit inside, such as a VPC boundary), keeps its members inside it and is resized around them; what lies inside a container shape when the call is made is what it holds, so name the contents along with it. The arrangement keeps the top-left corner the objects occupied together.",
+			"Use it after adding nodes and connectors instead of computing a grid by hand, and on a drawing that got tangled. Objects with no connector still get a place, in the first layer.",
+		].join(" "),
+		{
+			ids: z
+				.array(z.string())
+				.min(2)
+				.optional()
+				.describe("ids to arrange; omit for every top-level object."),
+			direction: z
+				.enum(LayoutDirections)
+				.optional()
+				.describe(
+					`Which way the flow runs: TB (top to bottom), LR (left to right), BT or RL; default ${LAYERED_LAYOUT_DEFAULTS.direction}.`,
+				),
+			nodeSpacing: z
+				.number()
+				.min(0)
+				.optional()
+				.describe(
+					`Gap in px between neighbours of one layer; default ${LAYERED_LAYOUT_DEFAULTS.nodeSpacing}.`,
+				),
+			rankSpacing: z
+				.number()
+				.min(0)
+				.optional()
+				.describe(
+					`Gap in px between one layer and the next; default ${LAYERED_LAYOUT_DEFAULTS.rankSpacing}.`,
+				),
+		},
+		(args) => ({ kind: "layoutObjects", ...args }),
+		{ drives: ["docOps.layoutObjects"] },
+	);
+
 	const groupObjectsTool = defineCanvasTool(
 		"group_objects",
 		"Wrap objects in a group so the user can move them as one. They must sit next to each other in the document (not already inside different groups). Connectors cannot be grouped — they follow the objects they join anyway.",
@@ -1697,6 +1737,7 @@ export const createCanvasToolDescriptors = (
 		updateConnectorsTool,
 		alignObjectsTool,
 		distributeObjectsTool,
+		layoutObjectsTool,
 		groupObjectsTool,
 		dissolveGroupsTool,
 		addToGroupTool,
