@@ -154,6 +154,7 @@ DOM にも依存せずに `CanvasDoc` の解析・検証・編集・計測がで
 | `@jiscribe/doc`              | ヘッドレスなドキュメント層。`CanvasDoc` モデル・パーサー・編集 ops・`.jis.*` の入出力                                                         |
 | `@jiscribe/canvas-sdk`       | プラグイン作者向けの図形オーサリングキット。canvas の公開 API だけで書かれている                                                              |
 | `@jiscribe/geometry`         | 幾何型と幾何計算（矩形、楕円、変換、交差判定）                                                                                                |
+| `@jiscribe/layout`           | 箱のグラフの自動レイアウト（dagre の階層型レイアウトと直角の経路）。`docOps.layoutObjects` の中身                                             |
 | `@jiscribe/markdown`         | Markdown 図形が使う Markdown レンダリング                                                                                                     |
 | `@jiscribe/basic-validators` | 基本的な実行時バリデーター                                                                                                                    |
 | `@jiscribe/utility-types`    | 共有の TypeScript ユーティリティ型                                                                                                            |

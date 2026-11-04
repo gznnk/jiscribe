@@ -55,6 +55,13 @@ type FrameObjectDocCommonParams = {
 	textRegion?: ObjectDocTextRegionCalculator;
 
 	/**
+	 * Declares the shape a titled region other objects sit inside, answering the
+	 * title band's height for a doc (see `ObjectDocDefinition.container`). Carried
+	 * into the definition as-is.
+	 */
+	container?: ObjectDocDefinition["container"];
+
+	/**
 	 * Reports content the shape stacks or sizes by a rule of its own that the box
 	 * is too small for (see `ObjectDocDefinition.diagnoseOverflow`). Carried into
 	 * the definition as-is.
@@ -149,6 +156,7 @@ export const createFrameObjectDoc = ({
 	defaults,
 	extraKeys,
 	textRegion,
+	container,
 	diagnoseOverflow,
 	autoHeight,
 	autoHeightPaddingEm,
@@ -167,6 +175,7 @@ export const createFrameObjectDoc = ({
 	extraKeys,
 	factory: factory ?? createFrameObjectFactory(defaults, { supportsBounds }),
 	textRegion,
+	container,
 	diagnoseOverflow,
 	autoHeight,
 	autoHeightPaddingEm,

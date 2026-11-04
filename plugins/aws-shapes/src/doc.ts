@@ -8,6 +8,7 @@ import type { CanvasDocPlugin, ObjectDocDefinition } from "@jiscribe/doc";
 
 import {
 	AWS_GROUP_DOC_DEFAULTS,
+	AWS_GROUP_HEADER_HEIGHT,
 	AWS_GROUP_KINDS,
 	AwsGroupExtraKeys,
 	AwsGroupFeatures,
@@ -45,6 +46,7 @@ export const awsGroupDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	// treats it as text outside the box, and autoHeight is off because sizing the
 	// box from the text would swallow whatever the frame surrounds.
 	textRegion: calcOutsideBoxTextRegion,
+	container: () => ({ titleHeight: AWS_GROUP_HEADER_HEIGHT }),
 	autoHeight: false,
 	description: `A boundary frame of an AWS architecture diagram: the VPC, subnet, availability zone or account that the icons inside belong to. \`kind\` picks which one, and the border colour, the line style and the corner badge all follow from it — one of: ${AWS_GROUP_KINDS.join(", ")}. \`text\` is the frame's title, drawn at the top left beside the badge, never in the body. Objects go inside it by geometry alone: give them coordinates within the box and place them after the frame in \`root\` so they paint on top. The body is click-through, so the icons lying over it stay selectable, and the frame does not carry its contents when it moves — wrap them in a GroupDoc when they must move together. Nest them the way AWS does: aws-cloud > region > vpc > public-subnet / private-subnet. Setting \`stroke\` or \`strokeDashType\` overrides what the kind would have chosen.`,
 	summary: "AWS boundary frame (VPC, subnet, region, account)",

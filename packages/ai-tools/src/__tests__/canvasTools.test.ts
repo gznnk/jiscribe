@@ -72,6 +72,7 @@ describe("createCanvasToolDescriptors", () => {
 			"update_connectors",
 			"align_objects",
 			"distribute_objects",
+			"layout_objects",
 			"group_objects",
 			"dissolve_groups",
 			"add_to_group",
