@@ -216,8 +216,11 @@ const calcSideRatio = (
  * since a jog in the gap is then unavoidable and a centred one reads best; else
  * leaning toward the column, so the edges sharing the side fan out.
  */
-/** An end's anchor, and whether the edge runs straight out of it (so moving it would bend the edge). */
-type EndAnchor = { anchor: LayoutEdgeAnchor; isStraight: boolean };
+/**
+ * An end's anchor, with where along the side the edge is headed (the unclamped ratio
+ * of the column it travels in next), which orders the ends sharing a side.
+ */
+type EndAnchor = { anchor: LayoutEdgeAnchor; heading: number };
 
 const calcEndAnchor = (
 	bounds: Rect,
@@ -228,14 +231,14 @@ const calcEndAnchor = (
 ): EndAnchor => {
 	const ratio = calcSideRatio(bounds, column, direction);
 	if (isWithin(ratio, EDGE_ANCHOR_STRAIGHT_RANGE)) {
-		return { anchor: { side, t: ratio }, isStraight: true };
+		return { anchor: { side, t: ratio }, heading: ratio };
 	}
 	if (isOnlyEdgeOnSide) {
-		return { anchor: { side, t: 0.5 }, isStraight: false };
+		return { anchor: { side, t: 0.5 }, heading: ratio };
 	}
 	return {
 		anchor: { side, t: clampRatio(ratio, EDGE_ANCHOR_FAN_RANGE) },
-		isStraight: false,
+		heading: ratio,
 	};
 };
 
@@ -557,17 +560,23 @@ export const computeLayeredLayout = (
 				) {
 					source = {
 						anchor: { side: sourceSide, t: targetCentreRatio },
-						isStraight: true,
+						heading: targetCentreRatio,
 					};
-					target = { anchor: { side: targetSide, t: 0.5 }, isStraight: true };
+					target = {
+						anchor: { side: targetSide, t: 0.5 },
+						heading: sourceCentreRatio,
+					};
 				} else if (
 					sourceAlone &&
 					isWithin(sourceCentreRatio, EDGE_ANCHOR_STRAIGHT_RANGE)
 				) {
-					source = { anchor: { side: sourceSide, t: 0.5 }, isStraight: true };
+					source = {
+						anchor: { side: sourceSide, t: 0.5 },
+						heading: targetCentreRatio,
+					};
 					target = {
 						anchor: { side: targetSide, t: sourceCentreRatio },
-						isStraight: true,
+						heading: sourceCentreRatio,
 					};
 				} else {
 					source = calcEndAnchor(
@@ -606,8 +615,8 @@ export const computeLayeredLayout = (
 				edge,
 				source: source.anchor,
 				target: target.anchor,
-				sourceStraight: source.isStraight,
-				targetStraight: target.isStraight,
+				sourceHeading: source.heading,
+				targetHeading: target.heading,
 				sourceBounds,
 				targetBounds,
 				dagrePoints,
@@ -680,7 +689,7 @@ export const computeLayeredLayout = (
 	}
 
 	// Ends that landed within EDGE_END_SPACING of each other on one side are pushed
-	// apart (see spreadSideEnds).
+	// apart, in the order of where their edges are headed (see spreadSideEnds).
 	type SideEndRef = {
 		anchored: (typeof anchoredEdges)[number];
 		end: "source" | "target";
@@ -705,8 +714,8 @@ export const computeLayeredLayout = (
 		const spread = spreadSideEnds(
 			refs.map(({ anchored, end }) => ({
 				t: anchored[end].t,
-				isStraight:
-					end === "source" ? anchored.sourceStraight : anchored.targetStraight,
+				heading:
+					end === "source" ? anchored.sourceHeading : anchored.targetHeading,
 			})),
 			isVerticalFlow(direction) ? bounds.width : bounds.height,
 			EDGE_END_SPACING,

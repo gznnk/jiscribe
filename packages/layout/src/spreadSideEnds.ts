@@ -1,15 +1,20 @@
 /** One edge end on a side of a box, as the spreading sees it. */
 export type SideEnd = {
-	/** Position along the side, 0..1. */
+	/** Position along the side, 0..1, as the anchor rules chose it. */
 	t: number;
-	/** Whether the edge runs straight out of this end, so moving it would bend the edge. */
-	isStraight: boolean;
+	/**
+	 * Where along the side the edge is headed, as a ratio of the side's extent and
+	 * without a clamp: below 0 or above 1 for an edge that turns toward a box beside
+	 * the side. Ends are kept in this order, so edges leaving one side never cross.
+	 */
+	heading: number;
 };
 
 /**
- * Open up the ends of a side that sit closer than `minimumGap` to each other, by
- * moving the end whose edge bends anyway and a straight one only when both are
- * (then each by half). Pure: the input is left alone.
+ * Open up the ends of a side that sit closer than `minimumGap` to each other, in the
+ * order of their headings: an end is moved on only as far as the one before it makes
+ * it, and the stack is moved back when it would run past the side's end. Pure: the
+ * input is left alone.
  *
  * @param ends - The ends on one side, in any order
  * @param extent - Length of the side in px, which turns `minimumGap` into a ratio
@@ -26,28 +31,25 @@ export const spreadSideEnds = (
 		return positions;
 	}
 	const gap = minimumGap / extent;
-	const clamp = (value: number): number => Math.min(1, Math.max(0, value));
-	// A push can open a new overlap with the next end over; a few passes settle it.
-	for (let pass = 0; pass < 8; pass += 1) {
-		const order = positions
-			.map((_, index) => index)
-			.sort((a, b) => positions[a] - positions[b]);
-		for (let rank = 1; rank < order.length; rank += 1) {
-			const lower = order[rank - 1];
-			const upper = order[rank];
-			const shortfall = gap - (positions[upper] - positions[lower]);
-			if (shortfall <= 0) {
-				continue;
-			}
-			if (ends[lower].isStraight === ends[upper].isStraight) {
-				positions[lower] = clamp(positions[lower] - shortfall / 2);
-				positions[upper] = clamp(positions[upper] + shortfall / 2);
-			} else if (ends[lower].isStraight) {
-				positions[upper] = clamp(positions[upper] + shortfall);
-			} else {
-				positions[lower] = clamp(positions[lower] - shortfall);
-			}
-		}
+	const order = positions
+		.map((_, index) => index)
+		.sort(
+			(a, b) =>
+				ends[a].heading - ends[b].heading || ends[a].t - ends[b].t || a - b,
+		);
+	// Forward: each end sits no earlier than a gap after the one before it.
+	for (let rank = 1; rank < order.length; rank += 1) {
+		const previous = positions[order[rank - 1]];
+		positions[order[rank]] = Math.max(positions[order[rank]], previous + gap);
 	}
-	return positions;
+	// Backward: pull the stack back from past the side's end, keeping the gaps.
+	positions[order[order.length - 1]] = Math.min(
+		1,
+		positions[order[order.length - 1]],
+	);
+	for (let rank = order.length - 2; rank >= 0; rank -= 1) {
+		const next = positions[order[rank + 1]];
+		positions[order[rank]] = Math.min(positions[order[rank]], next - gap);
+	}
+	return positions.map((position) => Math.max(0, position));
 };

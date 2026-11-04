@@ -3,12 +3,12 @@ import { describe, expect, it } from "vitest";
 import { spreadSideEnds } from "../spreadSideEnds";
 
 describe("spreadSideEnds", () => {
-	it("leaves ends alone that are already a gap apart", () => {
+	it("leaves ends alone that are already a gap apart in heading order", () => {
 		expect(
 			spreadSideEnds(
 				[
-					{ t: 0.2, isStraight: true },
-					{ t: 0.8, isStraight: false },
+					{ t: 0.2, heading: 0.2 },
+					{ t: 0.8, heading: 0.8 },
 				],
 				100,
 				12,
@@ -16,44 +16,33 @@ describe("spreadSideEnds", () => {
 		).toEqual([0.2, 0.8]);
 	});
 
-	it("moves the bent edge away from a straight one", () => {
-		// 0.79 straight, 0.8 bent: the bent end goes to 0.79 + 0.12.
+	it("opens ends that collide, in the order they are headed", () => {
+		// The second end is headed past the side's start, so it goes first even
+		// though it was placed after the first one.
 		expect(
 			spreadSideEnds(
 				[
-					{ t: 0.8, isStraight: false },
-					{ t: 0.79, isStraight: true },
+					{ t: 0.19, heading: 0.19 },
+					{ t: 0.2, heading: -1 },
 				],
 				100,
 				12,
 			),
-		).toEqual([0.91, 0.79]);
+		).toEqual([0.32, 0.2]);
 	});
 
-	it("splits the move when both are straight, and settles a chain", () => {
+	it("settles a chain and pulls it back from the side's end", () => {
 		const positions = spreadSideEnds(
 			[
-				{ t: 0.5, isStraight: true },
-				{ t: 0.5, isStraight: true },
-				{ t: 0.55, isStraight: true },
+				{ t: 0.95, heading: 0.9 },
+				{ t: 0.95, heading: 1.5 },
+				{ t: 0.95, heading: 2 },
 			],
 			100,
 			12,
 		);
-		const sorted = [...positions].sort((a, b) => a - b);
-		expect(sorted[1] - sorted[0]).toBeCloseTo(0.12, 3);
-		expect(sorted[2] - sorted[1]).toBeCloseTo(0.12, 3);
-	});
-
-	it("keeps every end on the side", () => {
-		const positions = spreadSideEnds(
-			[
-				{ t: 0.98, isStraight: false },
-				{ t: 0.97, isStraight: true },
-			],
-			100,
-			12,
-		);
-		expect(positions[0]).toBe(1);
+		expect(positions[0]).toBeCloseTo(0.76, 6);
+		expect(positions[1]).toBeCloseTo(0.88, 6);
+		expect(positions[2]).toBe(1);
 	});
 });

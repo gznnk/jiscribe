@@ -24,8 +24,8 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   along a side several of them share) and given
   a right-angled route around the objects between them, on a lane of its own where
   it overlaps another route crossing the same gap sideways; two connectors joining
-  the same pair run side by side, and two ends landing on one spot of a side are
-  opened to arrowhead width; a labelled connector gets room for its label, which
+  the same pair run side by side, and the ends sharing a side sit in the order their
+  lines are headed, opened to arrowhead width where they would touch; a labelled connector gets room for its label, which
   moves onto a stretch of the line that holds it clear of every corner and of the
   boxes it joins (beside the line when none does). A route leaves a box straight
   for at least a stub's length before it first bends, and a gap too narrow for the
