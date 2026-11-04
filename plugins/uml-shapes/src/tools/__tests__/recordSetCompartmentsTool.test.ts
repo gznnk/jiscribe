@@ -35,7 +35,7 @@ import { recordSetCompartmentsTool } from "../recordSetCompartmentsTool";
 
 const docOps = createDocOps({ plugins: [umlDocPlugin] });
 
-/** A record as add_object writes one: a title over three attribute rows, fitted. */
+/** A record as add_objects writes one: a title over three attribute rows, fitted. */
 const makeRecordDoc = (overrides: Partial<RecordDoc> = {}): RecordDoc =>
 	({
 		...structuredClone(RECORD_DOC_DEFAULTS),

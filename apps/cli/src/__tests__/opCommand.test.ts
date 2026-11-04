@@ -66,6 +66,11 @@ const rectArgs = (x: number): Record<string, unknown> => ({
 	height: 60,
 });
 
+/** add_objects arguments placing one {@link rectArgs} rect. */
+const addRectArgs = (x: number): Record<string, unknown> => ({
+	objects: [rectArgs(x)],
+});
+
 let workDir: string;
 let docPath: string;
 
@@ -96,9 +101,9 @@ describe("op with one tool", () => {
 		await writeFile(docPath, EMPTY_DOC_TEXT);
 		const { code, report } = await runOpReport([
 			docPath,
-			"add_object",
+			"add_objects",
 			"--args",
-			JSON.stringify(rectArgs(0)),
+			JSON.stringify(addRectArgs(0)),
 		]);
 		expect(code).toBe(0);
 		expect(report.ok).toBe(true);
@@ -106,7 +111,7 @@ describe("op with one tool", () => {
 		expect(report.file).toBe(docPath);
 		expect(report.results).toHaveLength(1);
 		const [result] = report.results;
-		expect(result.tool).toBe("add_object");
+		expect(result.tool).toBe("add_objects");
 		expect(result.ok).toBe(true);
 		expect(result.createdIds).toHaveLength(1);
 		expect(result.text).toContain(result.createdIds?.[0]);
@@ -137,14 +142,14 @@ describe("op with one tool", () => {
 		await writeFile(docPath, EMPTY_DOC_TEXT);
 		const { code, report } = await runOpReport([
 			docPath,
-			"add_object",
+			"add_objects",
 			"--args",
-			JSON.stringify({ ...rectArgs(0), cx: 10 }),
+			JSON.stringify({ objects: [{ ...rectArgs(0), cx: 10 }] }),
 		]);
 		expect(code).toBe(1);
 		expect(report.written).toBe(false);
 		expect(report.error?.index).toBe(0);
-		expect(report.error?.tool).toBe("add_object");
+		expect(report.error?.tool).toBe("add_objects");
 		expect(report.error?.message).toContain("cx");
 		expect(readFileSync(docPath, "utf8")).toBe(EMPTY_DOC_TEXT);
 	});
@@ -167,10 +172,10 @@ describe("op with one tool", () => {
 	it("reads --args from a file named with @", async () => {
 		await writeFile(docPath, EMPTY_DOC_TEXT);
 		const argsPath = join(workDir, "args.json");
-		await writeFile(argsPath, JSON.stringify(rectArgs(0)));
+		await writeFile(argsPath, JSON.stringify(addRectArgs(0)));
 		const { code, report } = await runOpReport([
 			docPath,
-			"add_object",
+			"add_objects",
 			"--args",
 			`@${argsPath}`,
 		]);
@@ -182,12 +187,12 @@ describe("op with one tool", () => {
 		await writeFile(docPath, EMPTY_DOC_TEXT);
 		vi.spyOn(process, "stdin", "get").mockReturnValue(
 			Readable.from([
-				Buffer.from(JSON.stringify(rectArgs(0))),
+				Buffer.from(JSON.stringify(addRectArgs(0))),
 			]) as unknown as typeof process.stdin,
 		);
 		const { code, report } = await runOpReport([
 			docPath,
-			"add_object",
+			"add_objects",
 			"--args",
 			"-",
 		]);
@@ -207,14 +212,14 @@ describe("op with one tool", () => {
 		await writeFile(docPath, EMPTY_DOC_TEXT);
 		const { code, stdout } = await runOp([
 			docPath,
-			"add_object",
+			"add_objects",
 			"--args",
-			JSON.stringify(rectArgs(0)),
+			JSON.stringify(addRectArgs(0)),
 			"--text",
 		]);
 		expect(code).toBe(0);
 		expect(stdout.trim().split("\n")).toEqual([
-			expect.stringMatching(/^0 add_object: added rect /),
+			expect.stringMatching(/^0 add_objects: added 1 objects: rect /),
 			`written ${docPath}`,
 		]);
 	});
@@ -245,14 +250,14 @@ describe("op with one tool, more", () => {
 		await writeFile(docPath, EMPTY_DOC_TEXT);
 		const { code, report } = await runOpReport([
 			docPath,
-			"add_object",
+			"add_objects",
 			"--args",
 			"[1]",
 		]);
 		expect(code).toBe(1);
 		expect(report.error).toEqual({
 			index: 0,
-			tool: "add_object",
+			tool: "add_objects",
 			message: "--args must be a JSON object",
 		});
 	});
@@ -261,12 +266,12 @@ describe("op with one tool, more", () => {
 		await writeFile(docPath, EMPTY_DOC_TEXT);
 		const { code, report } = await runOpReport([
 			docPath,
-			"add_object",
+			"add_objects",
 			"--args",
 			"{type: rect}",
 		]);
 		expect(code).toBe(1);
-		expect(report.error).toMatchObject({ index: 0, tool: "add_object" });
+		expect(report.error).toMatchObject({ index: 0, tool: "add_objects" });
 		expect(report.error?.message).toMatch(/^--args is not valid JSON: /);
 	});
 
@@ -284,15 +289,15 @@ describe("op with one tool, more", () => {
 		await writeFile(docPath, EMPTY_DOC_TEXT);
 		await runOpReport([
 			docPath,
-			"add_object",
+			"add_objects",
 			"--args",
-			JSON.stringify(rectArgs(0)),
+			JSON.stringify(addRectArgs(0)),
 		]);
 		const { code } = await runOpReport([
 			docPath,
-			"add_object",
+			"add_objects",
 			"--args",
-			JSON.stringify(rectArgs(200)),
+			JSON.stringify(addRectArgs(200)),
 			"--create",
 		]);
 		expect(code).toBe(0);
@@ -371,15 +376,15 @@ describe("op --batch", () => {
 			docPath,
 			"--batch",
 			await batchFile([
-				{ tool: "add_object", args: rectArgs(0), as: "first" },
+				{ tool: "add_objects", args: addRectArgs(0), as: "first" },
 				{
 					tool: "add_objects",
 					args: { objects: [rectArgs(200), rectArgs(400)] },
 					as: "pair",
 				},
 				{
-					tool: "connect",
-					args: { sourceId: "$first", targetId: "$pair.1" },
+					tool: "connect_many",
+					args: { entries: [{ sourceId: "$first", targetId: "$pair.1" }] },
 					as: "edge",
 				},
 			]),
@@ -406,8 +411,11 @@ describe("op --batch", () => {
 			docPath,
 			"--batch",
 			await batchFile([
-				{ tool: "add_object", args: rectArgs(0), as: "box" },
-				{ tool: "set_text", args: { id: "$box", text: "$$box" } },
+				{ tool: "add_objects", args: addRectArgs(0), as: "box" },
+				{
+					tool: "set_texts",
+					args: { entries: [{ id: "$box", text: "$$box" }] },
+				},
 			]),
 		]);
 		expect(code).toBe(0);
@@ -420,15 +428,19 @@ describe("op --batch", () => {
 			docPath,
 			"--batch",
 			await batchFile([
-				{ tool: "add_object", args: rectArgs(0), as: "box" },
-				{ tool: "set_text", args: { id: "$other", text: "x" }, as: "label" },
+				{ tool: "add_objects", args: addRectArgs(0), as: "box" },
+				{
+					tool: "set_texts",
+					args: { entries: [{ id: "$other", text: "x" }] },
+					as: "label",
+				},
 			]),
 		]);
 		expect(code).toBe(1);
 		expect(report.written).toBe(false);
 		expect(report.error).toMatchObject({
 			index: 1,
-			tool: "set_text",
+			tool: "set_texts",
 			as: "label",
 		});
 		expect(report.error?.message).toContain("$other");
@@ -441,8 +453,8 @@ describe("op --batch", () => {
 			docPath,
 			"--batch",
 			await batchFile([
-				{ tool: "add_object", args: rectArgs(0), as: "box" },
-				{ tool: "set_text", args: { id: "$box.1", text: "x" } },
+				{ tool: "add_objects", args: addRectArgs(0), as: "box" },
+				{ tool: "set_texts", args: { entries: [{ id: "$box.1", text: "x" }] } },
 			]),
 		]);
 		expect(code).toBe(1);
@@ -456,9 +468,13 @@ describe("op --batch", () => {
 			docPath,
 			"--batch",
 			await batchFile([
-				{ tool: "add_object", args: rectArgs(0), as: "box" },
-				{ tool: "set_position", args: { id: "$box", x: 10 }, as: "moved" },
-				{ tool: "set_text", args: { id: "$moved", text: "x" } },
+				{ tool: "add_objects", args: addRectArgs(0), as: "box" },
+				{
+					tool: "set_positions",
+					args: { entries: [{ id: "$box", x: 10 }] },
+					as: "moved",
+				},
+				{ tool: "set_texts", args: { entries: [{ id: "$moved", text: "x" }] } },
 			]),
 		]);
 		expect(code).toBe(1);
@@ -472,8 +488,8 @@ describe("op --batch", () => {
 			docPath,
 			"--batch",
 			await batchFile([
-				{ tool: "add_object", args: rectArgs(0), as: "box" },
-				{ tool: "add_object", args: rectArgs(200), as: "box" },
+				{ tool: "add_objects", args: addRectArgs(0), as: "box" },
+				{ tool: "add_objects", args: addRectArgs(200), as: "box" },
 			]),
 		]);
 		expect(code).toBe(1);
@@ -486,10 +502,12 @@ describe("op --batch", () => {
 		const { code, report } = await runOpReport([
 			docPath,
 			"--batch",
-			await batchFile([{ tool: "add_object", args: rectArgs(0), as: "a-b" }]),
+			await batchFile([
+				{ tool: "add_objects", args: addRectArgs(0), as: "a-b" },
+			]),
 		]);
 		expect(code).toBe(1);
-		expect(report.error).toMatchObject({ index: 0, tool: "add_object" });
+		expect(report.error).toMatchObject({ index: 0, tool: "add_objects" });
 		expect(report.error?.message).toContain(
 			"must be an identifier ([A-Za-z_][A-Za-z0-9_]*)",
 		);
@@ -501,8 +519,14 @@ describe("op --batch", () => {
 			docPath,
 			"--batch",
 			await batchFile([
-				{ tool: "add_object", args: { ...rectArgs(0), text: "$5" } },
-				{ tool: "add_object", args: { ...rectArgs(200), text: "$a.b" } },
+				{
+					tool: "add_objects",
+					args: { objects: [{ ...rectArgs(0), text: "$5" }] },
+				},
+				{
+					tool: "add_objects",
+					args: { objects: [{ ...rectArgs(200), text: "$a.b" }] },
+				},
 			]),
 		]);
 		expect(code).toBe(0);
@@ -515,16 +539,20 @@ describe("op --batch", () => {
 			docPath,
 			"--batch",
 			await batchFile([
-				{ tool: "add_object", args: rectArgs(0), as: "box" },
-				{ tool: "set_text", args: { id: "$missing", text: "x" }, as: "label" },
+				{ tool: "add_objects", args: addRectArgs(0), as: "box" },
+				{
+					tool: "set_texts",
+					args: { entries: [{ id: "$missing", text: "x" }] },
+					as: "label",
+				},
 			]),
 			"--text",
 		]);
 		expect(code).toBe(1);
 		const lines = stdout.trim().split("\n");
-		expect(lines[0]).toMatch(/^0 add_object as box: added rect /);
+		expect(lines[0]).toMatch(/^0 add_objects as box: added 1 objects: rect /);
 		expect(lines[1]).toMatch(
-			/^error: entry 1 set_text as label: \$missing names no earlier entry/,
+			/^error: entry 1 set_texts as label: \$missing names no earlier entry/,
 		);
 		expect(lines[2]).toBe(`not written ${docPath}`);
 	});
@@ -546,16 +574,19 @@ describe("op --batch", () => {
 			docPath,
 			"--batch",
 			await batchFile([
-				{ tool: "add_object", args: rectArgs(0) },
-				{ tool: "set_position", args: { id: "no-such-object", x: 10 } },
-				{ tool: "add_object", args: rectArgs(200) },
+				{ tool: "add_objects", args: addRectArgs(0) },
+				{
+					tool: "set_positions",
+					args: { entries: [{ id: "no-such-object", x: 10 }] },
+				},
+				{ tool: "add_objects", args: addRectArgs(200) },
 			]),
 		]);
 		expect(code).toBe(1);
 		expect(report.written).toBe(false);
 		expect(report.results.map((result) => result.ok)).toEqual([true, false]);
 		expect(report.results[1].text).toMatch(/^error: /);
-		expect(report.error).toMatchObject({ index: 1, tool: "set_position" });
+		expect(report.error).toMatchObject({ index: 1, tool: "set_positions" });
 		expect(readFileSync(docPath, "utf8")).toBe(EMPTY_DOC_TEXT);
 	});
 
@@ -576,9 +607,9 @@ describe("op --create", () => {
 	it("creates a missing file once the batch succeeds", async () => {
 		const { code, report } = await runOpReport([
 			docPath,
-			"add_object",
+			"add_objects",
 			"--args",
-			JSON.stringify(rectArgs(0)),
+			JSON.stringify(addRectArgs(0)),
 			"--create",
 		]);
 		expect(code).toBe(0);
@@ -591,8 +622,11 @@ describe("op --create", () => {
 			docPath,
 			"--batch",
 			await batchFile([
-				{ tool: "add_object", args: rectArgs(0) },
-				{ tool: "set_position", args: { id: "no-such-object", x: 10 } },
+				{ tool: "add_objects", args: addRectArgs(0) },
+				{
+					tool: "set_positions",
+					args: { entries: [{ id: "no-such-object", x: 10 }] },
+				},
 			]),
 			"--create",
 		]);

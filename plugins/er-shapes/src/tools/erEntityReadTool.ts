@@ -44,7 +44,7 @@ const formatErEntityListing = (entity: ErEntityDoc): string => {
 		`slot widths in px (stated, drawn): ${ER_ENTITY_SLOT_WIDTH_KEYS.map((widthKey) => describeSlotWidth(entity, layout, widthKey)).join("; ")}; box ${layout.width} x ${layout.height}`,
 		`${formatErEntityColumnCount(columnCount)}${indexRangeText}${columnCount === 0 ? "" : ":"}`,
 		...columnLines,
-		'A relationship line attaches to column <index> through the connect point "col:<index>:left" or "col:<index>:right": pass it as sourceAnchor / targetAnchor to connect or update_connector.',
+		'A relationship line attaches to column <index> through the connect point "col:<index>:left" or "col:<index>:right": pass it as sourceAnchor / targetAnchor to connect_many or update_connectors.',
 	].join("\n");
 };
 

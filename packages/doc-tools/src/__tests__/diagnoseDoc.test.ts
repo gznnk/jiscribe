@@ -406,7 +406,7 @@ describe("diagnoseDoc", () => {
 					severity: "error",
 					objectId: "user",
 					message:
-						"rows overflow record 180x60: its compartments need 95px but the box is 60px tall, 35px short, so the bottom rows are drawn past its edge; record_set_compartments refits the height to them, or resize_object it to height 95",
+						"rows overflow record 180x60: its compartments need 95px but the box is 60px tall, 35px short, so the bottom rows are drawn past its edge; record_set_compartments refits the height to them, or give it height 95 with resize_objects",
 				},
 			]);
 		});
@@ -568,13 +568,13 @@ describe("diagnoseDoc on connector ends naming connect points", () => {
 				severity: "warning",
 				objectId: "toGoneColumn",
 				message:
-					'the source end names connect point "col:2:right", which users (erEntity) does not offer, so it is drawn at the center of users: the part of users it belonged to is gone (on an erEntity, a column deleted since); re-anchor it with update_connector',
+					'the source end names connect point "col:2:right", which users (erEntity) does not offer, so it is drawn at the center of users: the part of users it belonged to is gone (on an erEntity, a column deleted since); re-anchor it with update_connectors',
 			},
 			{
 				severity: "warning",
 				objectId: "toRectColumn",
 				message:
-					'the source end names connect point "col:0:left", which box (rect) does not offer, so it is drawn at the center of box: rect offers only topCenter, rightCenter, bottomCenter, leftCenter; re-anchor it with update_connector',
+					'the source end names connect point "col:0:left", which box (rect) does not offer, so it is drawn at the center of box: rect offers only topCenter, rightCenter, bottomCenter, leftCenter; re-anchor it with update_connectors',
 			},
 		]);
 	});

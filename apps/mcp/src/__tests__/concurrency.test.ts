@@ -73,11 +73,9 @@ describe("concurrent calls against one file", () => {
 
 		const results = await Promise.all(
 			Array.from({ length: callCount }, (_, index) =>
-				client.callTool("add_rect", {
+				client.callTool("add_objects", {
 					path: targetPath,
-					x: index * 40,
-					y: 0,
-					text: `r${index}`,
+					objects: [{ type: "rect", x: index * 40, y: 0, text: `r${index}` }],
 				}),
 			),
 		);
@@ -96,23 +94,17 @@ describe("concurrent calls against one file", () => {
 		});
 
 		await Promise.all([
-			client.callTool("add_rect", {
+			client.callTool("add_objects", {
 				path: targetPath,
-				x: 200,
-				y: 0,
-				text: "a",
+				objects: [{ type: "rect", x: 200, y: 0, text: "a" }],
 			}),
-			client.callTool("set_position", {
+			client.callTool("set_positions", {
 				path: targetPath,
-				id: "seed",
-				x: 500,
-				y: 500,
+				entries: [{ id: "seed", x: 500, y: 500 }],
 			}),
-			client.callTool("add_rect", {
+			client.callTool("add_objects", {
 				path: targetPath,
-				x: 400,
-				y: 0,
-				text: "b",
+				objects: [{ type: "rect", x: 400, y: 0, text: "b" }],
 			}),
 		]);
 
@@ -129,8 +121,14 @@ describe("concurrent calls against one file", () => {
 		const second = await workspace.writeDoc("b.jis.json", emptyDoc);
 
 		await Promise.all([
-			client.callTool("add_rect", { path: first, x: 0, y: 0, text: "a" }),
-			client.callTool("add_rect", { path: second, x: 0, y: 0, text: "b" }),
+			client.callTool("add_objects", {
+				path: first,
+				objects: [{ type: "rect", x: 0, y: 0, text: "a" }],
+			}),
+			client.callTool("add_objects", {
+				path: second,
+				objects: [{ type: "rect", x: 0, y: 0, text: "b" }],
+			}),
 		]);
 
 		expect((await workspace.readDoc(first)).root).toHaveLength(1);
@@ -151,10 +149,9 @@ describe("concurrent calls against one file", () => {
 
 		const results = await Promise.all(
 			Array.from({ length: callCount }, (_, index) =>
-				client.callTool("add_rect", {
+				client.callTool("add_objects", {
 					path: index % 2 === 0 ? realPath : aliasPath,
-					x: index * 40,
-					y: 0,
+					objects: [{ type: "rect", x: index * 40, y: 0 }],
 				}),
 			),
 		);
@@ -177,11 +174,9 @@ describe("concurrent calls against one file", () => {
 
 		await Promise.all(
 			Array.from({ length: callCount }, (_, index) =>
-				client.callTool("add_rect", {
+				client.callTool("add_objects", {
 					path: targetPath,
-					x: index * 40,
-					y: 0,
-					text: String(index),
+					objects: [{ type: "rect", x: index * 40, y: 0, text: String(index) }],
 				}),
 			),
 		);
@@ -194,11 +189,9 @@ describe("concurrent calls against one file", () => {
 
 	it("runs a deletion before the addition sent after it, so the addition takes the id it freed", async () => {
 		const targetPath = await workspace.writeDoc("delete-add.jis", emptyDoc);
-		const seeded = await client.callTool("add_rect", {
+		const seeded = await client.callTool("add_objects", {
 			path: targetPath,
-			x: 0,
-			y: 0,
-			text: "seed",
+			objects: [{ type: "rect", x: 0, y: 0, text: "seed" }],
 		});
 		expect(seeded.text).not.toMatch(/^error:/);
 		const [seedObject] = (await workspace.readDoc(targetPath)).root;
@@ -209,11 +202,9 @@ describe("concurrent calls against one file", () => {
 				path: targetPath,
 				ids: [seedObject?.id],
 			}),
-			client.callTool("add_rect", {
+			client.callTool("add_objects", {
 				path: targetPath,
-				x: 100,
-				y: 0,
-				text: "fresh",
+				objects: [{ type: "rect", x: 100, y: 0, text: "fresh" }],
 			}),
 		]);
 

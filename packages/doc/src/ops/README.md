@@ -106,14 +106,15 @@ takes `Many` instead — `connect` → `connectMany`, `setPoints` → `setPoints
 
 **A batch op takes one of two shapes**, decided by the op rather than by preference. An
 argument that means the same for every object is given once, beside a list of ids
-(`setStyle(ids, style)`, `resizeObjects(ids, params)`). One that differs per object is
-given as a list of entries (`addObjects(entries)`, `setPositions(entries)`). The parameter
-is named `ids` or `entries` accordingly, and that name appears verbatim in error messages.
+(`setStyle(ids, style)`, `setRotation(ids, rotation)`). One that differs per object is
+given as a list of entries (`addObjects(entries)`, `setPositions(entries)`,
+`resizeObjects(entries)`). The parameter is named `ids` or `entries` accordingly, and that
+name appears verbatim in error messages.
 
 **An entry type is the single op's name plus `Entry`** — `AddObjectEntry`,
-`SetPositionEntry`, `SetTextEntry` — pairing with the `Params` types the single ops take.
-`connectMany` is the exception that proves it useful: its entries are exactly
-`ConnectParams`, so it has no type of its own.
+`SetPositionEntry`, `ResizeObjectEntry`, `SetTextEntry` — pairing with the `Params` types
+the single ops take. `connectMany` is the exception that proves it useful: its entries are
+exactly `ConnectParams`, so it has no type of its own.
 
 **A result type is the op's name plus `Result`**, and only exists where the return value
 needs naming (`DeleteObjectsResult`, `RemoveObjectsFromGroupResult`). An op returning bare

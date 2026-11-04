@@ -7,7 +7,7 @@
  * as a peer at the version the workspace catalog pins, the same zod the host reads.
  * textSlotStyleSchema / canonicalizeFontWeight are the typography set_style declares,
  * for a tool styling text slots of its own; textMatchSchema / inlineTextStyleSchema are
- * the stretch and typography set_text_style declares, for a tool decorating part of one.
+ * the stretch and typography set_text_styles declares, for a tool decorating part of one.
  * Authoring steps are in packages/canvas/docs/13-authoring-plugins.md.
  */
 

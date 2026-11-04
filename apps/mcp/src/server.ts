@@ -63,7 +63,7 @@ export type { BrowserOpenOptions } from "./host/openBrowser";
  * The tool definitions of the Jiscribe MCP server. Starting it over stdio is
  * `./index`'s job.
  *
- * The tools it exposes, 86 in all, come in four groups.
+ * The tools it exposes, 76 in all, come in four groups.
  *
  * 1. The ones this server has of its own (written out directly below)
  *    - `read_drawing_guide`: hands back one of the two guides `@jiscribe/doc-schema`
@@ -80,8 +80,8 @@ export type { BrowserOpenOptions } from "./host/openBrowser";
  *      as overflow
  *    - `measure_text`: without holding a diagram, measures whether a string fits
  *      a shape of a given size
- *    - `add_rect` / `add_ellipse`: entry points giving default sizes to the two
- *      most frequently used shapes
+ *    - `add_ellipses`: places ellipses by centre and radii, the form an ellipse is
+ *      thought of in, where add_objects takes every shape by its top-left
  *    - `export_image`: has the viewer draw the canvas on display to a PNG or SVG
  *      and writes it to a file under the workspace, for a person rather than the
  *      AI (which looks through capture_canvas). Run as group 3's round trip,
@@ -118,12 +118,8 @@ export type { BrowserOpenOptions } from "./host/openBrowser";
  * (built-ins plus plugins).
  */
 
-// The tools' default dimensions. addObject falls through to the factory defaults
-// (rect 100x100 and so on), so they are stated explicitly at the boundary to keep
-// the tool behaviour as it has been. add_ellipse keeps its center-based
-// (cx/cy/rx/ry) input and converts it to addObject's top-left basis.
-const DEFAULT_RECT_WIDTH = 160;
-const DEFAULT_RECT_HEIGHT = 80;
+// add_ellipses' radii when an entry gives none. Stated here rather than left to
+// the ellipse factory's default box, so the argument descriptions can name them.
 const DEFAULT_ELLIPSE_RX = 80;
 const DEFAULT_ELLIPSE_RY = 50;
 
@@ -339,94 +335,78 @@ export function createJiscribeMcpServer(
 	);
 
 	server.registerTool(
-		registerName("add_rect"),
+		registerName("add_ellipses"),
 		{
-			description:
-				"Add a rectangle to a .jis file (read → modify → validate → write). Returns the new object id.",
+			description: [
+				"Add ellipses to a .jis file by centre and radii, one or many in a single call.",
+				"add_objects places every shape, ellipse included, by the top-left of its bounding box; reach for this one when the centre is the number you have, as for a node placed on a circle or a marker over a point.",
+				"Each entry is converted to the box add_objects would take (x = cx - rx, y = cy - ry, width 2 rx, height 2 ry), and every entry is written in one read and write of the file, which one undo takes back.",
+				"All or nothing: if one entry is rejected nothing is added. Returns the new ids in the order given, each with the centre it was placed at.",
+			].join(" "),
 			inputSchema: z
 				.object({
 					path: pathArg,
-					x: z.number().describe("Top-left x in px."),
-					y: z.number().describe("Top-left y in px."),
-					width: z
-						.number()
-						.min(0)
-						.optional()
-						.describe(`Width in px (default ${DEFAULT_RECT_WIDTH}).`),
-					height: z
-						.number()
-						.min(0)
-						.optional()
-						.describe(`Height in px (default ${DEFAULT_RECT_HEIGHT}).`),
-					text: z
-						.string()
-						.optional()
-						.describe("Label text inside the rectangle."),
+					entries: z
+						.array(
+							z
+								.object({
+									cx: z.number().describe("Center x in px."),
+									cy: z.number().describe("Center y in px."),
+									rx: z
+										.number()
+										.min(0)
+										.optional()
+										.describe(
+											`X radius in px (default ${DEFAULT_ELLIPSE_RX}).`,
+										),
+									ry: z
+										.number()
+										.min(0)
+										.optional()
+										.describe(
+											`Y radius in px (default ${DEFAULT_ELLIPSE_RY}).`,
+										),
+									text: z
+										.string()
+										.optional()
+										.describe("Label text inside the ellipse."),
+								})
+								.strict(),
+						)
+						.min(1)
+						.describe("The ellipses to add, in creation order."),
 				})
 				.strict(),
 		},
-		async ({ path, ...params }) =>
+		async ({ path, entries }) =>
 			runTool(async () => {
-				// Fill in the tool's own defaults at the boundary, rather than falling
-				// through to addObject's factory defaults.
 				const outcome = await runtime.applyDocOpToFile(path, {
-					kind: "addObject",
-					type: "rect",
-					x: params.x,
-					y: params.y,
-					width: params.width ?? DEFAULT_RECT_WIDTH,
-					height: params.height ?? DEFAULT_RECT_HEIGHT,
-					...(params.text !== undefined ? { text: params.text } : {}),
+					kind: "addObjects",
+					objects: entries.map((entry) => {
+						const rx = entry.rx ?? DEFAULT_ELLIPSE_RX;
+						const ry = entry.ry ?? DEFAULT_ELLIPSE_RY;
+						return {
+							type: "ellipse",
+							x: entry.cx - rx,
+							y: entry.cy - ry,
+							width: rx * 2,
+							height: ry * 2,
+							...(entry.text !== undefined ? { text: entry.text } : {}),
+						};
+					}),
 				});
-				return toOutcomeText(outcome);
-			}),
-	);
-
-	server.registerTool(
-		registerName("add_ellipse"),
-		{
-			description:
-				"Add an ellipse to a .jis file (read → modify → validate → write). Returns the new object id.",
-			inputSchema: z
-				.object({
-					path: pathArg,
-					cx: z.number().describe("Center x in px."),
-					cy: z.number().describe("Center y in px."),
-					rx: z
-						.number()
-						.min(0)
-						.optional()
-						.describe(`X radius in px (default ${DEFAULT_ELLIPSE_RX}).`),
-					ry: z
-						.number()
-						.min(0)
-						.optional()
-						.describe(`Y radius in px (default ${DEFAULT_ELLIPSE_RY}).`),
-					text: z
-						.string()
-						.optional()
-						.describe("Label text inside the ellipse."),
-				})
-				.strict(),
-		},
-		async ({ path, ...params }) =>
-			runTool(async () => {
-				const rx = params.rx ?? DEFAULT_ELLIPSE_RX;
-				const ry = params.ry ?? DEFAULT_ELLIPSE_RY;
-				const outcome = await runtime.applyDocOpToFile(path, {
-					kind: "addObject",
-					type: "ellipse",
-					x: params.cx - rx,
-					y: params.cy - ry,
-					width: rx * 2,
-					height: ry * 2,
-					...(params.text !== undefined ? { text: params.text } : {}),
-				});
-				// ai-tools reports the top-left the document holds; the tool took a
-				// center, so it is named as well or the AI reads the reply as a misplacement
-				return outcome.ok
-					? `${outcome.text}, center (${params.cx}, ${params.cy})`
-					: toOutcomeText(outcome);
+				if (!outcome.ok || outcome.createdIds === undefined) {
+					return toOutcomeText(outcome);
+				}
+				// addObjects' own sentence names no position; the tool took centres, so
+				// those are what the reply names, or the AI reads it as a misplacement
+				const added = outcome.createdIds
+					.map(
+						(id, index) =>
+							`"${id}" centred at (${entries[index].cx}, ${entries[index].cy})`,
+					)
+					.join(", ");
+				return `added ${outcome.createdIds.length} ellipse(s): ${added}`;
 			}),
 	);
 

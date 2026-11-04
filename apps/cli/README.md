@@ -182,8 +182,8 @@ A batch is a JSON array of entries, run in order:
 ```json
 [
 	{
-		"tool": "add_object",
-		"args": { "type": "rect", "x": 0, "y": 0, "text": "API" },
+		"tool": "add_objects",
+		"args": { "objects": [{ "type": "rect", "x": 0, "y": 0, "text": "API" }] },
 		"as": "api"
 	},
 	{
@@ -196,8 +196,14 @@ A batch is a JSON array of entries, run in order:
 		},
 		"as": "back"
 	},
-	{ "tool": "connect", "args": { "sourceId": "$api", "targetId": "$back.0" } },
-	{ "tool": "set_text", "args": { "id": "$back.1", "text": "$$5 a month" } }
+	{
+		"tool": "connect_many",
+		"args": { "entries": [{ "sourceId": "$api", "targetId": "$back.0" }] }
+	},
+	{
+		"tool": "set_texts",
+		"args": { "entries": [{ "id": "$back.1", "text": "$$5 a month" }] }
+	}
 ]
 ```
 
@@ -245,15 +251,15 @@ The output is one JSON object on stdout:
 	"file": "/abs/path/diagram.jis",
 	"results": [
 		{
-			"tool": "add_object",
+			"tool": "add_objects",
 			"as": "api",
 			"ok": true,
-			"text": "added rect \"rect-1\" at (0, 0)",
+			"text": "added 1 objects: rect \"rect-1\"",
 			"createdIds": ["rect-1"]
 		},
-		{ "tool": "set_position", "ok": false, "text": "error: ..." }
+		{ "tool": "set_positions", "ok": false, "text": "error: ..." }
 	],
-	"error": { "index": 1, "tool": "set_position", "message": "..." }
+	"error": { "index": 1, "tool": "set_positions", "message": "..." }
 }
 ```
 

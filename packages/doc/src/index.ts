@@ -227,6 +227,7 @@ export {
 	type Rect,
 	type RemappedConnectorEnd,
 	type RemoveObjectsFromGroupResult,
+	type ResizeObjectEntry,
 	type ResizeObjectParams,
 	type SetHeightModeParams,
 	type SetInlineTextStyleEntry,

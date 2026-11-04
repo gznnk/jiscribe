@@ -72,16 +72,13 @@ describe("applyCanvasOp", () => {
 		expect(replacedDocs).toHaveLength(0);
 	});
 
-	it("hands a new document object back from addObject (given the same object, Canvas never syncs)", () => {
+	it("hands a new document object back from addObjects (given the same object, Canvas never syncs)", () => {
 		const { apply, replacedDocs, currentDoc } = createFakeDocBridge();
 		const docBeforeOp = currentDoc();
 
 		const result = apply({
-			kind: "addObject",
-			type: "rect",
-			x: 10,
-			y: 20,
-			text: "step",
+			kind: "addObjects",
+			objects: [{ type: "rect", x: 10, y: 20, text: "step" }],
 		});
 
 		expect(result.ok).toBe(true);
@@ -94,16 +91,14 @@ describe("applyCanvasOp", () => {
 		expect(result.text).toContain("rect-1");
 	});
 
-	it("writes the style given to addObject through as it stands", () => {
+	it("writes the style given to an addObjects entry through as it stands", () => {
 		const { apply, currentDoc } = createFakeDocBridge();
 
 		apply({
-			kind: "addObject",
-			type: "rect",
-			x: 0,
-			y: 0,
-			fill: "#e3f2fd",
-			fontColor: "#0d47a1",
+			kind: "addObjects",
+			objects: [
+				{ type: "rect", x: 0, y: 0, fill: "#e3f2fd", fontColor: "#0d47a1" },
+			],
 		});
 
 		expect(rootObject(currentDoc(), "rect-1")).toMatchObject({
@@ -115,7 +110,10 @@ describe("applyCanvasOp", () => {
 	it("adds a plugin shape too, catching a doc plugin left unregistered", () => {
 		const { apply, currentDoc } = createFakeDocBridge();
 
-		const result = apply({ kind: "addObject", type: "diamond", x: 0, y: 0 });
+		const result = apply({
+			kind: "addObjects",
+			objects: [{ type: "diamond", x: 0, y: 0 }],
+		});
 
 		expect(result.ok).toBe(true);
 		expect(currentDoc().root[0]?.type).toBe("diamond");
@@ -235,7 +233,7 @@ describe("applyCanvasOp", () => {
 				{ type: "rect", x: 200, y: 0 },
 			],
 		});
-		apply({ kind: "addObject", type: "rect", x: 400, y: 0 });
+		apply({ kind: "addObjects", objects: [{ type: "rect", x: 400, y: 0 }] });
 
 		const added = apply({
 			kind: "addToGroup",
@@ -275,15 +273,19 @@ describe("applyCanvasOp", () => {
 
 	it("joins two objects that were already added", () => {
 		const { apply, currentDoc } = createFakeDocBridge();
-		apply({ kind: "addObject", type: "rect", x: 0, y: 0 });
-		apply({ kind: "addObject", type: "rect", x: 300, y: 0 });
+		apply({ kind: "addObjects", objects: [{ type: "rect", x: 0, y: 0 }] });
+		apply({ kind: "addObjects", objects: [{ type: "rect", x: 300, y: 0 }] });
 
 		const result = apply({
-			kind: "connect",
-			sourceId: "rect-1",
-			targetId: "rect-2",
-			endArrow: "FilledTriangle",
-			label: "yes",
+			kind: "connectMany",
+			entries: [
+				{
+					sourceId: "rect-1",
+					targetId: "rect-2",
+					endArrow: "FilledTriangle",
+					label: "yes",
+				},
+			],
 		});
 
 		expect(result.ok).toBe(true);
@@ -296,15 +298,19 @@ describe("applyCanvasOp", () => {
 
 	it("places the label of a connector it draws", () => {
 		const { apply, currentDoc } = createFakeDocBridge();
-		apply({ kind: "addObject", type: "rect", x: 0, y: 0 });
-		apply({ kind: "addObject", type: "rect", x: 300, y: 0 });
+		apply({ kind: "addObjects", objects: [{ type: "rect", x: 0, y: 0 }] });
+		apply({ kind: "addObjects", objects: [{ type: "rect", x: 300, y: 0 }] });
 
 		const result = apply({
-			kind: "connect",
-			sourceId: "rect-1",
-			targetId: "rect-2",
-			label: "yes",
-			labelPosition: 0.25,
+			kind: "connectMany",
+			entries: [
+				{
+					sourceId: "rect-1",
+					targetId: "rect-2",
+					label: "yes",
+					labelPosition: 0.25,
+				},
+			],
 		});
 
 		expect(result.ok).toBe(true);
@@ -318,10 +324,8 @@ describe("applyCanvasOp", () => {
 		const { apply, replacedDocs } = createFakeDocBridge();
 
 		const result = apply({
-			kind: "addObject",
-			type: "nonexistent",
-			x: 0,
-			y: 0,
+			kind: "addObjects",
+			objects: [{ type: "nonexistent", x: 0, y: 0 }],
 		});
 
 		expect(result.ok).toBe(false);
@@ -334,20 +338,30 @@ describe("applyCanvasOp", () => {
 	// was drawn but cannot be opened again
 	it("builds a document that goes through the parser", () => {
 		const { apply, currentDoc } = createFakeDocBridge();
-		apply({ kind: "addObject", type: "stadium", x: 0, y: 0, text: "開始" });
-		apply({ kind: "addObject", type: "diamond", x: 0, y: 200 });
 		apply({
-			kind: "connect",
-			sourceId: "stadium-1",
-			targetId: "diamond-1",
-			sourceAnchor: "bottomCenter",
-			targetAnchor: "topCenter",
-			endArrow: "FilledTriangle",
-			label: "はい",
+			kind: "addObjects",
+			objects: [{ type: "stadium", x: 0, y: 0, text: "開始" }],
+		});
+		apply({ kind: "addObjects", objects: [{ type: "diamond", x: 0, y: 200 }] });
+		apply({
+			kind: "connectMany",
+			entries: [
+				{
+					sourceId: "stadium-1",
+					targetId: "diamond-1",
+					sourceAnchor: "bottomCenter",
+					targetAnchor: "topCenter",
+					endArrow: "FilledTriangle",
+					label: "はい",
+				},
+			],
 		});
 		apply({ kind: "setStyle", ids: ["diamond-1"], style: { fill: "#fff3cd" } });
-		apply({ kind: "setText", id: "diamond-1", text: "2FA 有効？" });
-		apply({ kind: "setPosition", id: "diamond-1", x: 40 });
+		apply({
+			kind: "setTexts",
+			entries: [{ id: "diamond-1", text: "2FA 有効？" }],
+		});
+		apply({ kind: "setPositions", entries: [{ id: "diamond-1", x: 40 }] });
 
 		const parseResult = createCanvasParser({ plugins: docPlugins }).parse(
 			JSON.stringify(currentDoc()),
@@ -356,13 +370,12 @@ describe("applyCanvasOp", () => {
 		expect(parseResult.kind).toBe("ok");
 	});
 
-	it("returns ok:false for a connect to an id that does not exist", () => {
+	it("returns ok:false for a connectMany entry to an id that does not exist", () => {
 		const { apply, replacedDocs } = createFakeDocBridge();
 
 		const result = apply({
-			kind: "connect",
-			sourceId: "rect-1",
-			targetId: "rect-2",
+			kind: "connectMany",
+			entries: [{ sourceId: "rect-1", targetId: "rect-2" }],
 		});
 
 		expect(result.ok).toBe(false);
@@ -372,9 +385,12 @@ describe("applyCanvasOp", () => {
 
 	it("puts the connectors that went with them into the deleteObjects result sentence", () => {
 		const { apply, currentDoc } = createFakeDocBridge();
-		apply({ kind: "addObject", type: "rect", x: 0, y: 0 });
-		apply({ kind: "addObject", type: "rect", x: 300, y: 0 });
-		apply({ kind: "connect", sourceId: "rect-1", targetId: "rect-2" });
+		apply({ kind: "addObjects", objects: [{ type: "rect", x: 0, y: 0 }] });
+		apply({ kind: "addObjects", objects: [{ type: "rect", x: 300, y: 0 }] });
+		apply({
+			kind: "connectMany",
+			entries: [{ sourceId: "rect-1", targetId: "rect-2" }],
+		});
 
 		const result = apply({ kind: "deleteObjects", ids: ["rect-2"] });
 
@@ -385,9 +401,12 @@ describe("applyCanvasOp", () => {
 
 	it("names in the result sentence the properties the type would not take", () => {
 		const { apply, currentDoc } = createFakeDocBridge();
-		apply({ kind: "addObject", type: "rect", x: 0, y: 0 });
-		apply({ kind: "addObject", type: "rect", x: 300, y: 0 });
-		apply({ kind: "connect", sourceId: "rect-1", targetId: "rect-2" });
+		apply({ kind: "addObjects", objects: [{ type: "rect", x: 0, y: 0 }] });
+		apply({ kind: "addObjects", objects: [{ type: "rect", x: 300, y: 0 }] });
+		apply({
+			kind: "connectMany",
+			entries: [{ sourceId: "rect-1", targetId: "rect-2" }],
+		});
 
 		const result = apply({
 			kind: "setStyle",
@@ -404,7 +423,7 @@ describe("applyCanvasOp", () => {
 
 	it("writes the paint opacities onto the object", () => {
 		const { apply, currentDoc } = createFakeDocBridge();
-		apply({ kind: "addObject", type: "rect", x: 0, y: 0 });
+		apply({ kind: "addObjects", objects: [{ type: "rect", x: 0, y: 0 }] });
 
 		const result = apply({
 			kind: "setStyle",
@@ -426,23 +445,22 @@ describe("operations that change where things sit", () => {
 		const fake = createFakeDocBridge();
 		for (const x of [0, 200, 500]) {
 			fake.apply({
-				kind: "addObject",
-				type: "rect",
-				x,
-				y: 0,
-				width: 100,
-				height: 100,
+				kind: "addObjects",
+				objects: [{ type: "rect", x, y: 0, width: 100, height: 100 }],
 			});
 		}
 		return fake;
 	};
 
-	it("writes an axis left out of setPosition as unchanged in the result sentence", () => {
+	it("writes an axis left out of setPositions as unchanged in the result sentence", () => {
 		const { apply, currentDoc } = threeRects();
 
-		const result = apply({ kind: "setPosition", id: "rect-1", y: 300 });
+		const result = apply({
+			kind: "setPositions",
+			entries: [{ id: "rect-1", y: 300 }],
+		});
 
-		expect(result.text).toBe('moved "rect-1" to (unchanged, 300)');
+		expect(result.text).toBe('moved 1 object(s): "rect-1" to (unchanged, 300)');
 		expect(rootObject(currentDoc(), "rect-1")).toMatchObject({ x: 0, y: 300 });
 	});
 
@@ -464,12 +482,17 @@ describe("operations that change where things sit", () => {
 		});
 	});
 
-	it("writes an axis left out of resizeObject as unchanged in the result sentence", () => {
+	it("writes an axis left out of resizeObjects as unchanged in the result sentence", () => {
 		const { apply, currentDoc } = threeRects();
 
-		const result = apply({ kind: "resizeObject", id: "rect-1", width: 240 });
+		const result = apply({
+			kind: "resizeObjects",
+			entries: [{ id: "rect-1", width: 240 }],
+		});
 
-		expect(result.text).toBe('resized "rect-1" to 240 x unchanged');
+		expect(result.text).toBe(
+			'resized 1 object(s): "rect-1" to 240 x unchanged',
+		);
 		expect(rootObject(currentDoc(), "rect-1")).toMatchObject({
 			width: 240,
 			height: 100,
@@ -521,7 +544,7 @@ describe("operations that change where things sit", () => {
 
 	it("moves one axis only with alignObjects / distributeObjects", () => {
 		const { apply, currentDoc } = threeRects();
-		apply({ kind: "setPosition", id: "rect-2", y: 40 });
+		apply({ kind: "setPositions", entries: [{ id: "rect-2", y: 40 }] });
 
 		expect(
 			apply({ kind: "alignObjects", ids: ["rect-1", "rect-2"], edge: "top" }),
@@ -560,32 +583,39 @@ describe("operations that change where things sit", () => {
 describe("operations that fix up text and connectors", () => {
 	const connectedPair = () => {
 		const fake = createFakeDocBridge();
-		fake.apply({ kind: "addObject", type: "rect", x: 0, y: 0 });
-		fake.apply({ kind: "addObject", type: "rect", x: 300, y: 0 });
-		fake.apply({ kind: "connect", sourceId: "rect-1", targetId: "rect-2" });
+		fake.apply({ kind: "addObjects", objects: [{ type: "rect", x: 0, y: 0 }] });
+		fake.apply({
+			kind: "addObjects",
+			objects: [{ type: "rect", x: 300, y: 0 }],
+		});
+		fake.apply({
+			kind: "connectMany",
+			entries: [{ sourceId: "rect-1", targetId: "rect-2" }],
+		});
 		return fake;
 	};
 
 	it("tells clearing with an empty string apart in what it writes", () => {
 		const { apply } = connectedPair();
 
-		expect(apply({ kind: "setText", id: "rect-1", text: "開始" }).text).toBe(
-			'set the text of "rect-1" to "開始"',
-		);
-		expect(apply({ kind: "setText", id: "rect-1", text: "" }).text).toBe(
-			'cleared the text of "rect-1"',
-		);
+		expect(
+			apply({ kind: "setTexts", entries: [{ id: "rect-1", text: "開始" }] })
+				.text,
+		).toBe('set the text of 1 object(s): "rect-1" to "開始"');
+		expect(
+			apply({ kind: "setTexts", entries: [{ id: "rect-1", text: "" }] }).text,
+		).toBe('set the text of 1 object(s): "rect-1" cleared');
 	});
 
 	it("writes a re-attached end into the document", () => {
 		const { apply, currentDoc } = connectedPair();
-		apply({ kind: "addObject", type: "rect", x: 600, y: 0 });
+		apply({ kind: "addObjects", objects: [{ type: "rect", x: 600, y: 0 }] });
 
 		const result = apply({
-			kind: "updateConnector",
-			id: "connector-1",
-			targetId: "rect-3",
-			targetAnchor: "leftCenter",
+			kind: "updateConnectors",
+			entries: [
+				{ id: "connector-1", targetId: "rect-3", targetAnchor: "leftCenter" },
+			],
 		});
 
 		expect(result.ok).toBe(true);
@@ -594,14 +624,13 @@ describe("operations that fix up text and connectors", () => {
 		});
 	});
 
-	it("returns ok:false for an updateConnector aimed at something that is not a connector", () => {
+	it("returns ok:false for an updateConnectors entry aimed at something that is not a connector", () => {
 		const { apply, replacedDocs } = connectedPair();
 		const replacedCountBeforeFailure = replacedDocs.length;
 
 		const result = apply({
-			kind: "updateConnector",
-			id: "rect-1",
-			targetId: "rect-2",
+			kind: "updateConnectors",
+			entries: [{ id: "rect-1", targetId: "rect-2" }],
 		});
 
 		expect(result.ok).toBe(false);
@@ -613,8 +642,11 @@ describe("operations that change rotation, vertices and stacking order", () => {
 	/** A document holding one rect and one polyline; the polyline stands for the types that do not turn */
 	const rectAndPolyline = () => {
 		const fake = createFakeDocBridge();
-		fake.apply({ kind: "addObject", type: "rect", x: 0, y: 0 });
-		fake.apply({ kind: "addObject", type: "polyline", x: 300, y: 0 });
+		fake.apply({ kind: "addObjects", objects: [{ type: "rect", x: 0, y: 0 }] });
+		fake.apply({
+			kind: "addObjects",
+			objects: [{ type: "polyline", x: 300, y: 0 }],
+		});
 		return fake;
 	};
 
@@ -685,17 +717,21 @@ describe("operations that change rotation, vertices and stacking order", () => {
 		const { apply, currentDoc } = rectAndPolyline();
 
 		const result = apply({
-			kind: "setPoints",
-			id: "polyline-1",
-			points: [
-				{ x: 0, y: 0 },
-				{ x: 40, y: 80 },
-				{ x: 120, y: 20 },
+			kind: "setPointsMany",
+			entries: [
+				{
+					id: "polyline-1",
+					points: [
+						{ x: 0, y: 0 },
+						{ x: 40, y: 80 },
+						{ x: 120, y: 20 },
+					],
+				},
 			],
 		});
 
 		expect(result.ok).toBe(true);
-		expect(result.text).toBe('reshaped "polyline-1" to 3 vertices');
+		expect(result.text).toBe('reshaped 1 shape(s): "polyline-1" to 3 vertices');
 		expect(rootObject(currentDoc(), "polyline-1").points).toEqual([
 			{ x: 0, y: 0 },
 			{ x: 40, y: 80 },
@@ -703,16 +739,20 @@ describe("operations that change rotation, vertices and stacking order", () => {
 		]);
 	});
 
-	it("returns ok:false for a setPoints aimed at a type that has no vertices", () => {
+	it("returns ok:false for a setPointsMany entry aimed at a type that has no vertices", () => {
 		const { apply, replacedDocs } = rectAndPolyline();
 		const replacedCountBeforeFailure = replacedDocs.length;
 
 		const result = apply({
-			kind: "setPoints",
-			id: "rect-1",
-			points: [
-				{ x: 0, y: 0 },
-				{ x: 10, y: 10 },
+			kind: "setPointsMany",
+			entries: [
+				{
+					id: "rect-1",
+					points: [
+						{ x: 0, y: 0 },
+						{ x: 10, y: 10 },
+					],
+				},
 			],
 		});
 
@@ -721,20 +761,24 @@ describe("operations that change rotation, vertices and stacking order", () => {
 		expect(replacedDocs).toHaveLength(replacedCountBeforeFailure);
 	});
 
-	it("makes a poly of whatever shape is wanted from points on addObject", () => {
+	it("makes a poly of whatever shape is wanted from points on an addObjects entry", () => {
 		const { apply, currentDoc } = createFakeDocBridge();
 
 		const result = apply({
-			kind: "addObject",
-			type: "polygon",
-			x: 999,
-			y: 999,
-			points: [
-				{ x: 0, y: 0 },
-				{ x: 60, y: 0 },
-				{ x: 30, y: 50 },
+			kind: "addObjects",
+			objects: [
+				{
+					type: "polygon",
+					x: 999,
+					y: 999,
+					points: [
+						{ x: 0, y: 0 },
+						{ x: 60, y: 0 },
+						{ x: 30, y: 50 },
+					],
+					rotation: 30,
+				},
 			],
-			rotation: 30,
 		});
 
 		expect(result.ok).toBe(true);
@@ -752,7 +796,7 @@ describe("operations that change rotation, vertices and stacking order", () => {
 
 	it("writes where they went into the result sentence, and restacks them within their parent", () => {
 		const { apply, currentDoc } = rectAndPolyline();
-		apply({ kind: "addObject", type: "rect", x: 600, y: 0 });
+		apply({ kind: "addObjects", objects: [{ type: "rect", x: 600, y: 0 }] });
 
 		const result = apply({
 			kind: "reorderObjects",
@@ -799,19 +843,18 @@ describe("operations that change rotation, vertices and stacking order", () => {
 });
 
 describe("connectors with a free end", () => {
-	it("writes the coordinate into the result sentence when one end of connect is one", () => {
+	it("writes the coordinate into the result sentence when one end of connectMany is one", () => {
 		const { apply, currentDoc } = createFakeDocBridge();
-		apply({ kind: "addObject", type: "rect", x: 0, y: 0 });
+		apply({ kind: "addObjects", objects: [{ type: "rect", x: 0, y: 0 }] });
 
 		const result = apply({
-			kind: "connect",
-			sourceId: "rect-1",
-			targetPoint: { x: 400, y: 120 },
+			kind: "connectMany",
+			entries: [{ sourceId: "rect-1", targetPoint: { x: 400, y: 120 } }],
 		});
 
 		expect(result.ok).toBe(true);
 		expect(result.text).toBe(
-			'connected "rect-1" → (400, 120) as "connector-1"',
+			'connected 1 connector(s): "rect-1" → (400, 120) as "connector-1"',
 		);
 		expect(rootObject(currentDoc(), "connector-1")).toMatchObject({
 			source: { owner: { id: "rect-1" } },
@@ -820,13 +863,14 @@ describe("connectors with a free end", () => {
 
 	// A line with both ends loose is a polyline's job; the document model refuses
 	// it as a connector
-	it("returns ok:false for a connect with a coordinate at both ends", () => {
+	it("returns ok:false for a connectMany entry with a coordinate at both ends", () => {
 		const { apply, replacedDocs } = createFakeDocBridge();
 
 		const result = apply({
-			kind: "connect",
-			sourcePoint: { x: 0, y: 0 },
-			targetPoint: { x: 100, y: 100 },
+			kind: "connectMany",
+			entries: [
+				{ sourcePoint: { x: 0, y: 0 }, targetPoint: { x: 100, y: 100 } },
+			],
 		});
 
 		expect(result.ok).toBe(false);
@@ -836,14 +880,16 @@ describe("connectors with a free end", () => {
 
 	it("detaches an end that was attached, onto a coordinate", () => {
 		const { apply, currentDoc } = createFakeDocBridge();
-		apply({ kind: "addObject", type: "rect", x: 0, y: 0 });
-		apply({ kind: "addObject", type: "rect", x: 300, y: 0 });
-		apply({ kind: "connect", sourceId: "rect-1", targetId: "rect-2" });
+		apply({ kind: "addObjects", objects: [{ type: "rect", x: 0, y: 0 }] });
+		apply({ kind: "addObjects", objects: [{ type: "rect", x: 300, y: 0 }] });
+		apply({
+			kind: "connectMany",
+			entries: [{ sourceId: "rect-1", targetId: "rect-2" }],
+		});
 
 		const result = apply({
-			kind: "updateConnector",
-			id: "connector-1",
-			targetPoint: { x: 500, y: 300 },
+			kind: "updateConnectors",
+			entries: [{ id: "connector-1", targetPoint: { x: 500, y: 300 } }],
 		});
 
 		expect(result.ok).toBe(true);
@@ -856,12 +902,15 @@ describe("connectors with a free end", () => {
 describe("operations that rearrange groups", () => {
 	const twoRects = () => {
 		const fake = createFakeDocBridge();
-		fake.apply({ kind: "addObject", type: "rect", x: 0, y: 0 });
-		fake.apply({ kind: "addObject", type: "rect", x: 300, y: 0 });
+		fake.apply({ kind: "addObjects", objects: [{ type: "rect", x: 0, y: 0 }] });
+		fake.apply({
+			kind: "addObjects",
+			objects: [{ type: "rect", x: 300, y: 0 }],
+		});
 		return fake;
 	};
 
-	it("has groupObjects and dissolveGroup cancel each other out", () => {
+	it("has groupObjects and dissolveGroups cancel each other out", () => {
 		const { apply, currentDoc } = twoRects();
 
 		const grouped = apply({
@@ -872,7 +921,7 @@ describe("operations that rearrange groups", () => {
 		expect(grouped.text).toContain('as "group-1"');
 		expect(currentDoc().root.map((object) => object.id)).toEqual(["group-1"]);
 
-		const dissolved = apply({ kind: "dissolveGroup", id: "group-1" });
+		const dissolved = apply({ kind: "dissolveGroups", ids: ["group-1"] });
 
 		expect(dissolved.text).toContain('"rect-1", "rect-2"');
 		expect(currentDoc().root.map((object) => object.id)).toEqual([
@@ -910,7 +959,10 @@ describe("operations that read the drawing", () => {
 				{ type: "rect", x: 300, y: 0, width: 120, height: 80, text: "Home" },
 			],
 		});
-		fake.apply({ kind: "connect", sourceId: "rect-1", targetId: "rect-2" });
+		fake.apply({
+			kind: "connectMany",
+			entries: [{ sourceId: "rect-1", targetId: "rect-2" }],
+		});
 		fake.apply({
 			kind: "addObjects",
 			groupNewObjects: true,
@@ -1258,27 +1310,74 @@ describe("the batch operations", () => {
 		expect(rootObject(currentDoc(), "rect-1")).toMatchObject({ x: 0, y: 0 });
 	});
 
-	it("gives every id the same size, leaving an axis left out as each object's own", () => {
+	it("gives each entry its own size, leaving an axis left out as that object's own", () => {
 		const { apply, currentDoc } = threeRects();
-		apply({ kind: "resizeObject", id: "rect-2", height: 40 });
 
 		const result = apply({
 			kind: "resizeObjects",
-			ids: ["rect-1", "rect-2"],
-			width: 240,
+			entries: [
+				{ id: "rect-1", width: 240 },
+				{ id: "rect-2", width: 80, height: 40 },
+				{ id: "rect-3" },
+			],
 		});
 
 		expect(result.text).toBe(
-			'resized "rect-1", "rect-2" to 240 x unchanged each',
+			'resized 3 object(s): "rect-1" to 240 x unchanged, "rect-2" to 80 x 40, "rect-3" to unchanged x unchanged',
 		);
 		expect(rootObject(currentDoc(), "rect-1")).toMatchObject({
 			width: 240,
 			height: 100,
 		});
 		expect(rootObject(currentDoc(), "rect-2")).toMatchObject({
-			width: 240,
+			width: 80,
 			height: 40,
 		});
+		expect(rootObject(currentDoc(), "rect-3")).toMatchObject({
+			width: 100,
+			height: 100,
+		});
+	});
+
+	it("resizes nothing when one entry is refused, naming that entry", () => {
+		const { apply, currentDoc } = threeRects();
+		apply({
+			kind: "connectMany",
+			entries: [{ sourceId: "rect-1", targetId: "rect-2" }],
+		});
+		const docBeforeOp = JSON.stringify(currentDoc());
+
+		const result = apply({
+			kind: "resizeObjects",
+			entries: [
+				{ id: "rect-1", width: 240 },
+				{ id: "connector-1", width: 50 },
+			],
+		});
+
+		expect(result.ok).toBe(false);
+		expect(result.text).toContain("entries[1] (connector-1)");
+		expect(JSON.stringify(currentDoc())).toBe(docBeforeOp);
+	});
+
+	it("refuses a group resized together with a member, leaving the document alone", () => {
+		const { apply, currentDoc } = threeRects();
+		apply({ kind: "groupObjects", ids: ["rect-1", "rect-2"] });
+		const docBeforeOp = JSON.stringify(currentDoc());
+
+		const result = apply({
+			kind: "resizeObjects",
+			entries: [
+				{ id: "group-1", width: 400 },
+				{ id: "rect-2", width: 50 },
+			],
+		});
+
+		expect(result.ok).toBe(false);
+		expect(result.text).toContain(
+			"rect-2 (inside group-1): given together with a group holding it",
+		);
+		expect(JSON.stringify(currentDoc())).toBe(docBeforeOp);
 	});
 
 	it("puts a different outline into each shape", () => {
@@ -1320,8 +1419,8 @@ describe("the batch operations", () => {
 
 	it("reshapes not one shape when a single setPointsMany entry is turned away", () => {
 		const { apply, replacedDocs, currentDoc } = createFakeDocBridge();
-		apply({ kind: "addObject", type: "polyline", x: 0, y: 0 });
-		apply({ kind: "addObject", type: "rect", x: 0, y: 300 });
+		apply({ kind: "addObjects", objects: [{ type: "polyline", x: 0, y: 0 }] });
+		apply({ kind: "addObjects", objects: [{ type: "rect", x: 0, y: 300 }] });
 		const pointsBeforeFailure = rootObject(currentDoc(), "polyline-1").points;
 		const replacedCountBeforeFailure = replacedDocs.length;
 
@@ -1488,23 +1587,26 @@ describe("the batch operations", () => {
 	it("decorates only where the body text matches", () => {
 		const { apply, currentDoc } = createFakeDocBridge();
 		apply({
-			kind: "addObject",
-			type: "rect",
-			x: 0,
-			y: 0,
-			text: "warning: check warning",
+			kind: "addObjects",
+			objects: [{ type: "rect", x: 0, y: 0, text: "warning: check warning" }],
 		});
 
 		const result = apply({
-			kind: "setTextStyle",
-			id: "rect-1",
-			match: "warning",
-			occurrence: 1,
-			fontWeight: "bold",
-			fontColor: "#c62828",
+			kind: "setTextStyles",
+			entries: [
+				{
+					id: "rect-1",
+					match: "warning",
+					occurrence: 1,
+					fontWeight: "bold",
+					fontColor: "#c62828",
+				},
+			],
 		});
 
-		expect(result.text).toBe('styled occurrence 1 of "warning" in "rect-1"');
+		expect(result.text).toBe(
+			'styled 1 stretch(es) of text: occurrence 1 of "warning" in "rect-1"',
+		);
 		expect(rootObject(currentDoc(), "rect-1").text).toEqual([
 			{ text: "warning", fontColor: "#c62828", fontWeight: "bold" },
 			{ text: ": check warning" },
@@ -1534,12 +1636,10 @@ describe("the batch operations", () => {
 	it("leaves the middle rungs of the ladder as they were written", () => {
 		const { apply, currentDoc } = createFakeDocBridge();
 		apply({
-			kind: "addObject",
-			type: "rect",
-			x: 0,
-			y: 0,
-			text: "medium",
-			fontWeight: "500",
+			kind: "addObjects",
+			objects: [
+				{ type: "rect", x: 0, y: 0, text: "medium", fontWeight: "500" },
+			],
 		});
 		expect(rootObject(currentDoc(), "rect-1").fontWeight).toBe("500");
 
@@ -1550,18 +1650,13 @@ describe("the batch operations", () => {
 	it("stores the numeric weights under the document's names on a decorated run too", () => {
 		const { apply, currentDoc } = createFakeDocBridge();
 		apply({
-			kind: "addObject",
-			type: "rect",
-			x: 0,
-			y: 0,
-			text: "warning: check it",
+			kind: "addObjects",
+			objects: [{ type: "rect", x: 0, y: 0, text: "warning: check it" }],
 		});
 
 		apply({
-			kind: "setTextStyle",
-			id: "rect-1",
-			match: "warning",
-			fontWeight: "700",
+			kind: "setTextStyles",
+			entries: [{ id: "rect-1", match: "warning", fontWeight: "700" }],
 		});
 		expect(rootObject(currentDoc(), "rect-1").text).toEqual([
 			{ text: "warning", fontWeight: "bold" },
@@ -1578,16 +1673,17 @@ describe("the batch operations", () => {
 		]);
 	});
 
-	it("returns ok:false on a setTextStyle that matches nothing, and leaves the document alone", () => {
+	it("returns ok:false on a setTextStyles entry that matches nothing, and leaves the document alone", () => {
 		const { apply, replacedDocs, currentDoc } = createFakeDocBridge();
-		apply({ kind: "addObject", type: "rect", x: 0, y: 0, text: "hello" });
+		apply({
+			kind: "addObjects",
+			objects: [{ type: "rect", x: 0, y: 0, text: "hello" }],
+		});
 		const replacedCountBeforeFailure = replacedDocs.length;
 
 		const result = apply({
-			kind: "setTextStyle",
-			id: "rect-1",
-			match: "missing",
-			fontWeight: "bold",
+			kind: "setTextStyles",
+			entries: [{ id: "rect-1", match: "missing", fontWeight: "bold" }],
 		});
 
 		expect(result.ok).toBe(false);
@@ -1624,11 +1720,8 @@ describe("the batch operations", () => {
 	it("decorates several places in one body of text by listing the same id more than once", () => {
 		const { apply, currentDoc } = createFakeDocBridge();
 		apply({
-			kind: "addObject",
-			type: "rect",
-			x: 0,
-			y: 0,
-			text: "ok and ng",
+			kind: "addObjects",
+			objects: [{ type: "rect", x: 0, y: 0, text: "ok and ng" }],
 		});
 
 		const result = apply({
@@ -1653,8 +1746,8 @@ describe("the batch operations", () => {
 describe("undo", () => {
 	it("undoes the last step, and returns ok:false once the history has run out", () => {
 		const { apply, currentDoc } = createFakeDocBridge();
-		apply({ kind: "addObject", type: "rect", x: 0, y: 0 });
-		apply({ kind: "addObject", type: "rect", x: 300, y: 0 });
+		apply({ kind: "addObjects", objects: [{ type: "rect", x: 0, y: 0 }] });
+		apply({ kind: "addObjects", objects: [{ type: "rect", x: 300, y: 0 }] });
 
 		expect(apply({ kind: "undo" }).ok).toBe(true);
 		expect(currentDoc().root.map((object) => object.id)).toEqual(["rect-1"]);
@@ -1671,7 +1764,7 @@ describe("undo", () => {
 	// disappears silently
 	it("refuses to undo when the user edited after the AI applied something", () => {
 		const { apply, bridge, currentDoc } = createFakeDocBridge();
-		apply({ kind: "addObject", type: "rect", x: 0, y: 0 });
+		apply({ kind: "addObjects", objects: [{ type: "rect", x: 0, y: 0 }] });
 
 		const userEditedDoc = structuredClone(currentDoc());
 		userEditedDoc.root = [];
@@ -1724,9 +1817,10 @@ describe("applyCanvasOp on a document holding a type this build does not know", 
 	it("keeps it in place through an edit, and undo gives it back as well", () => {
 		const { apply, currentDoc } = createFakeDocBridge(loadedDoc());
 
-		expect(apply({ kind: "addObject", type: "rect", x: 0, y: 200 }).ok).toBe(
-			true,
-		);
+		expect(
+			apply({ kind: "addObjects", objects: [{ type: "rect", x: 0, y: 200 }] })
+				.ok,
+		).toBe(true);
 		expect(rootIds(currentDoc())).toEqual([
 			"rect-1",
 			"gadget-1",
@@ -1773,7 +1867,10 @@ describe("applyCanvasOp on a document holding a type this build does not know", 
 	it("refuses to move it, naming why", () => {
 		const { apply } = createFakeDocBridge(loadedDoc());
 
-		const result = apply({ kind: "setPosition", id: "gadget-1", x: 0 });
+		const result = apply({
+			kind: "setPositions",
+			entries: [{ id: "gadget-1", x: 0 }],
+		});
 
 		expect(result.ok).toBe(false);
 		expect(result.text).toContain("a type this build does not know");

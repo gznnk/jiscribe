@@ -168,7 +168,7 @@ SVG の `fill` 属性ではなく CSS で当てる**。`"auto"` の解決先は 
 
 ## 図形用の AI ツールを足す
 
-汎用ツール（`set_text`・`set_extra_props` など）では、ある型にしか意味の無い編集
+汎用ツール（`set_texts`・`set_extra_props` など）では、ある型にしか意味の無い編集
 （表への行の挿入など）を表せない。そうした編集はプラグインが自前のツールとして出す。
 各ツールは呼び出しが `id` で名指す 1 オブジェクトに作用し、作り直す（`apply`）か
 読む（`read`）かのどちらかを持つ。`@jiscribe/canvas-sdk/tools` に対して書き、
@@ -221,11 +221,11 @@ throw する。
 書き込む前に `canonicalizeFontWeight` を通す（doc は `"normal"` / `"bold"` で持つ）。
 どちらも `@jiscribe/canvas-sdk/tools` から取る。実例はテーブルの `table_set_cell_style`。
 
-自分の型のテキストの一部を装飾するツールも同じように、組み込みの `set_text_style` が
+自分の型のテキストの一部を装飾するツールも同じように、組み込みの `set_text_styles` が
 宣言する語彙を展開する。`textMatchSchema`（`match` / `occurrence`。装飾する箇所を
 文字そのもので名指す）と `inlineTextStyleSchema`（文字の並びが単独で持てる文字装飾）
 の 2 つ。箇所を探して装飾するのは `@jiscribe/doc` の `styleRichTextMatches` で、
-`set_text_style` の裏にあるのと同じ関数。見つからなかった理由は結果で返すので、
+`set_text_styles` の裏にあるのと同じ関数。見つからなかった理由は結果で返すので、
 文言はツール側で組む。実例はテーブルの `table_set_text_style`。
 
 ## e2e スイートを持たせる

@@ -1,5 +1,5 @@
 // The vocabulary every tool decorating part of a text speaks: the built-in
-// set_text_style / set_text_styles and any plugin tool reaching inside text of its
+// set_text_styles and any plugin tool reaching inside text of its
 // own (a table's cells). Written in zod, as every tool argument is (ObjectAiTool.ts).
 
 import type { InlineTextStyle, RichTextMatch } from "@jiscribe/doc";

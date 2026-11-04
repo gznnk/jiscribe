@@ -35,6 +35,6 @@ export const diagnoseRecordOverflow: ObjectDocOverflowDiagnoser = (doc) => {
 		return [];
 	}
 	return [
-		`rows overflow record ${width}x${height}: its compartments need ${roundToDecimal(requiredHeight, 1)}px but the box is ${height}px tall, ${roundToDecimal(shortfall, 1)}px short, so the bottom rows are drawn past its edge; record_set_compartments refits the height to them, or resize_object it to height ${roundToDecimal(requiredHeight, 1)}`,
+		`rows overflow record ${width}x${height}: its compartments need ${roundToDecimal(requiredHeight, 1)}px but the box is ${height}px tall, ${roundToDecimal(shortfall, 1)}px short, so the bottom rows are drawn past its edge; record_set_compartments refits the height to them, or give it height ${roundToDecimal(requiredHeight, 1)} with resize_objects`,
 	];
 };

@@ -624,7 +624,7 @@ const diagnoseConnectorConnectPoints = (
 			{
 				severity: "warning",
 				objectId: connector.id,
-				message: `the ${end} end names connect point "${connectPointId}", which ${ownerId} (${owner.type}) does not offer, so it is drawn at the center of ${ownerId}: ${cause}; re-anchor it with update_connector`,
+				message: `the ${end} end names connect point "${connectPointId}", which ${ownerId} (${owner.type}) does not offer, so it is drawn at the center of ${ownerId}: ${cause}; re-anchor it with update_connectors`,
 			},
 		];
 	});
