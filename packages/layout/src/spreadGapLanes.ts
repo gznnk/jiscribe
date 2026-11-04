@@ -1,5 +1,6 @@
 import type { Point, Rect } from "@jiscribe/geometry";
 
+import { createLayoutAxis } from "./axis";
 import { isSameCoordinate } from "./isSameCoordinate";
 import { type LayoutDirection, isVerticalFlow } from "./LayoutDirection";
 
@@ -90,9 +91,7 @@ const collectGapRuns = (
 	rankSpacing: number,
 	labels: readonly (GapLaneLabel | undefined)[],
 ): GapRun[] => {
-	const vertical = isVerticalFlow(direction);
-	const along = (point: Point): number => (vertical ? point.y : point.x);
-	const across = (point: Point): number => (vertical ? point.x : point.y);
+	const axis = createLayoutAxis(direction);
 	const runs: GapRun[] = [];
 	paths.forEach((path, pathIndex) => {
 		const label = labels[pathIndex];
@@ -100,23 +99,24 @@ const collectGapRuns = (
 			const start = path[index];
 			const end = path[index + 1];
 			if (
-				!isSameCoordinate(along(start), along(end)) ||
-				isSameCoordinate(across(start), across(end))
+				!isSameCoordinate(axis.along(start), axis.along(end)) ||
+				isSameCoordinate(axis.across(start), axis.across(end))
 			) {
 				continue;
 			}
 			runs.push({
 				path,
 				index,
-				from: across(start),
-				to: across(end),
-				before: along(path[index - 1]),
-				after: along(path[index + 2]),
-				along: along(start),
+				from: axis.across(start),
+				to: axis.across(end),
+				before: axis.along(path[index - 1]),
+				after: axis.along(path[index + 2]),
+				along: axis.along(start),
 				// The run through the label's own gap is the one that carries it.
 				labelExtent:
 					label !== undefined &&
-					Math.abs(along(start) - along(label.point)) < rankSpacing / 2
+					Math.abs(axis.along(start) - axis.along(label.point)) <
+						rankSpacing / 2
 						? label.alongExtent
 						: 0,
 			});
@@ -152,6 +152,7 @@ export const spreadGapLanes = (
 	boxes: Rect[] = [],
 ): void => {
 	const vertical = isVerticalFlow(direction);
+	const axis = createLayoutAxis(direction);
 	const runsByGap = new Map<number, GapRun[]>();
 	for (const run of collectGapRuns(paths, direction, rankSpacing, labels)) {
 		// Gap midlines come out of one subtraction each, so equal gaps compare equal to
@@ -264,7 +265,6 @@ export const spreadGapLanes = (
 	const shiftedBefore = (along: number): number =>
 		sumWhere((planAlong) => planAlong <= along);
 	if (widenings.length > 0) {
-		const alongOf = (point: Point): number => (vertical ? point.y : point.x);
 		const move = (point: Point, delta: number): void => {
 			if (vertical) {
 				point.y += delta;
@@ -285,7 +285,7 @@ export const spreadGapLanes = (
 		}
 		const deltaByPoint = new Map<Point, number>();
 		for (const point of pointsToMove) {
-			deltaByPoint.set(point, shiftBeyond(alongOf(point)));
+			deltaByPoint.set(point, shiftBeyond(axis.along(point)));
 		}
 		for (const [point, delta] of deltaByPoint) {
 			move(point, delta);

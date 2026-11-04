@@ -1,8 +1,9 @@
 import type { Point, Rect } from "@jiscribe/geometry";
 
+import { createLayoutAxis } from "./axis";
 import { calcPositionAlongPath } from "./calcPositionAlongPath";
 import { isSameCoordinate } from "./isSameCoordinate";
-import { type LayoutDirection, isVerticalFlow } from "./LayoutDirection";
+import type { LayoutDirection } from "./LayoutDirection";
 
 /** Room kept between a label's box and the nearest corner of its own route, in px. */
 const LABEL_CORNER_CLEARANCE = 8;
@@ -50,8 +51,7 @@ export const calcLabelPosition = (
 	rankSpacing: number,
 	obstacles: readonly Rect[] = [],
 ): LabelPlacement => {
-	const vertical = isVerticalFlow(direction);
-	const along = (point: Point): number => (vertical ? point.y : point.x);
+	const axis = createLayoutAxis(direction);
 	const segments: Segment[] = path.slice(1).map((end, index) => {
 		const start = path[index];
 		return {
@@ -83,9 +83,11 @@ export const calcLabelPosition = (
 	let gapDistance = rankSpacing;
 	for (const segment of segments) {
 		const isSidewaysRun =
-			isSameCoordinate(along(segment.start), along(segment.end)) &&
+			isSameCoordinate(axis.along(segment.start), axis.along(segment.end)) &&
 			segment.length > 0;
-		const distance = Math.abs(along(segment.start) - along(labelPoint));
+		const distance = Math.abs(
+			axis.along(segment.start) - axis.along(labelPoint),
+		);
 		if (isSidewaysRun && distance < gapDistance) {
 			gapRun = segment;
 			gapDistance = distance;

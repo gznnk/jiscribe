@@ -1381,7 +1381,7 @@ export const createCanvasToolDescriptors = (
 				.enum(LayoutDirections)
 				.optional()
 				.describe(
-					`Which way the flow runs: TB (top to bottom, the default), LR (left to right), BT or RL.`,
+					`Which way the flow runs: TB (top to bottom), LR (left to right), BT or RL; default ${LAYERED_LAYOUT_DEFAULTS.direction}.`,
 				),
 			nodeSpacing: z
 				.number()

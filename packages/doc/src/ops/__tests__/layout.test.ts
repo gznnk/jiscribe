@@ -13,6 +13,7 @@ import {
 } from "./support/docFixtures";
 import {
 	columnCardDefinition,
+	ovalRegionDefinition,
 	regionDefinition,
 } from "./support/pluginFixtures";
 
@@ -161,6 +162,7 @@ describe("layoutObjects with container shapes and declared connect points", () =
 				id: "region-plugin",
 				objects: {
 					region: regionDefinition,
+					"oval-region": ovalRegionDefinition,
 					"column-card": columnCardDefinition,
 				},
 			},
@@ -316,6 +318,127 @@ describe("layoutObjects with container shapes and declared connect points", () =
 		});
 		expect(redrawn.target.anchor.t).not.toBe(0.5);
 		expect(redrawn.points).toEqual([]);
+	});
+
+	it("keeps a declared connect point on a connector into a container shape", () => {
+		const doc = emptyDoc();
+		regionDocOps.addObject(doc, "region", {
+			x: 0,
+			y: 0,
+			width: 400,
+			height: 300,
+		});
+		regionDocOps.addObject(doc, "rect", {
+			x: 50,
+			y: 60,
+			width: 100,
+			height: 50,
+		});
+		regionDocOps.addObject(doc, "rect", {
+			x: 200,
+			y: 200,
+			width: 100,
+			height: 50,
+		});
+		regionDocOps.addObject(doc, "column-card", { x: 700, y: 0 });
+		regionDocOps.connect(doc, { sourceId: "rect-1", targetId: "rect-2" });
+		regionDocOps.connect(doc, {
+			sourceId: "column-card-1",
+			targetId: "region-1",
+			sourceAnchor: "col:2:left",
+		});
+
+		regionDocOps.layoutObjects(doc, undefined, { direction: "LR" });
+
+		expect(readObject(doc, "connector-2")).toMatchObject({
+			source: { anchor: { kind: "connectPoint", id: "col:2:left" } },
+			target: { anchor: { kind: "edge" } },
+			points: [],
+		});
+	});
+
+	it("moves a container whose geometry is not a rect's without resizing it", () => {
+		const doc = emptyDoc();
+		doc.root.push({
+			id: "oval-1",
+			type: "oval-region",
+			cx: 300,
+			cy: 300,
+			rx: 300,
+			ry: 200,
+		} as ObjectDoc);
+		regionDocOps.addObject(doc, "rect", {
+			x: 100,
+			y: 250,
+			width: 100,
+			height: 50,
+		});
+		regionDocOps.addObject(doc, "rect", {
+			x: 400,
+			y: 250,
+			width: 100,
+			height: 50,
+		});
+		regionDocOps.connect(doc, { sourceId: "rect-1", targetId: "rect-2" });
+
+		const result = regionDocOps.layoutObjects(doc, undefined);
+
+		expect(result.containerIds).toEqual(["oval-1"]);
+		const oval = readObject(doc, "oval-1") as {
+			cx: number;
+			cy: number;
+			rx: number;
+			ry: number;
+		};
+		// Still the size it was, and still around both members, which now stack.
+		expect(oval).toMatchObject({ rx: 300, ry: 200 });
+		const ovalBox = {
+			x: oval.cx - oval.rx,
+			y: oval.cy - oval.ry,
+			width: oval.rx * 2,
+			height: oval.ry * 2,
+		};
+		expect(isInside(ovalBox, box(doc, "rect-1"))).toBe(true);
+		expect(isInside(ovalBox, box(doc, "rect-2"))).toBe(true);
+		expect(box(doc, "rect-2").y).toBeGreaterThan(box(doc, "rect-1").y);
+	});
+
+	it("takes a group lying inside a container shape in as a member", () => {
+		const doc = emptyDoc();
+		regionDocOps.addObject(doc, "region", {
+			x: 0,
+			y: 0,
+			width: 600,
+			height: 500,
+		});
+		regionDocOps.addObject(doc, "rect", {
+			x: 50,
+			y: 60,
+			width: 100,
+			height: 50,
+		});
+		regionDocOps.addObject(doc, "rect", {
+			x: 300,
+			y: 300,
+			width: 100,
+			height: 50,
+		});
+		regionDocOps.groupObjects(doc, ["rect-1", "rect-2"]);
+		regionDocOps.addObject(doc, "rect", {
+			x: 900,
+			y: 900,
+			width: 100,
+			height: 50,
+		});
+		regionDocOps.connect(doc, { sourceId: "rect-1", targetId: "rect-3" });
+
+		const result = regionDocOps.layoutObjects(doc, undefined);
+
+		expect(result.containerIds).toEqual(["region-1", "group-1"]);
+		const region = box(doc, "region-1");
+		expect(isInside(region, box(doc, "rect-1"))).toBe(true);
+		expect(isInside(region, box(doc, "rect-2"))).toBe(true);
+		expect(isInside(region, box(doc, "rect-3"))).toBe(false);
 	});
 
 	it("keeps an end on a declared connect point and leaves that route to the engine", () => {

@@ -1,346 +1,36 @@
-import { Graph, layout } from "@dagrejs/dagre";
 import type { Point, Rect } from "@jiscribe/geometry";
 
+import { createLayoutAxis } from "./axis";
 import { type LabelPlacement, calcLabelPosition } from "./calcLabelPosition";
-import { isSameCoordinate } from "./isSameCoordinate";
-import { type LayoutDirection, isVerticalFlow } from "./LayoutDirection";
+import { calcAnchorPoint, calcOrthogonalPath } from "./calcOrthogonalPath";
+import { chooseEdgeAnchors } from "./chooseEdgeAnchors";
+import { isVerticalFlow } from "./LayoutDirection";
+import { reserveTitleBands } from "./reserveTitleBands";
+import { createRowIndex, dropBorderPoints } from "./rows";
+import { runDagre } from "./runDagre";
 import { spreadGapLanes } from "./spreadGapLanes";
-import { spreadSideEnds } from "./spreadSideEnds";
-
-export { LayoutDirections, type LayoutDirection } from "./LayoutDirection";
-
-/** Side of a node's box an edge leaves from or arrives at, in the node's own container. */
-export type LayoutSide = "top" | "right" | "bottom" | "left";
-
-export type LayoutGraphNode = {
-	id: string;
-	/** Width of the box the node occupies, in px; the layout never resizes it. */
-	width: number;
-	/** Height of the box, in px. */
-	height: number;
-	/** Id of the container the node sits inside, when it does; must be among the containers. */
-	parentId?: string;
-};
-
-/**
- * A container other nodes sit inside: the layout keeps its members together inside it
- * and sizes it to them. It has no size of its own on input, and no edge may end on it.
- */
-export type LayoutGraphContainer = {
-	id: string;
-	/** Id of the container this one sits inside, when it does. */
-	parentId?: string;
-	/**
-	 * Height in px of the title band along the container's top edge; the layout keeps that
-	 * much clear below the edge, whichever way the ranks run. Defaults to 0.
-	 */
-	titleHeight?: number;
-};
-
-export type LayoutGraphEdge = {
-	id: string;
-	/** Id of the node the edge starts at; must be among the nodes. */
-	sourceId: string;
-	/** Id of the node the edge ends at; must be among the nodes. */
-	targetId: string;
-	/** Size of the label box drawn on the edge, in px; the layout keeps that much room free for it. */
-	label?: { width: number; height: number };
-};
-
-export type LayeredLayoutOptions = {
-	/** Defaults to `TB`. */
-	direction?: LayoutDirection;
-	/** Gap in px between neighbouring nodes of one rank; defaults to {@link LAYERED_LAYOUT_DEFAULTS}. */
-	nodeSpacing?: number;
-	/** Gap in px between one rank and the next; defaults to {@link LAYERED_LAYOUT_DEFAULTS}. */
-	rankSpacing?: number;
-};
-
-export const LAYERED_LAYOUT_DEFAULTS: Required<LayeredLayoutOptions> = {
-	direction: "TB",
-	nodeSpacing: 80,
-	rankSpacing: 80,
-};
-
-export type LaidOutNode = {
-	id: string;
-	/** Top-left of the node's box; the whole drawing starts at (0, 0). */
-	bounds: Rect;
-};
-
-/** Where an edge meets a box: a side and a position along it. */
-export type LayoutEdgeAnchor = {
-	side: LayoutSide;
-	/**
-	 * Position along the side, 0..1 measured left to right on `top` / `bottom` and top to
-	 * bottom on `left` / `right`; 0.5 is the side's midpoint. Within
-	 * {@link EDGE_ANCHOR_STRAIGHT_RANGE} when that lets the edge leave in a straight line,
-	 * otherwise 0.5 for the only edge on its side and within {@link EDGE_ANCHOR_FAN_RANGE}
-	 * for one of several (see calcEndAnchor).
-	 */
-	t: number;
-};
-
-/**
- * How far along a side an anchor may sit when it puts the edge straight on the column
- * it travels in, so a short jog in the gap is traded for a line near the corner.
- */
-export const EDGE_ANCHOR_STRAIGHT_RANGE = { min: 0.05, max: 0.95 } as const;
-
-/** How far along a side the anchors of several edges sharing it may spread. */
-export const EDGE_ANCHOR_FAN_RANGE = { min: 0.2, max: 0.8 } as const;
-
-/** Least distance in px between two edge ends on one side: room for two arrowheads. */
-export const EDGE_END_SPACING = 20;
-
-/** Least distance in px between two edges joining the same pair of boxes. */
-export const EDGE_BUNDLE_SPACING = EDGE_END_SPACING;
-
-/** Share of the shorter side a bundle of parallel edges may spread over. */
-const BUNDLE_SIDE_SHARE = 0.8;
-
-/** How far along the lines the labels of a bundle are staggered from each other. */
-const BUNDLE_LABEL_STAGGER = 0.15;
-
-/** Where along a line a bundle's label may sit, so the stagger keeps clear of the ends. */
-const BUNDLE_LABEL_RANGE = { min: 0.2, max: 0.8 } as const;
-
-export type LaidOutEdge = {
-	id: string;
-	/** Where the edge leaves the source box, on the side facing the target along the rank axis. */
-	source: LayoutEdgeAnchor;
-	/** Where it enters the target box. */
-	target: LayoutEdgeAnchor;
-	/**
-	 * Corners of a right-angled route from the source side to the target side that
-	 * stays clear of the boxes in between and of the other routes crossing the same gaps
-	 * (see spreadGapLanes), excluding the two ends themselves; empty when the edge runs
-	 * straight.
-	 */
-	points: Point[];
-	/**
-	 * Where along the route the label sits, 0 at the source and 1 at the target: the spot
-	 * the layout kept free for it, or the nearest stretch that holds it clear of every
-	 * corner (see calcLabelPosition). Only for an edge given a `label`.
-	 */
-	labelPosition?: number;
-	/**
-	 * Signed distance in px the label is set off its line; 0 but for a route too short
-	 * to hold the label on any segment. Only for an edge given a `label`.
-	 */
-	labelOffset?: number;
-};
-
-export type LaidOutContainer = {
-	id: string;
-	/** The box the container's members fit in, with the layout's own margin around them. */
-	bounds: Rect;
-};
-
-export type LayeredLayoutResult = {
-	nodes: LaidOutNode[];
-	/** Every edge given, except self loops, which the layout leaves to the caller. */
-	edges: LaidOutEdge[];
-	/** Every container given, sized and placed around its members. */
-	containers: LaidOutContainer[];
-};
-
-/** Which sides face each other along the rank axis, read off the two boxes' centres. */
-const calcFacingSides = (
-	source: Rect,
-	target: Rect,
-	direction: LayoutDirection,
-): { sourceSide: LayoutSide; targetSide: LayoutSide } => {
-	if (isVerticalFlow(direction)) {
-		const deltaY =
-			target.y + target.height / 2 - (source.y + source.height / 2);
-		return deltaY >= 0
-			? { sourceSide: "bottom", targetSide: "top" }
-			: { sourceSide: "top", targetSide: "bottom" };
-	}
-	const deltaX = target.x + target.width / 2 - (source.x + source.width / 2);
-	return deltaX >= 0
-		? { sourceSide: "right", targetSide: "left" }
-		: { sourceSide: "left", targetSide: "right" };
-};
-
-/** Where an anchor sits on a box, in the same container as `bounds`. */
-const calcAnchorPoint = (bounds: Rect, anchor: LayoutEdgeAnchor): Point => {
-	switch (anchor.side) {
-		case "top":
-			return { x: bounds.x + bounds.width * anchor.t, y: bounds.y };
-		case "bottom":
-			return {
-				x: bounds.x + bounds.width * anchor.t,
-				y: bounds.y + bounds.height,
-			};
-		case "left":
-			return { x: bounds.x, y: bounds.y + bounds.height * anchor.t };
-		case "right":
-			return {
-				x: bounds.x + bounds.width,
-				y: bounds.y + bounds.height * anchor.t,
-			};
-	}
-};
-
-/** A side of one box, as the key the anchor rules count edges on. */
-const sideKey = (nodeId: string, side: LayoutSide): string =>
-	`${nodeId}:${side}`;
-
-const clampRatio = (
-	ratio: number,
-	range: { readonly min: number; readonly max: number },
-): number => Math.min(range.max, Math.max(range.min, ratio));
-
-const isWithin = (
-	ratio: number,
-	range: { readonly min: number; readonly max: number },
-): boolean => ratio >= range.min && ratio <= range.max;
-
-/** Where `column` (a coordinate across the rank axis) falls along the box's side, 0..1. */
-const calcSideRatio = (
-	bounds: Rect,
-	column: number,
-	direction: LayoutDirection,
-): number =>
-	isVerticalFlow(direction)
-		? (column - bounds.x) / bounds.width
-		: (column - bounds.y) / bounds.height;
-
-/**
- * An end's anchor, with where along the side the edge is headed (the unclamped ratio
- * of the column it travels in next), which orders the ends sharing a side.
- */
-type EndAnchor = { anchor: LayoutEdgeAnchor; heading: number };
-
-/**
- * The anchor for one end of an edge, given the column the edge travels in beyond
- * that end. On the column itself when the column crosses the side, so the edge
- * leaves straight; else at the side's midpoint when this is the side's only edge,
- * since a jog in the gap is then unavoidable and a centred one reads best; else
- * leaning toward the column, so the edges sharing the side fan out.
- */
-const calcEndAnchor = (
-	bounds: Rect,
-	side: LayoutSide,
-	column: number,
-	isOnlyEdgeOnSide: boolean,
-	direction: LayoutDirection,
-): EndAnchor => {
-	const ratio = calcSideRatio(bounds, column, direction);
-	if (isWithin(ratio, EDGE_ANCHOR_STRAIGHT_RANGE)) {
-		return { anchor: { side, t: ratio }, heading: ratio };
-	}
-	if (isOnlyEdgeOnSide) {
-		return { anchor: { side, t: 0.5 }, heading: ratio };
-	}
-	return {
-		anchor: { side, t: clampRatio(ratio, EDGE_ANCHOR_FAN_RANGE) },
-		heading: ratio,
-	};
-};
-
-/**
- * Whether a rank coordinate is a row boxes sit on (a rank of nodes, or the border
- * rank dagre gives a container), as opposed to the middle of a gap between rows.
- */
-type IsSlotRow = (along: number) => boolean;
-
-/** A rank coordinate as a lookup key: rows that are the same to the routing share one. */
-const toRowKey = (along: number): number => Math.round(along * 1000);
-
-/**
- * The columns (coordinates across the rank axis) an edge travels in, between its
- * ends: the dummy slots dagre routed it through, read off its interior points.
- */
-const readSlotColumns = (
-	dagrePoints: readonly Point[],
-	direction: LayoutDirection,
-	isSlotRow: IsSlotRow,
-): number[] =>
-	dagrePoints
-		.slice(1, -1)
-		.filter((point) => isSlotRow(isVerticalFlow(direction) ? point.y : point.x))
-		.map((point) => (isVerticalFlow(direction) ? point.x : point.y));
-
-/** Drop every point that lies on the straight line between its neighbours. */
-const dropCollinearPoints = (path: readonly Point[]): Point[] =>
-	path.filter((point, index) => {
-		if (index === 0 || index === path.length - 1) {
-			return true;
-		}
-		const previous = path[index - 1];
-		const next = path[index + 1];
-		const sameColumn =
-			isSameCoordinate(previous.x, point.x) &&
-			isSameCoordinate(point.x, next.x);
-		const sameRow =
-			isSameCoordinate(previous.y, point.y) &&
-			isSameCoordinate(point.y, next.y);
-		return !(sameColumn || sameRow);
-	});
-
-/**
- * Turn the polyline dagre routed into a right-angled one that stays clear of the
- * boxes. Dagre's interior points sit either in the middle of a gap between two rows
- * or in the slot a dummy node holds on a row (a rank of nodes, or a container's border),
- * so the route changes column only in the gaps, to the column of the next slot it
- * passes, and crosses a row only in that slot, where no box is.
- *
- * @param start - Where the edge leaves the source box
- * @param end - Where it enters the target box
- * @param dagrePoints - The route as dagre gives it, border to border
- * @param direction - Decides which axis is the rank axis
- * @param isSlotRow - Tells a point on a row from one in a gap
- * @returns The whole route, `start` and `end` included, with no redundant point on it
- */
-const calcOrthogonalPath = (
-	start: Point,
-	end: Point,
-	dagrePoints: readonly Point[],
-	direction: LayoutDirection,
-	isSlotRow: IsSlotRow,
-): Point[] => {
-	const vertical = isVerticalFlow(direction);
-	const interior = dagrePoints.slice(1, -1);
-	const along = (point: Point): number => (vertical ? point.y : point.x);
-	const across = (point: Point): number => (vertical ? point.x : point.y);
-	const make = (acrossValue: number, alongValue: number): Point =>
-		vertical
-			? { x: acrossValue, y: alongValue }
-			: { x: alongValue, y: acrossValue };
-
-	const path: Point[] = [start];
-	let column = across(start);
-	// The slot each gap point hands the route on to: the next slot point after it,
-	// found in one pass from the back.
-	const nextSlotAfter: (Point | undefined)[] = new Array(interior.length);
-	let upcomingSlot: Point | undefined;
-	for (let index = interior.length - 1; index >= 0; index -= 1) {
-		nextSlotAfter[index] = upcomingSlot;
-		if (isSlotRow(along(interior[index]))) {
-			upcomingSlot = interior[index];
-		}
-	}
-	interior.forEach((point, index) => {
-		if (isSlotRow(along(point))) {
-			return;
-		}
-		const nextSlot = nextSlotAfter[index];
-		path.push(make(column, along(point)));
-		column = nextSlot === undefined ? across(end) : across(nextSlot);
-		path.push(make(column, along(point)));
-	});
-	path.push(end);
-	return dropCollinearPoints(path);
-};
+import {
+	LAYERED_LAYOUT_DEFAULTS,
+	type LaidOutEdge,
+	type LayeredLayoutOptions,
+	type LayeredLayoutResult,
+	type LayoutGraphContainer,
+	type LayoutGraphEdge,
+	type LayoutGraphNode,
+} from "./types";
 
 /**
  * Arrange a directed graph in layers (the Sugiyama scheme dagre implements): nodes are
  * ranked so edges point one way, ordered within each rank to reduce crossings, then
  * placed. The result is translated so the drawing's top-left is (0, 0); the caller
  * decides where it goes.
+ *
+ * The stages, in order: dagre places the boxes and routes each edge as a polyline
+ * (runDagre); each edge's ends are chosen on the facing sides (chooseEdgeAnchors); the
+ * polyline becomes a right-angled route (calcOrthogonalPath); routes crossing one gap
+ * take lanes, and a gap too narrow for them is widened (spreadGapLanes); every
+ * container's title band is kept clear (reserveTitleBands); each label is placed on
+ * its route (calcLabelPosition).
  *
  * @param nodes - The boxes to place, each with the size it keeps; ids must be distinct
  * @param edges - Directed edges between those ids. Several edges between the same pair are
@@ -361,540 +51,124 @@ export const computeLayeredLayout = (
 	options: LayeredLayoutOptions = {},
 	containers: readonly LayoutGraphContainer[] = [],
 ): LayeredLayoutResult => {
-	const { direction, nodeSpacing, rankSpacing } = {
-		...LAYERED_LAYOUT_DEFAULTS,
-		...options,
-	};
-	const graph = new Graph({ multigraph: true, compound: true });
-	graph.setGraph({
-		rankdir: direction,
-		nodesep: nodeSpacing,
-		ranksep: rankSpacing,
-		marginx: 0,
-		marginy: 0,
-	});
-	graph.setDefaultEdgeLabel(() => ({}));
-	const containerIds = new Set<string>();
-	for (const container of containers) {
-		if (containerIds.has(container.id)) {
-			throw new Error(`duplicate container id: ${container.id}`);
-		}
-		containerIds.add(container.id);
-		graph.setNode(container.id, {});
-	}
-	const requireContainer = (ownerId: string, parentId: string): void => {
-		if (!containerIds.has(parentId)) {
-			throw new Error(`${ownerId} names an unknown container: ${parentId}`);
-		}
-	};
-	for (const container of containers) {
-		if (container.parentId !== undefined) {
-			requireContainer(container.id, container.parentId);
-			graph.setParent(container.id, container.parentId);
-		}
-	}
-	const nodeIds = new Set<string>();
-	for (const node of nodes) {
-		if (nodeIds.has(node.id) || containerIds.has(node.id)) {
-			throw new Error(`duplicate node id: ${node.id}`);
-		}
-		nodeIds.add(node.id);
-		graph.setNode(node.id, { width: node.width, height: node.height });
-		if (node.parentId !== undefined) {
-			requireContainer(node.id, node.parentId);
-			graph.setParent(node.id, node.parentId);
-		}
-	}
-	// dagre sizes a container from what it holds, so an empty one has no size to give.
-	for (const container of containers) {
-		if (graph.children(container.id).length === 0) {
-			throw new Error(`container ${container.id} holds nothing`);
-		}
-	}
-	const laidOutEdgeIds = new Set<string>();
-	for (const edge of edges) {
-		for (const endId of [edge.sourceId, edge.targetId]) {
-			if (containerIds.has(endId)) {
-				throw new Error(`edge ${edge.id} ends on a container: ${endId}`);
-			}
-			if (!nodeIds.has(endId)) {
-				throw new Error(`edge ${edge.id} names an unknown node: ${endId}`);
-			}
-		}
-		if (edge.sourceId === edge.targetId) {
-			continue;
-		}
-		graph.setEdge(
-			edge.sourceId,
-			edge.targetId,
-			edge.label === undefined
-				? {}
-				: { width: edge.label.width, height: edge.label.height, labelpos: "c" },
-			edge.id,
-		);
-		laidOutEdgeIds.add(edge.id);
-	}
+	const resolved = { ...LAYERED_LAYOUT_DEFAULTS, ...options };
+	const axis = createLayoutAxis(resolved.direction);
+	const vertical = isVerticalFlow(resolved.direction);
 
-	layout(graph);
+	const placed = runDagre(nodes, edges, resolved, containers);
+	const rows = createRowIndex(placed.nodes, placed.containers, axis);
+	const boundsById = new Map(
+		placed.nodes.map(({ id, bounds }) => [id, bounds] as const),
+	);
+	const routes = placed.edges.map((dagreEdge) => ({
+		edge: dagreEdge.edge,
+		sourceBounds: boundsById.get(dagreEdge.edge.sourceId)!,
+		targetBounds: boundsById.get(dagreEdge.edge.targetId)!,
+		points: dropBorderPoints(dagreEdge.points, rows, axis),
+		labelPoint: dagreEdge.labelPoint,
+	}));
 
-	// dagre hands back centres, offset by whatever margin its ranking left; pin the
-	// drawing's top-left to the origin so the caller works in one known container.
-	const centred = nodes.map((node) => {
-		const placed = graph.node(node.id) as { x: number; y: number };
-		return {
-			id: node.id,
-			bounds: {
-				x: placed.x - node.width / 2,
-				y: placed.y - node.height / 2,
-				width: node.width,
-				height: node.height,
-			},
-		};
-	});
-	const centredContainers = containers.map((container) => {
-		const placed = graph.node(container.id) as {
-			x: number;
-			y: number;
-			width: number;
-			height: number;
-		};
-		return {
-			id: container.id,
-			bounds: {
-				x: placed.x - placed.width / 2,
-				y: placed.y - placed.height / 2,
-				width: placed.width,
-				height: placed.height,
-			},
-		};
-	});
-	const everyBox = [...centred, ...centredContainers].map(
+	const anchors = chooseEdgeAnchors(routes, rows, axis, vertical);
+	const paths = routes.map((route, index) =>
+		calcOrthogonalPath(
+			calcAnchorPoint(route.sourceBounds, anchors[index].source),
+			calcAnchorPoint(route.targetBounds, anchors[index].target),
+			route.points,
+			rows,
+			axis,
+		),
+	);
+
+	const everyBox = [...placed.nodes, ...placed.containers].map(
 		({ bounds }) => bounds,
 	);
-	const originX = Math.min(...everyBox.map((bounds) => bounds.x));
-	const originY = Math.min(...everyBox.map((bounds) => bounds.y));
-	const laidOutNodes = centred.map(({ id, bounds }) => ({
-		id,
-		bounds: { ...bounds, x: bounds.x - originX, y: bounds.y - originY },
-	}));
-	const laidOutContainers: LaidOutContainer[] = centredContainers.map(
-		({ id, bounds }) => ({
-			id,
-			bounds: { ...bounds, x: bounds.x - originX, y: bounds.y - originY },
-		}),
-	);
-	const boundsById = new Map(
-		laidOutNodes.map(({ id, bounds }) => [id, bounds] as const),
-	);
-	// The rows boxes sit on: every rank of nodes. The border ranks dagre adds around a
-	// container hold nothing a route could hit, and the half gaps beside them are too
-	// narrow to bend in, so their points are dropped from every route: a route then
-	// crosses a border wherever its column is and bends in the gaps between ranks.
-	const alongStart = (bounds: Rect): number =>
-		isVerticalFlow(direction) ? bounds.y : bounds.x;
-	const alongExtent = (bounds: Rect): number =>
-		isVerticalFlow(direction) ? bounds.height : bounds.width;
-	// Every node of a rank shares one row, so the rows are a handful of distinct
-	// coordinates, looked up by the same rounded key spreadGapLanes groups gaps by.
-	const slotRows = new Set(
-		laidOutNodes.map(({ bounds }) =>
-			toRowKey(alongStart(bounds) + alongExtent(bounds) / 2),
-		),
-	);
-	const isSlotRow: IsSlotRow = (along) => slotRows.has(toRowKey(along));
-	const borderRows = new Set(
-		laidOutContainers.flatMap(({ bounds }) => [
-			toRowKey(alongStart(bounds)),
-			toRowKey(alongStart(bounds) + alongExtent(bounds)),
-		]),
-	);
-	const isBorderRow = (along: number): boolean =>
-		borderRows.has(toRowKey(along));
-
-	const centreOf = (bounds: Rect): number =>
-		isVerticalFlow(direction)
-			? bounds.x + bounds.width / 2
-			: bounds.y + bounds.height / 2;
-	const sidedEdges = edges
-		.filter((edge) => laidOutEdgeIds.has(edge.id))
-		.map((edge) => {
-			const sourceBounds = boundsById.get(edge.sourceId) as Rect;
-			const targetBounds = boundsById.get(edge.targetId) as Rect;
-			return {
-				edge,
-				sourceBounds,
-				targetBounds,
-				...calcFacingSides(sourceBounds, targetBounds, direction),
-			};
-		});
-	// How many edges meet each side, which decides whether an end may sit at its midpoint.
-	const edgeCountBySide = new Map<string, number>();
-	for (const { edge, sourceSide, targetSide } of sidedEdges) {
-		for (const key of [
-			sideKey(edge.sourceId, sourceSide),
-			sideKey(edge.targetId, targetSide),
-		]) {
-			edgeCountBySide.set(key, (edgeCountBySide.get(key) ?? 0) + 1);
-		}
-	}
-	const isOnlyEdgeOnSide = (nodeId: string, side: LayoutSide): boolean =>
-		edgeCountBySide.get(sideKey(nodeId, side)) === 1;
-
-	const anchoredEdges = sidedEdges.map(
-		({ edge, sourceBounds, targetBounds, sourceSide, targetSide }) => {
-			const routed = graph.edge(edge.sourceId, edge.targetId, edge.id) as {
-				points?: Point[];
-				x?: number;
-				y?: number;
-			};
-			const dagrePoints = (routed.points ?? [])
-				.map(({ x, y }) => ({ x: x - originX, y: y - originY }))
-				.filter(
-					(point, index, points) =>
-						index === 0 ||
-						index === points.length - 1 ||
-						!isBorderRow(isVerticalFlow(direction) ? point.y : point.x),
-				);
-			const slotColumns = readSlotColumns(dagrePoints, direction, isSlotRow);
-			const sourceAlone = isOnlyEdgeOnSide(edge.sourceId, sourceSide);
-			const targetAlone = isOnlyEdgeOnSide(edge.targetId, targetSide);
-			let source: EndAnchor;
-			let target: EndAnchor;
-			if (slotColumns.length === 0) {
-				// Boxes in neighbouring ranks: one straight line when either centre crosses
-				// the other side and that other side is not shared, else each end on its own.
-				const targetCentreRatio = calcSideRatio(
-					sourceBounds,
-					centreOf(targetBounds),
-					direction,
-				);
-				const sourceCentreRatio = calcSideRatio(
-					targetBounds,
-					centreOf(sourceBounds),
-					direction,
-				);
-				if (
-					targetAlone &&
-					isWithin(targetCentreRatio, EDGE_ANCHOR_STRAIGHT_RANGE)
-				) {
-					source = {
-						anchor: { side: sourceSide, t: targetCentreRatio },
-						heading: targetCentreRatio,
-					};
-					target = {
-						anchor: { side: targetSide, t: 0.5 },
-						heading: sourceCentreRatio,
-					};
-				} else if (
-					sourceAlone &&
-					isWithin(sourceCentreRatio, EDGE_ANCHOR_STRAIGHT_RANGE)
-				) {
-					source = {
-						anchor: { side: sourceSide, t: 0.5 },
-						heading: targetCentreRatio,
-					};
-					target = {
-						anchor: { side: targetSide, t: sourceCentreRatio },
-						heading: sourceCentreRatio,
-					};
-				} else {
-					source = calcEndAnchor(
-						sourceBounds,
-						sourceSide,
-						centreOf(targetBounds),
-						sourceAlone,
-						direction,
-					);
-					target = calcEndAnchor(
-						targetBounds,
-						targetSide,
-						centreOf(sourceBounds),
-						targetAlone,
-						direction,
-					);
-				}
-			} else {
-				// Each end meets the slot column the edge travels in next to it.
-				source = calcEndAnchor(
-					sourceBounds,
-					sourceSide,
-					slotColumns[0],
-					sourceAlone,
-					direction,
-				);
-				target = calcEndAnchor(
-					targetBounds,
-					targetSide,
-					slotColumns[slotColumns.length - 1],
-					targetAlone,
-					direction,
-				);
-			}
-			return {
-				edge,
-				source: source.anchor,
-				target: target.anchor,
-				sourceHeading: source.heading,
-				targetHeading: target.heading,
-				sourceBounds,
-				targetBounds,
-				dagrePoints,
-				isAdjacent: slotColumns.length === 0,
-				labelPositionOverride: undefined as number | undefined,
-				// Where dagre put the label: a spot on its own polyline, which the
-				// right-angled route passes through or beside.
-				labelPoint:
-					edge.label !== undefined &&
-					routed.x !== undefined &&
-					routed.y !== undefined
-						? { x: routed.x - originX, y: routed.y - originY }
-						: undefined,
-			};
-		},
-	);
-
-	// Edges joining the same two boxes in neighbouring ranks would land on one column;
-	// slide each sideways by a share of the bundle's width, labels included, so they
-	// run side by side.
-	const bundles = new Map<string, typeof anchoredEdges>();
-	for (const anchored of anchoredEdges) {
-		if (!anchored.isAdjacent) {
-			continue;
-		}
-		const key = [anchored.edge.sourceId, anchored.edge.targetId]
-			.sort()
-			.join("\u0000");
-		const bundle = bundles.get(key);
-		if (bundle === undefined) {
-			bundles.set(key, [anchored]);
-		} else {
-			bundle.push(anchored);
-		}
-	}
-	const labelExtentOf = (edge: LayoutGraphEdge): number => {
-		if (edge.label === undefined) {
-			return 0;
-		}
-		return isVerticalFlow(direction) ? edge.label.width : edge.label.height;
-	};
-	for (const bundle of bundles.values()) {
-		if (bundle.length < 2) {
-			continue;
-		}
-		const offsets: number[] = [0];
-		for (let index = 1; index < bundle.length; index += 1) {
-			offsets.push(
-				offsets[index - 1] +
-					Math.max(
-						EDGE_BUNDLE_SPACING,
-						(labelExtentOf(bundle[index - 1].edge) +
-							labelExtentOf(bundle[index].edge)) /
-							2 +
-							EDGE_BUNDLE_SPACING / 2,
-					),
-			);
-		}
-		// The stack has to fit the shorter of the two sides, with a margin at each end.
-		const sideExtent = (bounds: Rect): number =>
-			isVerticalFlow(direction) ? bounds.width : bounds.height;
-		const usable =
-			BUNDLE_SIDE_SHARE *
-			Math.min(
-				sideExtent(bundle[0].sourceBounds),
-				sideExtent(bundle[0].targetBounds),
-			);
-		const span = offsets[offsets.length - 1];
-		const scale = span > usable ? usable / span : 1;
-		const centre = span / 2;
-		const labelled = bundle.filter(({ edge }) => edge.label !== undefined);
-		bundle.forEach((anchored, index) => {
-			const shift = (offsets[index] - centre) * scale;
-			// Labels of parallel lines are staggered along them, so they do not stack.
-			if (labelled.length > 1 && anchored.edge.label !== undefined) {
-				const rank = labelled.indexOf(anchored);
-				const position = clampRatio(
-					0.5 + (rank - (labelled.length - 1) / 2) * BUNDLE_LABEL_STAGGER,
-					BUNDLE_LABEL_RANGE,
-				);
-				// A position is measured from the edge's own source, so an edge running
-				// the other way takes the mirror image to land beside the others.
-				anchored.labelPositionOverride =
-					anchored.edge.sourceId === bundle[0].edge.sourceId
-						? position
-						: 1 - position;
-			}
-			const shiftAnchor = (
-				anchor: LayoutEdgeAnchor,
-				bounds: Rect,
-			): LayoutEdgeAnchor => ({
-				side: anchor.side,
-				t: clampRatio(
-					anchor.t +
-						shift / (isVerticalFlow(direction) ? bounds.width : bounds.height),
-					{ min: 0, max: 1 },
-				),
-			});
-			anchored.source = shiftAnchor(anchored.source, anchored.sourceBounds);
-			anchored.target = shiftAnchor(anchored.target, anchored.targetBounds);
-		});
-	}
-
-	// Ends that landed within EDGE_END_SPACING of each other on one side are pushed
-	// apart, in the order of where their edges are headed (see spreadSideEnds).
-	type SideEndRef = {
-		anchored: (typeof anchoredEdges)[number];
-		end: "source" | "target";
-	};
-	const endsBySide = new Map<string, SideEndRef[]>();
-	for (const anchored of anchoredEdges) {
-		for (const end of ["source", "target"] as const) {
-			const nodeId =
-				end === "source" ? anchored.edge.sourceId : anchored.edge.targetId;
-			const key = sideKey(nodeId, anchored[end].side);
-			const ends = endsBySide.get(key);
-			if (ends === undefined) {
-				endsBySide.set(key, [{ anchored, end }]);
-			} else {
-				ends.push({ anchored, end });
-			}
-		}
-	}
-	for (const refs of endsBySide.values()) {
-		if (refs.length < 2) {
-			continue;
-		}
-		const bounds =
-			refs[0].end === "source"
-				? refs[0].anchored.sourceBounds
-				: refs[0].anchored.targetBounds;
-		const spread = spreadSideEnds(
-			refs.map(({ anchored, end }) => ({
-				t: anchored[end].t,
-				heading:
-					end === "source" ? anchored.sourceHeading : anchored.targetHeading,
-			})),
-			isVerticalFlow(direction) ? bounds.width : bounds.height,
-			EDGE_END_SPACING,
-		);
-		refs.forEach(({ anchored, end }, index) => {
-			anchored[end] = { side: anchored[end].side, t: spread[index] };
-		});
-	}
-
-	const routedEdges = anchoredEdges.map((anchored) => ({
-		...anchored,
-		path: calcOrthogonalPath(
-			calcAnchorPoint(anchored.sourceBounds, anchored.source),
-			calcAnchorPoint(anchored.targetBounds, anchored.target),
-			anchored.dagrePoints,
-			direction,
-			isSlotRow,
-		),
-	}));
 	spreadGapLanes(
-		routedEdges.map(({ path }) => path),
-		direction,
-		rankSpacing,
-		routedEdges.map(({ edge, labelPoint }) =>
+		paths,
+		resolved.direction,
+		resolved.rankSpacing,
+		routes.map(({ edge, labelPoint }) =>
 			labelPoint !== undefined && edge.label !== undefined
 				? {
 						point: labelPoint,
-						alongExtent: isVerticalFlow(direction)
-							? edge.label.height
-							: edge.label.width,
+						alongExtent: vertical ? edge.label.height : edge.label.width,
 					}
 				: undefined,
 		),
-		[...laidOutNodes, ...laidOutContainers].map(({ bounds }) => bounds),
+		everyBox,
 	);
-	const toLabelFields = ({
-		position,
-		offset,
-	}: LabelPlacement): Pick<LaidOutEdge, "labelPosition" | "labelOffset"> => ({
-		labelPosition: position,
-		labelOffset: offset,
-	});
-	// Room for every container's title band: everything below a container's top edge, its own
-	// members first of all, moves down by the band's height, and the containers spanning
-	// that edge grow by it. Top to bottom, so a container inside another is moved by the
-	// outer band before it makes room for its own.
+
 	const titleHeightById = new Map(
 		containers.map(
 			(container) => [container.id, container.titleHeight ?? 0] as const,
 		),
 	);
 	const movablePoints = new Set<Point>();
-	for (const { path, labelPoint } of routedEdges) {
+	for (const path of paths) {
 		for (const point of path) {
 			movablePoints.add(point);
 		}
+	}
+	for (const { labelPoint } of routes) {
 		if (labelPoint !== undefined) {
 			movablePoints.add(labelPoint);
 		}
 	}
-	const movableBoxes = [...laidOutNodes, ...laidOutContainers].map(
-		({ bounds }) => bounds,
+	reserveTitleBands(
+		placed.containers.map((container) => ({
+			...container,
+			titleHeight: titleHeightById.get(container.id) ?? 0,
+		})),
+		movablePoints,
+		everyBox,
 	);
-	for (const container of [...laidOutContainers].sort(
-		(a, b) => a.bounds.y - b.bounds.y,
-	)) {
-		const titleHeight = titleHeightById.get(container.id) ?? 0;
-		if (titleHeight <= 0) {
-			continue;
-		}
-		const edgeY = container.bounds.y;
-		const isBelowEdge = (y: number): boolean =>
-			y > edgeY && !isSameCoordinate(y, edgeY);
-		for (const point of movablePoints) {
-			if (isBelowEdge(point.y)) {
-				point.y += titleHeight;
-			}
-		}
-		for (const box of movableBoxes) {
-			const bottom = box.y + box.height;
-			if (isBelowEdge(box.y)) {
-				box.y += titleHeight;
-			} else if (isBelowEdge(bottom)) {
-				box.height += titleHeight;
-			}
-		}
-	}
 
-	const laidOutEdges: LaidOutEdge[] = routedEdges.map(
-		({
-			edge,
-			source,
-			target,
+	// A bundle decided where its labels go; any other label is placed from its route.
+	const placeLabel = (
+		path: readonly Point[],
+		labelPoint: Point | undefined,
+		label: LayoutGraphEdge["label"],
+		bundlePosition: number | undefined,
+		obstacles: readonly Rect[],
+	): LabelPlacement | undefined => {
+		if (labelPoint === undefined || label === undefined) {
+			return undefined;
+		}
+		if (bundlePosition !== undefined) {
+			return { position: bundlePosition, offset: 0 };
+		}
+		return calcLabelPosition(
 			path,
 			labelPoint,
-			sourceBounds,
-			targetBounds,
-			labelPositionOverride,
-		}) => ({
-			id: edge.id,
-			source,
-			target,
+			label,
+			resolved.direction,
+			resolved.rankSpacing,
+			obstacles,
+		);
+	};
+	const laidOutEdges: LaidOutEdge[] = routes.map((route, index) => {
+		const path = paths[index];
+		const anchor = anchors[index];
+		const placement = placeLabel(
+			path,
+			route.labelPoint,
+			route.edge.label,
+			anchor.labelPosition,
+			[route.sourceBounds, route.targetBounds],
+		);
+		return {
+			id: route.edge.id,
+			source: anchor.source,
+			target: anchor.target,
 			points: path.slice(1, -1),
-			...(labelPoint !== undefined && edge.label !== undefined
-				? toLabelFields(
-						labelPositionOverride !== undefined
-							? { position: labelPositionOverride, offset: 0 }
-							: calcLabelPosition(
-									path,
-									labelPoint,
-									edge.label,
-									direction,
-									rankSpacing,
-									[sourceBounds, targetBounds],
-								),
-					)
+			...(placement !== undefined
+				? { labelPosition: placement.position, labelOffset: placement.offset }
 				: {}),
-		}),
-	);
+		};
+	});
 
 	return {
-		nodes: laidOutNodes,
+		nodes: placed.nodes,
 		edges: laidOutEdges,
-		containers: laidOutContainers,
+		containers: placed.containers,
 	};
 };

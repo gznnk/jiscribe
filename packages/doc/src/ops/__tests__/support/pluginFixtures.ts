@@ -289,3 +289,18 @@ export const regionDefinition: ObjectDocDefinition = {
 		height: 300,
 	}),
 };
+
+/**
+ * A container whose geometry is an ellipse's, so the layout can only move it, never
+ * resize it to its members. Written by hand (`cx` / `cy` / `rx` / `ry`), as it has no
+ * factory.
+ */
+export const ovalRegionDefinition: ObjectDocDefinition = {
+	features: {
+		type: "oval-region",
+		geometry: "ellipse",
+		connectable: true,
+		container: { titleHeight: 0 },
+	},
+	validateDoc: () => [],
+};
