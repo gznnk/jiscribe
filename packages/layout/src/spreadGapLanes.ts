@@ -1,6 +1,10 @@
 import type { Point } from "@jiscribe/geometry";
 
-import { type LayoutDirection, isVerticalFlow } from "./LayoutDirection";
+import {
+	type LayoutDirection,
+	isSameCoordinate,
+	isVerticalFlow,
+} from "./LayoutDirection";
 
 /** Preferred distance in px between two routes running side by side through one gap. */
 export const GAP_LANE_SPACING = 16;
@@ -88,7 +92,10 @@ const collectGapRuns = (
 		for (let index = 1; index + 2 < path.length; index += 1) {
 			const start = path[index];
 			const end = path[index + 1];
-			if (along(start) !== along(end) || across(start) === across(end)) {
+			if (
+				!isSameCoordinate(along(start), along(end)) ||
+				isSameCoordinate(across(start), across(end))
+			) {
 				continue;
 			}
 			runs.push({

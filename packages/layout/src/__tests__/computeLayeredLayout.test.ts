@@ -220,13 +220,13 @@ describe("computeLayeredLayout", () => {
 		const byId = new Map(result.edges.map((edge) => [edge.id, edge]));
 		const down = byId.get("down");
 		const back = byId.get("back");
-		// Each is still a straight line, 12px to one side of the shared column.
+		// Each is still a straight line, EDGE_BUNDLE_SPACING to one side of the shared column.
 		expect(down?.points).toEqual([]);
 		expect(back?.points).toEqual([]);
 		expect(down?.source.t).toBe(down?.target.t);
 		expect(
 			Math.abs(((down?.source.t ?? 0) - (back?.target.t ?? 0)) * 160),
-		).toBeCloseTo(12, 6);
+		).toBeCloseTo(20, 6);
 	});
 
 	it("rejects an edge naming a node that is not there", () => {

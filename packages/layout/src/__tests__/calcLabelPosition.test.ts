@@ -47,6 +47,20 @@ describe("calcLabelPosition", () => {
 		});
 	});
 
+	it("passes over a spot whose box would touch one of the boxes the edge joins", () => {
+		// The run at y = 50 holds the 40px label, but a box sits right under it; the
+		// label moves to the first vertical segment instead.
+		const placement = calcLabelPosition(
+			path,
+			{ x: 50, y: 50 },
+			size,
+			"TB",
+			80,
+			[{ x: 30, y: 58, width: 40, height: 40 }],
+		);
+		expect(placement).toEqual({ position: 0.125, offset: 0 });
+	});
+
 	it("ignores a run in another gap", () => {
 		// The label belongs to a gap at y = 200: no run there, so the longest holding
 		// segment (the run, 100 long) takes it.

@@ -9,8 +9,13 @@ import { Graph, layout } from "@dagrejs/dagre";
 import type { Point, Rect } from "@jiscribe/geometry";
 
 import { type LabelPlacement, calcLabelPosition } from "./calcLabelPosition";
-import { type LayoutDirection, isVerticalFlow } from "./LayoutDirection";
+import {
+	type LayoutDirection,
+	isSameCoordinate,
+	isVerticalFlow,
+} from "./LayoutDirection";
 import { spreadGapLanes } from "./spreadGapLanes";
+import { spreadSideEnds } from "./spreadSideEnds";
 
 export { LayoutDirections, type LayoutDirection } from "./LayoutDirection";
 
@@ -78,8 +83,11 @@ export const EDGE_ANCHOR_STRAIGHT_RANGE = { min: 0.05, max: 0.95 } as const;
 /** How far along a side the anchors of several edges sharing it may spread. */
 export const EDGE_ANCHOR_FAN_RANGE = { min: 0.2, max: 0.8 } as const;
 
+/** Least distance in px between two edge ends on one side: room for two arrowheads. */
+export const EDGE_END_SPACING = 20;
+
 /** Least distance in px between two edges joining the same pair of boxes. */
-export const EDGE_BUNDLE_SPACING = 12;
+export const EDGE_BUNDLE_SPACING = EDGE_END_SPACING;
 
 export type LaidOutEdge = {
 	id: string;
@@ -183,21 +191,27 @@ const calcSideRatio = (
  * since a jog in the gap is then unavoidable and a centred one reads best; else
  * leaning toward the column, so the edges sharing the side fan out.
  */
+/** An end's anchor, and whether the edge runs straight out of it (so moving it would bend the edge). */
+type EndAnchor = { anchor: LayoutEdgeAnchor; isStraight: boolean };
+
 const calcEndAnchor = (
 	bounds: Rect,
 	side: LayoutSide,
 	column: number,
 	isOnlyEdgeOnSide: boolean,
 	direction: LayoutDirection,
-): LayoutEdgeAnchor => {
+): EndAnchor => {
 	const ratio = calcSideRatio(bounds, column, direction);
 	if (isWithin(ratio, EDGE_ANCHOR_STRAIGHT_RANGE)) {
-		return { side, t: ratio };
+		return { anchor: { side, t: ratio }, isStraight: true };
 	}
 	if (isOnlyEdgeOnSide) {
-		return { side, t: 0.5 };
+		return { anchor: { side, t: 0.5 }, isStraight: false };
 	}
-	return { side, t: clampRatio(ratio, EDGE_ANCHOR_FAN_RANGE) };
+	return {
+		anchor: { side, t: clampRatio(ratio, EDGE_ANCHOR_FAN_RANGE) },
+		isStraight: false,
+	};
 };
 
 /**
@@ -222,8 +236,12 @@ const dropCollinearPoints = (path: readonly Point[]): Point[] =>
 		}
 		const previous = path[index - 1];
 		const next = path[index + 1];
-		const sameColumn = previous.x === point.x && point.x === next.x;
-		const sameRow = previous.y === point.y && point.y === next.y;
+		const sameColumn =
+			isSameCoordinate(previous.x, point.x) &&
+			isSameCoordinate(point.x, next.x);
+		const sameRow =
+			isSameCoordinate(previous.y, point.y) &&
+			isSameCoordinate(point.y, next.y);
 		return !(sameColumn || sameRow);
 	});
 
@@ -398,8 +416,8 @@ export const computeLayeredLayout = (
 			const slotColumns = readSlotColumns(dagrePoints, direction);
 			const sourceAlone = isOnlyEdgeOnSide(edge.sourceId, sourceSide);
 			const targetAlone = isOnlyEdgeOnSide(edge.targetId, targetSide);
-			let source: LayoutEdgeAnchor;
-			let target: LayoutEdgeAnchor;
+			let source: EndAnchor;
+			let target: EndAnchor;
 			if (slotColumns.length === 0) {
 				// Boxes in neighbouring ranks: one straight line when either centre crosses
 				// the other side and that other side is not shared, else each end on its own.
@@ -417,14 +435,20 @@ export const computeLayeredLayout = (
 					targetAlone &&
 					isWithin(targetCentreRatio, EDGE_ANCHOR_STRAIGHT_RANGE)
 				) {
-					source = { side: sourceSide, t: targetCentreRatio };
-					target = { side: targetSide, t: 0.5 };
+					source = {
+						anchor: { side: sourceSide, t: targetCentreRatio },
+						isStraight: true,
+					};
+					target = { anchor: { side: targetSide, t: 0.5 }, isStraight: true };
 				} else if (
 					sourceAlone &&
 					isWithin(sourceCentreRatio, EDGE_ANCHOR_STRAIGHT_RANGE)
 				) {
-					source = { side: sourceSide, t: 0.5 };
-					target = { side: targetSide, t: sourceCentreRatio };
+					source = { anchor: { side: sourceSide, t: 0.5 }, isStraight: true };
+					target = {
+						anchor: { side: targetSide, t: sourceCentreRatio },
+						isStraight: true,
+					};
 				} else {
 					source = calcEndAnchor(
 						sourceBounds,
@@ -460,8 +484,10 @@ export const computeLayeredLayout = (
 			}
 			return {
 				edge,
-				source,
-				target,
+				source: source.anchor,
+				target: target.anchor,
+				sourceStraight: source.isStraight,
+				targetStraight: target.isStraight,
 				sourceBounds,
 				targetBounds,
 				dagrePoints,
@@ -533,6 +559,43 @@ export const computeLayeredLayout = (
 		});
 	}
 
+	// Ends that landed within EDGE_END_SPACING of each other on one side are pushed
+	// apart (see spreadSideEnds).
+	type SideEndRef = {
+		anchored: (typeof anchoredEdges)[number];
+		end: "source" | "target";
+	};
+	const endsBySide = new Map<string, SideEndRef[]>();
+	for (const anchored of anchoredEdges) {
+		for (const end of ["source", "target"] as const) {
+			const nodeId =
+				end === "source" ? anchored.edge.sourceId : anchored.edge.targetId;
+			const key = sideKey(nodeId, anchored[end].side);
+			endsBySide.set(key, [...(endsBySide.get(key) ?? []), { anchored, end }]);
+		}
+	}
+	for (const refs of endsBySide.values()) {
+		if (refs.length < 2) {
+			continue;
+		}
+		const bounds =
+			refs[0].end === "source"
+				? refs[0].anchored.sourceBounds
+				: refs[0].anchored.targetBounds;
+		const spread = spreadSideEnds(
+			refs.map(({ anchored, end }) => ({
+				t: anchored[end].t,
+				isStraight:
+					end === "source" ? anchored.sourceStraight : anchored.targetStraight,
+			})),
+			isVerticalFlow(direction) ? bounds.width : bounds.height,
+			EDGE_END_SPACING,
+		);
+		refs.forEach(({ anchored, end }, index) => {
+			anchored[end] = { side: anchored[end].side, t: spread[index] };
+		});
+	}
+
 	const routedEdges = anchoredEdges.map((anchored) => ({
 		...anchored,
 		path: calcOrthogonalPath(
@@ -565,7 +628,15 @@ export const computeLayeredLayout = (
 		labelOffset: offset,
 	});
 	const laidOutEdges: LaidOutEdge[] = routedEdges.map(
-		({ edge, source, target, path, labelPoint }) => ({
+		({
+			edge,
+			source,
+			target,
+			path,
+			labelPoint,
+			sourceBounds,
+			targetBounds,
+		}) => ({
 			id: edge.id,
 			source,
 			target,
@@ -578,6 +649,7 @@ export const computeLayeredLayout = (
 							edge.label,
 							direction,
 							rankSpacing,
+							[sourceBounds, targetBounds],
 						),
 					)
 				: {}),
