@@ -27,17 +27,28 @@ covers that.
   in a directory that exists; an image already there is replaced, but a name
   ending in `.jis.png` / `.jis.svg` is refused. Like `capture_canvas`, it
   needs a viewer.
-- **`connect` and `connect_many` place the label they draw.** They take
-  `labelPosition` and `labelOffset` as `update_connector` does, so a label
-  lands where it should without a second call. Either one needs `label` text
-  in the same call.
-- **`set_style`, `connect` and `update_connector` size the arrowheads.** They
-  (and `connect_many` / `update_connectors`) take `arrowScale`, the factor on
-  both heads of a polyline or connector (0.2 to 4, omitted = 1); a value outside
-  the range is refused. `measure_visual_bounds` now counts the heads in.
+- **`connect_many` places the label it draws.** An entry takes
+  `labelPosition` and `labelOffset` as an `update_connectors` entry does, so a
+  label lands where it should without a second call. Either one needs `label`
+  text in the same entry.
+- **`set_style`, `connect_many` and `update_connectors` size the arrowheads.**
+  They take `arrowScale`, the factor on both heads of a polyline or connector
+  (0.2 to 4, omitted = 1); a value outside the range is refused.
+  `measure_visual_bounds` now counts the heads in.
 
 ### Changed
 
+- **Breaking: `resize_objects` takes one entry per object.** It takes
+  `entries: [{ id, width?, height? }]` in place of one `ids` list sharing one
+  `width` / `height`, so each object gets a size of its own; to even several up,
+  give every entry the same value. An id may appear only once, a group and an
+  object inside it cannot be named together, an entry naming neither axis
+  leaves that object as it is, and one refused entry still leaves every object
+  unresized. The reply names each object with its new size.
+- **Breaking: `add_ellipse` is now `add_ellipses`.** It takes
+  `entries: [{ cx, cy, rx?, ry?, text? }]` beside `path`, adds every entry in
+  one write that one `undo` takes back, and replies with each new id and the
+  centre it was placed at.
 - **The Icon and AWS sections of the shape library can show every icon.**
   **Show all ›** under either section opens all of it: the AWS icons in one
   section per AWS category, Compute first, and the Lucide icons in one section
@@ -66,6 +77,21 @@ covers that.
 
 ### Removed
 
+- **Breaking: the single-object tools are gone; their batch forms take one
+  entry as well as many.** Use instead:
+  - `add_object` → `add_objects`
+  - `connect` → `connect_many`
+  - `set_position` → `set_positions`
+  - `resize_object` → `resize_objects`
+  - `set_points` → `set_points_many`
+  - `set_text` → `set_texts`
+  - `set_text_style` → `set_text_styles`
+  - `update_connector` → `update_connectors`
+  - `dissolve_group` → `dissolve_groups`
+  - `add_rect` → `add_objects` with `type: "rect"`. An entry giving no `width` /
+    `height` takes the rect's own default of 100 x 100, not the 160 x 80
+    `add_rect` gave
+  - `add_ellipse` → `add_ellipses` (see Changed)
 - **A placed icon no longer offers to change its icon.** The floating menu's
   icon picker and the properties sidebar's Icon section are gone for AWS and
   Lucide icons; place the icon you want from the shape library instead. The
@@ -81,7 +107,7 @@ covers that.
   (and still without creating it), so a file that does not parse no longer
   stops it either; the `path` is checked as before.
 - **A document tool on a file that does not exist yet points at `open_canvas`.**
-  `get_object`, `add_rect`, `diagnose_canvas` and the rest of the tools that
+  `get_object`, `add_objects`, `diagnose_canvas` and the rest of the tools that
   take a `path` passed the raw `ENOENT` through; now the error says the file
   does not exist yet and that `open_canvas` creates it as an empty canvas.
 - **Panning or area-selecting through a file switch is no longer reported as a

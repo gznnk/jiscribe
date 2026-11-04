@@ -72,10 +72,9 @@ test("keeps both a drag and a tool's write to another object", async ({
 		x: from.x + DRAG_DELTA.x,
 		y: from.y + DRAG_DELTA.y,
 	});
-	const moved = await mcp.callTool("set_position", {
+	const moved = await mcp.callTool("set_positions", {
 		path: filePath,
-		id: SECOND_RECT.id,
-		...TOOL_POSITION,
+		entries: [{ id: SECOND_RECT.id, ...TOOL_POSITION }],
 	});
 	expect(moved.text).not.toContain("error:");
 	releaseWrites();
@@ -116,10 +115,9 @@ test("lets a tool's write win over a drag of the same object, and says so", asyn
 		x: from.x + DRAG_DELTA.x,
 		y: from.y + DRAG_DELTA.y,
 	});
-	const moved = await mcp.callTool("set_position", {
+	const moved = await mcp.callTool("set_positions", {
 		path: filePath,
-		id: SINGLE_RECT.id,
-		...TOOL_POSITION,
+		entries: [{ id: SINGLE_RECT.id, ...TOOL_POSITION }],
 	});
 	expect(moved.text).not.toContain("error:");
 	releaseWrites();
@@ -163,10 +161,9 @@ test("the notice of a change lost to a tool's write goes on its own", async ({
 		x: from.x + DRAG_DELTA.x,
 		y: from.y + DRAG_DELTA.y,
 	});
-	const moved = await mcp.callTool("set_position", {
+	const moved = await mcp.callTool("set_positions", {
 		path: filePath,
-		id: SINGLE_RECT.id,
-		...TOOL_POSITION,
+		entries: [{ id: SINGLE_RECT.id, ...TOOL_POSITION }],
 	});
 	expect(moved.text).not.toContain("error:");
 	releaseWrites();

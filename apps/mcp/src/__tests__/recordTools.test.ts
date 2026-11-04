@@ -1,5 +1,5 @@
 // The record's tool as the shipped server offers it: the real standard set,
-// nothing mocked, so a record add_object placed is given compartments through the
+// nothing mocked, so a record add_objects placed is given compartments through the
 // host's own path (createCanvasToolSet + applyCanvasOp) and diagnosed in the same
 // file.
 
@@ -24,17 +24,15 @@ afterAll(async () => {
 });
 
 describe("record_set_compartments", () => {
-	it("gives a record add_object placed its operations, fitted so diagnose_canvas passes it, and a box shrunk by hand is reported", async () => {
+	it("gives a record add_objects placed its operations, fitted so diagnose_canvas passes it, and a box shrunk by hand is reported", async () => {
 		const targetPath = await workspace.writeDoc("record.jis.json", {
 			version: 1,
 			root: [],
 		});
 
-		const added = await client.callTool("add_object", {
+		const added = await client.callTool("add_objects", {
 			path: targetPath,
-			type: "record",
-			x: 0,
-			y: 0,
+			objects: [{ type: "record", x: 0, y: 0 }],
 		});
 		expect(added.isError).toBe(false);
 		const recordId = (await workspace.readDoc(targetPath)).root[0]?.id;
@@ -59,10 +57,9 @@ describe("record_set_compartments", () => {
 		});
 		expect(diagnosed.text).toBe("valid: true");
 
-		const resized = await client.callTool("resize_object", {
+		const resized = await client.callTool("resize_objects", {
 			path: targetPath,
-			id: recordId,
-			height: 60,
+			entries: [{ id: recordId, height: 60 }],
 		});
 		expect(resized.isError).toBe(false);
 

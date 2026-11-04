@@ -145,7 +145,7 @@ const HEIGHT_MODES = [
 	"fixed",
 ] as const satisfies readonly AiHeightMode[];
 
-/** How the arrowheads' size is stated; set_style, connect and update_connector share it. */
+/** How the arrowheads' size is stated; set_style, connect_many and update_connectors share it. */
 const arrowScaleSchema = z
 	.number()
 	.min(ARROW_SCALE_MIN)
@@ -159,7 +159,7 @@ const arrowScaleSchema = z
 	);
 
 /**
- * The shared style vocabulary; add_object and set_style speak the same one. The
+ * The shared style vocabulary; add_objects and set_style speak the same one. The
  * typography is the one plugin tools styling text slots declare too (textSlotStyleSchema).
  * Properties a type has no place for (fill on a connector, an arrowhead on a rect,
  * a font colour on a shape without text) are dropped by docOps, which says so in the
@@ -207,7 +207,7 @@ const styleSchema = {
 		.enum(ArrowTypes)
 		.optional()
 		.describe(
-			"Arrowhead at the start of the line. Only for polyline and connector; no other type takes it. A connector's arrowheads can also be set as it is drawn, by connect.",
+			"Arrowhead at the start of the line. Only for polyline and connector; no other type takes it. A connector's arrowheads can also be set as it is drawn, by connect_many.",
 		),
 	endArrow: z
 		.enum(ArrowTypes)
@@ -261,7 +261,7 @@ const labelPlacementSchema = {
 		),
 };
 
-/** The endpoints and options one connector is drawn with; connect and connect_many share them. */
+/** The endpoints and options one connector is drawn with: one connect_many entry. */
 const connectorDrawSchema = {
 	sourceId: z
 		.string()
@@ -322,7 +322,7 @@ const connectorDrawSchema = {
 		),
 };
 
-/** The changes one existing connector takes; update_connector and update_connectors share them. */
+/** The changes one existing connector takes: one update_connectors entry. */
 const connectorChangeSchema = {
 	sourceId: z
 		.string()
@@ -406,7 +406,7 @@ const regionSchema = {
  * surfaces as the docOps error carried back in the tool result.
  *
  * @param capabilities - The shape types to name in the schemas. null means "not
- *   received yet", which makes the add_object type a free string instead of an enum
+ *   received yet", which makes the add_objects type a free string instead of an enum
  * @returns The descriptors in the order the model sees them; read-only tools first
  */
 export const createCanvasToolDescriptors = (
@@ -456,7 +456,7 @@ export const createCanvasToolDescriptors = (
 				.union([z.string(), z.array(z.string()).min(1)])
 				.optional()
 				.describe(
-					'Keep only these types, one name or several ("rect", ["rect", "ellipse"]); omit to keep every type. Names are the ones add_object takes, which list_types spells out.',
+					'Keep only these types, one name or several ("rect", ["rect", "ellipse"]); omit to keep every type. Names are the ones add_objects takes, which list_types spells out.',
 				),
 			text: z
 				.string()
@@ -498,7 +498,7 @@ export const createCanvasToolDescriptors = (
 	const getObjectBoundsTool = defineCanvasTool(
 		"get_object_bounds",
 		[
-			"Measure the box one object occupies, in world coordinates: the same top-left form add_object takes and set_position writes back, so the numbers go straight back into your next call.",
+			"Measure the box one object occupies, in world coordinates: the same top-left form add_objects takes and set_positions writes back, so the numbers go straight back into your next call.",
 			"Rotation is ignored — it turns a shape about its own centre, and this is the untransformed box every placement op works on.",
 			"A group is measured from what it holds, which is the one way to get its extent.",
 			"Objects that cannot be measured (a connector, which follows the objects it joins; a group holding nothing) say so rather than failing.",
@@ -515,7 +515,7 @@ export const createCanvasToolDescriptors = (
 		"get_combined_bounds",
 		[
 			"Measure the single box several objects occupy together, or the whole drawing when ids are omitted.",
-			"Omitting ids is how you find out how far the canvas already reaches, so you can place new content past its edge instead of guessing — read the box, then add_object beyond its right or bottom edge.",
+			"Omitting ids is how you find out how far the canvas already reaches, so you can place new content past its edge instead of guessing — read the box, then add_objects beyond its right or bottom edge.",
 			"Ids that contribute nothing (a connector, an empty group) are simply skipped, and a set that contributes nothing at all says so rather than failing; an id that is not on the canvas is an error.",
 			"Rotation is ignored, as in get_object_bounds.",
 		].join(" "),
@@ -535,7 +535,7 @@ export const createCanvasToolDescriptors = (
 	const getTextTool = defineCanvasTool(
 		"get_text",
 		[
-			"Read one object's text as plain characters: inline styling dropped and rows joined by newlines, which is what set_text would take back.",
+			"Read one object's text as plain characters: inline styling dropped and rows joined by newlines, which is what set_texts would take back.",
 			"Use it to check a label you are about to rewrite, and to read a text too long for the list_objects summary to be worth trusting.",
 			"On a connector this reads the label drawn on the line.",
 			"An object whose text is empty says so; a type that holds no text at all is an error, as is an unknown slot.",
@@ -586,7 +586,7 @@ export const createCanvasToolDescriptors = (
 		[
 			"List what a group holds directly, in drawing order, back to front.",
 			"Only its own children come back: a nested group is named as one id, and what that group holds is read by asking for it in turn.",
-			"Use it to work out what dissolve_group would release, and what a resize_object on the group would scale.",
+			"Use it to work out what dissolve_groups would release, and what resize_objects would scale along with the group.",
 			"Fails when the id is not on the canvas or names something that is not a group.",
 		].join(" "),
 		{
@@ -600,7 +600,7 @@ export const createCanvasToolDescriptors = (
 		"get_connectors",
 		[
 			"List the connectors with an end on this object, in drawing order.",
-			"This is how you find the line to re-route or re-label with update_connector without reading the whole drawing, and how you know what delete_objects would take with the object.",
+			"This is how you find the line to re-route or re-label with update_connectors without reading the whole drawing, and how you know what delete_objects would take with the object.",
 			"Only the ids come back; pass one to get_object for its endpoints, arrowheads and route, or to measure_connector_path for where it is actually drawn.",
 			"An object with nothing attached says so, which is an answer and not a failure.",
 		].join(" "),
@@ -629,10 +629,10 @@ export const createCanvasToolDescriptors = (
 	const listTypesTool = defineCanvasTool(
 		"list_types",
 		[
-			"List every object type this canvas knows and what each one can be asked to do: whether add_object can create it, whether connect may put an endpoint on it, what text it carries (one body, named slots, or none) and how its shape is stored.",
-			'The geometry answers which ops apply: only a poly type takes set_points, and a type stored as a point takes its size from its content rather than from add_object or resize_object, which refuse a width or height for it. What lays that content out is its own properties (extraProps); the one exception is a text in textLayout "block", which takes the width it wraps in.',
+			"List every object type this canvas knows and what each one can be asked to do: whether add_objects can create it, whether connect_many may put an endpoint on it, what text it carries (one body, named slots, or none) and how its shape is stored.",
+			'The geometry answers which ops apply: only a poly type takes set_points_many, and a type stored as a point takes its size from its content rather than from add_objects or resize_objects, which refuse a width or height for it. What lays that content out is its own properties (extraProps); the one exception is a text in textLayout "block", which takes the width it wraps in.',
 			"A type a plugin offers tools of its own for lists their names under tools: those tools are how to read and edit what the generic ops do not reach on it, such as texts kept in fields of its own.",
-			"Read it when a call was refused for the type rather than the arguments, and before writing a named slot with set_text.",
+			"Read it when a call was refused for the type rather than the arguments, and before writing a named slot with set_texts.",
 			"It describes the canvas rather than the drawing, so it answers the same on an empty one.",
 		].join(" "),
 		{},
@@ -640,8 +640,7 @@ export const createCanvasToolDescriptors = (
 		{ isReadOnly: true, drives: ["docOps.listTypes"] },
 	);
 
-	// add_object and one entry of add_objects speak the same vocabulary. Build the
-	// schema once here so the two cannot drift apart
+	// One add_objects entry: its type, then everything else the new object is made with
 	const objectTypeSchema =
 		firstType === undefined
 			? z.string().describe("Object type to add, e.g. rect / ellipse.")
@@ -692,7 +691,7 @@ export const createCanvasToolDescriptors = (
 			.string()
 			.optional()
 			.describe(
-				'Label text inside the object. Only for shapes with a single text body: a type keeping named texts (list_types shows text "slots") rejects a plain string — record keeps its title and rows in keyed text slots, so use set_text there, and a type keeping its texts in properties of its own rather than slots takes them through extraProps, as its entry in the drawing guide names them; and a type holding no text at all (polygon, polyline, lucideIcon — list_types shows text null) refuses it, so label it with a neighbouring shape.',
+				'Label text inside the object. Only for shapes with a single text body: a type keeping named texts (list_types shows text "slots") rejects a plain string — record keeps its title and rows in keyed text slots, so use set_texts there, and a type keeping its texts in properties of its own rather than slots takes them through extraProps, as its entry in the drawing guide names them; and a type holding no text at all (polygon, polyline, lucideIcon — list_types shows text null) refuses it, so label it with a neighbouring shape.',
 			),
 		points: z
 			.array(pointSchema)
@@ -703,7 +702,7 @@ export const createCanvasToolDescriptors = (
 					"Vertices in world coordinates, in drawing order; polygon and polyline only. A polygon closes itself, so never repeat the first vertex; it needs 3 vertices, a polyline 2.",
 					"These decide where the shape sits and how big it is, so x / y / width / height are ignored outright — x and y are still required by this schema, so pass the top-left of the vertices and let the vertices do the work.",
 					"Omitting them leaves the type's own outline: a regular pentagon for a polygon, a horizontal segment for a polyline.",
-					"This is how you draw a shape the built-in types do not cover; set_points reshapes it afterwards.",
+					"This is how you draw a shape the built-in types do not cover; set_points_many reshapes it afterwards.",
 				].join(" "),
 			),
 		rotation: z
@@ -725,27 +724,15 @@ export const createCanvasToolDescriptors = (
 		...styleSchema,
 	};
 
-	const addObjectTool = defineCanvasTool(
-		"add_object",
-		[
-			"Add one object to the canvas; placing several at once is add_objects instead.",
-			"x / y are the top-left corner of the object's bounding box, in px; +x is right and +y is down.",
-			"Omitting width / height uses the shape's own default size, which is written into the document like any other; autoHeight is how a shape is instead left to be as tall as its text.",
-			"Style it here rather than in a second call, but only with styling the type actually has: a property outside its features (a corner radius on an ellipse, a font size on a shape holding no text) is refused, and the error names the ones it does take.",
-			"Returns the new object id, which you need for connect and every edit.",
-		].join(" "),
-		{ type: objectTypeSchema, ...newObjectSchema },
-		(args) => ({ kind: "addObject", ...args }),
-		{ drives: ["docOps.addObject"] },
-	);
-
 	const addObjectsTool = defineCanvasTool(
 		"add_objects",
 		[
-			"Add many objects in one call. Use this for every layout with more than one shape, instead of calling add_object again and again.",
-			"Each entry takes exactly what add_object takes, and the objects are created in the order given.",
-			"All or nothing: if one entry is rejected nothing is added at all, and the error names the index that failed.",
-			"Returns the new ids in that same order, which you need for connect and every edit.",
+			"Add objects to the canvas, one or many in a single call; put every shape of a layout in the same call.",
+			"x / y are the top-left corner of each object's bounding box, in px; +x is right and +y is down.",
+			"Omitting width / height uses the shape's own default size, which is written into the document like any other; autoHeight is how a shape is instead left to be as tall as its text.",
+			"Style each object in its own entry rather than in a second call, but only with styling the type actually has: a property outside its features (a corner radius on an ellipse, a font size on a shape holding no text) is refused, and the error names the ones it does take.",
+			"The objects are created in the order given. All or nothing: if one entry is rejected nothing is added at all, and the error names the index that failed.",
+			"Returns the new ids in that same order, which you need for connect_many and every edit.",
 		].join(" "),
 		{
 			objects: z
@@ -782,28 +769,17 @@ export const createCanvasToolDescriptors = (
 			? ""
 			: ` Connectable types: ${capabilities.connectableObjectTypes.join(", ")}.`;
 
-	const connectTool = defineCanvasTool(
-		"connect",
-		[
-			`Join two existing objects with a connector.${connectableNote}`,
-			'Anchoring both ends to "center" gives a straight line; edge anchors give an orthogonal route and are what keeps a line from cutting across a shape.',
-			'This is also how you draw a free path: routing "straight" plus points makes one connector run through every corner you name — a chart line, a bracket, a route around obstacles.',
-			"One end may stand at a bare coordinate instead of an object (sourcePoint / targetPoint), but never both: a line attached to nothing is a polyline, so add_object a polyline with points for that.",
-			"Use update_connector afterwards to re-route or re-attach it.",
-		].join(" "),
-		{ ...connectorDrawSchema },
-		(args) => ({ kind: "connect", ...args }),
-		{ drives: ["docOps.connect"] },
-	);
-
 	const connectManyTool = defineCanvasTool(
 		"connect_many",
 		[
-			"Draw many connectors in one call: the batch form of connect, each entry taking exactly what connect takes — the two ends, their anchors, arrowheads, label and its placement, and route.",
-			"This is the second half of building a diagram: add_objects for every node, then this for every edge between them, instead of calling connect once per line.",
+			`Join existing objects with connectors, one or many in a single call; each entry names the two ends, their anchors, arrowheads, label and its placement, and route.${connectableNote}`,
+			'Anchoring both ends to "center" gives a straight line; edge anchors give an orthogonal route and are what keeps a line from cutting across a shape.',
+			'This is also how you draw a free path: routing "straight" plus points makes one connector run through every corner you name — a chart line, a bracket, a route around obstacles.',
+			"One end may stand at a bare coordinate instead of an object (sourcePoint / targetPoint), but never both: a line attached to nothing is a polyline, so add a polyline with points through add_objects for that.",
+			"This is the second half of building a diagram: add_objects for every node, then one call here for every edge between them.",
 			"Endpoints are resolved against the canvas as it already stands, so an object created in the same turn has to be added before this call, never inside it.",
-			"All or nothing: if one entry is rejected nothing is drawn at all, and the error names the entry that failed — a guarantee a loop of connect calls cannot give you, since it would leave the lines it already drew behind.",
-			"Returns the new connector ids in the order given.",
+			"All or nothing: if one entry is rejected nothing is drawn at all, and the error names the entry that failed, so a rejected call never leaves some of the lines drawn.",
+			"Returns the new connector ids in the order given. Use update_connectors afterwards to re-route or re-attach them.",
 		].join(" "),
 		{
 			entries: z
@@ -825,24 +801,13 @@ export const createCanvasToolDescriptors = (
 		{ drives: ["docOps.deleteObjects"] },
 	);
 
-	const setPositionTool = defineCanvasTool(
-		"set_position",
-		"Move one object so its bounding box starts at the given top-left. Give at least one of x / y; the axis you leave out stays where it is. Connectors attached to it follow on their own.",
-		{
-			id: z.string().describe("id of the object to move."),
-			x: z.number().optional().describe("New top-left x in px."),
-			y: z.number().optional().describe("New top-left y in px."),
-		},
-		(args) => ({ kind: "setPosition", ...args }),
-		{ drives: ["docOps.setPosition"] },
-	);
-
 	const setPositionsTool = defineCanvasTool(
 		"set_positions",
 		[
-			"Move many objects to places of their own: the batch form of set_position, each entry carrying an absolute top-left exactly as set_position does.",
-			"This is how a layout you worked out yourself is applied — every box lands at the coordinates you computed, in one call and one undo step, instead of a set_position per shape.",
-			"An omitted axis leaves that object where it is, per entry. To shift a cluster while keeping the spacing inside it, use translate_objects, which takes one delta for all of them.",
+			"Move objects so each one's bounding box starts at a top-left of its own, one or many in a single call.",
+			"This is how a layout you worked out yourself is applied — every box lands at the coordinates you computed, in one call and one undo step.",
+			"An omitted axis leaves that object where it is, and an entry naming neither axis moves nothing. Connectors attached to a moved object follow on their own.",
+			"To shift a cluster while keeping the spacing inside it, use translate_objects, which takes one delta for all of them.",
 			"All or nothing: if one entry is rejected nothing moves at all, and the error names the entry that failed — so the drawing is never left half re-laid-out.",
 		].join(" "),
 		{
@@ -875,43 +840,37 @@ export const createCanvasToolDescriptors = (
 		{ drives: ["docOps.translateObjects"] },
 	);
 
-	const resizeObjectTool = defineCanvasTool(
-		"resize_object",
-		'Resize one object, keeping its top-left corner. Give at least one of width / height. A group scales its children with it. A type stored as a point is refused, its box being measured from its content (set_extra_props changes what lays it out); a text in textLayout "block" is the one exception, taking a width alone (the width it wraps in) and never a height.',
-		{
-			id: z.string().describe("id of the object to resize."),
-			width: z.number().min(1).optional().describe("New width in px."),
-			height: z.number().min(1).optional().describe("New height in px."),
-		},
-		(args) => ({ kind: "resizeObject", ...args }),
-		{ drives: ["docOps.resizeObject"] },
-	);
-
 	const resizeObjectsTool = defineCanvasTool(
 		"resize_objects",
 		[
-			"Give many objects one and the same size, each keeping its own top-left corner — how a row of boxes is evened up to a common width.",
-			"Its arguments are shaped unlike the other batch tools: one ids list and one width / height for all of them, the way set_style hands one style to every id. There is no size per object here; for that, call resize_object per object.",
-			"An omitted axis keeps each object's current extent, so passing width alone leaves the heights as varied as they were.",
-			"A group scales its children with it, as in resize_object.",
-			"All or nothing: if one id is rejected — missing, or an object with no size of its own — nothing is resized at all, and the error names the id that failed.",
+			"Resize objects, one or many in a single call, each to a size of its own and each keeping its own top-left corner.",
+			"An omitted axis keeps that object's current extent, and an entry naming neither axis leaves that object's size as it is. To even a row of boxes up to a common width, give every entry the same width.",
+			"A group scales its children with it, so a group and an object inside it cannot be named in the same call.",
+			'A type stored as a point is refused, its box being measured from its content (set_extra_props changes what lays it out); a text in textLayout "block" is the one exception, taking a width alone (the width it wraps in) and never a height.',
+			"An id may appear only once; put both axes of one object in a single entry.",
+			"All or nothing: if one entry is rejected — a missing id, or an object with no size of its own — nothing is resized at all, and the error names the entry that failed.",
 		].join(" "),
 		{
-			ids: z.array(z.string()).min(1).describe("ids to resize to one size."),
-			width: z
-				.number()
+			entries: z
+				.array(
+					z
+						.object({
+							id: z.string().describe("id of the object to resize."),
+							width: z
+								.number()
+								.min(1)
+								.optional()
+								.describe("New width in px; omit to keep the current width."),
+							height: z
+								.number()
+								.min(1)
+								.optional()
+								.describe("New height in px; omit to keep the current height."),
+						})
+						.strict(),
+				)
 				.min(1)
-				.optional()
-				.describe(
-					"New width in px, shared by every id; omit to keep each object's own width.",
-				),
-			height: z
-				.number()
-				.min(1)
-				.optional()
-				.describe(
-					"New height in px, shared by every id; omit to keep each object's own height.",
-				),
+				.describe("The size each object takes, one entry per object."),
 		},
 		(args) => ({ kind: "resizeObjects", ...args }),
 		{ drives: ["docOps.resizeObjects"] },
@@ -922,7 +881,7 @@ export const createCanvasToolDescriptors = (
 		[
 			'Switch objects between a height the document states and one that follows the text inside them: "auto" takes the height out of the document, so the shape is exactly as tall as its wrapped text needs and stays so as the text is edited; "fixed" gives it a stated height again, the one you pass.',
 			'Only box shapes that hold one body of text inside their box take this (rect and the like; not ellipse, not a shape labelled outside its outline, and a few types opt out even so — markdown, container), and naming another is refused rather than skipped. "fixed" needs height; without one the call is refused.',
-			"Use it when a label turned out to overflow its box, instead of guessing a taller box: the shape then sizes itself. add_object takes autoHeight to create it that way in the first place.",
+			"Use it when a label turned out to overflow its box, instead of guessing a taller box: the shape then sizes itself. add_objects takes autoHeight to create it that way in the first place.",
 			"All or nothing: if one id is rejected nothing is switched at all.",
 		].join(" "),
 		{
@@ -964,31 +923,14 @@ export const createCanvasToolDescriptors = (
 		{ drives: ["docOps.setRotation"] },
 	);
 
-	const setPointsTool = defineCanvasTool(
-		"set_points",
-		[
-			"Rewrite the vertices of one polygon or polyline. A poly shape has no x / y / width / height of its own, so this is how it is moved, resized and reshaped alike.",
-			"Coordinates are world coordinates, in drawing order, and the whole outline is replaced at once — there is no way to nudge one vertex, so send the vertices you want to keep along with the ones you change.",
-			"A polygon closes itself, so never repeat the first vertex; it needs 3 vertices, a polyline 2.",
-			"A connector's points are its route rather than its shape: use update_connector for those.",
-		].join(" "),
-		{
-			id: z.string().describe("id of the polygon or polyline to reshape."),
-			points: z
-				.array(pointSchema)
-				.min(2)
-				.describe("The whole new outline, in drawing order."),
-		},
-		(args) => ({ kind: "setPoints", ...args }),
-		{ drives: ["docOps.setPoints"] },
-	);
-
 	const setPointsManyTool = defineCanvasTool(
 		"set_points_many",
 		[
-			"Rewrite the outlines of many polygons and polylines at once: the batch form of set_points, each entry giving one shape's whole new outline.",
-			"A poly shape has no x / y / width / height of its own, so this moves, resizes and reshapes every one of them together — which is what you want after recomputing a set of shapes, a chart's series or a fan of arrows.",
-			"Each entry follows set_points exactly: world coordinates in drawing order, the whole outline at once, a polygon closing itself (3 vertices, never repeating the first) and a polyline needing 2.",
+			"Rewrite the vertices of polygons and polylines, one or many in a single call, each entry giving one shape's whole new outline.",
+			"A poly shape has no x / y / width / height of its own, so this is how it is moved, resized and reshaped alike — one shape, or every one of a set you recomputed together (a chart's series, a fan of arrows).",
+			"Coordinates are world coordinates, in drawing order, and each outline is replaced whole — there is no way to nudge one vertex, so send the vertices you want to keep along with the ones you change.",
+			"A polygon closes itself, so never repeat the first vertex; it needs 3 vertices, a polyline 2.",
+			"A connector's points are its route rather than its shape: use update_connectors for those.",
 			"All or nothing: if one entry is rejected nothing is reshaped at all, and the error names the entry that failed, so the drawing never ends up with half the new geometry.",
 		].join(" "),
 		{
@@ -1173,7 +1115,7 @@ export const createCanvasToolDescriptors = (
 			"Set the properties belonging to a shape type itself: lucideIcon's `icon`, callout's `tail`, container's `headerFill` / `headerHeight`.",
 			"One object at a time, because these names belong to a single type — read the type's own schema for the names it has.",
 			"Unlike set_style nothing is silently skipped: a name the type does not have, or a value it rejects, comes back as an error with the reason, and the object is left as it was.",
-			'This is also how an existing text is moved between its layouts — `textLayout` with the `width` a "block" wraps in, always together: a `width` on a text that is not being a block is refused, nothing reading it there. A text you are about to create takes both on add_object instead, in one call.',
+			'This is also how an existing text is moved between its layouts — `textLayout` with the `width` a "block" wraps in, always together: a `width` on a text that is not being a block is refused, nothing reading it there. A text you are about to create takes both on add_objects instead, in one call.',
 			'One name is shared by several types rather than belonging to a single one: `textVerticalBasis` ("region" / "frame") decides whether the label is placed in the area the shape\'s outline leaves clear or on its whole height. Only a type whose label area is shorter than the shape (a cylinder\'s caps, a document\'s wavy foot, a header band, the box inside an ellipse or diamond) takes it, and its schema lists it; every other type (rect, stadium, hexagon, sticky, text, …) refuses it, its label already sitting on the whole height. Set "frame" on such a shape in a row drawn at one height so its label lines up with its neighbours\'.',
 		].join(" "),
 		{
@@ -1188,31 +1130,12 @@ export const createCanvasToolDescriptors = (
 		{ drives: ["docOps.setExtraProps"] },
 	);
 
-	const setTextTool = defineCanvasTool(
-		"set_text",
-		'Rewrite an object\'s text. On a shape it replaces the label; on a connector it sets the text drawn on the line, and "" removes it. Always prefer this over adding a second shape next to the first one.',
-		{
-			id: z.string().describe("id of the object to retext."),
-			text: z
-				.string()
-				.describe('The new text; "" clears it (and drops a connector label).'),
-			slot: z
-				.string()
-				.optional()
-				.describe(
-					'For shapes that keep several named texts (record: "name" / "attributes" / "operations"), which one to write. The slot must already exist — describe_canvas shows them.',
-				),
-		},
-		(args) => ({ kind: "setText", ...args }),
-		{ drives: ["docOps.setText"] },
-	);
-
 	const setTextsTool = defineCanvasTool(
 		"set_texts",
 		[
-			"Rewrite the text of many objects in one call: the batch form of set_text, each entry taking the same id, text and optional slot.",
-			"This is how a whole diagram's labels are filled in — add_objects for the shapes, then one call here for every label — and how a set of wordings is corrected together rather than one call per shape.",
-			'Each entry reads exactly as set_text does: on a connector the text is the label drawn on the line, and "" clears it.',
+			'Rewrite the text of objects, one or many in a single call. On a shape it replaces the label; on a connector it sets the text drawn on the line, and "" removes it.',
+			"Always prefer this over adding a second shape next to the first one.",
+			"This is how a whole diagram's labels are filled in — add_objects for the shapes, then one call here for every label — and how a set of wordings is corrected together.",
 			"All or nothing: if one entry is rejected nothing is rewritten at all, and the error names the entry that failed, so the diagram is never left with half its labels changed.",
 		].join(" "),
 		{
@@ -1230,7 +1153,7 @@ export const createCanvasToolDescriptors = (
 								.string()
 								.optional()
 								.describe(
-									'For shapes that keep several named texts (record: "name" / "attributes" / "operations"), which one to write. The slot must already exist.',
+									'For shapes that keep several named texts (record: "name" / "attributes" / "operations"), which one to write. The slot must already exist — describe_canvas shows them.',
 								),
 						})
 						.strict(),
@@ -1242,31 +1165,16 @@ export const createCanvasToolDescriptors = (
 		{ drives: ["docOps.setTexts"] },
 	);
 
-	const setTextStyleTool = defineCanvasTool(
-		"set_text_style",
-		[
-			"Decorate part of one object's text — a few words in bold, one term in another color, a phrase struck through — leaving the rest of the body as it was.",
-			"This is the only tool that reaches inside a text. set_style is the other side of that line: it styles the whole object, so its fontColor / fontSize reach every character, and applying it afterwards overrides what you set here.",
-			"The stretch is named by the characters themselves (match), never by an offset; occurrence picks which one when the text holds several, and omitting it decorates every occurrence.",
-			"Only typography a run of characters carries on its own is settable: fontColor, fontSize, fontFamily, fontWeight, fontStyle, textDecoration. textAlign and verticalAlign place the whole body and belong to set_style.",
-			"Fails when match does not occur in the text, and on text that can only be styled as a whole (a connector label, a slot holding rows, a markdown body, whose source is plain text) — use set_style there.",
-		].join(" "),
-		{
-			id: z.string().describe("id of the object whose text is decorated."),
-			...textStretchSchema,
-			...inlineTextStyleSchema,
-		},
-		(args) => ({ kind: "setTextStyle", ...args }),
-		{ drives: ["docOps.setInlineTextStyle"] },
-	);
-
 	const setTextStylesTool = defineCanvasTool(
 		"set_text_styles",
 		[
-			"Decorate stretches of text on many objects in one call: the batch form of set_text_style, each entry naming one object, the characters to match and the typography to lay over them.",
+			"Decorate part of an object's text — a few words in bold, one term in another color, a phrase struck through — leaving the rest of the body as it was. One stretch or many in a single call, each entry naming one object, the characters to match and the typography to lay over them.",
+			"This is the only tool that reaches inside a text. set_style is the other side of that line: it styles the whole object, so its fontColor / fontSize reach every character, and applying it afterwards overrides what you set here.",
+			"The stretch is named by the characters themselves (match), never by an offset; occurrence picks which one when the text holds several, and omitting it decorates every occurrence.",
+			"Only typography a run of characters carries on its own is settable: fontColor, fontSize, fontFamily, fontWeight, fontStyle, textDecoration. textAlign and verticalAlign place the whole body and belong to set_style.",
 			"Repeat an id to decorate several stretches of the same text — that is how one paragraph gets a term in bold and another in color — and the entries stack in the order given.",
-			"The same line holds as in set_text_style: only fontColor / fontSize / fontFamily / fontWeight / fontStyle / textDecoration, never alignment, and a later set_style on the whole object overrides all of it.",
-			"All or nothing: every match is looked for before anything is decorated, so one entry whose text does not contain its match leaves the whole call unapplied, and the error names that entry.",
+			"An entry fails when its match does not occur in the text, and on text that can only be styled as a whole (a connector label, a slot holding rows, a markdown body, whose source is plain text) — use set_style there.",
+			"All or nothing: every match is looked for before anything is decorated, so one entry that fails leaves the whole call unapplied, and the error names that entry.",
 		].join(" "),
 		{
 			entries: z
@@ -1288,28 +1196,15 @@ export const createCanvasToolDescriptors = (
 		{ drives: ["docOps.setInlineTextStyles"] },
 	);
 
-	const updateConnectorTool = defineCanvasTool(
-		"update_connector",
+	const updateConnectorsTool = defineCanvasTool(
+		"update_connectors",
 		[
-			"Change an existing connector: where each end attaches, how the line is routed, its arrowheads, and where its label sits.",
+			"Change existing connectors, one or many in a single call: where each end attaches, how the line is routed, its arrowheads, and where its label sits.",
 			"An end can also be lifted off its object onto a bare coordinate (sourcePoint / targetPoint), as long as the other end stays attached.",
 			"This is how you fix a line that cuts through a shape — pin both ends to the edges that face each other, or give the corners yourself through points.",
 			"A non-empty points list is the path, so nothing is routed around any more; pass [] to hand the route back to the engine.",
 			'It is also how you reshape a free path: with routing "straight", rewrite points instead of deleting the line and drawing it again.',
-		].join(" "),
-		{
-			id: z.string().describe("id of the connector to change."),
-			...connectorChangeSchema,
-		},
-		(args) => ({ kind: "updateConnector", ...args }),
-		{ drives: ["docOps.updateConnector"] },
-	);
-
-	const updateConnectorsTool = defineCanvasTool(
-		"update_connectors",
-		[
-			"Change many connectors in one call: the batch form of update_connector, each entry taking exactly what it takes — endpoints, anchors, arrowheads, routing, corners and label placement.",
-			"Reach for it when one move breaks a whole fan of lines: re-anchor every edge into the side that now faces the shape, or give a set of edges the same arrowhead, in one call and one undo step.",
+			"When one move breaks a whole fan of lines, re-anchor every edge into the side that now faces the shape, or give a set of edges the same arrowhead, in one call and one undo step.",
 			"An id may appear only once. Put every change to one connector in a single entry, since two entries would each be checked against the connector as it was before the call.",
 			"All or nothing: if one entry is rejected nothing is changed at all, and the error names the entry that failed, so a batch can never leave half the lines re-attached.",
 		].join(" "),
@@ -1412,21 +1307,11 @@ export const createCanvasToolDescriptors = (
 		{ drives: ["docOps.groupObjects"] },
 	);
 
-	const dissolveGroupTool = defineCanvasTool(
-		"dissolve_group",
-		"Dissolve a group, leaving its children in place as independent objects.",
-		{
-			id: z.string().describe("id of the group to dissolve."),
-		},
-		(args) => ({ kind: "dissolveGroup", ...args }),
-		{ drives: ["docOps.dissolveGroup"] },
-	);
-
 	const dissolveGroupsTool = defineCanvasTool(
 		"dissolve_groups",
 		[
-			"Dissolve many groups at once: the batch form of dissolve_group, every group leaving its children in place as independent objects.",
-			"Use it to flatten a whole grouping before re-organizing the drawing, instead of a dissolve_group per group.",
+			"Dissolve groups, one or many in a single call, every group leaving its children in place as independent objects.",
+			"Use it to flatten a whole grouping before re-organizing the drawing.",
 			"A group and a group nested inside it may be named together, in either order: both levels end up gone and the children keep their drawing order.",
 			"All or nothing: if one id is rejected — missing, not a group, or a rotated group — nothing is dissolved at all, and the error names the id that failed.",
 			"Returns the ids released, which are the objects you now address one by one.",
@@ -1457,7 +1342,7 @@ export const createCanvasToolDescriptors = (
 
 	const removeFromGroupTool = defineCanvasTool(
 		"remove_from_group",
-		"Take objects out of the group holding them, leaving them on the canvas where they are. Use this to release one member; dissolve_group dissolves the whole group. Taking the last member out drops the group.",
+		"Take objects out of the group holding them, leaving them on the canvas where they are. Use this to release one member; dissolve_groups dissolves the whole group. Taking the last member out drops the group.",
 		{
 			ids: z
 				.array(z.string())
@@ -1503,7 +1388,7 @@ export const createCanvasToolDescriptors = (
 			"Measure how one label actually came out: the box it is drawn in, the size the wrapped text takes, how many lines it wrapped to, and whether the shape is cutting it off.",
 			'This is the exact answer to "does the label fit?" that capture_canvas can only suggest — call it after putting text on a shape you did not size for it, instead of judging the fit from a picture.',
 			"describe_canvas cannot answer it either: the document holds the text and the shape size, not the wrapping between them.",
-			"When the text does not fit, the result says how much room is missing, so you can resize_object, drop the fontSize or shorten the text by a known amount.",
+			"When the text does not fit, the result says how much room is missing, so you can resize_objects, drop the fontSize or shorten the text by a known amount.",
 		].join(" "),
 		{
 			id: z.string().describe("id of the object whose label is measured."),
@@ -1544,7 +1429,7 @@ export const createCanvasToolDescriptors = (
 		[
 			"Trace where a connector is really drawn: both endpoints as they landed on the shapes' outlines, and every corner the router put in between.",
 			"The document stores neither — an end is an anchor reference and a route is computed at draw time — so this is the only way to know a line's actual path short of looking at a capture_canvas picture.",
-			"Use it when you suspect a line cuts through a shape: compare the returned points against the boxes describe_canvas reports, then re-route it with update_connector.",
+			"Use it when you suspect a line cuts through a shape: compare the returned points against the boxes describe_canvas reports, then re-route it with update_connectors.",
 		].join(" "),
 		{
 			id: z.string().describe("id of the connector to trace."),
@@ -1558,7 +1443,7 @@ export const createCanvasToolDescriptors = (
 		[
 			"Measure the rectangle objects really cover once drawn, decoration outside their geometry included (an actor's label, a shadow, a line's arrowheads).",
 			"describe_canvas reports the boxes you asked for; this reports what came of them, which is what actually collides with a neighbour and what fit_view frames.",
-			"Use it to place something beside existing work without guessing the gap off a capture_canvas picture: measure what is there, then set_position past its edge.",
+			"Use it to place something beside existing work without guessing the gap off a capture_canvas picture: measure what is there, then set_positions past its edge.",
 			"The result is a single rectangle, the union of everything named, so measure ids one at a time when you need them apart.",
 		].join(" "),
 		{
@@ -1639,7 +1524,7 @@ export const createCanvasToolDescriptors = (
 		"get_interaction_status",
 		[
 			"Read what the user is doing to the canvas at this instant: whether a drag is under way, which object's text they have open in the editor, whether the view is still coasting from a pan, which drawing tool is armed, and whether a dialog is open.",
-			"Two of those change what you should do. The object being edited is one the user is typing in right now, so leave its text alone — never set_text over what they are writing. A drag in progress means a pointer is down, which is why an edit of yours may have been refused or wiped out a moment later; wait for it to end instead of calling again.",
+			"Two of those change what you should do. The object being edited is one the user is typing in right now, so leave its text alone — never set_texts over what they are writing. A drag in progress means a pointer is down, which is why an edit of yours may have been refused or wiped out a moment later; wait for it to end instead of calling again.",
 			"It is a snapshot of the moment rather than a live value, so read it again rather than trusting an old answer.",
 		].join(" "),
 		{},
@@ -1822,19 +1707,14 @@ export const createCanvasToolDescriptors = (
 		toSvgTool,
 		toWorldTool,
 		toClientTool,
-		addObjectTool,
 		addObjectsTool,
-		connectTool,
 		connectManyTool,
 		deleteObjectsTool,
-		setPositionTool,
 		setPositionsTool,
 		translateObjectsTool,
-		resizeObjectTool,
 		resizeObjectsTool,
 		setHeightModeTool,
 		setRotationTool,
-		setPointsTool,
 		setPointsManyTool,
 		reorderObjectsTool,
 		setStyleTool,
@@ -1842,17 +1722,13 @@ export const createCanvasToolDescriptors = (
 		setDocumentViewTool,
 		setMetaTool,
 		setExtraPropsTool,
-		setTextTool,
 		setTextsTool,
-		setTextStyleTool,
 		setTextStylesTool,
-		updateConnectorTool,
 		updateConnectorsTool,
 		alignObjectsTool,
 		distributeObjectsTool,
 		layoutObjectsTool,
 		groupObjectsTool,
-		dissolveGroupTool,
 		dissolveGroupsTool,
 		addToGroupTool,
 		removeFromGroupTool,

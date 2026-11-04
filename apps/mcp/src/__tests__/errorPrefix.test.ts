@@ -65,18 +65,13 @@ describe("the prefix a failed operation is reported with", () => {
 	it("leaves an internal error to say so once", async () => {
 		injection.outcome = { ok: false, text: "internal error: boom" };
 
-		const fromDocTool = await client.callTool("add_object", {
+		const fromDocTool = await client.callTool("add_objects", {
 			path: targetPath,
-			type: "rect",
-			x: 0,
-			y: 0,
-			width: 10,
-			height: 10,
+			objects: [{ type: "rect", x: 0, y: 0, width: 10, height: 10 }],
 		});
-		const fromOwnTool = await client.callTool("add_rect", {
+		const fromOwnTool = await client.callTool("add_ellipses", {
 			path: targetPath,
-			x: 0,
-			y: 0,
+			entries: [{ cx: 0, cy: 0 }],
 		});
 
 		expect(fromDocTool.text).toBe("internal error: boom");
@@ -86,10 +81,9 @@ describe("the prefix a failed operation is reported with", () => {
 	it("puts error: in front of a failure the AI can act on", async () => {
 		injection.outcome = { ok: false, text: "object not found: nope" };
 
-		const result = await client.callTool("add_rect", {
+		const result = await client.callTool("add_ellipses", {
 			path: targetPath,
-			x: 0,
-			y: 0,
+			entries: [{ cx: 0, cy: 0 }],
 		});
 
 		expect(result.text).toBe("error: object not found: nope");

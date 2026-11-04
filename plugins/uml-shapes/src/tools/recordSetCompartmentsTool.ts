@@ -22,7 +22,7 @@ import type {
 	RecordTextSlotId,
 } from "../schema/RecordDoc";
 
-/** The slots this tool sets; `name` is left to set_text. */
+/** The slots this tool sets; `name` is left to set_texts. */
 const RECORD_COMPARTMENT_ARG_IDS = [
 	RECORD_STEREOTYPE_TEXT_SLOT_ID,
 	RECORD_ATTRIBUTES_TEXT_SLOT_ID,
@@ -149,9 +149,9 @@ export const recordSetCompartmentsTool = defineObjectAiTool({
 	name: "record_set_compartments",
 	description: [
 		"Set which compartments a record (a UML class / interface box) has and what they hold: the stereotype line above the name, the attribute rows and the operation rows.",
-		"The generic set_text writes only a compartment the record already has and cannot remove one, so this is how a class gains its operations, an interface its stereotype, or a DTO loses its attributes.",
-		"A compartment that already exists keeps its typography; a new one starts with the record's defaults. Rename the record with set_text on its name slot.",
-		"The record does not grow with its rows, so afterwards its height is set to exactly what the compartments need, taller or shorter, its top edge staying where it is — no resize_object is needed. Called with no compartment at all, it only refits the height.",
+		"The generic set_texts writes only a compartment the record already has and cannot remove one, so this is how a class gains its operations, an interface its stereotype, or a DTO loses its attributes.",
+		"A compartment that already exists keeps its typography; a new one starts with the record's defaults. Rename the record with set_texts on its name slot.",
+		"The record does not grow with its rows, so afterwards its height is set to exactly what the compartments need, taller or shorter, its top edge staying where it is — no resize_objects is needed. Called with no compartment at all, it only refits the height.",
 	].join(" "),
 	objectType: "record",
 	inputSchema: {

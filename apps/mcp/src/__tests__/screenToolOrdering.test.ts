@@ -187,11 +187,9 @@ describe("a screen tool", () => {
 		mocked.resolveDelaysMs = [WRITE_DELAY_MS];
 
 		const [added, viewed] = await Promise.all([
-			client.callTool("add_rect", {
+			client.callTool("add_objects", {
 				path: filePath,
-				x: 0,
-				y: 0,
-				text: "sent alongside",
+				objects: [{ type: "rect", x: 0, y: 0, text: "sent alongside" }],
 			}),
 			client.callTool("get_view", {}),
 		]);
@@ -210,11 +208,9 @@ describe("a screen tool", () => {
 		});
 		const viewer = await openInFakeViewer(filePath);
 
-		await client.callTool("add_rect", {
+		await client.callTool("add_objects", {
 			path: filePath,
-			x: 0,
-			y: 0,
-			text: "written first",
+			objects: [{ type: "rect", x: 0, y: 0, text: "written first" }],
 		});
 		await client.callTool("get_view", {});
 
@@ -232,11 +228,9 @@ describe("a screen tool", () => {
 		mocked.resolveDelaysMs = [WRITE_DELAY_MS * 5];
 
 		const viewing = client.callTool("get_view", {});
-		const adding = client.callTool("add_rect", {
+		const adding = client.callTool("add_objects", {
 			path: filePath,
-			x: 0,
-			y: 0,
-			text: "sent behind",
+			objects: [{ type: "rect", x: 0, y: 0, text: "sent behind" }],
 		});
 		let isAdded = false;
 		void adding.then(() => {

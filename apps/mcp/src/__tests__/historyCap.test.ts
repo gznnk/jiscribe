@@ -31,7 +31,10 @@ afterAll(async () => {
 
 it("keeps a written file's undo history however many other files are read", async () => {
 	const drawnPath = await workspace.writeText("drawn.jis.json", emptyDocText);
-	await client.callTool("add_rect", { path: drawnPath, x: 0, y: 0 });
+	await client.callTool("add_objects", {
+		path: drawnPath,
+		objects: [{ type: "rect", x: 0, y: 0 }],
+	});
 
 	for (let index = 0; index < READ_FILE_COUNT; index += 1) {
 		const readPath = await workspace.writeText(

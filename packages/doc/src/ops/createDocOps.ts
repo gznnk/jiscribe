@@ -52,6 +52,7 @@ import {
 import {
 	resizeObject,
 	resizeObjects,
+	type ResizeObjectEntry,
 	type ResizeObjectParams,
 	setHeightMode,
 	type SetHeightModeParams,
@@ -125,8 +126,8 @@ import { createDocValidatorRegistry } from "../registries/ObjectDocValidatorRegi
  * write for itself: it holds the same all-or-nothing guarantee across the whole list, so a
  * bad element anywhere leaves the document untouched rather than half-edited. Which of the
  * two shapes the batch takes follows what the op does — an argument that means the same for
- * every object is given once (`setStyle`, `resizeObjects`), while one that differs per object
- * is given as a list of `entries` (`addObjects`, `setPositions`).
+ * every object is given once (`setStyle`, `setRotation`), while one that differs per object
+ * is given as a list of `entries` (`addObjects`, `setPositions`, `resizeObjects`).
  *
  * A `get` / `list` / `find` prefix marks an op that only reads, and each one sits beside the
  * op that writes what it reads, so a write always has its counterpart in view. The naming
@@ -188,15 +189,12 @@ export type DocOps = {
 	 */
 	resizeObject(doc: CanvasDoc, id: string, params: ResizeObjectParams): void;
 	/**
-	 * Give several objects the same size, each around its own top-left corner. An omitted
-	 * axis keeps each object's current one, so the results match only on the axis given.
-	 * Throws `DocOperationError` for a missing id, an unsizable object, or a size ≤ 0.
+	 * Give each object a size of its own, around its own top-left corner. An omitted axis
+	 * keeps that object's current one, and an entry naming neither leaves it as it is.
+	 * Throws `DocOperationError` for a repeated or missing id, an unsizable object, or a
+	 * size ≤ 0, naming the entry at fault, having resized nothing.
 	 */
-	resizeObjects(
-		doc: CanvasDoc,
-		ids: readonly string[],
-		params: ResizeObjectParams,
-	): void;
+	resizeObjects(doc: CanvasDoc, entries: readonly ResizeObjectEntry[]): void;
 	/**
 	 * Switch objects between a stated height and one that follows their text, the latter
 	 * being spelled as no `height` field at all.
@@ -505,8 +503,7 @@ export const createDocOps = (config?: DocDefinitionsConfig): DocOps => {
 			translateObjects(doc, ids, deltaX, deltaY, definitions),
 		resizeObject: (doc, id, params) =>
 			resizeObject(doc, id, params, definitions),
-		resizeObjects: (doc, ids, params) =>
-			resizeObjects(doc, ids, params, definitions),
+		resizeObjects: (doc, entries) => resizeObjects(doc, entries, definitions),
 		setHeightMode: (doc, ids, params) =>
 			setHeightMode(doc, ids, params, definitions),
 		setStyle: (doc, ids, style) => setStyle(doc, ids, style, definitions),

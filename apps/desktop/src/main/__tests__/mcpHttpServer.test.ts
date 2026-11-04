@@ -107,6 +107,23 @@ const TOOLS_LIST_REQUEST = {
 	params: {},
 };
 
+/**
+ * One tool from each of the stdio server's four families (its own, ai-tools doc,
+ * ai-tools screen, plugin), so a listing that lost a family fails without the
+ * test pinning the count (see apps/mcp/CLAUDE.md).
+ */
+const expectEveryToolFamily = (tools: readonly { name: string }[]): void => {
+	const names = tools.map((tool) => tool.name);
+	expect(names).toEqual(
+		expect.arrayContaining([
+			"open_canvas",
+			"add_objects",
+			"capture_canvas",
+			"table_read",
+		]),
+	);
+};
+
 describe("startMcpHttpServer", () => {
 	let runtime: JiscribeMcpRuntime;
 	let mcpHttpServer: McpHttpServer;
@@ -132,7 +149,7 @@ describe("startMcpHttpServer", () => {
 		openClients.push(client);
 		const { tools } = await client.listTools();
 		const stdioToolCount = await countStdioServerTools();
-		expect(stdioToolCount).toBeGreaterThan(80);
+		expectEveryToolFamily(tools);
 		expect(tools).toHaveLength(stdioToolCount);
 	});
 
@@ -156,7 +173,7 @@ describe("startMcpHttpServer", () => {
 			firstClient.listTools(),
 			secondClient.listTools(),
 		]);
-		expect(firstTools.tools.length).toBeGreaterThan(80);
+		expectEveryToolFamily(firstTools.tools);
 		expect(secondTools.tools).toHaveLength(firstTools.tools.length);
 	});
 

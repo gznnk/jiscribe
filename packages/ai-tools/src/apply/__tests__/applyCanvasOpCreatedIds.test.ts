@@ -39,13 +39,16 @@ const twoRects = () => {
 };
 
 describe("createdIds", () => {
-	it("holds the one id addObject created", () => {
+	it("holds the one id a single addObjects entry created", () => {
 		const apply = createApplier();
 
-		const result = apply({ kind: "addObject", type: "rect", x: 10, y: 20 });
+		const result = apply({
+			kind: "addObjects",
+			objects: [{ type: "rect", x: 10, y: 20 }],
+		});
 
 		expect(result.createdIds).toEqual(["rect-1"]);
-		expect(result.text).toBe('added rect "rect-1" at (10, 20)');
+		expect(result.text).toBe('added 1 objects: rect "rect-1"');
 	});
 
 	it("lists what addObjects added in the order the objects were given", () => {
@@ -105,17 +108,18 @@ describe("createdIds", () => {
 		expect(result.text).toBe('added 1 objects inside "group-1": rect "rect-3"');
 	});
 
-	it("holds the connector connect drew", () => {
+	it("holds the connector a single connectMany entry drew", () => {
 		const apply = twoRects();
 
 		const result = apply({
-			kind: "connect",
-			sourceId: "rect-1",
-			targetId: "rect-2",
+			kind: "connectMany",
+			entries: [{ sourceId: "rect-1", targetId: "rect-2" }],
 		});
 
 		expect(result.createdIds).toEqual(["connector-1"]);
-		expect(result.text).toBe('connected "rect-1" → "rect-2" as "connector-1"');
+		expect(result.text).toBe(
+			'connected 1 connector(s): "rect-1" → "rect-2" as "connector-1"',
+		);
 	});
 
 	it("lists the connectors connectMany drew in entry order", () => {
@@ -153,7 +157,10 @@ describe("createdIds", () => {
 	it("is absent from an edit that creates nothing", () => {
 		const apply = twoRects();
 
-		const result = apply({ kind: "setPosition", id: "rect-1", x: 50 });
+		const result = apply({
+			kind: "setPositions",
+			entries: [{ id: "rect-1", x: 50 }],
+		});
 
 		expect(result.ok).toBe(true);
 		expect(result).not.toHaveProperty("createdIds");
@@ -163,9 +170,8 @@ describe("createdIds", () => {
 		const apply = twoRects();
 
 		const result = apply({
-			kind: "connect",
-			sourceId: "rect-1",
-			targetId: "rect-9",
+			kind: "connectMany",
+			entries: [{ sourceId: "rect-1", targetId: "rect-9" }],
 		});
 
 		expect(result.ok).toBe(false);

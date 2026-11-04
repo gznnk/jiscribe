@@ -31,13 +31,11 @@ test("moves to the second new file in the same directory, and edits then follow 
 	await openInViewer(secondPath);
 	await expectFileOnDisplay(page, "b.jis.json");
 
-	const added = await mcp.callTool("add_rect", {
+	const added = await mcp.callTool("add_objects", {
 		path: secondPath,
-		x: 40,
-		y: 40,
-		width: 120,
-		height: 80,
-		text: "second",
+		objects: [
+			{ type: "rect", x: 40, y: 40, width: 120, height: 80, text: "second" },
+		],
 	});
 	expect(added.isError).toBe(false);
 	const addedId = String((await workspace.readDoc(secondPath)).root[0].id);

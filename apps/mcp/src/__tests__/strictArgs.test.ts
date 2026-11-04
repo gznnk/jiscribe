@@ -117,12 +117,9 @@ describe("a style key the type cannot hold", () => {
 	// call as it was told to and fails a second time. The refusal is a signpost,
 	// so every name it points at must go through
 	it("takes every name the refusal message lists, exactly as given", async () => {
-		const refused = await client.callTool("add_object", {
+		const refused = await client.callTool("add_objects", {
 			path: targetPath,
-			type: "ellipse",
-			x: 0,
-			y: 0,
-			rx: 5,
+			objects: [{ type: "ellipse", x: 0, y: 0, rx: 5 }],
 		});
 		const advertised = [...refused.text.matchAll(/"([a-zA-Z]+)"/g)]
 			.map(([, name]) => name)
@@ -134,12 +131,9 @@ describe("a style key the type cannot hold", () => {
 			// A name with no sample is a hole in the test. This failure is how a key
 			// newly added to doc gets noticed
 			expect(value, `no sample value for "${name}"`).toBeDefined();
-			const result = await client.callTool("add_object", {
+			const result = await client.callTool("add_objects", {
 				path: targetPath,
-				type: "ellipse",
-				x: 0,
-				y: 0,
-				[name]: value,
+				objects: [{ type: "ellipse", x: 0, y: 0, [name]: value }],
 			});
 
 			expect(result.text, name).not.toContain("Unrecognized key");
@@ -150,10 +144,9 @@ describe("a style key the type cannot hold", () => {
 
 describe("unknown keys at the top level", () => {
 	it("fails on our own tools", async () => {
-		const result = await client.callTool("add_rect", {
+		const result = await client.callTool("add_ellipses", {
 			path: targetPath,
-			x: 0,
-			y: 0,
+			entries: [{ cx: 0, cy: 0 }],
 			w: 200,
 		});
 
@@ -163,11 +156,9 @@ describe("unknown keys at the top level", () => {
 	});
 
 	it("fails on the doc tools that come from ai-tools", async () => {
-		const result = await client.callTool("add_object", {
+		const result = await client.callTool("add_objects", {
 			path: targetPath,
-			type: "rect",
-			x: 0,
-			y: 0,
+			objects: [{ type: "rect", x: 0, y: 0 }],
 			cy: 40,
 		});
 
@@ -207,14 +198,18 @@ describe("arguments that are correct", () => {
 	});
 
 	it("carries the properties a type declares for itself through extraProps", async () => {
-		const added = await client.callTool("add_object", {
+		const added = await client.callTool("add_objects", {
 			path: targetPath,
-			type: "lucideIcon",
-			x: 0,
-			y: 0,
-			width: 40,
-			height: 40,
-			extraProps: { icon: "star" },
+			objects: [
+				{
+					type: "lucideIcon",
+					x: 0,
+					y: 0,
+					width: 40,
+					height: 40,
+					extraProps: { icon: "star" },
+				},
+			],
 		});
 
 		expect(added.isError).toBe(false);

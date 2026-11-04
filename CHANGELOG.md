@@ -103,8 +103,8 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   the switch work the same with or without a declared library.
 - **A connector's label is placed as it is drawn.** `ConnectParams` (`connect` /
   `connectMany` in `@jiscribe/doc`) takes `labelPosition` and `labelOffset`,
-  and so do `jiscribe op <file> connect` / `connect_many`, so placing the label
-  no longer takes a second `update_connector`. Either one without non-empty
+  and so does a `jiscribe op <file> connect_many` entry, so placing the label
+  no longer takes a second `update_connectors`. Either one without non-empty
   `label` text is refused.
 - For plugin authors: `ObjectDocDefinition.autoHeightPaddingEm` (also taken by
   `createFrameObjectDoc`) sets the room a type's derived height leaves above
@@ -167,9 +167,8 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   head is drawn `9 × strokeWidth × arrowScale` px with its outline kept at the
   stroke width down to 0.5 and thinning with the head below it; the line still
   stops at the scaled head's base. The property panel's Arrows section gains a
-  size row in percent (20–400%), `set_style`,
-  `connect` / `connect_many` and `update_connector` / `update_connectors` take
-  it, and `docOps.connect` / `updateConnector` refuse a value outside the range
+  size row in percent (20–400%), `set_style`, `connect_many` and
+  `update_connectors` take it, and `docOps.connect` / `updateConnector` refuse a value outside the range
   before writing. `@jiscribe/doc` exports `ARROW_SCALE_MIN`, `ARROW_SCALE_MAX`,
   `DEFAULT_ARROW_SCALE` and `ARROW_OUTLINE_THINNING_SCALE`; `CanvasMessages` gains `propertyPanelRowArrowScale`
   and `menuArrowScale`.
@@ -191,6 +190,21 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   container plugin's frames serve.
 
 ### Changed
+
+- **Breaking: `DocOps.resizeObjects` takes one entry per object.**
+  `resizeObjects(doc, entries)` takes `ResizeObjectEntry[]` (an `id` with an
+  optional `width` and `height`, exported from `@jiscribe/doc`) in place of
+  `(doc, ids, params)`, so each object gets a size of its own, as
+  `setPositions` gives each its own place. An id given twice is refused, and so
+  is a group given together with an object inside it; an entry naming neither
+  axis leaves its object as it is, and a refused entry is named
+  `entries[i] (id)` with nothing resized. The `resize_objects` tool (and
+  `jiscribe op <file> resize_objects`) takes the same `entries`, and its reply
+  names each object with its new size.
+- **Breaking: the AI tool set (`@jiscribe/ai-tools`, and so `jiscribe op` and
+  `jiscribe tools`) keeps only the batch form of each edit,** taking one entry
+  as well as many; see Removed for the tools that went. Each batch tool's
+  description now states on its own every rule the single form's carried.
 
 - **A line's drawn extent takes its arrowheads in.** Zoom-to-fit, the export
   viewBox, viewport culling, zoom-to-selection, the object menu's placement and
@@ -308,6 +322,26 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Removed
 
+- **Breaking: the single-object AI tools are gone.** `@jiscribe/ai-tools` no
+  longer declares them, nor the op kinds behind them (`AiDocOp`'s
+  `addObject`, `connect`, `setPosition`, `resizeObject`, `setPoints`,
+  `setText`, `setTextStyle`, `updateConnector`, `dissolveGroup`), and
+  `jiscribe op` refuses their names. Use instead:
+  - `add_object` → `add_objects`
+  - `connect` → `connect_many`
+  - `set_position` → `set_positions`
+  - `resize_object` → `resize_objects` (see Changed)
+  - `set_points` → `set_points_many`
+  - `set_text` → `set_texts`
+  - `set_text_style` → `set_text_styles`
+  - `update_connector` → `update_connectors`
+  - `dissolve_group` → `dissolve_groups`
+
+  `@jiscribe/ai-tools` no longer exports `AiInlineTextStyleParams`,
+  `AiArrowType`, `AiRouting` and `AiTextLayout`, which only those op kinds
+  used, and exports `AiResizeObjectEntry` for a `resize_objects` entry. The
+  single ops themselves stay on `DocOps`.
+
 - **Breaking: a placed AWS or Lucide icon no longer offers to change its
   icon.** The floating menu's icon picker and the properties sidebar's icon
   section are gone from `awsIcon` and `lucideIcon`; the icon is chosen by the
@@ -360,7 +394,7 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 - **Measuring text in Node no longer throws on some space and zero-width characters.** `@jiscribe/doc-tools`
   failed with `RangeError: Offset is outside the bounds of the DataView` on
   U+2009, U+200B and U+FEFF under Source Sans 3 and on U+2002 under Noto Sans
-  JP, so the MCP server's `measure_text`, `add_object` and `diagnose_canvas` and
+  JP, so the MCP server's `measure_text`, `add_objects` and `diagnose_canvas` and
   the CLI's `measure` / `diagnose` failed on any text holding one. fontkit cannot
   read these empty glyphs; their advance is now read from the font's `hmtx`.
 - **The drawing guide no longer says `diamond` and `stadium` lay text out over

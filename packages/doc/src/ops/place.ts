@@ -5,7 +5,10 @@ import { batchItemError } from "./utils/batchErrors";
 import { isBlockLayoutText } from "./utils/extraFields";
 import { requireFiniteNumber } from "./utils/numberArgs";
 import {
+	findRepeatedIds,
 	type ObjectRecord,
+	readChildren,
+	rejectIds,
 	requireObject,
 	requireObjects,
 } from "./utils/objectAccess";
@@ -272,41 +275,76 @@ export const resizeObject = (
 	applyResize(planResize(object, params, definitions), definitions);
 };
 
+/** Ids of every object a group holds, at any depth; empty for any other object. */
+const collectDescendantIds = (object: ObjectRecord): string[] =>
+	readChildren(object).flatMap((child) => [
+		child.id,
+		...collectDescendantIds(child),
+	]);
+
 /**
- * Resize several objects to the same size, each around its own top-left corner, mutating
- * `doc` in place.
+ * Refuse a batch naming a group together with an object inside it: the group's scale
+ * already moves and scales the member, so a size of the member's own would be applied to a
+ * box it no longer has.
+ */
+const rejectNestedResizeTargets = (objects: readonly ObjectRecord[]): void => {
+	const targetIds = new Set(objects.map(({ id }) => id));
+	const nestedPairs = objects.flatMap((group) =>
+		collectDescendantIds(group)
+			.filter((memberId) => targetIds.has(memberId))
+			.map((memberId) => `${memberId} (inside ${group.id})`),
+	);
+	if (nestedPairs.length > 0) {
+		throw new DocOperationError(
+			`${nestedPairs.join(", ")}: given together with a group holding it; resize the group or what it holds, not both`,
+		);
+	}
+};
+
+/** One object's new size in a {@link resizeObjects} call. */
+export type ResizeObjectEntry = { id: string } & ResizeObjectParams;
+
+/**
+ * Resize several objects to sizes of their own, each around its own top-left corner,
+ * mutating `doc` in place.
  *
- * One size is handed to every id, the way {@link import("./style").setStyle} hands one set
- * of properties to every id; there is no per-object size here. An omitted axis keeps each
- * object's current extent, so passing only `width` leaves the heights as varied as they were.
+ * Every entry is planned against the document as it stood before the call, then all are
+ * applied. A group and an object inside it (at any depth) cannot be named in the same call,
+ * since scaling the group already moves and scales what it holds.
  *
  * @param doc - Mutated in place
- * @param ids - Ids to resize; all must exist in the root tree, and repeats are counted once
- * @param params - Target size shared by every id; an omitted axis keeps each object's own
- *   extent. Both must be greater than 0
+ * @param entries - Target size per object, applied in the order given; an omitted axis
+ *   keeps that object's current extent, and an entry naming neither axis leaves the object
+ *   as it is. An id may appear only once. Each extent given must be greater than 0
  * @param definitions - Type table `features.geometry` is read from
- * @throws {@link DocOperationError} before touching the doc: for a missing id, naming every
- *   missing one at once; for a size failure — a connector or other object with no size of
- *   its own to set, a zero extent on an axis being resized, or a requested extent not
- *   greater than 0, a height for a block text — identified as `ids[i] (id)`. One such id
- *   rejects the whole batch, so a selection holding a `geometry: "point"` shape resizes
- *   nothing until that id is left out (or, for a block text, until the height is)
+ * @throws {@link DocOperationError} before touching the doc: naming every repeated id; for
+ *   a missing id, naming every missing one at once; naming every object given together with
+ *   a group holding it, and that group; for a size failure — a connector or
+ *   other object with no size of its own to set, a zero extent on an axis being resized, a
+ *   requested extent not greater than 0, a height for a block text — identified as
+ *   `entries[i] (id)`. One such entry rejects the whole batch
  */
 export const resizeObjects = (
 	doc: CanvasDoc,
-	ids: readonly string[],
-	params: ResizeObjectParams,
+	entries: readonly ResizeObjectEntry[],
 	definitions: DocDefinitions,
 ): void => {
 	// A repeated id would be scaled twice, the second time off the box it no longer has.
-	const locations = requireObjects(doc, [...new Set(ids)]);
+	rejectIds(
+		findRepeatedIds(entries.map(({ id }) => id)),
+		"given more than once; put both axes of one object in a single entry",
+	);
+	const locations = requireObjects(
+		doc,
+		entries.map(({ id }) => id),
+	);
+	rejectNestedResizeTargets(locations.map(({ object }) => object));
 	// Plan every object first: a mid-way failure would leave half the batch resized.
-	const plans = locations.map(({ object }) => {
+	const plans = locations.map(({ object }, index) => {
 		try {
-			return planResize(object, params, definitions);
+			return planResize(object, entries[index], definitions);
 		} catch (error) {
-			// Reported against the caller's own array, which a repeated id makes wider than the set.
-			throw batchItemError("ids", ids.indexOf(object.id), object.id, error);
+			throw batchItemError("entries", index, object.id, error);
 		}
 	});
 	for (const plan of plans) {

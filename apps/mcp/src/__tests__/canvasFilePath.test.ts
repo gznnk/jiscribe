@@ -1,9 +1,9 @@
 // The one gate every path argument goes through, checked through a `tools/call`
 // round trip (the gate on its own is doc-tools' canvasFilePath.test.ts).
 //
-// The tools used to disagree about what a path is: add_rect refused a relative
-// one while add_object resolved it against the MCP process's cwd, which is not
-// the user's workspace, and wrote a file nobody asked for.
+// The tools used to disagree about what a path is: this server's own refused a
+// relative one while the ai-tools ones resolved it against the MCP process's cwd,
+// which is not the user's workspace, and wrote a file nobody asked for.
 
 import { lstat, mkdir, readFile, symlink } from "node:fs/promises";
 import { join } from "node:path";
@@ -46,27 +46,26 @@ describe("the path argument of the tools", () => {
 	it("refuses a relative path on a document tool as on our own, writing nothing", async () => {
 		const relativePath = "jiscribe-mcp-relative.jis.json";
 
-		const added = await client.callTool("add_object", {
+		const added = await client.callTool("add_objects", {
 			path: relativePath,
-			type: "rect",
-			x: 0,
-			y: 0,
-			width: 100,
-			height: 50,
+			objects: [{ type: "rect", x: 0, y: 0, width: 100, height: 50 }],
 		});
 
 		expect(added.text).toMatch(/^error: path must be an absolute path/);
 		expect(
-			(await client.callTool("add_rect", { path: relativePath, x: 0, y: 0 }))
-				.text,
+			(
+				await client.callTool("add_ellipses", {
+					path: relativePath,
+					entries: [{ cx: 0, cy: 0 }],
+				})
+			).text,
 		).toMatch(/^error: path must be an absolute path/);
 	});
 
 	it("refuses a path that names another kind of file", async () => {
-		const result = await client.callTool("add_rect", {
+		const result = await client.callTool("add_objects", {
 			path: join("/tmp", "jiscribe-mcp-notes.txt"),
-			x: 0,
-			y: 0,
+			objects: [{ type: "rect", x: 0, y: 0 }],
 		});
 
 		expect(result.text).toMatch(/^error: path must name a canvas file/);
@@ -79,7 +78,10 @@ describe("the path argument of the tools", () => {
 		});
 		const detouringPath = join(targetPath, "..", "alias.jis.json");
 
-		await client.callTool("add_rect", { path: targetPath, x: 0, y: 0 });
+		await client.callTool("add_objects", {
+			path: targetPath,
+			objects: [{ type: "rect", x: 0, y: 0 }],
+		});
 		const undone = await client.callTool("undo", { path: detouringPath });
 
 		expect(undone.text).not.toMatch(/^error:/);
@@ -92,10 +94,9 @@ describe("the path argument of the tools", () => {
 			root: [],
 		});
 
-		await client.callTool("add_rect", {
+		await client.callTool("add_objects", {
 			path: join(realDirPath, "a.jis"),
-			x: 0,
-			y: 0,
+			objects: [{ type: "rect", x: 0, y: 0 }],
 		});
 		const undone = await client.callTool("undo", {
 			path: join(aliasDirPath, "a.jis"),
@@ -115,10 +116,9 @@ describe("the path argument of the tools", () => {
 		const linkPath = join(workspace.dirPath, "in-place-link.jis");
 		await symlink(targetPath, linkPath);
 
-		const added = await client.callTool("add_rect", {
+		const added = await client.callTool("add_objects", {
 			path: linkPath,
-			x: 0,
-			y: 0,
+			objects: [{ type: "rect", x: 0, y: 0 }],
 		});
 
 		expect(added.text).not.toMatch(/^error:/);
@@ -135,10 +135,9 @@ describe("the path argument of the tools", () => {
 		const diagnosed = await client.callTool("diagnose_canvas", {
 			path: linkPath,
 		});
-		const added = await client.callTool("add_rect", {
+		const added = await client.callTool("add_objects", {
 			path: linkPath,
-			x: 0,
-			y: 0,
+			objects: [{ type: "rect", x: 0, y: 0 }],
 		});
 
 		expect(diagnosed.text).toMatch(/^error: path must name a canvas file/);

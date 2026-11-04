@@ -61,11 +61,7 @@ type Report = {
 
 const EMPTY_DOC_TEXT = `${JSON.stringify({ version: 1, root: [] }, null, "\t")}\n`;
 const RECT_ARGS = JSON.stringify({
-	type: "rect",
-	x: 0,
-	y: 0,
-	width: 100,
-	height: 60,
+	objects: [{ type: "rect", x: 0, y: 0, width: 100, height: 60 }],
 });
 
 let workDir: string;
@@ -143,7 +139,7 @@ describe("a refused write-back", () => {
 			Promise.reject(new CanvasFileError("refused to write (simulated)"));
 		const { code, report } = await runOpReport([
 			docPath,
-			"add_object",
+			"add_objects",
 			"--args",
 			RECT_ARGS,
 		]);
@@ -161,7 +157,7 @@ describe("a refused write-back", () => {
 		stubs.beforeSave = (path) => writeFile(path, outsideText);
 		const { code, report } = await runOpReport([
 			docPath,
-			"add_object",
+			"add_objects",
 			"--args",
 			RECT_ARGS,
 			"--create",

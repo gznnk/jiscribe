@@ -63,7 +63,10 @@ describe("setExtraProps", () => {
 	/** A container, the shipped type that carries properties of its own (headerFill / headerHeight) */
 	const oneContainer = () => {
 		const fake = createFakeDocBridge();
-		fake.apply({ kind: "addObject", type: "container", x: 0, y: 0 });
+		fake.apply({
+			kind: "addObjects",
+			objects: [{ type: "container", x: 0, y: 0 }],
+		});
 		return fake;
 	};
 

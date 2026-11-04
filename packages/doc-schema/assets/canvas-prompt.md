@@ -1,4 +1,4 @@
-<!-- jiscribe guide 0.12.2+953eb9f7 -->
+<!-- jiscribe guide 0.12.2+f157d51a -->
 
 # Drawing on a Jiscribe canvas
 
@@ -123,12 +123,12 @@ Use `erEntity` for every entity of an ER diagram, never `record`. The title is
   written.
 - Leave out `keyWidth` / `nameWidth` / `typeWidth` unless a column needs more
   room than its texts: the key gutter follows the widest key, and the name and
-  type columns start at 96 and 104 px. `add_object` / `resize_object` take no
+  type columns start at 96 and 104 px. `add_objects` / `resize_objects` take no
   `width` or `height` for an entity: set these three through `extraProps`
   instead.
 - Write every text as a plain string. An entity has no typography at its
   root: to style a text (one column's name in red, say), write it as
-  `{ "text": "email", "fontColor": "#c00" }`. `set_style` and `set_text` do
+  `{ "text": "email", "fontColor": "#c00" }`. `set_style` and `set_texts` do
   not reach an entity's texts: on an existing entity, style them with
   `er_entity_set_text_style` and rewrite them with `er_entity_set_texts`.
 - Change the columns of an existing entity with `er_entity_insert_columns` /
@@ -138,7 +138,7 @@ Use `erEntity` for every entity of an ER diagram, never `record`. The title is
   whatever column now holds its old index.
 - A relationship is a `connector` from the FK column's `col:<i>:right` (or
   `col:<i>:left`) to the referenced PK column's `col:<j>:left`, `<i>` counting
-  `columns` from 0. Draw it with `connect`, passing those ids as
+  `columns` from 0. Draw it with `connect_many`, passing those ids as
   `sourceAnchor` / `targetAnchor`. `startArrow` is the FK side's cardinality (usually
   `"CrowFootZeroMany"`), `endArrow` the PK side's (`"CrowFootOne"`). An
   identifying relationship is solid, a non-identifying one `"dashed"`.

@@ -24,15 +24,15 @@ describe("isCanvasHandleTool", () => {
 	it("tells a tool driving the canvas handle from one a document answers", () => {
 		expect(isCanvasHandleTool(findDescriptor("capture_canvas"))).toBe(true);
 		expect(isCanvasHandleTool(findDescriptor("fit_view"))).toBe(true);
-		expect(isCanvasHandleTool(findDescriptor("add_object"))).toBe(false);
+		expect(isCanvasHandleTool(findDescriptor("add_objects"))).toBe(false);
 		expect(isCanvasHandleTool(findDescriptor("undo"))).toBe(false);
 	});
 });
 
 describe("toDrivesMismatchText", () => {
 	it("names the way the op disagreed with the declaration", () => {
-		expect(toDrivesMismatchText(findDescriptor("add_object"))).toBe(
-			"internal error: add_object is declared to need only a document but produced a canvas-handle operation",
+		expect(toDrivesMismatchText(findDescriptor("add_objects"))).toBe(
+			"internal error: add_objects is declared to need only a document but produced a canvas-handle operation",
 		);
 		expect(toDrivesMismatchText(findDescriptor("capture_canvas"))).toBe(
 			"internal error: capture_canvas is declared to drive the canvas handle but produced a document operation",

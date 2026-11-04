@@ -35,7 +35,17 @@ const UNEXPOSED_DOC_OPS: Readonly<Record<string, string>> = {
 	replaceObject:
 		"writes back what a plugin's object tool built (createCanvasToolSet drives it); handing the AI a whole object to write would bypass every op's own checks",
 	remapConnectPoints:
-		"follows a plugin's object tool that moved its own connect points (its connectPointRemap); only the type that numbers the points knows where each one went, so the AI moves ends itself through update_connector",
+		"follows a plugin's object tool that moved its own connect points (its connectPointRemap); only the type that numbers the points knows where each one went, so the AI moves ends itself through update_connectors",
+	addObject: "the batch form add_objects drives addObjects",
+	connect: "the batch form connect_many drives connectMany",
+	setPosition: "the batch form set_positions drives setPositions",
+	resizeObject: "the batch form resize_objects drives resizeObjects",
+	setPoints: "the batch form set_points_many drives setPointsMany",
+	setText: "the batch form set_texts drives setTexts",
+	setInlineTextStyle:
+		"the batch form set_text_styles drives setInlineTextStyles",
+	updateConnector: "the batch form update_connectors drives updateConnectors",
+	dissolveGroup: "the batch form dissolve_groups drives dissolveGroups",
 };
 
 const toCamelCase = (toolName: string): string =>

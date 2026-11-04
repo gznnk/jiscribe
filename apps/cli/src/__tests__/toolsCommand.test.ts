@@ -41,7 +41,7 @@ describe("tools", () => {
 			tools: { name: string; summary: string }[];
 		};
 		expect(tools.map((tool) => tool.name)).toEqual(expectedNames);
-		expect(expectedNames).toContain("add_object");
+		expect(expectedNames).toContain("add_objects");
 		expect(expectedNames).not.toContain("capture_canvas");
 	});
 
@@ -49,15 +49,15 @@ describe("tools", () => {
 		const { stdout } = capture(() => runToolsCommand([]));
 		const addObjectLine = stdout
 			.split("\n")
-			.find((line) => line.startsWith("add_object "));
+			.find((line) => line.startsWith("add_objects "));
 		expect(addObjectLine).toMatch(
-			/^add_object +Add one object to the canvas; placing several at once is add_objects instead\.$/,
+			/^add_objects +Add objects to the canvas, one or many in a single call; put every shape of a layout in the same call\.$/,
 		);
 	});
 
 	it("describes one tool with its full description and a closed JSON Schema", () => {
 		const { code, stdout } = capture(() =>
-			runToolsCommand(["connect", "--json"]),
+			runToolsCommand(["connect_many", "--json"]),
 		);
 		expect(code).toBe(0);
 		const described = JSON.parse(stdout) as {
@@ -69,32 +69,32 @@ describe("tools", () => {
 				properties: Record<string, unknown>;
 			};
 		};
-		expect(described.name).toBe("connect");
+		expect(described.name).toBe("connect_many");
 		expect(described.description).toBe(
 			standardCanvasToolSet.descriptors.find(
-				(descriptor) => descriptor.name === "connect",
+				(descriptor) => descriptor.name === "connect_many",
 			)?.description,
 		);
 		expect(described.inputSchema.type).toBe("object");
 		expect(described.inputSchema.additionalProperties).toBe(false);
-		expect(described.inputSchema.properties).toHaveProperty("sourceId");
+		expect(described.inputSchema.properties).toHaveProperty("entries");
 		expect(described.inputSchema.properties).not.toHaveProperty("path");
 	});
 
 	it("describes one tool in text: name, description, then the schema", () => {
-		const { code, stdout } = capture(() => runToolsCommand(["connect"]));
+		const { code, stdout } = capture(() => runToolsCommand(["connect_many"]));
 		expect(code).toBe(0);
 		const [name, blank, description, blankAgain, heading, ...schemaLines] =
 			stdout.split("\n");
 		expect([name, blank, blankAgain, heading]).toEqual([
-			"connect",
+			"connect_many",
 			"",
 			"",
 			"arguments (JSON Schema):",
 		]);
 		expect(description).toBe(
 			standardCanvasToolSet.descriptors.find(
-				(descriptor) => descriptor.name === "connect",
+				(descriptor) => descriptor.name === "connect_many",
 			)?.description,
 		);
 		expect(JSON.parse(schemaLines.join("\n"))).toMatchObject({

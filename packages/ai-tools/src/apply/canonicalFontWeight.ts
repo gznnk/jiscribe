@@ -38,14 +38,10 @@ const withCanonicalFontWeight = <Style extends { fontWeight?: string }>(
  */
 export const canonicalizeFontWeights = (op: AiDocOp): AiDocOp => {
 	switch (op.kind) {
-		case "addObject":
-			return withCanonicalFontWeight(op);
 		case "addObjects":
 			return { ...op, objects: op.objects.map(withCanonicalFontWeight) };
 		case "setStyle":
 			return { ...op, style: withCanonicalFontWeight(op.style) };
-		case "setTextStyle":
-			return withCanonicalFontWeight(op);
 		case "setTextStyles":
 			return { ...op, entries: op.entries.map(withCanonicalFontWeight) };
 		default:

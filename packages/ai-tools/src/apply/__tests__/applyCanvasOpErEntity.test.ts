@@ -16,7 +16,7 @@ import type { AiDocBridge } from "../docBridge";
 
 const docOps = createDocOps({ plugins: [erDocPlugin] });
 
-/** The built-in tools alone; an entity is written through add_object and extraProps, never a plugin tool */
+/** The built-in tools alone; an entity is written through add_objects and extraProps, never a plugin tool */
 const builtinToolSet = createCanvasToolSet(null, []);
 
 // An entity's height is laid out from its texts; a proportional answer is enough
@@ -77,12 +77,16 @@ describe("erEntity through the AI ops", () => {
 		({ size }) => {
 			const fake = createFakeDocBridge();
 			const result = fake.apply({
-				kind: "addObject",
-				type: "erEntity",
-				x: 0,
-				y: 0,
-				...size,
-				extraProps: { name: "users", columns: entityColumns },
+				kind: "addObjects",
+				objects: [
+					{
+						type: "erEntity",
+						x: 0,
+						y: 0,
+						...size,
+						extraProps: { name: "users", columns: entityColumns },
+					},
+				],
 			});
 
 			expect(result.ok).toBe(false);
@@ -96,16 +100,20 @@ describe("erEntity through the AI ops", () => {
 	it("is created at the slot widths extraProps names", () => {
 		const fake = createFakeDocBridge();
 		const result = fake.apply({
-			kind: "addObject",
-			type: "erEntity",
-			x: 40,
-			y: 60,
-			extraProps: {
-				name: "users",
-				columns: entityColumns,
-				nameWidth: 140,
-				typeWidth: 160,
-			},
+			kind: "addObjects",
+			objects: [
+				{
+					type: "erEntity",
+					x: 40,
+					y: 60,
+					extraProps: {
+						name: "users",
+						columns: entityColumns,
+						nameWidth: 140,
+						typeWidth: 160,
+					},
+				},
+			],
 		});
 
 		expect(result.ok).toBe(true);
@@ -129,22 +137,25 @@ describe("erEntity through the AI ops", () => {
 		({ size }) => {
 			const fake = createFakeDocBridge();
 			fake.apply({
-				kind: "addObject",
-				type: "erEntity",
-				x: 0,
-				y: 0,
-				extraProps: {
-					name: "users",
-					columns: entityColumns,
-					nameWidth: 120,
-					typeWidth: 120,
-				},
+				kind: "addObjects",
+				objects: [
+					{
+						type: "erEntity",
+						x: 0,
+						y: 0,
+						extraProps: {
+							name: "users",
+							columns: entityColumns,
+							nameWidth: 120,
+							typeWidth: 120,
+						},
+					},
+				],
 			});
 
 			const refused = fake.apply({
-				kind: "resizeObject",
-				id: "erEntity-1",
-				...size,
+				kind: "resizeObjects",
+				entries: [{ id: "erEntity-1", ...size }],
 			});
 
 			expect(refused.ok).toBe(false);
@@ -159,11 +170,15 @@ describe("erEntity through the AI ops", () => {
 	it("takes new slot widths and new columns through set_extra_props, but no box width", () => {
 		const fake = createFakeDocBridge();
 		fake.apply({
-			kind: "addObject",
-			type: "erEntity",
-			x: 0,
-			y: 0,
-			extraProps: { name: "users", columns: entityColumns },
+			kind: "addObjects",
+			objects: [
+				{
+					type: "erEntity",
+					x: 0,
+					y: 0,
+					extraProps: { name: "users", columns: entityColumns },
+				},
+			],
 		});
 
 		const result = fake.apply({
@@ -197,11 +212,15 @@ describe("erEntity through the AI ops", () => {
 		({ columns }) => {
 			const fake = createFakeDocBridge();
 			const result = fake.apply({
-				kind: "addObject",
-				type: "erEntity",
-				x: 0,
-				y: 0,
-				extraProps: { name: "users", columns },
+				kind: "addObjects",
+				objects: [
+					{
+						type: "erEntity",
+						x: 0,
+						y: 0,
+						extraProps: { name: "users", columns },
+					},
+				],
 			});
 
 			expect(result.ok).toBe(false);
@@ -218,11 +237,15 @@ describe("erEntity through the AI ops", () => {
 	it("reports set_style typography as ignored, writing it nowhere", () => {
 		const fake = createFakeDocBridge();
 		fake.apply({
-			kind: "addObject",
-			type: "erEntity",
-			x: 0,
-			y: 0,
-			extraProps: { name: "users", columns: entityColumns },
+			kind: "addObjects",
+			objects: [
+				{
+					type: "erEntity",
+					x: 0,
+					y: 0,
+					extraProps: { name: "users", columns: entityColumns },
+				},
+			],
 		});
 		const before = structuredClone(readEntity(fake.currentDoc()));
 
@@ -238,15 +261,19 @@ describe("erEntity through the AI ops", () => {
 		expect(readEntity(fake.currentDoc())).toEqual(before);
 	});
 
-	it("refuses add_object typography, which a new entity has no place for", () => {
+	it("refuses add_objects typography, which a new entity has no place for", () => {
 		const fake = createFakeDocBridge();
 		const result = fake.apply({
-			kind: "addObject",
-			type: "erEntity",
-			x: 0,
-			y: 0,
-			fontSize: 18,
-			extraProps: { name: "users", columns: entityColumns },
+			kind: "addObjects",
+			objects: [
+				{
+					type: "erEntity",
+					x: 0,
+					y: 0,
+					fontSize: 18,
+					extraProps: { name: "users", columns: entityColumns },
+				},
+			],
 		});
 
 		expect(result.ok).toBe(false);
@@ -260,13 +287,20 @@ describe("an erEntity's own tools, as the generic ops point at them", () => {
 	const createEntityDoc = (toolSet: CanvasToolSet) => {
 		const fake = createFakeDocBridge(toolSet);
 		fake.apply({
-			kind: "addObject",
-			type: "erEntity",
-			x: 0,
-			y: 0,
-			extraProps: { name: "users", columns: entityColumns },
+			kind: "addObjects",
+			objects: [
+				{
+					type: "erEntity",
+					x: 0,
+					y: 0,
+					extraProps: { name: "users", columns: entityColumns },
+				},
+			],
 		});
-		fake.apply({ kind: "addObject", type: "rect", x: 400, y: 0 });
+		fake.apply({
+			kind: "addObjects",
+			objects: [{ type: "rect", x: 400, y: 0 }],
+		});
 		return fake;
 	};
 
@@ -290,21 +324,8 @@ describe("an erEntity's own tools, as the generic ops point at them", () => {
 	it.each([
 		{ label: "get_text", op: { kind: "getText", id: "erEntity-1" } },
 		{
-			label: "set_text",
-			op: { kind: "setText", id: "erEntity-1", text: "accounts" },
-		},
-		{
 			label: "set_texts",
 			op: { kind: "setTexts", entries: [{ id: "erEntity-1", text: "x" }] },
-		},
-		{
-			label: "set_text_style",
-			op: {
-				kind: "setTextStyle",
-				id: "erEntity-1",
-				match: "users",
-				fontWeight: "bold",
-			},
 		},
 		{
 			label: "set_text_styles",
@@ -341,11 +362,15 @@ describe("an erEntity's own tools, as the generic ops point at them", () => {
 	it("points set_style's ignored note at them once, and at nothing for a type without any", () => {
 		const fake = createEntityDoc(erToolSet);
 		fake.apply({
-			kind: "addObject",
-			type: "erEntity",
-			x: 0,
-			y: 300,
-			extraProps: { name: "orders", columns: entityColumns },
+			kind: "addObjects",
+			objects: [
+				{
+					type: "erEntity",
+					x: 0,
+					y: 300,
+					extraProps: { name: "orders", columns: entityColumns },
+				},
+			],
 		});
 
 		const result = fake.apply({
@@ -382,11 +407,15 @@ describe("connecting to an erEntity's column points", () => {
 			["orders", 400],
 		] as const) {
 			fake.apply({
-				kind: "addObject",
-				type: "erEntity",
-				x,
-				y: 0,
-				extraProps: { name, columns: entityColumns },
+				kind: "addObjects",
+				objects: [
+					{
+						type: "erEntity",
+						x,
+						y: 0,
+						extraProps: { name, columns: entityColumns },
+					},
+				],
 			});
 		}
 		return fake;
@@ -406,11 +435,15 @@ describe("connecting to an erEntity's column points", () => {
 		const fake = twoEntities();
 
 		const result = fake.apply({
-			kind: "connect",
-			sourceId: "erEntity-2",
-			targetId: "erEntity-1",
-			sourceAnchor: "col:1:left",
-			targetAnchor: "col:0:right",
+			kind: "connectMany",
+			entries: [
+				{
+					sourceId: "erEntity-2",
+					targetId: "erEntity-1",
+					sourceAnchor: "col:1:left",
+					targetAnchor: "col:0:right",
+				},
+			],
 		});
 
 		expect(result.ok).toBe(true);
@@ -427,10 +460,14 @@ describe("connecting to an erEntity's column points", () => {
 		const before = structuredClone(fake.currentDoc());
 
 		const result = fake.apply({
-			kind: "connect",
-			sourceId: "erEntity-2",
-			targetId: "erEntity-1",
-			sourceAnchor: "col:2:left",
+			kind: "connectMany",
+			entries: [
+				{
+					sourceId: "erEntity-2",
+					targetId: "erEntity-1",
+					sourceAnchor: "col:2:left",
+				},
+			],
 		});
 
 		expect(result.ok).toBe(false);

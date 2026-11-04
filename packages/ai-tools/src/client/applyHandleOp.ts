@@ -77,7 +77,7 @@ const describeTextSlot = (
 	}
 	const missing = describeMissingRoom(measurement);
 	const missingNote = missing === "" ? "" : ` It is short ${missing}.`;
-	return `${head}; the shape is clipping it.${missingNote} Fix it by growing the object with resize_object, by lowering fontSize with set_style, or by shortening the text with set_text.`;
+	return `${head}; the shape is clipping it.${missingNote} Fix it by growing the object with resize_objects, by lowering fontSize with set_style, or by shortening the text with set_texts.`;
 };
 
 /** What hit_test was aimed at, written one way for a point and another for a rect (the rect is the one with a width) */
@@ -318,7 +318,7 @@ export const applyHandleOp = async (
 				text: [
 					`${overlaps.length} overlapping pair(s), widest overlap first:`,
 					...overlaps.map(describeOverlap),
-					"Open the layout up with translate_objects, or re-place one shape with set_position.",
+					"Open the layout up with translate_objects, or re-place shapes with set_positions.",
 				].join("\n"),
 			};
 		}

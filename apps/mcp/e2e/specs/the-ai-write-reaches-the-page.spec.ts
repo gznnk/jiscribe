@@ -13,13 +13,18 @@ test("draws what a tool added to the file while the page was open", async ({
 	);
 	await openInViewer(filePath);
 
-	const added = await mcp.callTool("add_rect", {
+	const added = await mcp.callTool("add_objects", {
 		path: filePath,
-		x: 240,
-		y: 40,
-		width: 100,
-		height: 60,
-		text: "from the AI",
+		objects: [
+			{
+				type: "rect",
+				x: 240,
+				y: 40,
+				width: 100,
+				height: 60,
+				text: "from the AI",
+			},
+		],
 	});
 	expect(added.isError).toBe(false);
 	expect(added.text).not.toContain("error:");
