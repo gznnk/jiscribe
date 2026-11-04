@@ -7,7 +7,8 @@
  * azureIconCatalog derives. A test holds every target to an icon that exists
  * and every alias to a spelling that would not resolve without it.
  *
- * The Entra spellings (`entra`, `aad`, `azure-ad`) reach Microsoft Entra ID,
+ * The Entra spellings (`entra`, `aad`, `azure-ad`, and `microsoft-entra-id`,
+ * the catalog's own label) reach Microsoft Entra ID,
  * which comes from Entra's own icon package; `entra-id-governance` and
  * `entra-workload-id` reach the Azure icons Entra's package draws the same.
  */
@@ -47,6 +48,7 @@ export const AZURE_ICON_ALIASES: Readonly<Record<string, string>> = {
 	lb: "load-balancers",
 	"log-analytics": "log-analytics-workspaces",
 	"managed-identity": "managed-identities",
+	"microsoft-entra-id": "entra-id",
 	"nat-gateway": "nat",
 	nsg: "network-security-groups",
 	"private-endpoint": "private-endpoints",

@@ -53,9 +53,10 @@ group/region                          Region_32.svg
 The short names people say (`lambda`, `s3`, `alb`, `igw`) are resolved by the
 table in `src/schema/icon/iconAliases.ts`. A spelling with the `amazon-` /
 `aws-` prefix or the layer prefix dropped resolves too, wherever it is
-unambiguous. A name that resolves to nothing is a validation error carrying
-candidates. `awsIconCatalog` (`src/schema/icon/awsIconCatalog.ts`) is all of
-that lookup, built with canvas-sdk's `createIconSetCatalog`.
+unambiguous, and so does the product name as it is written under the icon
+(`Amazon DynamoDB`). A name that resolves to nothing is a validation error
+carrying candidates. `awsIconCatalog` (`src/schema/icon/awsIconCatalog.ts`) is
+all of that lookup, built with canvas-sdk's `createIconSetCatalog`.
 
 ## Light and dark
 

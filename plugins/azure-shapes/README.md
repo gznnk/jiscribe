@@ -53,9 +53,11 @@ entra-id               Microsoft Entra ID color icon.svg (the Entra package)
 The short names people say (`vm`, `aks`, `vnet`, `kv`, `entra`, `aad`) are resolved by the
 table in `src/schema/icon/iconAliases.ts`. A spelling with the `azure-` /
 `microsoft-` prefix dropped resolves too (`cosmos-db`, `service-bus`), wherever
-it is unambiguous. A name that resolves to nothing is a validation error
-carrying candidates. `azureIconCatalog` (`src/schema/icon/azureIconCatalog.ts`)
-is all of that lookup, built with canvas-sdk's `createIconSetCatalog`.
+it is unambiguous, and so does the product name as it is written under the icon
+(`Azure DevOps`, `Microsoft Entra ID`). A name that resolves to nothing is a
+validation error carrying candidates. `azureIconCatalog`
+(`src/schema/icon/azureIconCatalog.ts`) is all of that lookup, built with
+canvas-sdk's `createIconSetCatalog`.
 
 ## Regenerating the drawings
 

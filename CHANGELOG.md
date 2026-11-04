@@ -192,6 +192,11 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Changed
 
+- **Breaking: `ObjectOverlap.covers` gains `"both"`, for two boxes with all four
+  edges equal.** `CanvasHandle.measure.findOverlaps` used to report such a pair as
+  `"first"`; it now reports `"both"`. Code that reads the containing shape as
+  `covers === "first" ? ids[0] : ids[1]`, or switches over `covers` with a
+  `never` default, has to handle the new value.
 - **Breaking: `DocOps.resizeObjects` takes one entry per object.**
   `resizeObjects(doc, entries)` takes `ResizeObjectEntry[]` (an `id` with an
   optional `width` and `height`, exported from `@jiscribe/doc`) in place of
@@ -320,6 +325,16 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   `readAwsIconDrawing` and `createAwsStencilIcon`; their counterparts are the
   canvas-sdk icon-set kit's. Every name an `awsIcon`'s `icon` could hold
   resolves to the same icon as before, and the diagnostics read the same.
+- **An icon's `icon` takes the product name as it is written under the icon.**
+  `awsIcon`, `azureIcon` and `gcpIcon` resolve camel case, spaces, `&` and
+  parentheses as the vendor writes them (`Amazon DynamoDB`, `Azure DevOps`,
+  `BigQuery`, `Web & Mobile`, `Cloud Services (Classic)`), and a camel-case name
+  split into words (`big-query`). `normalizeIconSetName` turns every character
+  other than a letter, a digit or `/` into `-`, and `createIconSetCatalog`'s
+  `resolveName` tries a last round with every `-` and `/` dropped, where a
+  canonical name wins over an alias or a shorthand. `microsoft-entra-id` is an
+  alias of `entra-id`. A library search for a term that normalizes to nothing
+  (`&`, a term in Japanese) now matches nothing instead of laying out the palette.
 
 ### Removed
 

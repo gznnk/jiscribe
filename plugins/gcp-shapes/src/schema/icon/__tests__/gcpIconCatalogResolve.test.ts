@@ -54,6 +54,25 @@ describe("gcpIconCatalog.resolveName", () => {
 		expect(resolveName("GCE")).toBe("compute-engine");
 	});
 
+	it("resolves the product name as written under the icon", () => {
+		expect(resolveName("BigQuery")).toBe("bigquery");
+		expect(resolveName("AlloyDB Omni")).toBe("alloydb");
+		expect(resolveName("AutoML Vision")).toBe("ai-machine-learning");
+		expect(resolveName("Web & Mobile")).toBe("web-mobile");
+		expect(resolveName("AI / Machine Learning")).toBe("ai-machine-learning");
+	});
+
+	it("resolves every spelling of Pub/Sub through the one alias", () => {
+		expect(resolveName("Pub/Sub")).toBe("data-analytics");
+		expect(resolveName("pub/sub")).toBe("data-analytics");
+		expect(resolveName("pub-sub")).toBe("data-analytics");
+	});
+
+	// What a caller writes when it kebab-cases a camel-case name itself.
+	it("resolves a camel-case name split into words", () => {
+		expect(resolveName("big-query")).toBe("bigquery");
+	});
+
 	it("returns null for a name nothing answers to", () => {
 		expect(resolveName("does-not-exist")).toBeNull();
 		expect(resolveName("constructor")).toBeNull();

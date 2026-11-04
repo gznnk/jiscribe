@@ -44,7 +44,12 @@ export type IconSetCatalogConfig<TEntry extends IconSetCatalogEntry> = {
 export type IconSetCatalog<TEntry extends IconSetCatalogEntry> = {
 	/**
 	 * Resolves a written name onto a canonical one: as written first (canonical
-	 * name, alias, shorthand), then the same three after normalizeIconSetName.
+	 * name, alias, shorthand), then the same three after normalizeIconSetName,
+	 * then the normalized name with every `-` and `/` removed against the same
+	 * three spellings joined that way (`BigQuery` and `big-query` reach
+	 * `bigquery`). In that last round a canonical name wins over an alias or a
+	 * shorthand; a joined spelling two names share, or two different targets
+	 * claim among the aliases and shorthands, resolves to nothing.
 	 * Null when nothing answers to it.
 	 */
 	resolveName: (name: string) => string | null;
@@ -61,8 +66,9 @@ export type IconSetCatalog<TEntry extends IconSetCatalogEntry> = {
 	suggestNames: (name: string) => string[];
 	/**
 	 * The names a library search for the term lays out, matched against the
-	 * name, the label, the aliases and the category. An empty term (or one that
-	 * normalizes to nothing) answers with the palette.
+	 * name, the label, the aliases and the category. An empty term (after
+	 * trimming) answers with the palette; any other term that normalizes to
+	 * nothing (`&`, a term in Japanese) matches nothing.
 	 */
 	search: (query: string) => IconSetSearchResult;
 	/** Every section of the "show all" view, in declaration order. */
@@ -97,8 +103,9 @@ const hasOwnKey = (record: object, key: string): boolean =>
  * spelling variants), suggestions for a miss, the library search and the
  * "show all" sections, and the validator a doc definition registers.
  *
- * The shorthand and word-set indexes are built on first use, so a host that
- * only parses documents carrying canonical names never builds them.
+ * The shorthand, joined-spelling and word-set indexes are built on first use,
+ * so a host that only parses documents carrying canonical names never builds
+ * them.
  *
  * @param config - the set's tables; `entries`, `aliases` and `palette` are read,
  *   never copied, so they must not change afterwards
@@ -144,6 +151,48 @@ export const createIconSetCatalog = <TEntry extends IconSetCatalogEntry>(
 		return namesByShorthand;
 	};
 
+	/**
+	 * Joined spelling to canonical name, for the last round of resolveName. A
+	 * canonical name's joined spelling wins over an alias's or a shorthand's;
+	 * one two names share, or two different targets claim among the aliases and
+	 * shorthands, is recorded as null. Built on first use.
+	 */
+	let namesByJoinedSpelling: Map<string, string | null> | null = null;
+
+	const readNamesByJoinedSpelling = (): Map<string, string | null> => {
+		if (namesByJoinedSpelling === null) {
+			const claimedByNames = new Map<string, string | null>();
+			for (const name of names) {
+				const joined = joinIconSetName(name);
+				claimedByNames.set(joined, claimedByNames.has(joined) ? null : name);
+			}
+			const claimedBySpellings = new Map<string, string | null>();
+			const claim = (spelling: string, target: string): void => {
+				const joined = joinIconSetName(spelling);
+				claimedBySpellings.set(
+					joined,
+					!claimedBySpellings.has(joined) ||
+						claimedBySpellings.get(joined) === target
+						? target
+						: null,
+				);
+			};
+			for (const [alias, target] of Object.entries(aliases)) {
+				claim(alias, target);
+			}
+			for (const [shorthand, target] of readNamesByShorthand()) {
+				if (target !== null) {
+					claim(shorthand, target);
+				}
+			}
+			namesByJoinedSpelling = new Map([
+				...claimedBySpellings,
+				...claimedByNames,
+			]);
+		}
+		return namesByJoinedSpelling;
+	};
+
 	/** Looks the spelling up as written: canonical name, then alias, then shorthand. */
 	const matchExactly = (name: string): string | null => {
 		if (hasOwnKey(entries, name)) {
@@ -161,7 +210,16 @@ export const createIconSetCatalog = <TEntry extends IconSetCatalogEntry>(
 			return direct;
 		}
 		const normalized = normalizeIconSetName(name);
-		return normalized === name ? null : matchExactly(normalized);
+		if (normalized === "") {
+			return null;
+		}
+		if (normalized !== name) {
+			const variant = matchExactly(normalized);
+			if (variant !== null) {
+				return variant;
+			}
+		}
+		return readNamesByJoinedSpelling().get(joinIconSetName(normalized)) ?? null;
 	};
 
 	const readEntry = (name: string): TEntry | null => {
@@ -209,10 +267,12 @@ export const createIconSetCatalog = <TEntry extends IconSetCatalogEntry>(
 
 	const search = (query: string): IconSetSearchResult => {
 		const needle = normalizeIconSetName(query);
-		const matched =
-			needle === ""
-				? [...paletteNames]
-				: sortByRelevance(findMatches(needle), needle);
+		let matched: string[] = [];
+		if (query.trim() === "") {
+			matched = [...paletteNames];
+		} else if (needle !== "") {
+			matched = sortByRelevance(findMatches(needle), needle);
+		}
 		return {
 			names: matched.slice(0, MAX_SEARCH_RESULTS),
 			total: matched.length,
@@ -324,6 +384,9 @@ const assertTablesConsistent = <TEntry extends IconSetCatalogEntry>({
 		}
 	}
 };
+
+/** A name with its `-` and `/` dropped: `big-query` and `bigquery` both become `bigquery`. */
+const joinIconSetName = (name: string): string => name.replace(/[-/]/g, "");
 
 /** Prefix matches first, then shortest, then alphabetical. */
 const sortByRelevance = (names: string[], needle: string): string[] =>

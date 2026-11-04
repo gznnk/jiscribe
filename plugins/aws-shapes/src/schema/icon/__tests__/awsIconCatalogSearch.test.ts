@@ -23,10 +23,10 @@ describe("awsIconCatalog.search with an empty term", () => {
 		expect(total).toBe(AWS_TIER1_ICON_NAMES.length);
 	});
 
-	// The term is normalized before it is looked at, so one made of separators
-	// alone is no term at all and falls back to the palette
-	it("treats a term that normalizes to nothing as an empty one", () => {
-		expect(search("---").names).toEqual([...AWS_TIER1_ICON_NAMES]);
+	// A term in Japanese, say, normalizes to nothing too; listing the palette
+	// for it would pass the whole palette off as matches
+	it("matches nothing for a term that normalizes to nothing", () => {
+		expect(search("---")).toEqual({ names: [], total: 0 });
 	});
 });
 

@@ -56,10 +56,9 @@ describe("findObjectOverlaps", () => {
 		expect(overlap.covers).toBe("first");
 	});
 
-	it("marks a pair stacked in the same place as covering each other's box", () => {
+	it("marks a pair stacked in the same place as occupying the same box", () => {
 		const objects = toMap([rect("a", 0, 0), rect("b", 0, 0)]);
-		// Identical boxes: each covers the other, and the first found wins the label.
-		expect(findObjectOverlaps(undefined, objects)[0].covers).toBe("first");
+		expect(findObjectOverlaps(undefined, objects)[0].covers).toBe("both");
 	});
 
 	it("leaves connectors out, a line crossing a shape being how they are drawn", () => {

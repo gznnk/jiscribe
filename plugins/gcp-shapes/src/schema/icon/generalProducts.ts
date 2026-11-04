@@ -105,9 +105,6 @@ export const GCP_GENERAL_PRODUCT_ICONS: Readonly<Record<string, string>> = {
 	"dataproc-metastore": "data-analytics",
 	datashare: "data-analytics",
 	datastream: "data-analytics",
-	"pub-sub": "data-analytics",
-	// normalizeIconSetName keeps `/`, so the official spelling "Pub/Sub" lands here.
-	"pub/sub": "data-analytics",
 	pubsub: "data-analytics",
 	composer: "data-analytics",
 

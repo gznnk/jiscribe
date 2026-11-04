@@ -84,8 +84,7 @@ export type CanvasMeasureHandle = {
 	 */
 	connectorPath(id: string): Point[] | null;
 	/**
-	 * The shapes sitting on top of one another (see {@link ObjectOverlap}) — the
-	 * check a computed layout is verified with.
+	 * The pairs of shapes whose boxes share area (see {@link ObjectOverlap}).
 	 *
 	 * @param ids - Shapes to compare, or every object on the canvas when omitted
 	 * @returns One entry per overlapping pair, largest shared area first
