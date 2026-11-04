@@ -275,6 +275,34 @@ describe("computeLayeredLayout", () => {
 		}
 	});
 
+	it("keeps a frame's title band clear of its members, moving what lies below", () => {
+		const plain = computeLayeredLayout(
+			[{ ...box("a"), parentId: "f" }, box("b")],
+			[{ id: "ab", sourceId: "a", targetId: "b" }],
+			{ rankSpacing: 60 },
+			[{ id: "f" }],
+		);
+		const titled = computeLayeredLayout(
+			[{ ...box("a"), parentId: "f" }, box("b")],
+			[{ id: "ab", sourceId: "a", targetId: "b" }],
+			{ rankSpacing: 60 },
+			[{ id: "f", titleHeight: 30 }],
+		);
+
+		const frameOf = (result: typeof plain) => result.frames[0].bounds;
+		const nodeOf = (result: typeof plain, id: string) =>
+			result.nodes.find((node) => node.id === id)?.bounds as Rect;
+		// The frame's top edge stays; its member and the node below both move down by
+		// the band, and the frame grows by it.
+		expect(frameOf(titled).y).toBe(frameOf(plain).y);
+		expect(frameOf(titled).height).toBe(frameOf(plain).height + 30);
+		expect(nodeOf(titled, "a").y).toBe(nodeOf(plain, "a").y + 30);
+		expect(nodeOf(titled, "b").y).toBe(nodeOf(plain, "b").y + 30);
+		expect(nodeOf(titled, "a").y - frameOf(titled).y).toBeGreaterThanOrEqual(
+			30,
+		);
+	});
+
 	it("refuses a frame that holds nothing", () => {
 		expect(() =>
 			computeLayeredLayout([box("a"), box("b")], [], {}, [{ id: "empty" }]),

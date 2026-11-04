@@ -73,7 +73,11 @@ export const AwsGroupFeatures = {
 	fill: true,
 	text: "body",
 	connectable: true,
-	frame: true,
+	// The corner icon and the label row, as calcAwsGroupLabelTextRegion lays them out.
+	frame: {
+		titleHeight:
+			AWS_GROUP_PADDING + AWS_GROUP_CORNER_ICON_SIZE + AWS_GROUP_LABEL_GAP,
+	},
 } as const satisfies ObjectFeatures;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

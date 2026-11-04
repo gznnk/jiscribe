@@ -31,7 +31,8 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   for at least a stub's length before it first bends, and a gap too narrow for the
   routes crossing it is widened. A group, and a shape whose type declares the new
   `features.frame` (`container`, `awsGroup`), is a frame: what lies inside it is
-  laid out inside it and the frame is resized around them. Direction (`TB` /
+  laid out inside it, the frame is resized around them, and the `titleHeight` the
+  type declares is kept clear below its top edge. Direction (`TB` /
   `LR` / `BT` / `RL`) and the two gaps are parameters; omitting ids lays out the
   whole canvas, and the drawing keeps its top-left corner. The algorithm is dagre's,
   wrapped in the new headless `@jiscribe/layout` package.

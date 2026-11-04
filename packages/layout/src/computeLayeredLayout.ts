@@ -40,6 +40,11 @@ export type LayoutGraphFrame = {
 	id: string;
 	/** Id of the frame this one sits inside, when it does. */
 	parentId?: string;
+	/**
+	 * Height in px of the title band along the frame's top edge; the layout keeps that
+	 * much clear below the edge, whichever way the ranks run. Defaults to 0.
+	 */
+	titleHeight?: number;
 };
 
 export type LayoutGraphEdge = {
@@ -331,7 +336,8 @@ const calcOrthogonalPath = (
  * @param options - Direction and gaps; see {@link LAYERED_LAYOUT_DEFAULTS}
  * @param frames - Frames nodes may sit inside (see {@link LayoutGraphFrame}); ids must be
  *   distinct from the nodes' and each other's, a parent must be another frame, every
- *   frame must hold a node or a frame, and an edge ending on a frame is an error
+ *   frame must hold a node or a frame, and an edge ending on a frame is an error. A
+ *   frame's `titleHeight` is kept clear below its top edge
  * @returns Every node's new top-left, every frame's box, and, for every edge that is not
  *   a self loop, where it meets each box (on the facing sides, fanned out toward where it
  *   goes) and the corners of a route between them
@@ -743,6 +749,50 @@ export const computeLayeredLayout = (
 		labelPosition: position,
 		labelOffset: offset,
 	});
+	// Room for every frame's title band: everything below a frame's top edge, its own
+	// members first of all, moves down by the band's height, and the frames spanning
+	// that edge grow by it. Top to bottom, so a frame inside another is moved by the
+	// outer band before it makes room for its own.
+	const titleHeightById = new Map(
+		frames.map((frame) => [frame.id, frame.titleHeight ?? 0] as const),
+	);
+	const movablePoints = new Set<Point>();
+	for (const { path, labelPoint } of routedEdges) {
+		for (const point of path) {
+			movablePoints.add(point);
+		}
+		if (labelPoint !== undefined) {
+			movablePoints.add(labelPoint);
+		}
+	}
+	const movableBoxes = [...laidOutNodes, ...laidOutFrames].map(
+		({ bounds }) => bounds,
+	);
+	for (const frame of [...laidOutFrames].sort(
+		(a, b) => a.bounds.y - b.bounds.y,
+	)) {
+		const titleHeight = titleHeightById.get(frame.id) ?? 0;
+		if (titleHeight <= 0) {
+			continue;
+		}
+		const edgeY = frame.bounds.y;
+		const isBelowEdge = (y: number): boolean =>
+			y > edgeY && !isSameCoordinate(y, edgeY);
+		for (const point of movablePoints) {
+			if (isBelowEdge(point.y)) {
+				point.y += titleHeight;
+			}
+		}
+		for (const box of movableBoxes) {
+			const bottom = box.y + box.height;
+			if (isBelowEdge(box.y)) {
+				box.y += titleHeight;
+			} else if (isBelowEdge(bottom)) {
+				box.height += titleHeight;
+			}
+		}
+	}
+
 	const laidOutEdges: LaidOutEdge[] = routedEdges.map(
 		({
 			edge,

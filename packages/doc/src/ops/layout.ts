@@ -59,7 +59,13 @@ const readOwnerId = (endpoint: EndpointRef): string | undefined =>
 const isFrameShape = (
 	object: ObjectRecord,
 	definitions: DocDefinitions,
-): boolean => definitions.get(object.type)?.features.frame === true;
+): boolean => definitions.get(object.type)?.features.frame !== undefined;
+
+/** Room the frame's type keeps for its title band; a group has none. */
+const readTitleHeight = (
+	object: ObjectRecord,
+	definitions: DocDefinitions,
+): number => definitions.get(object.type)?.features.frame?.titleHeight ?? 0;
 
 const isGroupObject = (object: ObjectRecord): boolean =>
 	object.type === GroupFeatures.type;
@@ -273,6 +279,7 @@ export const layoutObjects = (
 		({ object, parentId }) => ({
 			id: object.id,
 			...(parentId !== undefined ? { parentId } : {}),
+			titleHeight: readTitleHeight(object, definitions),
 		}),
 	);
 	const graphEdges: LayoutGraphEdge[] = connectors.map((connector) => {
