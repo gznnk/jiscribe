@@ -67,6 +67,19 @@ export const parseFontStack = (fontFamily: string): string[] =>
 		);
 
 /**
+ * Whether text set in a font stack is measured from font files rather than
+ * estimated: true when the stack names at least one family the canvas ships
+ * whose package is installed here. Package-internal — not exported from the
+ * package root.
+ *
+ * @param fontFamily - A `font-family` value as a document stores it; generic keywords count for nothing, and an empty string answers false
+ */
+export const isFontStackMeasured = (fontFamily: string): boolean =>
+	parseFontStack(fontFamily).some(
+		(family) => resolveFontSourceDir(family) !== null,
+	);
+
+/**
  * The numeric weight a CSS `font-weight` names. Only the two keywords a document
  * can hold are spelled out; anything unparseable is taken as regular, matching
  * what a browser falls back to.

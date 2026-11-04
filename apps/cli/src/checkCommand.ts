@@ -1,8 +1,10 @@
 import { readFileSync } from "node:fs";
+import path from "node:path";
 import { parseArgs } from "node:util";
 
 import type { Diagnostic } from "@jiscribe/doc-tools";
 import { diagnoseDoc, validateDoc } from "@jiscribe/doc-tools";
+import { diagnoseImageSources } from "@jiscribe/doc-tools/file";
 
 import { parseCommandArgs } from "./parseCommandArgs";
 import { formatDiagnosticLine, hasError } from "./reportLines";
@@ -17,7 +19,10 @@ type FileReport = {
 	diagnostics: Diagnostic[];
 };
 
-const checkFile = (file: string, diagnose: boolean): FileReport => {
+const checkFile = async (
+	file: string,
+	diagnose: boolean,
+): Promise<FileReport> => {
 	let text: string;
 	try {
 		text = readFileSync(file, "utf8");
@@ -40,7 +45,10 @@ const checkFile = (file: string, diagnose: boolean): FileReport => {
 	// noise beside a structural error anyway — a shape whose width failed to
 	// validate has no meaningful content box.
 	if (diagnose && result.ok && result.doc !== undefined) {
-		diagnostics.push(...diagnoseDoc(result.doc));
+		diagnostics.push(
+			...diagnoseDoc(result.doc),
+			...(await diagnoseImageSources(result.doc, path.resolve(file))),
+		);
 	}
 	return { file, ok: !hasError(diagnostics), diagnostics };
 };
@@ -50,13 +58,13 @@ const checkFile = (file: string, diagnose: boolean): FileReport => {
  * prints what they came to.
  *
  * @param argv - Arguments after the sub-command name; every positional is a file path (globs are the shell's job), and `--json` swaps the one-line-per-finding output for a single JSON object
- * @param diagnose - Whether to add the overflow diagnosis on top of validation, which is the whole difference between the two sub-commands
+ * @param diagnose - Whether to add the diagnosis on top of validation — what does not fit or cannot be seen, and image files missing beside the document — which is the whole difference between the two sub-commands
  * @returns The process exit code: 0 when every file passed, 1 when any produced an error
  */
-export const runCheckCommand = (
+export const runCheckCommand = async (
 	argv: readonly string[],
 	diagnose: boolean,
-): number => {
+): Promise<number> => {
 	const parsed = parseCommandArgs(usageFor(diagnose), () =>
 		parseArgs({
 			args: [...argv],
@@ -74,7 +82,10 @@ export const runCheckCommand = (
 		return 2;
 	}
 
-	const reports = positionals.map((file) => checkFile(file, diagnose));
+	const reports: FileReport[] = [];
+	for (const file of positionals) {
+		reports.push(await checkFile(file, diagnose));
+	}
 
 	if (values.json) {
 		process.stdout.write(`${JSON.stringify({ files: reports }, null, 2)}\n`);

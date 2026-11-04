@@ -1,4 +1,4 @@
-import { mkdir } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -87,6 +87,14 @@ const labelOverflowingDoc: CanvasFileContent = {
 	],
 };
 
+/** One image, named relative to the diagram's directory. */
+const imageDoc = (src: string): CanvasFileContent => ({
+	version: 1,
+	root: [
+		{ id: "photo", type: "image", x: 0, y: 0, width: 80, height: 60, src },
+	],
+});
+
 let client: McpTestClient;
 let workspace: TempCanvasWorkspace;
 
@@ -144,6 +152,29 @@ describe("diagnose_canvas", () => {
 		const result = await client.callTool("diagnose_canvas", { path });
 		expect(result.text).toMatch(/^valid: false\n/);
 		expect(result.text).toContain("JSON syntax error");
+	});
+
+	it("reports an image whose file is not beside the diagram", async () => {
+		const path = await workspace.writeDoc(
+			"missingImage.jis.json",
+			imageDoc("images/missing.png"),
+		);
+		const result = await client.callTool("diagnose_canvas", { path });
+		expect(result.text).toMatch(/^valid: false\n1 issue\(s\):\n/);
+		expect(result.text).toContain(
+			'- error photo: src "images/missing.png" names a file that does not exist, so the canvas draws a placeholder box in its place',
+		);
+	});
+
+	it("reports nothing for an image whose file is in place", async () => {
+		await mkdir(join(workspace.dirPath, "images"), { recursive: true });
+		await writeFile(join(workspace.dirPath, "images", "present.png"), "");
+		const path = await workspace.writeDoc(
+			"presentImage.jis.json",
+			imageDoc("images/present.png"),
+		);
+		const result = await client.callTool("diagnose_canvas", { path });
+		expect(result.text).toBe("valid: true");
 	});
 
 	it("returns a file it cannot read as error text, not as an exception", async () => {

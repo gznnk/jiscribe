@@ -31,6 +31,7 @@ import { z } from "zod";
 import { canvasToolSet } from "./canvasDefinitions";
 import {
 	CanvasFileError,
+	diagnoseImageSources,
 	readCanvasFileText,
 	writeFileAtomically,
 	CANVAS_FILE_EXTENSIONS,
@@ -279,20 +280,31 @@ export function createJiscribeMcpServer(
 		registerName("diagnose_canvas"),
 		{
 			description: [
-				"Check an existing .jis file: validation with the canvas parser plus a diagnosis of whether each shape's text actually fits inside it.",
+				"Check an existing .jis file: validation with the canvas parser plus a diagnosis of whether each shape's text actually fits inside it, and of what a reader cannot see — a shape hidden under another's opaque fill, an image whose file is missing.",
 				"Names the file by path, so a large diagram never has to be sent through the conversation; this is the only validation entry point, and it reports JSON syntax errors too.",
-				"Overflow is only diagnosed when the file itself validates, since a shape with an invalid size has no meaningful content box.",
+				"The diagnosis only runs when the file itself validates, since a shape with an invalid size has no meaningful content box.",
 				"Returns one line per finding, or valid: true when there is nothing to report.",
 			].join(" "),
 			inputSchema: z.object({ path: pathArg }).strict(),
 		},
 		async ({ path }) =>
 			runTool(async () => {
-				const text = await runtime.withCanvasFileLock(path, readCanvasFileText);
+				const { filePath, text } = await runtime.withCanvasFileLock(
+					path,
+					async (filePath) => ({
+						filePath,
+						text: await readCanvasFileText(filePath),
+					}),
+				);
 				const result = validateDoc(text);
 				const diagnostics: Diagnostic[] = [...result.diagnostics];
 				if (result.ok && result.doc !== undefined) {
 					diagnostics.push(...diagnoseDoc(result.doc));
+					// The image files are not the lock's to guard, so they are read
+					// after it is released.
+					diagnostics.push(
+						...(await diagnoseImageSources(result.doc, filePath)),
+					);
 				}
 				return formatDiagnostics(diagnostics);
 			}),
