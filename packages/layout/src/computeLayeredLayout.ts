@@ -463,22 +463,25 @@ export const computeLayeredLayout = (
 	const boundsById = new Map(
 		laidOutNodes.map(({ id, bounds }) => [id, bounds] as const),
 	);
-	// The rows boxes sit on: every rank of nodes, and both borders of every frame.
+	// The rows boxes sit on: every rank of nodes. The border ranks dagre adds around a
+	// frame hold nothing a route could hit, and the half gaps beside them are too
+	// narrow to bend in, so their points are dropped from every route: a route then
+	// crosses a border wherever its column is and bends in the gaps between ranks.
 	const alongStart = (bounds: Rect): number =>
 		isVerticalFlow(direction) ? bounds.y : bounds.x;
 	const alongExtent = (bounds: Rect): number =>
 		isVerticalFlow(direction) ? bounds.height : bounds.width;
-	const slotRows = [
-		...laidOutNodes.map(
-			({ bounds }) => alongStart(bounds) + alongExtent(bounds) / 2,
-		),
-		...laidOutFrames.flatMap(({ bounds }) => [
-			alongStart(bounds),
-			alongStart(bounds) + alongExtent(bounds),
-		]),
-	];
+	const slotRows = laidOutNodes.map(
+		({ bounds }) => alongStart(bounds) + alongExtent(bounds) / 2,
+	);
 	const isSlotRow: IsSlotRow = (along) =>
 		slotRows.some((row) => isSameCoordinate(row, along));
+	const borderRows = laidOutFrames.flatMap(({ bounds }) => [
+		alongStart(bounds),
+		alongStart(bounds) + alongExtent(bounds),
+	]);
+	const isBorderRow = (along: number): boolean =>
+		borderRows.some((row) => isSameCoordinate(row, along));
 
 	const centreOf = (bounds: Rect): number =>
 		isVerticalFlow(direction)
@@ -516,10 +519,14 @@ export const computeLayeredLayout = (
 				x?: number;
 				y?: number;
 			};
-			const dagrePoints = (routed.points ?? []).map(({ x, y }) => ({
-				x: x - originX,
-				y: y - originY,
-			}));
+			const dagrePoints = (routed.points ?? [])
+				.map(({ x, y }) => ({ x: x - originX, y: y - originY }))
+				.filter(
+					(point, index, points) =>
+						index === 0 ||
+						index === points.length - 1 ||
+						!isBorderRow(isVerticalFlow(direction) ? point.y : point.x),
+				);
 			const slotColumns = readSlotColumns(dagrePoints, direction, isSlotRow);
 			const sourceAlone = isOnlyEdgeOnSide(edge.sourceId, sourceSide);
 			const targetAlone = isOnlyEdgeOnSide(edge.targetId, targetSide);
