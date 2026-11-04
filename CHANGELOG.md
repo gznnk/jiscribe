@@ -293,6 +293,16 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   `readAwsIconDrawing` and `createAwsStencilIcon`; their counterparts are the
   canvas-sdk icon-set kit's. Every name an `awsIcon`'s `icon` could hold
   resolves to the same icon as before, and the diagnostics read the same.
+- **An icon's `icon` takes the product name as it is written under the icon.**
+  `awsIcon`, `azureIcon` and `gcpIcon` resolve camel case, spaces, `&` and
+  parentheses as the vendor writes them (`Amazon DynamoDB`, `Azure DevOps`,
+  `BigQuery`, `Web & Mobile`, `Cloud Services (Classic)`), and a camel-case name
+  split into words (`big-query`). `normalizeIconSetName` turns every character
+  other than a letter, a digit or `/` into `-`, and `createIconSetCatalog`'s
+  `resolveName` tries a last round with every `-` and `/` dropped, where a
+  canonical name wins over an alias or a shorthand. `microsoft-entra-id` is an
+  alias of `entra-id`. A library search for a term that normalizes to nothing
+  (`&`, a term in Japanese) now matches nothing instead of laying out the palette.
 
 ### Removed
 

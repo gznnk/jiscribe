@@ -58,8 +58,10 @@ ai-machine-learning    Category Icons/AI _ Machine Learning
 table, `src/schema/icon/generalProducts.ts`, holds every product of Google's
 icon overview. The short names and Google's spellings that differ from the
 folders' (`gce`, `gcs`, `spanner`, `scc`, `google-kubernetes-engine`) are in
-`src/schema/icon/iconAliases.ts`. Write the product's own name in `text`: it is
-what tells apart the products sharing one category icon. A name that resolves
+`src/schema/icon/iconAliases.ts`. The product name as it is written under the
+icon resolves too (`BigQuery`, `AutoML Vision`, `Web & Mobile`). Write the
+product's own name in `text`: it is what tells apart the products sharing one
+category icon. A name that resolves
 to nothing is a validation error carrying candidates; Gemini is one, since the
 packages carry no Gemini icon. `gcpIconCatalog`
 (`src/schema/icon/gcpIconCatalog.ts`) is all of that lookup, built with

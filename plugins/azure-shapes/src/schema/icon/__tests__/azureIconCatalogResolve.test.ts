@@ -64,6 +64,14 @@ describe("azureIconCatalog.resolveName", () => {
 		expect(resolveName("arc-postgresql")).toBe("arc-postgresql");
 	});
 
+	it("resolves the product name as written under the icon", () => {
+		expect(resolveName("Azure DevOps")).toBe("azure-devops");
+		expect(resolveName("Cloud Services (Classic)")).toBe(
+			"cloud-services-classic",
+		);
+		expect(resolveName("Microsoft Entra ID")).toBe("entra-id");
+	});
+
 	it("returns null for a name nothing answers to", () => {
 		expect(resolveName("does-not-exist")).toBeNull();
 		expect(resolveName("constructor")).toBeNull();

@@ -29,7 +29,19 @@ describe("normalizeIconSetName", () => {
 		).toBe("resource/amazon-elastic-container-service/container-1");
 	});
 
+	it("drops a label's ampersand", () => {
+		expect(normalizeIconSetName("Web & Mobile")).toBe("web-mobile");
+	});
+
+	it("drops a label's parentheses", () => {
+		expect(normalizeIconSetName("Cloud Services (Classic)")).toBe(
+			"cloud-services-classic",
+		);
+	});
+
 	it("returns an empty string when nothing survives", () => {
 		expect(normalizeIconSetName("---")).toBe("");
+		expect(normalizeIconSetName("&")).toBe("");
+		expect(normalizeIconSetName("ストレージ")).toBe("");
 	});
 });

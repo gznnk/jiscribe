@@ -2,7 +2,10 @@
  * Rewrites an icon name into the canonical spelling: kebab-case, `/` kept as the
  * separator between name segments. The spellings a caller reaches for
  * (`Service/AWS-Lambda`, `service/awsLambda`, `service/aws_lambda`) all land on
- * `service/aws-lambda`.
+ * `service/aws-lambda`. Every run of characters other than letters, digits and
+ * `/` becomes one `-`, so a label's own punctuation drops out
+ * (`Web & Mobile` -> `web-mobile`, `Cloud Services (Classic)` ->
+ * `cloud-services-classic`).
  *
  * Digits stay where they are (the 53 of `route-53` and the 1 of `container-1`
  * are part of the name), and a run of capitals (`AWS`, `EC2`, `VPC`) counts as
@@ -10,8 +13,8 @@
  * makes a different name.
  *
  * @param name - any spelling; passing an already canonical name changes nothing
- * @returns the kebab-case name, or the empty string when nothing but separators
- *   was given
+ * @returns the kebab-case name, or the empty string when no letter or digit was
+ *   given (`"---"`, `"&"`, a name in Japanese)
  */
 export const normalizeIconSetName = (name: string): string =>
 	name
@@ -24,7 +27,7 @@ export const normalizeIconSetName = (name: string): string =>
 		// into "a-w-s"
 		.replace(/([A-Z]+)([A-Z][a-z])/g, "$1-$2")
 		.toLowerCase()
-		.replace(/[\s_.]+/g, "-")
+		.replace(/[^a-z0-9/]+/g, "-")
 		.replace(/-*\/-*/g, "/")
 		.replace(/-{2,}/g, "-")
 		.replace(/^-+|-+$/g, "");

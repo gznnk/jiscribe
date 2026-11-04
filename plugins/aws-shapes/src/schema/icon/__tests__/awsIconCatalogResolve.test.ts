@@ -59,6 +59,19 @@ describe("awsIconCatalog.resolveName", () => {
 		expect(isKnownName("service/does-not-exist")).toBe(false);
 	});
 
+	it("resolves the product name as written under the icon", () => {
+		expect(resolveName("Amazon DynamoDB")).toBe("service/amazon-dynamodb");
+	});
+
+	// Neither is the name under an icon: the first two are not the icon's own,
+	// the last two are shared by several.
+	it("does not resolve a vendor spelling that is not an icon's name", () => {
+		expect(resolveName("Amazon S3")).toBeNull();
+		expect(resolveName("Amazon Simple Storage Service (Amazon S3)")).toBeNull();
+		expect(resolveName("AWS Management Console")).toBeNull();
+		expect(resolveName("Shield")).toBeNull();
+	});
+
 	it("does not mistake a name of Object.prototype for an icon", () => {
 		expect(resolveName("constructor")).toBeNull();
 		expect(resolveName("toString")).toBeNull();

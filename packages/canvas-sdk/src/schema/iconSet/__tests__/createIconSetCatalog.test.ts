@@ -37,6 +37,18 @@ const catalog = createIconSetCatalog<TestEntry>({
 			.map((prefix) => name.slice(prefix.length)),
 });
 
+/** A one-category skeleton the cases needing names of their own build on. */
+const analyticsSetBase = {
+	setLabel: "Test",
+	entries: {} as Record<string, TestEntry>,
+	aliases: {} as Record<string, string>,
+	palette: [],
+	browseGroups: [
+		{ id: "analytics", label: "Analytics", categories: ["Analytics"] },
+	],
+	listShorthands: (): string[] => [],
+};
+
 const validate = (icon: unknown) =>
 	catalog.validateIconName({ icon } as never, "root[2]");
 
@@ -63,6 +75,91 @@ describe("createIconSetCatalog: resolveName", () => {
 	it("does not mistake a name of Object.prototype for an icon", () => {
 		expect(catalog.resolveName("constructor")).toBeNull();
 		expect(catalog.isKnownName("hasOwnProperty")).toBe(false);
+		expect(catalog.resolveName("toString")).toBeNull();
+	});
+
+	it("resolves a name that normalizes to nothing to nothing", () => {
+		expect(catalog.resolveName("&")).toBeNull();
+		expect(catalog.resolveName("ストレージ")).toBeNull();
+	});
+});
+
+describe("createIconSetCatalog: resolveName by the joined spelling", () => {
+	it("reaches a canonical name, an alias and a shorthand", () => {
+		expect(catalog.resolveName("Keyvault")).toBe("key-vault");
+		expect(catalog.resolveName("v-m")).toBe("virtual-machine");
+		expect(catalog.resolveName("Func-tions")).toBe("azure-functions");
+	});
+
+	// What a caller writes when it kebab-cases a camel-case name itself;
+	// normalizing leaves it unchanged.
+	it("reaches the last round from an already kebab-case spelling", () => {
+		expect(catalog.resolveName("virtual-mach-ine")).toBe("virtual-machine");
+		expect(catalog.resolveName("azure/storage")).toBe("azure-storage");
+	});
+
+	it("still answers a canonical name as written", () => {
+		const joinable = createIconSetCatalog<TestEntry>({
+			...analyticsSetBase,
+			entries: {
+				bigquery: entry("BigQuery", "Analytics"),
+				"big-query": entry("Big Query", "Analytics"),
+			},
+		});
+		expect(joinable.resolveName("big-query")).toBe("big-query");
+		expect(joinable.resolveName("bigquery")).toBe("bigquery");
+	});
+
+	it("resolves a joined spelling two names share to nothing", () => {
+		const shared = createIconSetCatalog<TestEntry>({
+			...analyticsSetBase,
+			entries: {
+				"multi-factor-auth": entry("Multi-Factor Auth", "Analytics"),
+				"multifactor-auth": entry("Multifactor Auth", "Analytics"),
+			},
+		});
+		expect(shared.resolveName("Multi Factorauth")).toBeNull();
+	});
+
+	it("resolves a joined spelling an alias and a shorthand claim for different names to nothing", () => {
+		const claimed = createIconSetCatalog<TestEntry>({
+			...analyticsSetBase,
+			entries: {
+				"azure-dev-box": entry("Azure Dev Box", "Analytics"),
+				"dev-tools": entry("Dev Tools", "Analytics"),
+			},
+			aliases: { devbox: "dev-tools" },
+			listShorthands: (name) =>
+				name.startsWith("azure-") ? [name.slice("azure-".length)] : [],
+		});
+		// The alias `devbox` and the shorthand `dev-box` both join to `devbox`.
+		expect(claimed.resolveName("De Vbox")).toBeNull();
+	});
+
+	it("resolves a joined spelling an alias and a shorthand claim for the same name to it", () => {
+		const agreeing = createIconSetCatalog<TestEntry>({
+			...analyticsSetBase,
+			entries: {
+				"azure-dev-box": entry("Azure Dev Box", "Analytics"),
+			},
+			aliases: { devbox: "azure-dev-box" },
+			listShorthands: (name) =>
+				name.startsWith("azure-") ? [name.slice("azure-".length)] : [],
+		});
+		// The alias `devbox` and the shorthand `dev-box` both join to `devbox`.
+		expect(agreeing.resolveName("De Vbox")).toBe("azure-dev-box");
+	});
+
+	it("lets a canonical name's joined spelling win over an alias's", () => {
+		const outranked = createIconSetCatalog<TestEntry>({
+			...analyticsSetBase,
+			entries: {
+				"data-lake": entry("Data Lake", "Analytics"),
+				warehouse: entry("Warehouse", "Analytics"),
+			},
+			aliases: { "data-lak-e": "warehouse" },
+		});
+		expect(outranked.resolveName("Datalake")).toBe("data-lake");
 	});
 });
 
@@ -94,6 +191,12 @@ describe("createIconSetCatalog: search and browse", () => {
 			names: ["azure-functions", "virtual-machine"],
 			total: 2,
 		});
+	});
+
+	// A term in Japanese, say, must not list the whole palette as matches.
+	it("matches nothing for a term that normalizes to nothing", () => {
+		expect(catalog.search("&")).toEqual({ names: [], total: 0 });
+		expect(catalog.search("---")).toEqual({ names: [], total: 0 });
 	});
 
 	it("matches the category and the aliases", () => {
