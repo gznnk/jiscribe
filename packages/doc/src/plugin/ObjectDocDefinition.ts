@@ -72,6 +72,18 @@ export type ObjectDocDefinition = {
 	extraConnectPointIds?: (doc: ObjectDoc) => readonly string[];
 
 	/**
+	 * Declared by a titled region other objects sit inside (a VPC, a subsystem
+	 * boundary). An automatic layout keeps the objects a doc of this type holds inside
+	 * it and sizes it to them, instead of moving it as one box among the others, and
+	 * keeps `titleHeight` px below the top edge clear for the title band. Answered per
+	 * doc, since a type may let a document size its band (the container's
+	 * `headerHeight`); the answer is the band as drawn, not capped at the box, which the
+	 * layout grows anyway. Only a type whose `geometry` is `"rect"` is resized that way;
+	 * any other is moved whole. Omitted = a doc of this type is a box like any other.
+	 */
+	container?: (doc: ObjectDoc) => { titleHeight: number };
+
+	/**
 	 * Where the type lays one text slot out, given a doc of it: the rectangle the
 	 * canvas places that slot in, answerable with no rendering layer present. A
 	 * declaration for any text form — the one `body` of a `"body"` / `"source"`

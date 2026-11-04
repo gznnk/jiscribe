@@ -82,7 +82,6 @@ export const AwsGroupFeatures = {
 	fill: true,
 	text: "body",
 	connectable: true,
-	container: { titleHeight: AWS_GROUP_HEADER_HEIGHT },
 } as const satisfies ObjectFeatures;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

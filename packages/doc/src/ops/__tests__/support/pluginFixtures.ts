@@ -271,18 +271,24 @@ export const columnCardDefinition: ObjectDocDefinition = {
 };
 
 /**
- * A titled region other shapes sit inside, declaring `features.container` the way the
- * container and AWS group shapes do (which a doc test cannot import). Its title band is
- * 20px tall. Created 400 by 300.
+ * A titled region other shapes sit inside, declaring `container` the way the container
+ * and AWS group shapes do (which a doc test cannot import). Its title band is 20px tall
+ * unless the doc sets `headerHeight`. Created 400 by 300.
  */
 export const regionDefinition: ObjectDocDefinition = {
 	features: {
 		type: "region",
 		geometry: "rect",
 		connectable: true,
-		container: { titleHeight: 20 },
 	},
 	validateDoc: () => [],
+	extraKeys: ["headerHeight"],
+	container: (doc) => {
+		const { headerHeight } = doc as { headerHeight?: unknown };
+		return {
+			titleHeight: typeof headerHeight === "number" ? headerHeight : 20,
+		};
+	},
 	factory: createFrameObjectFactory({
 		type: "region",
 		width: 400,
@@ -300,7 +306,7 @@ export const ovalRegionDefinition: ObjectDocDefinition = {
 		type: "oval-region",
 		geometry: "ellipse",
 		connectable: true,
-		container: { titleHeight: 0 },
 	},
 	validateDoc: () => [],
+	container: () => ({ titleHeight: 0 }),
 };

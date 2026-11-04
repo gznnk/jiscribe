@@ -9,17 +9,29 @@ import {
 } from "./objectGeometry";
 import { GroupFeatures } from "../../model/objects/primitives/group/GroupDoc";
 
-/** A shape whose type declares itself a container other objects sit inside (`features.container`). */
+/** A shape whose type declares itself a container other objects sit inside (`ObjectDocDefinition.container`). */
 const isContainerShape = (
 	object: ObjectRecord,
 	definitions: DocDefinitions,
-): boolean => definitions.get(object.type)?.features.container !== undefined;
+): boolean => definitions.get(object.type)?.container !== undefined;
 
-/** Room the container's type keeps for its title band; a group has none. */
+/**
+ * Room the container's type keeps for its title band on this object; a group has none,
+ * and a band that is not a finite positive number counts as none.
+ */
 export const readTitleHeight = (
 	object: ObjectRecord,
 	definitions: DocDefinitions,
-): number => definitions.get(object.type)?.features.container?.titleHeight ?? 0;
+): number => {
+	const titleHeight = definitions
+		.get(object.type)
+		?.container?.(object).titleHeight;
+	return titleHeight !== undefined &&
+		Number.isFinite(titleHeight) &&
+		titleHeight > 0
+		? titleHeight
+		: 0;
+};
 
 const isGroupObject = (object: ObjectRecord): boolean =>
 	object.type === GroupFeatures.type;
@@ -58,7 +70,7 @@ export type PlacedContainer = {
  *
  * @param candidates - The objects named, or the root's objects; an object reached twice
  *   (a group and a child of it both named) counts once
- * @param definitions - Type table `features.container` and `features.geometry` are read from
+ * @param definitions - Type table `container` and `features.geometry` are read from
  * @param skipsUnmeasurable - True when the candidates were not named: an object the build
  *   cannot measure (an unknown type) is then left out instead of failing the call
  * @returns The nodes in the order found, then the container shapes that hold nothing

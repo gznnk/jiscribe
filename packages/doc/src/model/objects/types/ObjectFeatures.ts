@@ -34,14 +34,6 @@ export type ObjectFeatures = {
 	arrow?: boolean;
 	/** Whether this object can be used as a connector endpoint target */
 	connectable?: boolean;
-	/**
-	 * Declared by a titled region other objects sit inside (a VPC, a subsystem
-	 * boundary). An automatic layout keeps the objects it holds inside it and sizes
-	 * it to them, instead of moving it as one box among the others, and keeps
-	 * `titleHeight` px below the top edge clear for the title band. Only a type whose
-	 * `geometry` is `"rect"` is resized that way; any other is moved whole.
-	 */
-	container?: { titleHeight: number };
 };
 
 /** Boolean flag keys of ObjectFeatures (excludes the structural `type` / `geometry`). */

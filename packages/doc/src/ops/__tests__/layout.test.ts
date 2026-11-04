@@ -233,6 +233,37 @@ describe("layoutObjects with container shapes and declared connect points", () =
 		expectValid(doc);
 	});
 
+	it("keeps the title band the container's own doc sizes clear", () => {
+		const doc = emptyDoc();
+		regionDocOps.addObject(doc, "region", {
+			x: 0,
+			y: 0,
+			width: 400,
+			height: 300,
+			extraProps: { headerHeight: 90 },
+		});
+		regionDocOps.addObject(doc, "rect", {
+			x: 20,
+			y: 40,
+			width: 100,
+			height: 50,
+		});
+		regionDocOps.addObject(doc, "rect", {
+			x: 20,
+			y: 200,
+			width: 100,
+			height: 50,
+		});
+		regionDocOps.connect(doc, { sourceId: "rect-1", targetId: "rect-2" });
+
+		regionDocOps.layoutObjects(doc, undefined, { rankSpacing: 60 });
+
+		const region = box(doc, "region-1");
+		expect(box(doc, "rect-1").y - region.y).toBeGreaterThanOrEqual(90);
+		expect(isInside(region, box(doc, "rect-2"))).toBe(true);
+		expectValid(doc);
+	});
+
 	it("nests container shapes, the smallest around a box being its parent", () => {
 		const doc = emptyDoc();
 		regionDocOps.addObject(doc, "region", {

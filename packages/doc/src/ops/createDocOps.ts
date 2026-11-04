@@ -390,7 +390,7 @@ export type DocOps = {
 	/**
 	 * Arrange objects as a layered graph (sources above or left of their targets), re-anchoring
 	 * the connectors between them to the facing sides and routing them around what lies between;
-	 * a group, or a shape whose type declares `features.container`, is a container its members are kept
+	 * a group, or a shape whose type declares `container`, is a container its members are kept
 	 * inside and that is sized around them. Omitted `ids` means
 	 * every top-level object. Throws `DocOperationError` for fewer than 2 placeable objects or
 	 * an object with no position.
