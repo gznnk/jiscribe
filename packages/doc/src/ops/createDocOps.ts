@@ -39,6 +39,11 @@ import {
 	type RemoveObjectsFromGroupResult,
 } from "./grouping";
 import {
+	type LayoutObjectsParams,
+	type LayoutObjectsResult,
+	layoutObjects,
+} from "./layout";
+import {
 	type GetZOrderResult,
 	getZOrder,
 	reorderObjects,
@@ -383,6 +388,19 @@ export type DocOps = {
 		spacing?: number,
 	): void;
 	/**
+	 * Arrange objects as a layered graph (sources above or left of their targets), re-anchoring
+	 * the connectors between them to the facing sides and routing them around what lies between;
+	 * a group, or a shape whose type declares `container`, is a container its members are kept
+	 * inside and that is sized around them. Omitted `ids` means
+	 * every top-level object. Throws `DocOperationError` for fewer than 2 placeable objects or
+	 * an object with no position.
+	 */
+	layoutObjects(
+		doc: CanvasDoc,
+		ids: readonly string[] | undefined,
+		params?: LayoutObjectsParams,
+	): LayoutObjectsResult;
+	/**
 	 * Wrap sibling objects in a new group and return its id.
 	 * Throws `DocOperationError` for fewer than 2 distinct ids, a connector, or members of
 	 * different parents.
@@ -521,6 +539,8 @@ export const createDocOps = (config?: DocDefinitionsConfig): DocOps => {
 		alignObjects: (doc, ids, edge) => alignObjects(doc, ids, edge, definitions),
 		distributeObjects: (doc, ids, axis, spacing) =>
 			distributeObjects(doc, ids, axis, spacing, definitions),
+		layoutObjects: (doc, ids, params = {}) =>
+			layoutObjects(doc, ids, params, definitions),
 		groupObjects: (doc, ids) => groupObjects(doc, ids),
 		dissolveGroup: (doc, id) => dissolveGroup(doc, id),
 		dissolveGroups: (doc, ids) => dissolveGroups(doc, ids),

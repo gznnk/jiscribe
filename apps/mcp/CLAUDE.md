@@ -152,8 +152,9 @@ they hold.
 - **`dist/node_modules/` is read at runtime by node resolution**: the two guides
   (`canvas-prompt.md`, `authoring-json.md`) and the measurement fonts
   (`resolveFontSourceDir`). No JSON schema. Dropping it fails
-  `read_drawing_guide` and silently degrades Japanese measurement to an
-  estimate (doc-tools falls back without erroring). Only the weights the
+  `read_drawing_guide` and degrades Japanese measurement to an estimate
+  (doc-tools falls back without erroring: `measure_text` says nothing, and
+  `diagnose_canvas` warns that text was measured by estimate). Only the weights the
   browser ships are staged (see `build.mjs`), so `findNearestWeight` picks the
   same face. `verifyDist.mjs` (on `prepublishOnly`) refuses to publish a dist
   missing any of this.

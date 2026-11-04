@@ -16,6 +16,7 @@ export {
 	CANVAS_FILE_EXTENSIONS,
 	CanvasFileError,
 	createEmptyCanvasDoc,
+	diagnoseImageSources,
 	ensureCanvasFile,
 	realpathDeepestExisting,
 	toCanvasFilePath,

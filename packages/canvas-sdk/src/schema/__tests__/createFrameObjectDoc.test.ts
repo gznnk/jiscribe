@@ -50,6 +50,17 @@ describe("createFrameObjectDoc", () => {
 		expect(definition.summary).toBe("demo");
 	});
 
+	it("carries the container hook into the definition as-is", () => {
+		const container = () => ({ titleHeight: 24 });
+		const definition = createFrameObjectDoc({
+			features: DemoFeatures,
+			defaults: DEMO_DOC_DEFAULTS,
+			container,
+		});
+
+		expect(definition.container).toBe(container);
+	});
+
 	it("derives a doc validator from features", () => {
 		const { validateDoc } = createFrameObjectDoc({
 			features: DemoFeatures,

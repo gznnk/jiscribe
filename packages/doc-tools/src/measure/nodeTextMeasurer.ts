@@ -14,9 +14,10 @@ import { calcPunctuationTrimEm } from "./punctuationTrim";
  * Width a character no shipped family covers is assumed to take, as a fraction of
  * the type size. The same ratio `createEstimateTextMeasurement` charges, repeated
  * here so a string mixing covered and uncovered characters stays one measurement
- * rather than two.
+ * rather than two. Package-internal: a diagnosis quotes it when it reports text
+ * that is estimated.
  */
-const FALLBACK_CHAR_WIDTH_RATIO = 0.6;
+export const FALLBACK_CHAR_WIDTH_RATIO = 0.6;
 
 const fontByPath = new Map<string, fontkit.Font | null>();
 

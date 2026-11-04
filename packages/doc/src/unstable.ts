@@ -95,6 +95,10 @@ export { CONNECTOR_LABEL_DEFAULTS } from "./model/objects/connector/ConnectorDoc
 // resolves to, for a host that shows a shape style with nothing selected to
 // resolve it from.
 export { SHAPE_STYLE_FALLBACK } from "./model/objects/utils/shapeStyleFallback";
+// The whole resolution a shape style is drawn with (object over type over that
+// last resort), for a headless host judging what a shape paints.
+export { createObjectShapeStyleDefaultsRegistry } from "./registries/ObjectShapeStyleDefaultsRegistry";
+export type { ObjectShapeStyleDefaultsRegistry } from "./registries/ObjectShapeStyleDefaultsRegistry";
 
 // line-height shared by display (TextOverlayFrame) and editing (TextEditor). Shapes that
 // carry their own per-row dimensions must derive row height from this value, or their rows

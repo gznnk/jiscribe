@@ -53,6 +53,15 @@ export const AWS_GROUP_PADDING = 8;
 export const AWS_GROUP_LABEL_GAP = 6;
 
 /**
+ * Height in local px of the header band along the top edge: the padding above the
+ * corner badge and the badge itself, which the label row is centred on
+ * (calcAwsGroupLabelTextRegion). A label wrapping onto more lines than the badge is
+ * tall runs below it.
+ */
+export const AWS_GROUP_HEADER_HEIGHT =
+	AWS_GROUP_PADDING + AWS_GROUP_CORNER_ICON_SIZE;
+
+/**
  * The boundary frame of an AWS architecture diagram — a VPC, a subnet — with the
  * kind's badge in the top-left corner and the label beside it.
  *

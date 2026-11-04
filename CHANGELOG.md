@@ -40,6 +40,52 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   from a verdict (`formatSourceTextMeasureNote` is the sentence that says so,
   shared by `jiscribe measure` and the MCP server). The MCP server's
   `diagnose_canvas` is the first caller (see its changelog).
+- **`diagnoseDoc` reports four more things a reader cannot see as written**,
+  and `jiscribe diagnose` with it. A shape whose whole box is under a later
+  shape's opaque fill is a warning naming the cover: the covers are the shipped
+  types whose fill paints their whole box or ellipse (`rect`, `ellipse`,
+  `container`, `sticky`, `markdown`, `record`, `umlComponent`, `table`,
+  `erEntity`, `awsGroup`), and partial overlaps are left to `find_overlaps`.
+  An `svg` that references an internal id an earlier `svg` also defines is a
+  warning, all markup sharing one page. A Japanese line-start prohibition is
+  now looked for in text nothing wraps too — a `text` in its label layout and a
+  label drawn outside its shape — at the breaks the author typed. And a font
+  stack naming no family the canvas ships (or none installed) is one
+  document-wide warning, since text in it is measured by estimate.
+- **`@jiscribe/doc-tools/file` exports `diagnoseImageSources`**, which checks
+  the file each `image` `src` names against the `.jis` file's directory: a
+  missing file, a `src` no host accepts or an extension no host serves is an
+  error (the canvas draws a placeholder), and a link leading out of the
+  directory is a warning (the MCP viewer refuses it, other hosts follow it).
+  `jiscribe diagnose` runs it; `validate` does not. `isInsideRoot`, the
+  containment test the MCP host already used, moves here with it.
+- **Automatic layout for graphs.** `docOps.layoutObjects` (and the `layout_objects`
+  AI tool over it) arranges objects as a layered graph the way a flowchart renderer
+  does: the connectors between them decide the layers, each layer is ordered to
+  reduce crossings, and every connector between two placed objects is re-anchored
+  onto the facing sides (straight on the column it travels in where that crosses
+  the side, at the midpoint when it is the side's only connector, fanned out
+  along a side several of them share) and given
+  a right-angled route around the objects between them, on a lane of its own where
+  it overlaps another route crossing the same gap sideways; two connectors joining
+  the same pair run side by side, and the ends sharing a side sit in the order their
+  lines are headed, opened to arrowhead width where they would touch; a labelled connector gets room for its label, which
+  moves onto a stretch of the line that holds it clear of every corner and of the
+  boxes it joins (beside the line when none does). A route leaves a box straight
+  for at least a stub's length before it first bends, and a gap too narrow for the
+  routes crossing it is widened. A group, and a shape whose type declares the new
+  `ObjectDocDefinition.container` hook (`container`, `awsGroup`), is a container:
+  what lies inside it is laid out inside it, the container is resized around them,
+  and the title band the hook answers for it (the container's own `headerHeight`)
+  is kept clear below its top edge; a connector
+  with an end on a container shape is redrawn between the facing sides afterwards;
+  one holding nothing is placed as a box of its own. An end on a connect point the
+  owner's type declares (an ER entity's column) stays where it is, with that
+  connector's route left to the engine, as is a self loop's. A spacing below 0 or a
+  direction outside `LayoutDirections` is refused before anything moves. Direction (`TB` /
+  `LR` / `BT` / `RL`) and the two gaps are parameters; omitting ids lays out the
+  whole canvas, and the drawing keeps its top-left corner. The algorithm is dagre's,
+  wrapped in the new headless `@jiscribe/layout` package.
 - **A stencil bar floats over the canvas.** `<Canvas stencilBar>` draws a
   column of buttons over the viewport's left edge, centred top to bottom below
   the top-left pill and scrolling when the room there is shorter, over the

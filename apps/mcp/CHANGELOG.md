@@ -17,6 +17,15 @@ covers that.
 
 ### Added
 
+- **`diagnose_canvas` reports shapes and images a reader cannot see.** A shape
+  whose whole box is under a later shape's opaque fill is a warning naming the
+  cover, with `reorder_objects` and `set_style` as the fixes; an image whose
+  file is missing, or whose `src` no host accepts, is an error; an image
+  reached through a link out of the diagram's directory is a warning, since
+  this server's viewer refuses it. It also warns about an `svg` referencing an
+  internal id an earlier `svg` defines too, a line-start prohibition at a break
+  the author typed in text nothing wraps, and a font measured by estimate
+  because the canvas does not ship it.
 - **`export_image` writes the drawing to an image file for a person.** It has
   the viewer draw the canvas on display — the whole drawing, or the extent of
   `ids` (with `isolate`, those objects alone) — to a PNG at `scale` (default 2,

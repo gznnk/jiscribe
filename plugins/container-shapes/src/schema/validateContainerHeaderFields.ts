@@ -2,6 +2,8 @@ import { isCssSafeValue } from "@jiscribe/basic-validators";
 import type { ObjectDocValidateFn } from "@jiscribe/canvas-sdk/doc";
 import { validateOptionalNumber } from "@jiscribe/canvas-sdk/doc";
 
+import { CONTAINER_HEADER_HEIGHT_MIN } from "./calcContainerHeaderHeight";
+
 /**
  * Validates the container-specific header fields (both optional). `headerFill`
  * mirrors the `fill` check: an independent safe CSS color value (or `"auto"`).
@@ -19,5 +21,10 @@ export const validateContainerHeaderFields: ObjectDocValidateFn = (o, path) => [
 					beyondSchema: true,
 				},
 			]),
-	...validateOptionalNumber(o, path, "headerHeight", 1),
+	...validateOptionalNumber(
+		o,
+		path,
+		"headerHeight",
+		CONTAINER_HEADER_HEIGHT_MIN,
+	),
 ];
