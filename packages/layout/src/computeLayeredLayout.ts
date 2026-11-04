@@ -28,6 +28,18 @@ export type LayoutGraphNode = {
 	width: number;
 	/** Height of the box, in px. */
 	height: number;
+	/** Id of the frame the node sits inside, when it does; must be among the frames. */
+	parentId?: string;
+};
+
+/**
+ * A frame other nodes sit inside: the layout keeps its members together inside it
+ * and sizes it to them. It has no size of its own on input, and no edge may end on it.
+ */
+export type LayoutGraphFrame = {
+	id: string;
+	/** Id of the frame this one sits inside, when it does. */
+	parentId?: string;
 };
 
 export type LayoutGraphEdge = {
@@ -115,10 +127,18 @@ export type LaidOutEdge = {
 	labelOffset?: number;
 };
 
+export type LaidOutFrame = {
+	id: string;
+	/** The box the frame's members fit in, with the layout's own margin around them. */
+	bounds: Rect;
+};
+
 export type LayeredLayoutResult = {
 	nodes: LaidOutNode[];
 	/** Every edge given, except self loops, which the layout leaves to the caller. */
 	edges: LaidOutEdge[];
+	/** Every frame given, sized and placed around its members. */
+	frames: LaidOutFrame[];
 };
 
 /** Which sides face each other along the rank axis, read off the two boxes' centres. */
@@ -215,17 +235,23 @@ const calcEndAnchor = (
 };
 
 /**
+ * Whether a rank coordinate is a row boxes sit on (a rank of nodes, or the border
+ * rank dagre gives a frame), as opposed to the middle of a gap between rows.
+ */
+type IsSlotRow = (along: number) => boolean;
+
+/**
  * The columns (coordinates across the rank axis) an edge travels in, between its
  * ends: the dummy slots dagre routed it through, read off its interior points.
  */
 const readSlotColumns = (
 	dagrePoints: readonly Point[],
 	direction: LayoutDirection,
+	isSlotRow: IsSlotRow,
 ): number[] =>
 	dagrePoints
 		.slice(1, -1)
-		// Even indexes are the gap midpoints, odd ones the dummy slots (see calcOrthogonalCorners).
-		.filter((_, index) => index % 2 === 1)
+		.filter((point) => isSlotRow(isVerticalFlow(direction) ? point.y : point.x))
 		.map((point) => (isVerticalFlow(direction) ? point.x : point.y));
 
 /** Drop every point that lies on the straight line between its neighbours. */
@@ -247,14 +273,16 @@ const dropCollinearPoints = (path: readonly Point[]): Point[] =>
 
 /**
  * Turn the polyline dagre routed into a right-angled one that stays clear of the
- * boxes. Dagre's interior points alternate between the middle of a gap between two
- * ranks and the slot a dummy node holds inside a rank, so the route changes column
- * only in the gaps and crosses a rank only in a dummy's slot, where no box is.
+ * boxes. Dagre's interior points sit either in the middle of a gap between two rows
+ * or in the slot a dummy node holds on a row (a rank of nodes, or a frame's border),
+ * so the route changes column only in the gaps, to the column of the next slot it
+ * passes, and crosses a row only in that slot, where no box is.
  *
  * @param start - Where the edge leaves the source box
  * @param end - Where it enters the target box
  * @param dagrePoints - The route as dagre gives it, border to border
  * @param direction - Decides which axis is the rank axis
+ * @param isSlotRow - Tells a point on a row from one in a gap
  * @returns The whole route, `start` and `end` included, with no redundant point on it
  */
 const calcOrthogonalPath = (
@@ -262,12 +290,10 @@ const calcOrthogonalPath = (
 	end: Point,
 	dagrePoints: readonly Point[],
 	direction: LayoutDirection,
+	isSlotRow: IsSlotRow,
 ): Point[] => {
 	const vertical = isVerticalFlow(direction);
 	const interior = dagrePoints.slice(1, -1);
-	// Even indexes are the gap midpoints, odd ones the dummy slots (see above).
-	const gaps = interior.filter((_, index) => index % 2 === 0);
-	const slots = interior.filter((_, index) => index % 2 === 1);
 	const along = (point: Point): number => (vertical ? point.y : point.x);
 	const across = (point: Point): number => (vertical ? point.x : point.y);
 	const make = (acrossValue: number, alongValue: number): Point =>
@@ -277,10 +303,16 @@ const calcOrthogonalPath = (
 
 	const path: Point[] = [start];
 	let column = across(start);
-	gaps.forEach((gap, index) => {
-		path.push(make(column, along(gap)));
-		column = index < slots.length ? across(slots[index]) : across(end);
-		path.push(make(column, along(gap)));
+	interior.forEach((point, index) => {
+		if (isSlotRow(along(point))) {
+			return;
+		}
+		const nextSlot = interior
+			.slice(index + 1)
+			.find((candidate) => isSlotRow(along(candidate)));
+		path.push(make(column, along(point)));
+		column = nextSlot === undefined ? across(end) : across(nextSlot);
+		path.push(make(column, along(point)));
 	});
 	path.push(end);
 	return dropCollinearPoints(path);
@@ -297,19 +329,24 @@ const calcOrthogonalPath = (
  *   kept apart; an edge naming an id not in `nodes` is an error. An edge with a `label`
  *   gets room for it, in the gap it crosses or beside a rank it passes
  * @param options - Direction and gaps; see {@link LAYERED_LAYOUT_DEFAULTS}
- * @returns Every node's new top-left and, for every edge that is not a self loop, which
- *   sides of the two boxes now face each other
+ * @param frames - Frames nodes may sit inside (see {@link LayoutGraphFrame}); ids must be
+ *   distinct from the nodes' and each other's, a parent must be another frame, every
+ *   frame must hold a node or a frame, and an edge ending on a frame is an error
+ * @returns Every node's new top-left, every frame's box, and, for every edge that is not
+ *   a self loop, where it meets each box (on the facing sides, fanned out toward where it
+ *   goes) and the corners of a route between them
  */
 export const computeLayeredLayout = (
 	nodes: readonly LayoutGraphNode[],
 	edges: readonly LayoutGraphEdge[],
 	options: LayeredLayoutOptions = {},
+	frames: readonly LayoutGraphFrame[] = [],
 ): LayeredLayoutResult => {
 	const { direction, nodeSpacing, rankSpacing } = {
 		...LAYERED_LAYOUT_DEFAULTS,
 		...options,
 	};
-	const graph = new Graph({ multigraph: true });
+	const graph = new Graph({ multigraph: true, compound: true });
 	graph.setGraph({
 		rankdir: direction,
 		nodesep: nodeSpacing,
@@ -318,17 +355,49 @@ export const computeLayeredLayout = (
 		marginy: 0,
 	});
 	graph.setDefaultEdgeLabel(() => ({}));
+	const frameIds = new Set<string>();
+	for (const frame of frames) {
+		if (frameIds.has(frame.id)) {
+			throw new Error(`duplicate frame id: ${frame.id}`);
+		}
+		frameIds.add(frame.id);
+		graph.setNode(frame.id, {});
+	}
+	const requireFrame = (ownerId: string, parentId: string): void => {
+		if (!frameIds.has(parentId)) {
+			throw new Error(`${ownerId} names an unknown frame: ${parentId}`);
+		}
+	};
+	for (const frame of frames) {
+		if (frame.parentId !== undefined) {
+			requireFrame(frame.id, frame.parentId);
+			graph.setParent(frame.id, frame.parentId);
+		}
+	}
 	const nodeIds = new Set<string>();
 	for (const node of nodes) {
-		if (nodeIds.has(node.id)) {
+		if (nodeIds.has(node.id) || frameIds.has(node.id)) {
 			throw new Error(`duplicate node id: ${node.id}`);
 		}
 		nodeIds.add(node.id);
 		graph.setNode(node.id, { width: node.width, height: node.height });
+		if (node.parentId !== undefined) {
+			requireFrame(node.id, node.parentId);
+			graph.setParent(node.id, node.parentId);
+		}
+	}
+	// dagre sizes a frame from what it holds, so an empty one has no size to give.
+	for (const frame of frames) {
+		if (graph.children(frame.id).length === 0) {
+			throw new Error(`frame ${frame.id} holds nothing`);
+		}
 	}
 	const laidOutEdgeIds: string[] = [];
 	for (const edge of edges) {
 		for (const endId of [edge.sourceId, edge.targetId]) {
+			if (frameIds.has(endId)) {
+				throw new Error(`edge ${edge.id} ends on a frame: ${endId}`);
+			}
 			if (!nodeIds.has(endId)) {
 				throw new Error(`edge ${edge.id} names an unknown node: ${endId}`);
 			}
@@ -363,15 +432,53 @@ export const computeLayeredLayout = (
 			},
 		};
 	});
-	const originX = Math.min(...centred.map(({ bounds }) => bounds.x));
-	const originY = Math.min(...centred.map(({ bounds }) => bounds.y));
+	const centredFrames = frames.map((frame) => {
+		const placed = graph.node(frame.id) as {
+			x: number;
+			y: number;
+			width: number;
+			height: number;
+		};
+		return {
+			id: frame.id,
+			bounds: {
+				x: placed.x - placed.width / 2,
+				y: placed.y - placed.height / 2,
+				width: placed.width,
+				height: placed.height,
+			},
+		};
+	});
+	const everyBox = [...centred, ...centredFrames].map(({ bounds }) => bounds);
+	const originX = Math.min(...everyBox.map((bounds) => bounds.x));
+	const originY = Math.min(...everyBox.map((bounds) => bounds.y));
 	const laidOutNodes = centred.map(({ id, bounds }) => ({
+		id,
+		bounds: { ...bounds, x: bounds.x - originX, y: bounds.y - originY },
+	}));
+	const laidOutFrames: LaidOutFrame[] = centredFrames.map(({ id, bounds }) => ({
 		id,
 		bounds: { ...bounds, x: bounds.x - originX, y: bounds.y - originY },
 	}));
 	const boundsById = new Map(
 		laidOutNodes.map(({ id, bounds }) => [id, bounds] as const),
 	);
+	// The rows boxes sit on: every rank of nodes, and both borders of every frame.
+	const alongStart = (bounds: Rect): number =>
+		isVerticalFlow(direction) ? bounds.y : bounds.x;
+	const alongExtent = (bounds: Rect): number =>
+		isVerticalFlow(direction) ? bounds.height : bounds.width;
+	const slotRows = [
+		...laidOutNodes.map(
+			({ bounds }) => alongStart(bounds) + alongExtent(bounds) / 2,
+		),
+		...laidOutFrames.flatMap(({ bounds }) => [
+			alongStart(bounds),
+			alongStart(bounds) + alongExtent(bounds),
+		]),
+	];
+	const isSlotRow: IsSlotRow = (along) =>
+		slotRows.some((row) => isSameCoordinate(row, along));
 
 	const centreOf = (bounds: Rect): number =>
 		isVerticalFlow(direction)
@@ -413,7 +520,7 @@ export const computeLayeredLayout = (
 				x: x - originX,
 				y: y - originY,
 			}));
-			const slotColumns = readSlotColumns(dagrePoints, direction);
+			const slotColumns = readSlotColumns(dagrePoints, direction, isSlotRow);
 			const sourceAlone = isOnlyEdgeOnSide(edge.sourceId, sourceSide);
 			const targetAlone = isOnlyEdgeOnSide(edge.targetId, targetSide);
 			let source: EndAnchor;
@@ -603,6 +710,7 @@ export const computeLayeredLayout = (
 			calcAnchorPoint(anchored.targetBounds, anchored.target),
 			anchored.dagrePoints,
 			direction,
+			isSlotRow,
 		),
 	}));
 	spreadGapLanes(
@@ -619,6 +727,7 @@ export const computeLayeredLayout = (
 					}
 				: undefined,
 		),
+		[...laidOutNodes, ...laidOutFrames].map(({ bounds }) => bounds),
 	);
 	const toLabelFields = ({
 		position,
@@ -656,5 +765,5 @@ export const computeLayeredLayout = (
 		}),
 	);
 
-	return { nodes: laidOutNodes, edges: laidOutEdges };
+	return { nodes: laidOutNodes, edges: laidOutEdges, frames: laidOutFrames };
 };

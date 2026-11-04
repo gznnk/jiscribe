@@ -34,6 +34,7 @@ describe("layoutObjects", () => {
 
 		expect(result).toEqual({
 			nodeIds: ["rect-1", "rect-2", "rect-3"],
+			frameIds: [],
 			connectorIds: ["connector-1", "connector-2"],
 		});
 		expect(readObject(doc, "rect-1")).toMatchObject({ x: 40, y: 20 });
@@ -109,6 +110,28 @@ describe("layoutObjects", () => {
 		expect(readObject(doc, "connector-1")).toMatchObject({
 			label: { text: "yes", position: 0.5, offset: 0 },
 		});
+	});
+
+	it("keeps a group's children together inside it", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "rect", { x: 0, y: 0, width: 160, height: 80 });
+		docOps.addObject(doc, "rect", { x: 900, y: 900, width: 160, height: 80 });
+		docOps.addObject(doc, "rect", { x: 500, y: 100, width: 160, height: 80 });
+		docOps.groupObjects(doc, ["rect-2", "rect-3"]);
+		docOps.connect(doc, { sourceId: "rect-1", targetId: "rect-2" });
+		docOps.connect(doc, { sourceId: "rect-2", targetId: "rect-3" });
+
+		const result = docOps.layoutObjects(doc, undefined, { rankSpacing: 60 });
+
+		expect(result.frameIds).toEqual(["group-1"]);
+		expect(result.nodeIds).toEqual(["rect-1", "rect-2", "rect-3"]);
+		const second = readObject(doc, "rect-2") as { x: number; y: number };
+		const third = readObject(doc, "rect-3") as { x: number; y: number };
+		// The two children stack under rect-1, inside their group; both moved from where
+		// they were and the group's box tracks them (a group stores no frame of its own).
+		expect(third.y).toBeGreaterThan(second.y);
+		expect(second).not.toMatchObject({ x: 900, y: 900 });
+		expectValid(doc);
 	});
 
 	it("needs two placeable objects and names a missing id", () => {

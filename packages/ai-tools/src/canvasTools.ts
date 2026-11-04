@@ -1374,7 +1374,7 @@ export const createCanvasToolDescriptors = (
 		"layout_objects",
 		[
 			"Arrange objects automatically as a layered graph, the way a flowchart renderer does: the connectors between them decide the layers (a source sits above, or left of, its targets), objects of one layer are ordered to reduce crossings, and every connector between two placed objects is re-attached onto the sides that now face each other (fanned out along the side when several share it) and given a right-angled route that goes around the objects in between; a labelled connector gets room for its label, which is moved onto the line there.",
-			"Omit ids to lay out the whole canvas; give ids to rearrange just those (a group moves as one box, connectors among the ids are skipped since they follow their ends). The arrangement keeps the top-left corner the objects occupied together.",
+			"Omit ids to lay out the whole canvas; give ids to rearrange just those (connectors among the ids are skipped since they follow their ends). A group, and a frame shape such as a container or an awsGroup, keeps its members inside it and is resized around them; what lies inside a frame shape when the call is made is what it holds. The arrangement keeps the top-left corner the objects occupied together.",
 			"Use it after adding nodes and connectors instead of computing a grid by hand, and on a drawing that got tangled. Objects with no connector still get a place, in the first layer.",
 		].join(" "),
 		{

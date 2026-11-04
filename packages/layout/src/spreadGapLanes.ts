@@ -1,4 +1,4 @@
-import type { Point } from "@jiscribe/geometry";
+import type { Point, Rect } from "@jiscribe/geometry";
 
 import {
 	type LayoutDirection,
@@ -11,6 +11,16 @@ export const GAP_LANE_SPACING = 16;
 
 /** Room kept between a label on one lane and the route on the next, in px. */
 const LABEL_LANE_MARGIN = 4;
+
+/**
+ * Least length in px of the stub between a box and the first bend of a route leaving
+ * or entering it, or {@link LANE_STUB_RATIO} of the rank spacing when that is more; a
+ * gap too narrow for its lanes and these stubs is widened.
+ */
+export const LANE_STUB_LENGTH = 24;
+
+/** Share of the rank spacing a stub takes at least, so wider spacing gives longer stubs. */
+export const LANE_STUB_RATIO = 0.3;
 
 /** A label a route carries: where dagre put it and how much of the rank axis it takes. */
 export type GapLaneLabel = {
@@ -121,7 +131,8 @@ const collectGapRuns = (
 /**
  * Spread the routes that cross one gap sideways over lanes, so two of them never share
  * a line where they overlap: runs clear of each other sideways keep the gap's midline,
- * and the lanes are ordered to keep crossings few. Mutates the paths in place.
+ * and the lanes are ordered to keep crossings few. A gap too narrow for its lanes is
+ * widened, moving the ranks beyond it. Mutates the paths and boxes in place.
  *
  * @param paths - Full routes, each from the point on the source box to the point on the
  *   target box, as calcOrthogonalCorners builds them; only the points of a sideways run
@@ -131,13 +142,17 @@ const collectGapRuns = (
  *   {@link GAP_LANE_SPACING} when there are too many for the gap
  * @param labels - The label each path carries, by the same index as `paths`, or
  *   undefined; a lane whose run carries one is kept clear of its neighbours by the
- *   label's extent along the rank axis
+ *   label's extent along the rank axis, and its point moves with the ranks
+ * @param boxes - The boxes the routes join, mutated: a gap too narrow for its lanes
+ *   with {@link LANE_STUB_LENGTH} on either side is widened, and every box and point
+ *   beyond it moves along the rank axis by the same amount
  */
 export const spreadGapLanes = (
 	paths: readonly Point[][],
 	direction: LayoutDirection,
 	rankSpacing: number,
 	labels: readonly (GapLaneLabel | undefined)[] = [],
+	boxes: Rect[] = [],
 ): void => {
 	const vertical = isVerticalFlow(direction);
 	const runsByGap = new Map<number, GapRun[]>();
@@ -147,6 +162,14 @@ export const spreadGapLanes = (
 		const key = Math.round(run.along * 1000);
 		runsByGap.set(key, [...(runsByGap.get(key) ?? []), run]);
 	}
+	// Each gap's lanes, with how much wider than it is the gap has to be for them.
+	type GapPlan = {
+		along: number;
+		laneOf: Map<GapRun, number>;
+		offsets: number[];
+		widening: number;
+	};
+	const plans: GapPlan[] = [];
 	for (const runs of runsByGap.values()) {
 		if (runs.length < 2) {
 			continue;
@@ -194,7 +217,7 @@ export const spreadGapLanes = (
 		const span = offsets[offsets.length - 1];
 		// The gap is as wide as the nearest rank boundary on either side of the midline
 		// says (a label dagre reserved room for widens it beyond rankSpacing); the stack
-		// keeps a lane's width clear of both boundaries.
+		// has to leave a stub's length clear of both boundaries, or the gap grows.
 		const halfGap = Math.min(
 			...ordered.map((run) =>
 				Math.min(
@@ -203,10 +226,80 @@ export const spreadGapLanes = (
 				),
 			),
 		);
-		const room = Math.max(0, 2 * halfGap - 2 * GAP_LANE_SPACING);
-		const scale = span > room ? room / span : 1;
+		const stub = Math.max(LANE_STUB_LENGTH, rankSpacing * LANE_STUB_RATIO);
+		const room = 2 * halfGap - 2 * stub;
+		plans.push({
+			along: runs[0].along,
+			laneOf,
+			offsets,
+			widening: Math.max(0, span - room),
+		});
+	}
+
+	// Widen the gaps that need it, from the first rank on: everything beyond a gap's
+	// midline moves by what that gap grew, and the moves add up along the ranks.
+	const widenings = plans
+		.filter(({ widening }) => widening > 0)
+		.sort((a, b) => a.along - b.along);
+	const shiftBeyond = (along: number): number =>
+		widenings
+			.filter((plan) => plan.along < along)
+			.reduce((sum, plan) => sum + plan.widening, 0);
+	const shiftedBefore = (along: number): number =>
+		widenings
+			.filter((plan) => plan.along <= along)
+			.reduce((sum, plan) => sum + plan.widening, 0);
+	if (widenings.length > 0) {
+		const alongOf = (point: Point): number => (vertical ? point.y : point.x);
+		const move = (point: Point, delta: number): void => {
+			if (vertical) {
+				point.y += delta;
+			} else {
+				point.x += delta;
+			}
+		};
+		const pointsToMove = new Set<Point>();
+		for (const path of paths) {
+			for (const point of path) {
+				pointsToMove.add(point);
+			}
+		}
+		for (const label of labels) {
+			if (label !== undefined) {
+				pointsToMove.add(label.point);
+			}
+		}
+		const deltaByPoint = new Map<Point, number>();
+		for (const point of pointsToMove) {
+			deltaByPoint.set(point, shiftBeyond(alongOf(point)));
+		}
+		for (const [point, delta] of deltaByPoint) {
+			move(point, delta);
+		}
+		// A box beyond a gap moves whole; one spanning it (a frame around ranks on both
+		// sides) grows by the widening instead.
+		for (const box of boxes) {
+			const start = vertical ? box.y : box.x;
+			const extent = vertical ? box.height : box.width;
+			const startDelta = shiftBeyond(start);
+			const endDelta = shiftBeyond(start + extent);
+			if (vertical) {
+				box.y += startDelta;
+				box.height += endDelta - startDelta;
+			} else {
+				box.x += startDelta;
+				box.width += endDelta - startDelta;
+			}
+		}
+	}
+
+	for (const { along, laneOf, offsets, widening } of plans) {
+		// The midline sits half the widening further on than it did, after every
+		// earlier widening has moved it on as well.
+		const midline = along + shiftedBefore(along) - widening / 2;
+		const span = offsets[offsets.length - 1];
 		for (const [run, laneIndex] of laneOf) {
-			const lane = run.along + (offsets[laneIndex] - span / 2) * scale;
+			const lane = midline + offsets[laneIndex] - span / 2;
 			for (const point of [run.path[run.index], run.path[run.index + 1]]) {
 				if (vertical) {
 					point.y = lane;

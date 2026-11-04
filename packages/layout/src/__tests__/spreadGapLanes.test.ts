@@ -33,7 +33,7 @@ describe("spreadGapLanes", () => {
 		expect(wide[2]).toEqual({ x: 200, y: 108 });
 	});
 
-	it("packs lanes closer when the gap is too narrow for the preferred spacing", () => {
+	it("widens a gap too narrow for its lanes and moves what lies beyond it", () => {
 		const threeOverlapping = () => [
 			routeThroughGap(0, 100),
 			routeThroughGap(20, 120),
@@ -42,8 +42,8 @@ describe("spreadGapLanes", () => {
 		const laneYs = (paths: ReturnType<typeof threeOverlapping>) =>
 			paths.map((path) => path[1].y).sort((a, b) => a - b);
 
-		// Boxes 40 either side of the midline leave 80 - 2 * 16 = 48 for the stack: the
-		// preferred 16px steps fit.
+		// Boxes 40 either side of the midline leave 80 - 2 * 24 = 32 for the stack: the
+		// three lanes at 16px steps just fit, centred on the midline.
 		const roomy = threeOverlapping();
 		for (const path of roomy) {
 			path[0].y = 60;
@@ -51,15 +51,24 @@ describe("spreadGapLanes", () => {
 		}
 		spreadGapLanes(roomy, "TB", 80);
 		expect(laneYs(roomy)).toEqual([84, 100, 116]);
+		expect(roomy[0][3].y).toBe(140);
 
-		// Boxes 20 either side leave 8: the same stack shrinks to fit.
+		// Boxes 20 either side leave no room: the gap grows by the 32px the stack needs
+		// plus the 8px it was short of two stubs, and the far box moves with it.
 		const tight = threeOverlapping();
 		for (const path of tight) {
 			path[0].y = 80;
 			path[3].y = 120;
 		}
-		spreadGapLanes(tight, "TB", 40);
-		expect(laneYs(tight)).toEqual([96, 100, 104]);
+		const farBox = { x: 0, y: 120, width: 100, height: 50 };
+		const nearBox = { x: 0, y: 30, width: 100, height: 50 };
+		const frame = { x: -10, y: 20, width: 120, height: 160 };
+		spreadGapLanes(tight, "TB", 40, [], [farBox, nearBox, frame]);
+		expect(laneYs(tight)).toEqual([104, 120, 136]);
+		expect(tight[0][3].y).toBe(160);
+		expect(farBox.y).toBe(160);
+		expect(nearBox.y).toBe(30);
+		expect(frame).toEqual({ x: -10, y: 20, width: 120, height: 200 });
 	});
 
 	it("keeps runs that do not overlap sideways on the midline together", () => {

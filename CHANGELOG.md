@@ -27,7 +27,11 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   the same pair run side by side, and two ends landing on one spot of a side are
   opened to arrowhead width; a labelled connector gets room for its label, which
   moves onto a stretch of the line that holds it clear of every corner and of the
-  boxes it joins (beside the line when none does). Direction (`TB` /
+  boxes it joins (beside the line when none does). A route leaves a box straight
+  for at least a stub's length before it first bends, and a gap too narrow for the
+  routes crossing it is widened. A group, and a shape whose type declares the new
+  `features.frame` (`container`, `awsGroup`), is a frame: what lies inside it is
+  laid out inside it and the frame is resized around them. Direction (`TB` /
   `LR` / `BT` / `RL`) and the two gaps are parameters; omitting ids lays out the
   whole canvas, and the drawing keeps its top-left corner. The algorithm is dagre's,
   wrapped in the new headless `@jiscribe/layout` package.

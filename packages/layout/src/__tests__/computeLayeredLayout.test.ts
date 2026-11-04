@@ -1,3 +1,4 @@
+import type { Rect } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
 import { computeLayeredLayout } from "../computeLayeredLayout";
@@ -227,6 +228,68 @@ describe("computeLayeredLayout", () => {
 		expect(
 			Math.abs(((down?.source.t ?? 0) - (back?.target.t ?? 0)) * 160),
 		).toBeCloseTo(20, 6);
+	});
+
+	it("keeps a frame's members inside it and routes an edge into it in right angles", () => {
+		const result = computeLayeredLayout(
+			[
+				box("outside"),
+				{ ...box("first"), parentId: "vpc" },
+				{ ...box("second"), parentId: "vpc" },
+			],
+			[
+				{ id: "in", sourceId: "outside", targetId: "first" },
+				{ id: "within", sourceId: "first", targetId: "second" },
+			],
+			{ nodeSpacing: 40, rankSpacing: 60 },
+			[{ id: "vpc" }],
+		);
+
+		const frame = result.frames.find(({ id }) => id === "vpc")?.bounds as Rect;
+		const within = (inner: Rect) =>
+			inner.x > frame.x &&
+			inner.y > frame.y &&
+			inner.x + inner.width < frame.x + frame.width &&
+			inner.y + inner.height < frame.y + frame.height;
+		const byId = new Map(result.nodes.map(({ id, bounds }) => [id, bounds]));
+		expect(within(byId.get("first") as Rect)).toBe(true);
+		expect(within(byId.get("second") as Rect)).toBe(true);
+		expect(within(byId.get("outside") as Rect)).toBe(false);
+		// The edge from outside crosses the frame's top border; its route is right-angled.
+		const inEdge = result.edges.find(({ id }) => id === "in");
+		const outside = byId.get("outside") as Rect;
+		const first = byId.get("first") as Rect;
+		const path = [
+			{
+				x: outside.x + outside.width * (inEdge?.source.t ?? 0),
+				y: outside.y + outside.height,
+			},
+			...(inEdge?.points ?? []),
+			{ x: first.x + first.width * (inEdge?.target.t ?? 0), y: first.y },
+		];
+		for (let index = 1; index < path.length; index += 1) {
+			const turnsRightAngle =
+				Math.abs(path[index - 1].x - path[index].x) < 1e-6 ||
+				Math.abs(path[index - 1].y - path[index].y) < 1e-6;
+			expect(turnsRightAngle).toBe(true);
+		}
+	});
+
+	it("refuses a frame that holds nothing", () => {
+		expect(() =>
+			computeLayeredLayout([box("a"), box("b")], [], {}, [{ id: "empty" }]),
+		).toThrow("frame empty holds nothing");
+	});
+
+	it("refuses an edge that ends on a frame", () => {
+		expect(() =>
+			computeLayeredLayout(
+				[{ ...box("a"), parentId: "f" }],
+				[{ id: "e", sourceId: "a", targetId: "f" }],
+				{},
+				[{ id: "f" }],
+			),
+		).toThrow("ends on a frame: f");
 	});
 
 	it("rejects an edge naming a node that is not there", () => {

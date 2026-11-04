@@ -1,4 +1,4 @@
-<!-- jiscribe guide 0.12.2+7fd8f5e8 -->
+<!-- jiscribe guide 0.12.2+c09f6f61 -->
 
 # Jiscribe AI Authoring Guide
 
@@ -333,7 +333,7 @@ allowed (see "The canvas"); what these avoid is the overlap nobody meant.
 - Keep a single flow direction (left→right or top→bottom).
 - Choose connect points to match the connection direction (for left→right, source = `rightCenter`, target = `leftCenter`).
 - Do not overlap objects that are already there.
-- For a flow or a graph, `layout_objects` does this arithmetic for you: add the nodes, connect them, then call it (direction `TB` or `LR`). It layers the nodes along the connectors, orders each layer to reduce crossings, and re-attaches every connector to the sides that face each other. Use it instead of a hand-made grid, and again on a drawing that got tangled.
+- For a flow or a graph, `layout_objects` does this arithmetic for you: add the nodes, connect them, then call it (direction `TB` or `LR`). It layers the nodes along the connectors, orders each layer to reduce crossings, and re-attaches every connector to the sides that face each other. A `container` or `awsGroup` with nodes inside it is a frame: its members stay inside and it is resized around them, so draw the frame, put the nodes in it, then call `layout_objects`. Use it instead of a hand-made grid, and again on a drawing that got tangled.
 
 ## Choosing what to draw with
 
