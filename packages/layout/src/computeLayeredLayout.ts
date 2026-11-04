@@ -8,18 +8,10 @@
 import { Graph, layout } from "@dagrejs/dagre";
 import type { Point, Rect } from "@jiscribe/geometry";
 
-/**
- * Which way ranks are stacked: `TB` puts a source above its targets, `LR` to
- * their left; `BT` / `RL` are the same stacks read the other way.
- */
-export type LayoutDirection = "TB" | "BT" | "LR" | "RL";
+import { type LayoutDirection, isVerticalFlow } from "./LayoutDirection";
+import { spreadGapLanes } from "./spreadGapLanes";
 
-export const LayoutDirections = [
-	"TB",
-	"BT",
-	"LR",
-	"RL",
-] as const satisfies readonly LayoutDirection[];
+export { LayoutDirections, type LayoutDirection } from "./LayoutDirection";
 
 /** Side of a node's box an edge leaves from or arrives at, in the node's own frame. */
 export type LayoutSide = "top" | "right" | "bottom" | "left";
@@ -83,8 +75,9 @@ export type LaidOutEdge = {
 	target: LayoutEdgeAnchor;
 	/**
 	 * Corners of a right-angled route from the source side to the target side that
-	 * stays clear of the boxes in between, excluding the two ends themselves; empty when
-	 * the edge runs straight.
+	 * stays clear of the boxes in between and of the other routes crossing the same gaps
+	 * (see spreadGapLanes), excluding the two ends themselves; empty when the edge runs
+	 * straight.
 	 */
 	points: Point[];
 };
@@ -94,9 +87,6 @@ export type LayeredLayoutResult = {
 	/** Every edge given, except self loops, which the layout leaves to the caller. */
 	edges: LaidOutEdge[];
 };
-
-const isVerticalFlow = (direction: LayoutDirection): boolean =>
-	direction === "TB" || direction === "BT";
 
 /** Which sides face each other along the rank axis, read off the two boxes' centres. */
 const calcFacingSides = (
@@ -196,9 +186,9 @@ const dropCollinearPoints = (path: readonly Point[]): Point[] =>
  * @param end - Where it enters the target box
  * @param dagrePoints - The route as dagre gives it, border to border
  * @param direction - Decides which axis is the rank axis
- * @returns The corners strictly between `start` and `end`; empty when the edge is a straight line
+ * @returns The whole route, `start` and `end` included, with no redundant point on it
  */
-const calcOrthogonalCorners = (
+const calcOrthogonalPath = (
 	start: Point,
 	end: Point,
 	dagrePoints: readonly Point[],
@@ -224,7 +214,7 @@ const calcOrthogonalCorners = (
 		path.push(make(column, along(gap)));
 	});
 	path.push(end);
-	return dropCollinearPoints(path).slice(1, -1);
+	return dropCollinearPoints(path);
 };
 
 /**
@@ -306,7 +296,7 @@ export const computeLayeredLayout = (
 		laidOutNodes.map(({ id, bounds }) => [id, bounds] as const),
 	);
 
-	const laidOutEdges = edges
+	const routedEdges = edges
 		.filter((edge) => laidOutEdgeIds.includes(edge.id))
 		.map((edge) => {
 			const routed = graph.edge(edge.sourceId, edge.targetId, edge.id) as {
@@ -342,7 +332,7 @@ export const computeLayeredLayout = (
 				id: edge.id,
 				source,
 				target,
-				points: calcOrthogonalCorners(
+				path: calcOrthogonalPath(
 					calcAnchorPoint(sourceBounds, source),
 					calcAnchorPoint(targetBounds, target),
 					dagrePoints,
@@ -350,6 +340,15 @@ export const computeLayeredLayout = (
 				),
 			};
 		});
+	spreadGapLanes(
+		routedEdges.map(({ path }) => path),
+		direction,
+		rankSpacing,
+	);
+	const laidOutEdges = routedEdges.map(({ path, ...edge }) => ({
+		...edge,
+		points: path.slice(1, -1),
+	}));
 
 	return { nodes: laidOutNodes, edges: laidOutEdges };
 };

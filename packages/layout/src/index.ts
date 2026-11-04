@@ -1,3 +1,4 @@
+export { GAP_LANE_SPACING } from "./spreadGapLanes";
 export {
 	computeLayeredLayout,
 	EDGE_ANCHOR_T_RANGE,
