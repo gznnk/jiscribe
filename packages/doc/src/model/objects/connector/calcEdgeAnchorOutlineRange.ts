@@ -6,6 +6,10 @@ import {
 } from "@jiscribe/geometry";
 
 import {
+	type EdgeAnchorRange,
+	calcAnchorRegionBodyRange,
+} from "./convertEdgeAnchorRatio";
+import {
 	EDGE_LOCAL_DIRECTIONS,
 	calcLocalAnchorRegion,
 	calcRegionCenter,
@@ -13,8 +17,7 @@ import {
 import { EdgeAnchorSides, type EdgeAnchorSide } from "../types/EndpointRef";
 import type { GeometryType } from "../types/GeometryType";
 
-/** A stretch of one side, as ratios of the bounding box's side: 0 at its start, 1 at its end. */
-export type EdgeAnchorRange = { min: number; max: number };
+export type { EdgeAnchorRange } from "./convertEdgeAnchorRatio";
 
 /** What {@link calcEdgeAnchorOutlineRange} reads of a shape, every declaration already resolved. */
 export type EdgeAnchorOutlineShape = {
@@ -175,22 +178,6 @@ const calcEllipseInsideRange = (
 	return { min: 0.5 - halfChordShare, max: 0.5 + halfChordShare };
 };
 
-/** The stretch of the side the anchor region spans, as ratios of the box's side, held to 0..1. */
-const calcRegionCoverage = (
-	shape: EdgeAnchorOutlineShape,
-	side: EdgeAnchorSide,
-	region: Rect,
-): EdgeAnchorRange => {
-	const acrossX = isAcrossX(side);
-	const extent = acrossX ? shape.width : shape.height;
-	const start = acrossX ? region.x : region.y;
-	const length = acrossX ? region.width : region.height;
-	return {
-		min: Math.min(1, Math.max(0, start / extent + 0.5)),
-		max: Math.min(1, Math.max(0, (start + length) / extent + 0.5)),
-	};
-};
-
 /**
  * Where along one side an edge anchor ends on the drawn outline: the ratios
  * whose ray starts inside the outline and leaves it, as opposed to one that
@@ -248,7 +235,7 @@ export const calcEdgeAnchorOutlineRange = (
 	if (shape.anchorRegion === undefined) {
 		return { ...outlineRange };
 	}
-	const coverage = calcRegionCoverage(shape, side, region);
+	const coverage = calcAnchorRegionBodyRange(shape, side);
 	const min = Math.max(outlineRange.min, coverage.min);
 	const max = Math.min(outlineRange.max, coverage.max);
 	return min <= max ? { min, max } : coverage;

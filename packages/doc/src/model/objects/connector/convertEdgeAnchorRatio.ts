@@ -1,7 +1,10 @@
 import type { Dimensions, Rect } from "@jiscribe/geometry";
 
 import { calcLocalAnchorRegion } from "./localAnchorRay";
-import type { EdgeAnchorSide } from "../types/EndpointRef";
+import { EdgeAnchorSides, type EdgeAnchorSide } from "../types/EndpointRef";
+
+/** A stretch of one side, as ratios of the bounding box's side: 0 at its start, 1 at its end. */
+export type EdgeAnchorRange = { min: number; max: number };
 
 /** The along-side start and length of a rect's side, in local coordinates. */
 const readSideSpan = (
@@ -79,6 +82,53 @@ export const convertAnchorRegionRatioToBoxRatio = (
 	}
 	const along = region.start + region.length * regionRatio;
 	return (along - box.start) / box.length;
+};
+
+/**
+ * The stretch of one side the anchor region covers (the shape's body there, a loop
+ * limit's left side below its cut corners): where the region's ratios 0 and 1 fall
+ * on the bounding box's side, by {@link convertAnchorRegionRatioToBoxRatio}.
+ *
+ * @param shape - The shape's untransformed box and resolved anchor region
+ * @param side - Which local side of the bounding box
+ * @returns The stretch as ratios of the bounding box's side, each end held to 0..1.
+ *   0..1 for a shape declaring no anchor region, for a region the canvas falls back
+ *   from (see calcLocalAnchorRegion), and when the box has no extent on that side
+ */
+export const calcAnchorRegionBodyRange = (
+	shape: SideScaleShape,
+	side: EdgeAnchorSide,
+): EdgeAnchorRange => {
+	const extent = readSideSpan(calcLocalAnchorRegion(shape), side).length;
+	if (!(extent > 0) || !Number.isFinite(extent)) {
+		return { min: 0, max: 1 };
+	}
+	const toBoxRatio = (regionRatio: number): number =>
+		clampUnit(
+			convertAnchorRegionRatioToBoxRatio(
+				regionRatio,
+				side,
+				shape,
+				shape.anchorRegion,
+			),
+		);
+	return { min: toBoxRatio(0), max: toBoxRatio(1) };
+};
+
+/**
+ * {@link calcAnchorRegionBodyRange} for each of the four sides.
+ *
+ * @param shape - As for calcAnchorRegionBodyRange
+ * @returns One stretch per side, keyed by the side
+ */
+export const calcAnchorRegionBodyRanges = (
+	shape: SideScaleShape,
+): Record<EdgeAnchorSide, EdgeAnchorRange> => {
+	const bodyRanges = {} as Record<EdgeAnchorSide, EdgeAnchorRange>;
+	for (const side of EdgeAnchorSides) {
+		bodyRanges[side] = calcAnchorRegionBodyRange(shape, side);
+	}
+	return bodyRanges;
 };
 
 /** A position along one side, as a layout anchor and a stored end both carry it. */

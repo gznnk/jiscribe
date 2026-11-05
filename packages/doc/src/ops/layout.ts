@@ -19,6 +19,7 @@ import { DocOperationError } from "./errors";
 import { buildEndpoint } from "./utils/connectorEndpoints";
 import {
 	readLayoutAnchorRanges,
+	readLayoutAnchorBodyRanges,
 	resolveLayoutAnchorShape,
 } from "./utils/layoutAnchorShapes";
 import { readOwnerId } from "./utils/layoutConnectorEnds";
@@ -147,7 +148,8 @@ const collectConnectors = (
 
 /**
  * The graph as the layout takes it, built from the placements and the connectors
- * between them; each node carries the stretch of its sides its outline reaches along.
+ * between them; each node carries the stretch of its sides its outline reaches along,
+ * and the stretch its anchor region covers.
  */
 const buildGraph = (
 	nodes: readonly PlacedNode[],
@@ -160,16 +162,16 @@ const buildGraph = (
 	edges: LayoutGraphEdge[];
 } => ({
 	nodes: nodes.map(({ object, bounds, parentId }) => {
-		const anchorRanges = readLayoutAnchorRanges(
-			object,
-			resolveLayoutAnchorShape(object, bounds, definitions),
-		);
+		const shape = resolveLayoutAnchorShape(object, bounds, definitions);
+		const anchorRanges = readLayoutAnchorRanges(object, shape);
+		const anchorBodyRanges = readLayoutAnchorBodyRanges(shape);
 		return {
 			id: object.id,
 			width: bounds.width,
 			height: bounds.height,
 			...(parentId !== undefined ? { parentId } : {}),
 			...(anchorRanges !== undefined ? { anchorRanges } : {}),
+			...(anchorBodyRanges !== undefined ? { anchorBodyRanges } : {}),
 		};
 	}),
 	containers: containers.map(({ object, parentId, titleHeight }) => ({
@@ -402,6 +404,7 @@ const redrawContainerConnectors = (
 				side,
 				box,
 				readLayoutAnchorRanges(object, shape)?.[side],
+				readLayoutAnchorBodyRanges(shape)?.[side],
 			),
 			shape,
 		);

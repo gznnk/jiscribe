@@ -3,6 +3,7 @@ import {
 	calcEdgeAnchorOutlineRanges,
 } from "@jiscribe/doc/model/objects/connector/calcEdgeAnchorOutlineRange";
 import {
+	calcAnchorRegionBodyRanges,
 	toAnchorRegionSidePosition,
 	toBoxSidePosition,
 } from "@jiscribe/doc/model/objects/connector/convertEdgeAnchorRatio";
@@ -89,6 +90,19 @@ const readAnchorRanges = (
 	return calcEdgeAnchorOutlineRanges(shape);
 };
 
+/**
+ * The stretch of each side the object's anchor region covers (see
+ * calcAnchorRegionBodyRange), or undefined for an object whose ends are stored as
+ * ratios of its box: rotated or flipped ones get it all the same, as their ends are
+ * converted all the same (see toStoredAnchor).
+ */
+const readAnchorBodyRanges = (
+	shape: EdgeAnchorOutlineShape | undefined,
+): LayoutGraphNode["anchorBodyRanges"] =>
+	shape?.anchorRegion === undefined
+		? undefined
+		: calcAnchorRegionBodyRanges(shape);
+
 /** A layout anchor (a ratio of the box's side) as the edge anchor stored (one of the anchor region's). */
 const toStoredAnchor = (
 	anchor: LayoutEdgeAnchor,
@@ -128,13 +142,16 @@ const layOutGraph = (
 	);
 	const laidOut = computeLayeredLayout(
 		graph.nodes.map(({ id, bounds, parentId }) => {
-			const anchorRanges = readAnchorRanges(srcObjects[id], shapeById.get(id));
+			const shape = shapeById.get(id);
+			const anchorRanges = readAnchorRanges(srcObjects[id], shape);
+			const anchorBodyRanges = readAnchorBodyRanges(shape);
 			return {
 				id,
 				width: bounds.width,
 				height: bounds.height,
 				...(parentId !== undefined ? { parentId } : {}),
 				...(anchorRanges !== undefined ? { anchorRanges } : {}),
+				...(anchorBodyRanges !== undefined ? { anchorBodyRanges } : {}),
 			};
 		}),
 		graph.edges,
@@ -309,6 +326,7 @@ const redrawContainerConnectors = (
 				side,
 				box,
 				readAnchorRanges(object, shape)?.[side],
+				readAnchorBodyRanges(shape)?.[side],
 			),
 			shape,
 		);

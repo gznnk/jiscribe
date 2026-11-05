@@ -9,6 +9,7 @@ import {
 	buildOutlinedDoc,
 	buildOvalRegionDoc,
 	buildRegionDoc,
+	buildRotatedCutTopDoc,
 	buildRotatedOutlinedDoc,
 	layoutDocOps,
 	layoutRegistries,
@@ -61,13 +62,15 @@ const reconciledPointsOf = (
 /**
  * Arrange `doc` through the command with `selectedIds` selected, and through the
  * doc op with the ids the command resolved, and compare what each wrote.
+ *
+ * @returns The state the command left
  */
 const expectSameAsDocOps = (
 	doc: CanvasDoc,
 	selectedIds: readonly string[],
 	commandId: string,
 	direction: "TB" | "LR",
-): void => {
+): CanvasControllerState => {
 	const state = {
 		...createInitialControllerState(doc, layoutRegistries),
 		selection: selectionOf(selectedIds),
@@ -98,6 +101,7 @@ const expectSameAsDocOps = (
 	expect(reconciledPointsOf(viaCommand)).toEqual(
 		reconciledPointsOf(docOpsState),
 	);
+	return viaCommand;
 };
 
 describe("the layout commands write what the doc op writes", () => {
@@ -178,5 +182,21 @@ describe("the layout commands write what the doc op writes", () => {
 			LayoutTopToBottomCommand.id,
 			"TB",
 		);
+	});
+
+	it("for a rotated shape whose ends are stored on its anchor region", () => {
+		const viaCommand = expectSameAsDocOps(
+			buildRotatedCutTopDoc(),
+			["rect-1", "cut-top-1"],
+			LayoutLeftToRightCommand.id,
+			"LR",
+		);
+		// The side's only end, in the middle of the body below the cut.
+		const connector = viaCommand.objects["connector-1"];
+		expect(isConnectorState(connector) && connector.target.anchor).toEqual({
+			kind: "edge",
+			side: "left",
+			t: 0.5,
+		});
 	});
 });

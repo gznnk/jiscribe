@@ -470,12 +470,17 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   commands now keep every end within the stretch of the side where an anchor's
   ray starts inside the outline and leaves it, from the type's `outline` and
   `anchorRegion`; a rotated or flipped shape is left out, being laid out by its
-  box. `LayoutGraphNode` (`@jiscribe/layout`) takes that stretch per side as
-  `anchorRanges` (each a `LayoutAnchorRange`, now exported), and
+  box. Only an end that would fall outside that stretch moves (to its middle,
+  or to the nearer part of the fan range), so an end already on the outline
+  stays where it was. `LayoutGraphNode` (`@jiscribe/layout`) takes that stretch
+  per side as `anchorRanges` (each a `LayoutAnchorRange`, now exported), and
   `TakenEnds.place` takes one for its side. The ends are
   also written as a share of the type's anchor region, which is how they are
   drawn: on the loop limit's and the off-page connector's left and right sides a
-  line the layout ran straight used to meet the shape off level.
+  line the layout ran straight used to meet the shape off level. Those two
+  shapes' ends are centred and fanned out on the body the anchor region covers,
+  rotated or flipped as well, as they were before: `LayoutGraphNode` takes that
+  stretch per side as `anchorBodyRanges`, and `TakenEnds.place` takes one too.
 - **A connector label with no `fill` masks the line in the document's
   `background`.** It drew in the theme's canvas colour, so on a document with its
   own opaque `background` every default label was a box of another colour, in the

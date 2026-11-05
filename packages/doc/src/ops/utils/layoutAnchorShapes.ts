@@ -7,6 +7,7 @@ import {
 	type EdgeAnchorOutlineShape,
 	calcEdgeAnchorOutlineRanges,
 } from "../../model/objects/connector/calcEdgeAnchorOutlineRange";
+import { calcAnchorRegionBodyRanges } from "../../model/objects/connector/convertEdgeAnchorRatio";
 
 /**
  * Whether the doc turns the shape off its box (rotation, a flip): the layout places it
@@ -53,3 +54,16 @@ export const readLayoutAnchorRanges = (
 	(shape.outline === undefined && shape.anchorRegion === undefined)
 		? undefined
 		: calcEdgeAnchorOutlineRanges(shape);
+
+/**
+ * The stretch of each side the object's anchor region covers, which the layout centres
+ * and fans ends out on, or undefined for an object whose type declares no anchor
+ * region: exactly the objects whose ends are stored as ratios of the region (see
+ * toAnchorRegionSidePosition), rotated or flipped ones included.
+ */
+export const readLayoutAnchorBodyRanges = (
+	shape: EdgeAnchorOutlineShape,
+): LayoutGraphNode["anchorBodyRanges"] =>
+	shape.anchorRegion === undefined
+		? undefined
+		: calcAnchorRegionBodyRanges(shape);

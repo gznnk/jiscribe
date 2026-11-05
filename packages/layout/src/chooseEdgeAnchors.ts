@@ -1,10 +1,12 @@
 import type { Point, Rect } from "@jiscribe/geometry";
 
 import {
-	calcAnchorRangeMidpoint,
+	calcCentredAnchorRatio,
 	intersectAnchorRanges,
+	isWithinAnchorRange,
 	readAnchorRange,
 	scaleIntoAnchorRange,
+	scaleIntoBodyWithinUsable,
 } from "./anchorRange";
 import type { LayoutAxis } from "./LayoutAxis";
 import { type RowIndex, readSlotColumns } from "./RowIndex";
@@ -19,15 +21,17 @@ import type {
 
 /**
  * How far along a side an anchor may sit when it puts the edge straight on the column
- * it travels in, so a short jog in the gap is traded for a line near the corner. Taken
- * together with the side's usable stretch (`LayoutGraphNode.anchorRanges`): both must
- * hold the column.
+ * it travels in, so a short jog in the gap is traded for a line near the corner. As
+ * ratios of the whole side, taken together with the side's usable stretch
+ * (`LayoutGraphNode.anchorRanges`): both must hold the column.
  */
 export const EDGE_ANCHOR_STRAIGHT_RANGE = { min: 0.05, max: 0.95 } as const;
 
 /**
  * How far along a side the anchors of several edges sharing it may spread, as shares of
- * the side's usable stretch (`LayoutGraphNode.anchorRanges`, the whole side by default).
+ * the side's body (`LayoutGraphNode.anchorBodyRanges`, the whole side by default),
+ * cut down to the side's usable stretch (`LayoutGraphNode.anchorRanges`); the same
+ * shares of the usable stretch where the two do not meet.
  */
 export const EDGE_ANCHOR_FAN_RANGE = { min: 0.2, max: 0.8 } as const;
 
@@ -51,9 +55,6 @@ type Range = Readonly<LayoutAnchorRange>;
 const clampRatio = (ratio: number, range: Range): number =>
 	Math.min(range.max, Math.max(range.min, ratio));
 
-const isWithin = (ratio: number, range: Range): boolean =>
-	ratio >= range.min && ratio <= range.max;
-
 /** An edge as this stage takes it: dagre's route between the two boxes it joins. */
 export type EdgeToAnchor = {
 	edge: LayoutGraphEdge;
@@ -63,6 +64,10 @@ export type EdgeToAnchor = {
 	sourceAnchorRanges?: LayoutGraphNode["anchorRanges"];
 	/** The target node's, likewise. */
 	targetAnchorRanges?: LayoutGraphNode["anchorRanges"];
+	/** The source node's body on each side; see {@link LayoutGraphNode.anchorBodyRanges}. */
+	sourceAnchorBodyRanges?: LayoutGraphNode["anchorBodyRanges"];
+	/** The target node's, likewise. */
+	targetAnchorBodyRanges?: LayoutGraphNode["anchorBodyRanges"];
 	/** Dagre's route, container borders already dropped. */
 	points: readonly Point[];
 };
@@ -110,31 +115,40 @@ const columnAt = (bounds: Rect, ratio: number, axis: LayoutAxis): number =>
 
 /** Whether an end at `ratio` lets its edge leave straight, inside the side's usable stretch. */
 const isStraightRatio = (ratio: number, usable: Range): boolean =>
-	isWithin(ratio, intersectAnchorRanges(EDGE_ANCHOR_STRAIGHT_RANGE, usable));
+	isWithinAnchorRange(
+		ratio,
+		intersectAnchorRanges(EDGE_ANCHOR_STRAIGHT_RANGE, usable),
+	);
 
 /**
  * The anchor for one end of an edge, given where along the side the edge is headed
- * (the unclamped ratio of the column it travels in beyond that end) and the side's
- * usable stretch. On the column itself when the column crosses that stretch, so the
- * edge leaves straight; else at the stretch's middle when this is the side's only
- * edge, since a jog in the gap is then unavoidable and a centred one reads best; else
- * leaning toward the column, so the edges sharing the side fan out.
+ * (the unclamped ratio of the column it travels in beyond that end), the side's body
+ * and its usable stretch. On the column itself when the column crosses the usable
+ * stretch, so the edge leaves straight; else at the body's middle when this is the
+ * side's only edge, since a jog in the gap is then unavoidable and a centred one reads
+ * best, or at the usable stretch's middle when the body's is off the outline; else
+ * leaning toward the column within {@link EDGE_ANCHOR_FAN_RANGE}, so the edges sharing
+ * the side fan out.
  */
 const calcEndAnchor = (
 	side: LayoutSide,
 	heading: number,
 	isOnlyEdgeOnSide: boolean,
+	body: Range,
 	usable: Range,
 ): LayoutEdgeAnchor => {
 	if (isStraightRatio(heading, usable)) {
 		return { side, t: heading };
 	}
 	if (isOnlyEdgeOnSide) {
-		return { side, t: calcAnchorRangeMidpoint(usable) };
+		return { side, t: calcCentredAnchorRatio(body, usable) };
 	}
 	return {
 		side,
-		t: clampRatio(heading, scaleIntoAnchorRange(usable, EDGE_ANCHOR_FAN_RANGE)),
+		t: clampRatio(
+			heading,
+			scaleIntoBodyWithinUsable(body, usable, EDGE_ANCHOR_FAN_RANGE),
+		),
 	};
 };
 
@@ -160,6 +174,10 @@ type HeadedEdge = EdgeToAnchor & {
 	sourceUsable: Range;
 	/** The target side's usable stretch. */
 	targetUsable: Range;
+	/** The source side's body (see LayoutGraphNode.anchorBodyRanges). */
+	sourceBody: Range;
+	/** The target side's body. */
+	targetBody: Range;
 };
 
 type WorkingEdge = HeadedEdge & {
@@ -218,6 +236,8 @@ const headEnds = (
 			targetAlone: isOnlyEdgeOnSide(edge.targetId, targetSide),
 			sourceUsable: readAnchorRange(working.sourceAnchorRanges, sourceSide),
 			targetUsable: readAnchorRange(working.targetAnchorRanges, targetSide),
+			sourceBody: readAnchorRange(working.sourceAnchorBodyRanges, sourceSide),
+			targetBody: readAnchorRange(working.targetAnchorBodyRanges, targetSide),
 		};
 	});
 };
@@ -225,7 +245,7 @@ const headEnds = (
 /**
  * Both ends of an edge by the column it travels in next to each end (see
  * calcEndAnchor); two boxes in neighbouring ranks share one column when a side's only
- * end, in the middle of its usable stretch, faces a column the other side can meet
+ * end, where calcEndAnchor centres it, faces a column the other side can meet
  * straight.
  */
 const anchorEnd = (headed: HeadedEdge, axis: LayoutAxis): WorkingEdge => {
@@ -240,50 +260,65 @@ const anchorEnd = (headed: HeadedEdge, axis: LayoutAxis): WorkingEdge => {
 		targetAlone,
 		sourceUsable,
 		targetUsable,
+		sourceBody,
+		targetBody,
 	} = headed;
 	if (headed.isAdjacent) {
 		if (targetAlone) {
-			const targetMidpoint = calcAnchorRangeMidpoint(targetUsable);
-			const towardTargetMidpoint = calcSideRatio(
+			const targetCentre = calcCentredAnchorRatio(targetBody, targetUsable);
+			const towardTargetCentre = calcSideRatio(
 				sourceBounds,
-				columnAt(targetBounds, targetMidpoint, axis),
+				columnAt(targetBounds, targetCentre, axis),
 				axis,
 			);
-			if (isStraightRatio(towardTargetMidpoint, sourceUsable)) {
+			if (isStraightRatio(towardTargetCentre, sourceUsable)) {
 				return {
 					...headed,
-					source: { side: sourceSide, t: towardTargetMidpoint },
-					target: { side: targetSide, t: targetMidpoint },
+					source: { side: sourceSide, t: towardTargetCentre },
+					target: { side: targetSide, t: targetCentre },
 				};
 			}
 		}
 		if (sourceAlone) {
-			const sourceMidpoint = calcAnchorRangeMidpoint(sourceUsable);
-			const towardSourceMidpoint = calcSideRatio(
+			const sourceCentre = calcCentredAnchorRatio(sourceBody, sourceUsable);
+			const towardSourceCentre = calcSideRatio(
 				targetBounds,
-				columnAt(sourceBounds, sourceMidpoint, axis),
+				columnAt(sourceBounds, sourceCentre, axis),
 				axis,
 			);
-			if (isStraightRatio(towardSourceMidpoint, targetUsable)) {
+			if (isStraightRatio(towardSourceCentre, targetUsable)) {
 				return {
 					...headed,
-					source: { side: sourceSide, t: sourceMidpoint },
-					target: { side: targetSide, t: towardSourceMidpoint },
+					source: { side: sourceSide, t: sourceCentre },
+					target: { side: targetSide, t: towardSourceCentre },
 				};
 			}
 		}
 	}
 	return {
 		...headed,
-		source: calcEndAnchor(sourceSide, sourceHeading, sourceAlone, sourceUsable),
-		target: calcEndAnchor(targetSide, targetHeading, targetAlone, targetUsable),
+		source: calcEndAnchor(
+			sourceSide,
+			sourceHeading,
+			sourceAlone,
+			sourceBody,
+			sourceUsable,
+		),
+		target: calcEndAnchor(
+			targetSide,
+			targetHeading,
+			targetAlone,
+			targetBody,
+			targetUsable,
+		),
 	};
 };
 
 /**
  * Puts on one straight column each edge between neighbouring ranks whose sides are
  * both shared and which no other edge bundles with: the mean of where the end's rank
- * by heading puts it on each side, kept where both sides can meet it straight. An edge
+ * by heading puts it on each side's body, kept where both sides' usable stretches can
+ * meet it straight. An edge
  * keeps its ends when no such column exists or spreading either side's ends would move
  * its end, or the end of an edge already put on a column, off it. Edges are decided in
  * order, each against the ends as already decided. Mutates the edges.
@@ -340,7 +375,7 @@ const straightenSharedEdges = (
 	};
 	/**
 	 * Where an end ranked among a side's ends would sit on it with all of them evenly
-	 * spaced over the side's usable stretch.
+	 * spaced over the side's body (see LayoutGraphNode.anchorBodyRanges).
 	 */
 	const idealRatioOf = (
 		{
@@ -350,10 +385,10 @@ const straightenSharedEdges = (
 			ends: readonly SideEndRef[];
 			rank: number;
 		},
-		usable: Range,
+		body: Range,
 	): number => {
 		const share = (rank + 1) / (ends.length + 1);
-		return scaleIntoAnchorRange(usable, { min: share, max: share }).min;
+		return scaleIntoAnchorRange(body, { min: share, max: share }).min;
 	};
 	/** Indices of the edges already put on a column. */
 	const straightened = new Set<number>();
@@ -397,7 +432,14 @@ const straightenSharedEdges = (
 		) {
 			return;
 		}
-		const { sourceBounds, targetBounds, sourceUsable, targetUsable } = working;
+		const {
+			sourceBounds,
+			targetBounds,
+			sourceUsable,
+			targetUsable,
+			sourceBody,
+			targetBody,
+		} = working;
 		const sourceStraight = intersectAnchorRanges(
 			EDGE_ANCHOR_STRAIGHT_RANGE,
 			sourceUsable,
@@ -422,8 +464,8 @@ const straightenSharedEdges = (
 		const sourcePlace = locateEnd(working, edgeIndex, "source");
 		const targetPlace = locateEnd(working, edgeIndex, "target");
 		const column = clampRatio(
-			(columnAt(sourceBounds, idealRatioOf(sourcePlace, sourceUsable), axis) +
-				columnAt(targetBounds, idealRatioOf(targetPlace, targetUsable), axis)) /
+			(columnAt(sourceBounds, idealRatioOf(sourcePlace, sourceBody), axis) +
+				columnAt(targetBounds, idealRatioOf(targetPlace, targetBody), axis)) /
 				2,
 			shared,
 		);
@@ -603,12 +645,14 @@ const spreadEndsOnSides = (
  * midpoint for a side's only edge, fanned out for several; an edge between neighbouring
  * ranks whose two sides are both shared runs on one straight column when one fits clear
  * of its neighbours; edges joining one pair of boxes run side by side, and ends that
- * would touch are opened to arrowhead width in the order their edges are headed. Every
- * rule works within the side's usable stretch (`LayoutGraphNode.anchorRanges`), and no
- * end leaves it.
+ * would touch are opened to arrowhead width in the order their edges are headed. The
+ * midpoint and the fan are measured on the side's body
+ * (`LayoutGraphNode.anchorBodyRanges`); the side's usable stretch
+ * (`LayoutGraphNode.anchorRanges`) only brings back an end that would fall outside
+ * it, so no end leaves it.
  *
  * @param edges - Dagre's routes, container borders dropped, with the boxes they join
- *   and the usable stretches of their sides
+ *   and the bodies and usable stretches of their sides
  * @param rows - Tells a slot column from a gap on a route
  * @param axis - The rank axis, which also names the facing sides
  * @returns One entry per edge, in the order given

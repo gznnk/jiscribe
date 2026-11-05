@@ -19,10 +19,20 @@ export type LayoutGraphNode = {
 	/**
 	 * The stretch of each side an edge may end on, for a node whose drawn outline does
 	 * not reach along the whole side (a parallelogram's top and bottom): every anchor
-	 * the layout chooses on that side stays inside it. A side left out, or the field
-	 * left out, is usable from end to end (0..1).
+	 * the layout chooses on that side stays inside it. It only moves an end that would
+	 * fall outside it; where the layout would put an end is measured on
+	 * {@link LayoutGraphNode.anchorBodyRanges}. A side left out, or the field left
+	 * out, is usable from end to end (0..1).
 	 */
 	anchorRanges?: Partial<Record<LayoutSide, LayoutAnchorRange>>;
+	/**
+	 * The stretch of each side the node's body covers (a loop limit's sides below the
+	 * cut corners): the layout centres a side's only end on it and fans several out
+	 * over it, as it would over a whole side, before {@link LayoutGraphNode.anchorRanges}
+	 * moves any of them back onto the outline. Need not lie within `anchorRanges`. A
+	 * side left out, or the field left out, spans the whole side (0..1).
+	 */
+	anchorBodyRanges?: Partial<Record<LayoutSide, LayoutAnchorRange>>;
 };
 
 /**
@@ -79,8 +89,10 @@ export type LayoutEdgeAnchor = {
 	 * bottom on `left` / `right`; 0.5 is the side's midpoint. Always within the node's
 	 * {@link LayoutGraphNode.anchorRanges} for the side. Within
 	 * `EDGE_ANCHOR_STRAIGHT_RANGE` when that lets the edge leave in a straight line,
-	 * otherwise the middle of the usable stretch for the only edge on its side and within
-	 * `EDGE_ANCHOR_FAN_RANGE` of that stretch for one of several (see chooseEdgeAnchors).
+	 * otherwise the middle of the side's {@link LayoutGraphNode.anchorBodyRanges} for
+	 * the only edge on its side and within `EDGE_ANCHOR_FAN_RANGE` of that body for one
+	 * of several, each brought back inside `anchorRanges` when it falls outside them
+	 * (see chooseEdgeAnchors).
 	 */
 	t: number;
 };

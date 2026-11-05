@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+	calcAnchorRegionBodyRange,
 	convertAnchorRegionRatioToBoxRatio,
 	convertBoxRatioToAnchorRegionRatio,
 } from "../convertEdgeAnchorRatio";
@@ -51,5 +52,46 @@ describe("convertAnchorRegionRatioToBoxRatio", () => {
 		expect(
 			convertAnchorRegionRatioToBoxRatio(0.5, "left", box, undefined),
 		).toBe(0.5);
+	});
+});
+
+describe("calcAnchorRegionBodyRange", () => {
+	it("answers the stretch of each side the anchor region covers", () => {
+		const loopLimit = { ...box, anchorRegion: region };
+		expect(calcAnchorRegionBodyRange(loopLimit, "left")).toEqual({
+			min: 0.2,
+			max: 1,
+		});
+		expect(calcAnchorRegionBodyRange(loopLimit, "top")).toEqual({
+			min: 0,
+			max: 1,
+		});
+	});
+
+	it("holds a region reaching past the box to the box's side", () => {
+		const overhanging = {
+			...box,
+			anchorRegion: { x: -150, y: -50, width: 200, height: 100 },
+		};
+		expect(calcAnchorRegionBodyRange(overhanging, "top")).toEqual({
+			min: 0,
+			max: 0.75,
+		});
+	});
+
+	it("answers the whole side with no region, a region the canvas falls back from, or no extent", () => {
+		for (const shape of [
+			{ ...box, anchorRegion: undefined },
+			{
+				...box,
+				anchorRegion: { x: Number.NaN, y: 0, width: 10, height: 10 },
+			},
+			{ ...box, width: 0, anchorRegion: { ...region, x: 0, width: 0 } },
+		]) {
+			expect(calcAnchorRegionBodyRange(shape, "top")).toEqual({
+				min: 0,
+				max: 1,
+			});
+		}
 	});
 });

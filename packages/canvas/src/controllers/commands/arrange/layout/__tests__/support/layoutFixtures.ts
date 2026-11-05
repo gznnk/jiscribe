@@ -427,6 +427,19 @@ export const buildOutlinedDoc = (): CanvasDoc => {
 	return doc;
 };
 
+/**
+ * A rect feeding the cut-top shape turned upside down: the layout places it by its
+ * box, but still stores its end as a ratio of the anchor region.
+ */
+export const buildRotatedCutTopDoc = (): CanvasDoc => {
+	const doc = emptyDoc();
+	layoutDocOps.addObject(doc, "rect", { x: 0, y: 0, width: 160, height: 100 });
+	layoutDocOps.addObject(doc, "cut-top", { x: 400, y: 300 });
+	layoutDocOps.connect(doc, { sourceId: "rect-1", targetId: "cut-top-1" });
+	layoutDocOps.setRotation(doc, ["cut-top-1"], 180);
+	return doc;
+};
+
 /** {@link buildOutlinedDoc} with the parallelogram turned upside down, which the layout places by its box. */
 export const buildRotatedOutlinedDoc = (): CanvasDoc => {
 	const doc = buildOutlinedDoc();

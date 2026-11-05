@@ -748,6 +748,24 @@ describe("layoutObjects on shapes whose outline is not their box", () => {
 		expect(readObject(doc, "connector-1").points).toEqual([]);
 	});
 
+	it("centres a side's only end on a rotated cut-top shape's body, as on an unturned one", () => {
+		const doc = emptyDoc();
+		outlinedDocOps.addObject(doc, "rect", {
+			x: 0,
+			y: 0,
+			width: 160,
+			height: 100,
+		});
+		outlinedDocOps.addObject(doc, "cut-top", { x: 400, y: 300 });
+		outlinedDocOps.connect(doc, { sourceId: "rect-1", targetId: "cut-top-1" });
+		outlinedDocOps.setRotation(doc, ["cut-top-1"], 180);
+
+		outlinedDocOps.layoutObjects(doc, undefined, { direction: "LR" });
+
+		const [, target] = readEnds(doc, "connector-1");
+		expect(target.anchor).toMatchObject({ kind: "edge", side: "left", t: 0.5 });
+	});
+
 	it("writes an end as a ratio of the anchor region, so a straight line meets a tipped shape's side level", () => {
 		const doc = emptyDoc();
 		outlinedDocOps.addObject(doc, "tipped", { x: 0, y: 0 });

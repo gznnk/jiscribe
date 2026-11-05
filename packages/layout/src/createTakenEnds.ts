@@ -2,13 +2,16 @@ import type { Rect } from "@jiscribe/geometry";
 
 import {
 	FULL_ANCHOR_RANGE,
-	calcAnchorRangeMidpoint,
-	scaleIntoAnchorRange,
+	calcCentredAnchorRatio,
+	scaleIntoBodyWithinUsable,
 } from "./anchorRange";
 import { EDGE_END_SPACING } from "./chooseEdgeAnchors";
 import type { LayoutAnchorRange, LayoutEdgeAnchor, LayoutSide } from "./types";
 
-/** How far from the middle of the usable stretch a handed-out end may go, as shares of it. */
+/**
+ * Where on a side a handed-out end may go, as shares of the side's body, cut down to
+ * its usable stretch (see scaleIntoBodyWithinUsable).
+ */
 const PLACE_RANGE: LayoutAnchorRange = { min: 0.1, max: 0.9 };
 
 /** An end already sitting on a side of an object. */
@@ -27,25 +30,32 @@ export type TakenEnd = {
 /** Hands out free positions on the sides of objects; see {@link createTakenEnds}. */
 export type TakenEnds = {
 	/**
-	 * The position on `side` of the owner nearest the middle of the side's usable
-	 * stretch that keeps {@link EDGE_END_SPACING} from every end already there, kept a
-	 * tenth of that stretch clear at either end, or the middle itself when nothing
-	 * fits; taken from then on.
+	 * The position on `side` of the owner nearest where a side's only end would sit
+	 * (the middle of `body`, or of `usable` when that is off it) that keeps
+	 * {@link EDGE_END_SPACING} from every end already there, searched below and
+	 * above it, the lower first at each step, within a tenth of `body` clear at either
+	 * end and within `usable`; that starting position itself when nothing fits. Taken
+	 * from then on.
 	 *
 	 * @param ownerId - Matched against {@link TakenEnd.ownerId}; ends are tracked per
 	 *   owner and side, so an end on another object never crowds this one
-	 * @param side - The only side searched: when it is full the middle is handed out,
-	 *   never a position on a neighbouring side
+	 * @param side - The only side searched: when it is full the starting position is
+	 *   handed out, never a position on a neighbouring side
 	 * @param box - The owner's box, for the side's length; a zero-length side
-	 *   always gets the middle
+	 *   always gets the starting position
 	 * @param usable - The stretch of the side an end may sit on, as ratios of the
 	 *   side (see `LayoutGraphNode.anchorRanges`); defaults to all of it
+	 * @param body - The stretch of the side the owner's body covers, as ratios of the
+	 *   side (see `LayoutGraphNode.anchorBodyRanges`); defaults to all of it. Where it
+	 *   and `usable` share nothing past the clear tenths, the search runs over
+	 *   `usable`'s middle eight tenths instead
 	 */
 	place: (
 		ownerId: string,
 		side: LayoutSide,
 		box: Rect,
 		usable?: LayoutAnchorRange,
+		body?: LayoutAnchorRange,
 	) => LayoutEdgeAnchor;
 };
 
@@ -73,24 +83,43 @@ export const createTakenEnds = (taken: readonly TakenEnd[]): TakenEnds => {
 		take(ownerId, side, t);
 	}
 	return {
-		place: (ownerId, side, box, usable = FULL_ANCHOR_RANGE) => {
+		place: (
+			ownerId,
+			side,
+			box,
+			usable = FULL_ANCHOR_RANGE,
+			body = FULL_ANCHOR_RANGE,
+		) => {
 			const extent =
 				side === "top" || side === "bottom" ? box.width : box.height;
 			const positions = positionsBySide.get(keyOf(ownerId, side)) ?? [];
 			const gap = extent > 0 ? EDGE_END_SPACING / extent : 0;
 			const isFree = (t: number): boolean =>
 				positions.every((position) => Math.abs(position - t) >= gap);
-			const middle = calcAnchorRangeMidpoint(usable);
-			const searched = scaleIntoAnchorRange(usable, PLACE_RANGE);
-			let t = middle;
-			if (!isFree(middle)) {
-				for (let step = gap; middle + step <= searched.max; step += gap) {
-					if (isFree(middle - step)) {
-						t = middle - step;
+			const searched = scaleIntoBodyWithinUsable(body, usable, PLACE_RANGE);
+			const start = Math.min(
+				searched.max,
+				Math.max(searched.min, calcCentredAnchorRatio(body, usable)),
+			);
+			// The lower limit mirrored above the start, so both sides are tested by the
+			// same `start + step` and a start centred on the stretch runs out of both at
+			// the same step: `start - step >= min` rounds differently (0.5 - 0.4 >= 0.1
+			// is false while 0.5 + 0.4 <= 0.9 is true).
+			const lowerReach = 2 * start - searched.min;
+			let t = start;
+			if (gap > 0 && !isFree(start)) {
+				for (let step = gap; ; step += gap) {
+					const hasLower = start + step <= lowerReach;
+					const hasUpper = start + step <= searched.max;
+					if (!hasLower && !hasUpper) {
 						break;
 					}
-					if (isFree(middle + step)) {
-						t = middle + step;
+					if (hasLower && isFree(start - step)) {
+						t = start - step;
+						break;
+					}
+					if (hasUpper && isFree(start + step)) {
+						t = start + step;
 						break;
 					}
 				}

@@ -58,6 +58,28 @@ describe("chooseEdgeAnchors", () => {
 		expect(gs.source.t).toBe(0.8);
 	});
 
+	it("sets the column by each end's rank on the side's body", () => {
+		// p's left body covers 0.25..1, so the first of two ends on it is evenly spaced
+		// at half the side rather than a third.
+		const r = ["r", at(0, 140)] as const;
+		const pLeft = { left: { min: 0.25, max: 1 } };
+		const [gp] = chooseEdgeAnchors(
+			[
+				{ ...link("gp", g, p), targetAnchorBodyRanges: pLeft },
+				link("gs", g, sql),
+				{ ...link("rp", r, p), targetAnchorBodyRanges: pLeft },
+			],
+			rows,
+			axis,
+		);
+
+		expect(columnOf(g[1], gp.source.t)).toBeCloseTo((64 / 3 + 10 + 32) / 2, 6);
+		expect(columnOf(p[1], gp.target.t)).toBeCloseTo(
+			columnOf(g[1], gp.source.t),
+			6,
+		);
+	});
+
 	it("runs an edge between two shared sides straight within a side's usable stretch", () => {
 		// p's left is usable from its middle down; by rank alone the column would land
 		// a third of the way down p, above that stretch.
