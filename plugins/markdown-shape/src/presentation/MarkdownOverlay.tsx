@@ -5,8 +5,8 @@ import { renderMarkdown } from "@jiscribe/markdown";
 import type React from "react";
 import { memo, useEffect, useMemo, useRef } from "react";
 
-import { calcMarkdownMaxFontScale } from "./calcMarkdownMaxFontScale";
 import { MarkdownBody } from "./MarkdownStyled";
+import { resolveMarkdownFrameProps } from "./resolveMarkdownFrameProps";
 
 const MarkdownOverlayComponent: React.FC<FrameTextOverlayProps> = ({
 	x,
@@ -35,9 +35,13 @@ const MarkdownOverlayComponent: React.FC<FrameTextOverlayProps> = ({
 		[source],
 	);
 
-	const maxFontScale = useMemo(
-		() => calcMarkdownMaxFontScale(renderedHtml),
-		[renderedHtml],
+	const frameProps = useMemo(
+		() =>
+			resolveMarkdownFrameProps(
+				{ textAlign, verticalAlign, fontColor, fontSize, fontFamily },
+				renderedHtml,
+			),
+		[textAlign, verticalAlign, fontColor, fontSize, fontFamily, renderedHtml],
 	);
 
 	// isEditing stays in deps: while editing this component renders null, so the
@@ -62,15 +66,7 @@ const MarkdownOverlayComponent: React.FC<FrameTextOverlayProps> = ({
 			width={width}
 			height={height}
 			transform={transform}
-			textAlign={textAlign}
-			verticalAlign={verticalAlign}
-			fontColor={fontColor}
-			fontSize={fontSize}
-			// Headings are scaled in `em` of fontSize; with no fontSize the frame's
-			// own default applies to both.
-			maxFontSize={fontSize === undefined ? undefined : fontSize * maxFontScale}
-			fontFamily={fontFamily}
-			exportAs="html"
+			{...frameProps}
 		>
 			<MarkdownBody ref={bodyRef} />
 		</TextOverlayFrame>

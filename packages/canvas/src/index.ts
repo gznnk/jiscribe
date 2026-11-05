@@ -288,6 +288,10 @@ export type {
 	TextEditOverflow,
 } from "./controllers/ui/editors/ObjectTextEditOverflowTypes";
 export type {
+	ObjectTextMeasurement,
+	ObjectTextMeasurer,
+} from "./rendering/objects/registry/ObjectTextMeasurerRegistry";
+export type {
 	ObjectTextEditLineBreaksResolver,
 	TextEditLineBreaks,
 } from "./controllers/ui/editors/ObjectTextEditLineBreaksTypes";

@@ -161,6 +161,13 @@ function of the doc returning one English line per overflow — what is short, b
 how many pixels, and how to fix it — which `diagnoseDoc` turns into an error on
 the object. The record does this for its compartments.
 
+On the canvas side, `measure.textSlot` measures a slot as plain text by
+default. A type that draws its body as HTML of its own (`features.text:
+"source"`, as Markdown does) declares `textMeasurer` on its definition, usually a call to
+`measureTextOverlayContent` with the very frame props and body its overlay draws
+— share one helper between the two so the measured box is the drawn one. The
+markdown plugin is the example (`measureMarkdownText`).
+
 A shape that hand-draws instead of going through `createFrameObject` has to redo
 what that helper resolved (the sticky is the example). Colors above all: resolve
 them with `resolveAutoColor(fill, "surface")` and **apply the result through CSS,

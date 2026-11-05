@@ -17,7 +17,6 @@
 // read itself, and a file that holds the named revision again by the time it is
 // looked at is written rather than refused.
 
-import { createHash } from "node:crypto";
 import { unwatchFile, watchFile } from "node:fs";
 import { mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
@@ -31,6 +30,7 @@ import {
 } from "@jiscribe/doc-tools/file";
 
 import type { WriteOpenFileOutcome } from "./canvasHostTypes";
+import { calcDocRevision } from "./docRevision";
 import { resolveWorkspacePathReal } from "./workspacePaths";
 import { canvasParser } from "../canvasDefinitions";
 import type { CanvasHostServerMessage } from "../shared/canvasHostProtocol";
@@ -52,16 +52,6 @@ const SETTLE_TIMEOUT_MS = 500;
 
 /** How long a read that has not settled waits before it looks again */
 const SETTLE_RETRY_MS = 25;
-
-/**
- * The revision a text is handed out under, and has to be named by again when it is
- * written back.
- *
- * @param docText The text as the viewer was given it, or as it was just written
- * @returns The lowercase hex SHA-256 of the text's UTF-8 bytes
- */
-const calcDocRevision = (docText: string): string =>
-	createHash("sha256").update(docText, "utf8").digest("hex");
 
 /**
  * Reads a file with the identity it was read under (see readFileSnapshot),
@@ -107,8 +97,8 @@ type OpenFileRead =
 
 /** What the windows hold once syncOpenFile has passed the file on display on */
 export type OpenFileSyncOutcome =
-	/** The text under this revision is the last the windows were sent */
-	| { kind: "synced"; revision: string }
+	/** The text under this revision, of relPath, is the last the windows were sent */
+	| { kind: "synced"; relPath: string; revision: string }
 	/** The file cannot be read, and the windows have been told why */
 	| { kind: "unreadable"; relPath: string; reason: string }
 	/**
@@ -546,7 +536,7 @@ export const createFileMirror = (options: FileMirrorOptions): FileMirror => {
 			// What the windows were last sent is the answer rather than what this read
 			// found: a newer read, or a person's write, may have been taken over it
 			if (openPath === relPath && lastKnownRevision !== null) {
-				return { kind: "synced", revision: lastKnownRevision };
+				return { kind: "synced", relPath, revision: lastKnownRevision };
 			}
 			if (read.kind === "unreadable") {
 				return { kind: "unreadable", relPath, reason: read.reason };

@@ -53,6 +53,7 @@ import {
 import { useDocSync, type WorkInHand } from "./useDocSync";
 import { viewerTheme } from "./viewerTheme";
 import {
+	DRAWN_REVISION_WAIT_MS,
 	isHeadlessViewerSearch,
 	type ViewerOp,
 } from "../shared/canvasHostProtocol";
@@ -100,14 +101,6 @@ type Notice = { id: number; kind: NoticeKind; message: string };
 
 /** How often that wait looks, the canvas having nothing to call when a drag ends */
 const DRAG_RELEASE_POLL_MS = 50;
-
-/**
- * How long a query waits for the file the host named to be drawn before it
- * answers with an error. What holds it up is a person's gesture, which the file
- * waits behind; the host gives up on the query at 15 seconds, which leaves room
- * for the op itself
- */
-const DRAWN_REVISION_WAIT_MS = 5_000;
 
 /** How often that wait looks, the gesture having nothing to call when it ends */
 const DRAWN_REVISION_POLL_MS = 50;

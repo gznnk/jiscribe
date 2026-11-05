@@ -220,6 +220,14 @@ CodeMirror の `EditorView`）。
 （`sticky-shadow`）。ホストの `objectTypes` が絞るのは組み込み型だけで、`plugins` に
 入れたプラグインの型とその `svgDefs` は常に登録される。エクスポートは live SVG の `cloneNode` なので、プラグイン提供分も自動で入る。
 
+**`textMeasurer`**（`features.text: "source"`）。`measure.textSlot` はスロットを
+`layoutVisualLines` で平文として測るが、型が自分で描く本体（Markdown: `em` 倍率の
+見出し・ブロックの margin・表）ではそれが外れる。そういう型は `textMeasurer`
+（`ObjectTextMeasurer`）を宣言し、overlay が描くとおりに本体を組む —
+`measureTextOverlayContent` が同じ `TextOverlayFrame` に画面外で描く — その大きさを
+`lineCount: null` で返す。領域と溢れの判定は core が付けるので、答えの形は他の型と
+同じになる。ブラウザでだけ、ホストが問うたときに走る。
+
 **テキストスロット**（`features.text: "slots"`）。整数風のスロット ID（`"0"` /
 `"1"`）を使わない。JS は整数風の自前キーを挿入順より前に数値昇順で列挙するため、
 `state.text` のキー順 — 既定スロット（Enter 編集）と描画順を決めているもの — が

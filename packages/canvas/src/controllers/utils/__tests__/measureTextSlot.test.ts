@@ -103,6 +103,65 @@ describe("measureTextSlot", () => {
 		expect(measure(textRect("ok"), "title")).toBeNull();
 	});
 
+	describe("a type that registers its own text measurer", () => {
+		const measuredRegistries = createCanvasRegistries();
+		const measuredCalls: unknown[] = [];
+		measuredRegistries.objectTextMeasurer.register(
+			"rect",
+			(object, slotId, context) => {
+				measuredCalls.push({ id: object.id, slotId, context });
+				// Taller than any region below is wide, as a heading-led body would be.
+				return { textSize: { width: 200, height: 150 }, lineCount: null };
+			},
+		);
+		const measureWithOwn = (object: ObjectState) =>
+			measureTextSlot(object, "body", measuredRegistries);
+
+		it("is measured by that measurer, with the region and the resolved style", () => {
+			measuredCalls.length = 0;
+			const measurement = measureWithOwn(textRect("# Title"));
+			expect(measuredCalls).toEqual([
+				{
+					id: "r1",
+					slotId: "body",
+					context: {
+						regionSize: { width: 200, height: 100 },
+						style: expect.objectContaining({ fontSize: FONT_SIZE }),
+					},
+				},
+			]);
+			expect(measurement?.textSize).toEqual({ width: 200, height: 150 });
+			expect(measurement?.lineCount).toBeNull();
+		});
+
+		it("gets its overflow verdict and region from core", () => {
+			const short = measureWithOwn(textRect("# Title"));
+			expect(short?.isOverflowing).toBe(true);
+			expect(short?.bounds).toEqual({
+				x: -100,
+				y: -50,
+				width: 200,
+				height: 100,
+			});
+
+			const tall = measureWithOwn(textRect("# Title", { height: 150.4 }));
+			// Within OVERFLOW_TOLERANCE of the region counts as fitting.
+			expect(tall?.isOverflowing).toBe(false);
+		});
+
+		it("leaves a type without a measurer on the plain-text layout", () => {
+			const plain = measureTextSlot(
+				{
+					...textRect("a\nb\nc"),
+					type: "ellipse",
+				} as ObjectState,
+				"body",
+				measuredRegistries,
+			);
+			expect(plain?.lineCount).toBe(3);
+		});
+	});
+
 	it("returns null for an object with no text region of its own", () => {
 		const connector = {
 			id: "c1",

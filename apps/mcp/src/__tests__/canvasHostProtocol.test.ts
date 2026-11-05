@@ -20,6 +20,16 @@ const handleOpResultFrame = {
 	text: "captured",
 };
 
+/** A measureText's numbers the guard accepts, to vary one field at a time from */
+const textMeasurement = {
+	textSlotId: "body",
+	bounds: { x: 0, y: 0, width: 200, height: 80 },
+	textSize: { width: 188, height: 132.5 },
+	regionSize: { width: 188, height: 76 },
+	lineCount: null,
+	isOverflowing: true,
+};
+
 describe("isCanvasHostClientMessage", () => {
 	it.each([
 		["a flushed frame", flushedFrame],
@@ -32,6 +42,17 @@ describe("isCanvasHostClientMessage", () => {
 		[
 			"a handleOpResult frame carrying an exported image",
 			{ ...handleOpResultFrame, exportedImageBase64: "PHN2Zy8+" },
+		],
+		[
+			"a handleOpResult frame carrying a block-laid measurement",
+			{ ...handleOpResultFrame, textMeasurement },
+		],
+		[
+			"a handleOpResult frame carrying a measurement with a line count",
+			{
+				...handleOpResultFrame,
+				textMeasurement: { ...textMeasurement, lineCount: 3 },
+			},
 		],
 		[
 			"a frame carrying properties nobody asked for",
@@ -84,6 +105,13 @@ describe("isCanvasHostClientMessage", () => {
 			{ ...handleOpResultFrame, text: 1 },
 		],
 		[
+			"a handleOpResult frame whose measurement is missing a field",
+			{
+				...handleOpResultFrame,
+				textMeasurement: { ...textMeasurement, isOverflowing: undefined },
+			},
+		],
+		[
 			"a handleOpResult frame whose PNG is not a string",
 			{ ...handleOpResultFrame, imagePngBase64: 123 },
 		],
@@ -102,4 +130,30 @@ describe("isCanvasHostClientMessage", () => {
 	])("rejects %s", (_label, frame) => {
 		expect(isCanvasHostClientMessage(frame)).toBe(false);
 	});
+
+	it.each([
+		["textSlotId", { textSlotId: 1 }],
+		["bounds.x", { bounds: { ...textMeasurement.bounds, x: "0" } }],
+		[
+			"bounds.width",
+			{ bounds: { ...textMeasurement.bounds, width: Number.NaN } },
+		],
+		[
+			"textSize.height",
+			{ textSize: { width: 188, height: Number.POSITIVE_INFINITY } },
+		],
+		["regionSize", { regionSize: null }],
+		["lineCount", { lineCount: "3" }],
+		["isOverflowing", { isOverflowing: "true" }],
+	] as [string, Record<string, unknown>][])(
+		"rejects a handleOpResult frame whose measurement's %s is malformed",
+		(_field, override) => {
+			expect(
+				isCanvasHostClientMessage({
+					...handleOpResultFrame,
+					textMeasurement: { ...textMeasurement, ...override },
+				}),
+			).toBe(false);
+		},
+	);
 });

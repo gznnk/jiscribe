@@ -15,6 +15,31 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Added
 
+- **A type can measure the text body it draws itself.** `ObjectTypeDefinition`
+  takes `textMeasurer` (`ObjectTextMeasurer`, returning an
+  `ObjectTextMeasurement`), which `CanvasHandle.measure.textSlot` calls in place
+  of the plain-text layout; core still adds the region and the overflow verdict.
+  `measureTextOverlayContent` (`@jiscribe/canvas/unstable`, and so
+  `@jiscribe/canvas-sdk`) lays content out in a `TextOverlayFrame` off screen and
+  returns its size, the building block for one. The markdown card declares one,
+  so `measure.textSlot` on it now measures the body as it is drawn — headings at
+  their larger size, block margins, tables — and reports a card the rendering
+  overflows as `isOverflowing: true` where the plain-text layout said it fit.
+  The ai-tools `measure_text` result says so too ("laid out as HTML blocks (no
+  line count)") and carries the numbers as `AiCanvasOpOutcome.textMeasurement`,
+  for a host to judge; while the page's fonts are still loading it measures
+  once more after `document.fonts.ready`, so a heading is not measured in its
+  fallback face.
+- **`diagnoseDoc` takes measurements of the bodies it cannot measure itself.**
+  `diagnoseDoc(doc, { measuredSourceText })` (`@jiscribe/doc-tools`) judges a
+  `"source"` body (the markdown card) from a `MeasuredSourceText` a browser
+  took, reporting an overflow as an error on the object and leaving a measured
+  body out of the "not checked" warning; `listSourceTextObjects(doc)` lists the
+  objects such a caller has to measure, and `resolveContentBox` reports
+  `isSourceText` on a `region`, so a tool can tell a plain-text lower bound
+  from a verdict (`formatSourceTextMeasureNote` is the sentence that says so,
+  shared by `jiscribe measure` and the MCP server). The MCP server's
+  `diagnose_canvas` is the first caller (see its changelog).
 - **`diagnoseDoc` reports three more things a reader cannot see as written**,
   and `jiscribe diagnose` with it. An `svg` that references an internal id an
   earlier `svg` also defines is a warning, all markup sharing one page. A Japanese line-start prohibition is
@@ -206,6 +231,17 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Changed
 
+- **Breaking: `TextSlotMeasurement.lineCount` is `number | null`.** A body laid
+  out as HTML blocks (the markdown card, or any type declaring `textMeasurer`)
+  has no line count and reports `null`; code that does arithmetic on it has to
+  handle that.
+- **`jiscribe measure` gives no verdict for a markdown card.** It still prints
+  the plain-text lines, the text box and the content box, but in place of
+  `fits` a note says those are only a lower bound on the rendered body, since
+  the card lays it out as HTML, and names the MCP server's
+  `measure_rendered_text` as what measures it as drawn. The JSON form carries
+  `fits: null` beside the note, and the exit code is 0, as for a type that
+  draws its label outside its box. `--height` is still required.
 - **Breaking: `ObjectOverlap.covers` gains `"both"`, for two boxes with all four
   edges equal.** `CanvasHandle.measure.findOverlaps` used to report such a pair as
   `"first"`; it now reports `"both"`. Code that reads the containing shape as

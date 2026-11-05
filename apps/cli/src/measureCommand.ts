@@ -1,6 +1,10 @@
 import { parseArgs } from "node:util";
 
-import { measureWrappedText, resolveContentBox } from "@jiscribe/doc-tools";
+import {
+	formatSourceTextMeasureNote,
+	measureWrappedText,
+	resolveContentBox,
+} from "@jiscribe/doc-tools";
 
 import { parseCommandArgs } from "./parseCommandArgs";
 
@@ -65,8 +69,13 @@ const fail = (message?: string): number => {
  * the text is measured as authored and reported with a note, and neither a
  * `content` line nor a verdict is printed.
  *
+ * A shape that lays its body out itself (markdown, as HTML) is measured into its
+ * content box as plain text, which only bounds what the drawn body takes from
+ * below: the numbers come with a note in place of a verdict (`fits` is null in
+ * the JSON).
+ *
  * @param argv - Arguments after the sub-command name: `--width` (required), `--font-size` (required), `--bold`, `--shape` (default `rect`), `--height` (required for any shape whose outline is built from both sides and holds its text), `--json`, and the text as the single positional
- * @returns The process exit code: 0 when the text fits and for a shape whose box does not constrain it, 1 when it does not fit and for a type outside the shipped set, 2 for a malformed command line
+ * @returns The process exit code: 0 when the text fits, for a shape whose box does not constrain it and for one that lays its body out itself, 1 when it does not fit and for a type outside the shipped set, 2 for a malformed command line
  */
 export const runMeasureCommand = (argv: readonly string[]): number => {
 	const parsed = parseCommandArgs(USAGE, () =>
@@ -167,6 +176,37 @@ export const runMeasureCommand = (argv: readonly string[]): number => {
 
 	const box = resolution.rect;
 	const metrics = measureWrappedText(positionals[0], font, box.width);
+
+	if (resolution.isSourceText) {
+		if (values.json) {
+			process.stdout.write(
+				`${JSON.stringify(
+					{
+						shape,
+						lines: metrics.lines,
+						width: round(metrics.width),
+						height: round(metrics.height),
+						contentWidth: round(box.width),
+						contentHeight: height === null ? null : round(box.height),
+						fits: null,
+						note: formatSourceTextMeasureNote(shape),
+					},
+					null,
+					2,
+				)}\n`,
+			);
+			return 0;
+		}
+		process.stdout.write(`lines ${metrics.lines}\n`);
+		process.stdout.write(
+			`text ${round(metrics.width)}x${round(metrics.height)}\n`,
+		);
+		process.stdout.write(
+			`content ${round(box.width)}x${height === null ? "-" : round(box.height)}\n`,
+		);
+		process.stdout.write(`note: ${formatSourceTextMeasureNote(shape)}\n`);
+		return 0;
+	}
 
 	const fits =
 		metrics.width <= box.width + 0.5 &&

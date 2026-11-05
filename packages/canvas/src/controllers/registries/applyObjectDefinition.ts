@@ -554,6 +554,9 @@ export const applyObjectDefinition = (
 			definition.textEditLineBreaks,
 		);
 	}
+	if (definition.textMeasurer) {
+		registries.objectTextMeasurer.register(type, definition.textMeasurer);
+	}
 	if (definition.outline) {
 		registries.objectOutline.register(type, definition.outline);
 	}

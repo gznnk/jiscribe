@@ -283,6 +283,68 @@ describe("measure", () => {
 		expect(stdout).not.toContain("fits ");
 	});
 
+	it("measures a markdown card as plain text with a note in place of a verdict, and exits 0", () => {
+		// Far more than 120x40 holds: the plain-text numbers would say "no", but
+		// they only bound the drawn body from below, so no verdict is given
+		const { code, stdout } = capture(() =>
+			runMeasureCommand([
+				"--width",
+				"120",
+				"--height",
+				"40",
+				"--font-size",
+				"14",
+				"--shape",
+				"markdown",
+				"# 見出し\n\nこの箱には到底入りきらない長さの本文",
+			]),
+		);
+		expect(code).toBe(0);
+		expect(stdout).toMatch(/^content [\d.]+x[\d.]+$/m);
+		expect(stdout).toMatch(
+			/^note: shape markdown lays its body out as HTML .* lower bound .* measure_rendered_text$/m,
+		);
+		expect(stdout).not.toContain("fits ");
+	});
+
+	it("reports a markdown card's fit as null in the JSON, beside the note", () => {
+		const { code, stdout } = capture(() =>
+			runMeasureCommand([
+				"--width",
+				"120",
+				"--height",
+				"40",
+				"--font-size",
+				"14",
+				"--shape",
+				"markdown",
+				"--json",
+				"短い",
+			]),
+		);
+		expect(code).toBe(0);
+		const report = JSON.parse(stdout) as Record<string, unknown>;
+		expect(report.fits).toBeNull();
+		expect(report.note).toMatch(/lays its body out as HTML/);
+		expect(typeof report.contentWidth).toBe("number");
+	});
+
+	it("still insists on a height for a markdown card", () => {
+		const { code, stderr } = capture(() =>
+			runMeasureCommand([
+				"--width",
+				"120",
+				"--font-size",
+				"14",
+				"--shape",
+				"markdown",
+				"x",
+			]),
+		);
+		expect(code).toBe(2);
+		expect(stderr).toMatch(/--height is required for --shape markdown/);
+	});
+
 	it("lays a shape's outside label out as authored, wrapping at nothing", () => {
 		const { stdout } = capture(() =>
 			runMeasureCommand([

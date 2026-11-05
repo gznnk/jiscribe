@@ -101,6 +101,15 @@ describe("resolveContentBox", () => {
 		).toEqual({ kind: "outside" });
 	});
 
+	it("marks a type that lays its body out itself as source text, and a shared-typesetting one as not", () => {
+		expect(
+			resolveContentBox({ type: "markdown", width: 200, height: 100 }),
+		).toMatchObject({ kind: "region", isSourceText: true });
+		expect(
+			resolveContentBox({ type: "rect", width: 200, height: 100 }),
+		).toMatchObject({ kind: "region", isSourceText: false });
+	});
+
 	it("clamps to zero rather than reporting a negative box", () => {
 		expect(contentRectOf({ type: "rect", width: 4, height: 2 })).toMatchObject({
 			width: 0,
