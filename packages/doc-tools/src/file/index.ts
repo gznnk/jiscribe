@@ -1,7 +1,8 @@
 // Reading and writing canvas files from Node: the path gate, a validated load, a
-// write-back that refuses to leave the file worse than it found it, and the atomic
-// replacement under it. The package root has no file reading or writing; this
-// entry is where it lives.
+// write-back that refuses to leave the file worse than it found it, the atomic
+// replacement under it, and the check that the images a document names are on
+// disk beside it. The package root has no file reading or writing; this entry is
+// where it lives.
 //
 // e.g. `import { loadCanvasFile, saveCanvasFile } from "@jiscribe/doc-tools/file";`
 export {
@@ -31,6 +32,10 @@ export type {
 } from "./atomicWrite";
 
 export { realpathDeepestExisting } from "./realpathDeepestExisting";
+
+export { isInsideRoot } from "./isInsideRoot";
+
+export { diagnoseImageSources } from "./diagnoseImageSources";
 
 export { isErrnoWithCode } from "./nodeErrors";
 

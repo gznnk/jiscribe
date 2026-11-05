@@ -13,6 +13,7 @@
 //    under a requestId.
 
 import type { AiHandleOp } from "@jiscribe/ai-tools";
+import type { TextSlotMeasurement } from "@jiscribe/canvas";
 
 /**
  * The query naming a viewer that nobody can see (the AI's eye). The host puts it
@@ -30,6 +31,16 @@ export const HEADLESS_VIEWER_QUERY = "headless=1";
  */
 export const isHeadlessViewerSearch = (search: string): boolean =>
 	search.replace(/^\?/, "").split("&").includes(HEADLESS_VIEWER_QUERY);
+
+/**
+ * How long the viewer holds a handleOpRequest for the revision it names to be
+ * drawn before it answers with an error. What holds it up is a person's gesture,
+ * which the file waits behind. A host asking with a timeout of its own has to
+ * leave room past this for the op itself: the 15 s default does, and
+ * diagnose_canvas's measurements add a margin of their own
+ * (DIAGNOSE_MEASURE_TIMEOUT_MS in server.ts)
+ */
+export const DRAWN_REVISION_WAIT_MS = 5_000;
 
 /**
  * The longest edge (px) of a PNG export_image writes; the viewer scales a larger
@@ -125,10 +136,42 @@ export type CanvasHostClientMessage =
 			 * exportImage; the format is the one the request named
 			 */
 			exportedImageBase64?: string;
+			/**
+			 * The numbers behind a successful measureText's text, which
+			 * diagnose_canvas turns into a finding. A tab too old to send it leaves it
+			 * out
+			 */
+			textMeasurement?: TextSlotMeasurement;
 	  };
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
 	typeof value === "object" && value !== null;
+
+const isFiniteNumber = (value: unknown): value is number =>
+	typeof value === "number" && Number.isFinite(value);
+
+/** Whether a value is a width and height, both finite numbers */
+const isFiniteSize = (value: unknown): boolean =>
+	isRecord(value) &&
+	isFiniteNumber(value.width) &&
+	isFiniteNumber(value.height);
+
+/**
+ * Whether a value has the shape of a TextSlotMeasurement, field by field. It
+ * arrives over the network and its numbers are written into a diagnosis, so a
+ * NaN or a string in their place is refused rather than passed on
+ */
+const isTextSlotMeasurement = (value: unknown): boolean =>
+	isRecord(value) &&
+	typeof value.textSlotId === "string" &&
+	isRecord(value.bounds) &&
+	isFiniteNumber(value.bounds.x) &&
+	isFiniteNumber(value.bounds.y) &&
+	isFiniteSize(value.bounds) &&
+	isFiniteSize(value.textSize) &&
+	isFiniteSize(value.regionSize) &&
+	(value.lineCount === null || isFiniteNumber(value.lineCount)) &&
+	typeof value.isOverflowing === "boolean";
 
 /**
  * Checks whether a received frame has the shape of a message from the viewer. The
@@ -155,7 +198,9 @@ export function isCanvasHostClientMessage(
 				(value.imagePngBase64 === undefined ||
 					typeof value.imagePngBase64 === "string") &&
 				(value.exportedImageBase64 === undefined ||
-					typeof value.exportedImageBase64 === "string")
+					typeof value.exportedImageBase64 === "string") &&
+				(value.textMeasurement === undefined ||
+					isTextSlotMeasurement(value.textMeasurement))
 			);
 		default:
 			return false;

@@ -17,6 +17,7 @@ import { createObjectGeometryKeyRegistry } from "../../rendering/objects/registr
 import { createObjectOutlineRegistry } from "../../rendering/objects/registry/ObjectOutlineRegistry";
 import { createObjectPartKindRegistry } from "../../rendering/objects/registry/ObjectPartKindRegistry";
 import { createObjectSvgDefsRegistry } from "../../rendering/objects/registry/ObjectSvgDefsRegistry";
+import { createObjectTextMeasurerRegistry } from "../../rendering/objects/registry/ObjectTextMeasurerRegistry";
 import { createObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import { createObjectAutoHeightRegistry } from "../../states/registry/ObjectAutoHeightRegistry";
 import { createObjectContainerRegistry } from "../../states/registry/ObjectContainerRegistry";
@@ -65,6 +66,7 @@ export const createCanvasRegistries = (
 		objectShapeStyleDefaults: createObjectShapeStyleDefaultsRegistry(),
 		objectTextEditOverflow: createObjectTextEditOverflowRegistry(),
 		objectTextEditLineBreaks: createObjectTextEditLineBreaksRegistry(),
+		objectTextMeasurer: createObjectTextMeasurerRegistry(),
 		objectOutline: createObjectOutlineRegistry(),
 		objectAnchorRegion: createObjectAnchorRegionRegistry(),
 		objectExtraConnectPoints: createObjectExtraConnectPointsRegistry(),

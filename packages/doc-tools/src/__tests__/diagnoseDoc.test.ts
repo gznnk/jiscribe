@@ -6,7 +6,7 @@ import { isMissingBounds } from "@jiscribe/doc";
 import { standardObjectDocDefinitions } from "@jiscribe/standard-shapes/doc";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { diagnoseDoc } from "../diagnoseDoc";
+import { diagnoseDoc, listSourceTextObjects } from "../diagnoseDoc";
 import { validateDoc } from "../validateDoc";
 
 /**
@@ -44,6 +44,30 @@ afterEach(() => {
 describe("diagnoseDoc", () => {
 	it("reports nothing for shapes their text fits in", () => {
 		expect(diagnoseDoc(readFixture("fitting.jis.json"))).toEqual([]);
+	});
+
+	it("leaves a shape drawn wholly under a later shape's opaque fill unreported", () => {
+		// Layering is the author's to judge: an illustration hides shapes on
+		// purpose, so covering is left to the find_overlaps tool.
+		const doc = parseDoc(
+			{
+				version: 1,
+				root: [
+					{ type: "rect", id: "under", x: 40, y: 40, width: 80, height: 40 },
+					{
+						type: "rect",
+						id: "cover",
+						x: 0,
+						y: 0,
+						width: 200,
+						height: 120,
+						fill: "#E2E8F0",
+					},
+				],
+			},
+			"a rect covered by a later opaque rect",
+		);
+		expect(diagnoseDoc(doc)).toEqual([]);
 	});
 
 	it("reports the object whose text does not fit, and only that one", () => {
@@ -123,6 +147,94 @@ describe("diagnoseDoc", () => {
 			expect(diagnostics[0].message).toMatch(
 				/^text in markdown md-1, md-2 is not checked for overflow/,
 			);
+		});
+
+		describe("measured as drawn (options.measuredSourceText)", () => {
+			const overflowing = {
+				isOverflowing: true,
+				textSize: { width: 40, height: 61.25 },
+				regionSize: { width: 40, height: 20 },
+			};
+			const fitting = {
+				isOverflowing: false,
+				textSize: { width: 40, height: 18 },
+				regionSize: { width: 40, height: 20 },
+			};
+
+			it("reports an overflowing body as an error on the object, in document order, and keeps only the unmeasured in the warning", () => {
+				const doc: CanvasDoc = {
+					version: 1,
+					root: [
+						markdown("md-1", "# Heading\n\nbody"),
+						// overflowing.jis.json's "cramped": a rect whose text overflows
+						readFixture("overflowing.jis.json").root[0],
+						markdown("md-2", "unmeasured"),
+						markdown("md-3", "# Heading"),
+					],
+				};
+				const diagnostics = diagnoseDoc(doc, {
+					measuredSourceText: new Map([
+						["md-1", overflowing],
+						[
+							"md-3",
+							{
+								isOverflowing: true,
+								textSize: { width: 52, height: 30 },
+								regionSize: { width: 40, height: 20 },
+							},
+						],
+					]),
+				});
+				expect(
+					diagnostics.map(({ severity, objectId }) => [severity, objectId]),
+				).toEqual([
+					["error", "md-1"],
+					["error", "cramped"],
+					["error", "md-3"],
+					["warning", undefined],
+				]);
+				// Only the axis that overflows is named
+				expect(diagnostics[0].message).toBe(
+					"text overflows markdown 40x20: the rendered body needs 61.3px of height but the region is 20px tall (measured as drawn on the open canvas)",
+				);
+				expect(diagnostics[2].message).toBe(
+					"text overflows markdown 40x20: the rendered body needs 52x30px but the region is 40x20px (measured as drawn on the open canvas)",
+				);
+				expect(diagnostics[3].message).toMatch(
+					/^text in markdown md-2 is not checked for overflow/,
+				);
+			});
+
+			it("says nothing about a body that fits, and leaves it out of the warning", () => {
+				const doc: CanvasDoc = {
+					version: 1,
+					root: [markdown("md-1", "short")],
+				};
+				expect(
+					diagnoseDoc(doc, {
+						measuredSourceText: new Map([["md-1", fitting]]),
+					}),
+				).toEqual([]);
+			});
+		});
+
+		it("lists the objects to measure in document order, group children included", () => {
+			const doc: CanvasDoc = {
+				version: 1,
+				root: [
+					markdown("md-1", "text"),
+					markdown("md-empty", ""),
+					{
+						id: "group1",
+						type: "group",
+						children: [markdown("md-2", "short")],
+					} as never,
+				],
+			};
+			expect(listSourceTextObjects(doc).map(({ id }) => id)).toEqual([
+				"md-1",
+				"md-2",
+			]);
 		});
 
 		it("says nothing about a markdown object with no text", () => {

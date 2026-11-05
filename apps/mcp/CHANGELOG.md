@@ -17,6 +17,13 @@ covers that.
 
 ### Added
 
+- **`diagnose_canvas` reports images a reader cannot see, and more.** An image whose
+  file is missing, or whose `src` no host accepts, is an error; an image
+  reached through a link out of the diagram's directory is a warning, since
+  this server's viewer refuses it. It also warns about an `svg` referencing an
+  internal id an earlier `svg` defines too, a line-start prohibition at a break
+  the author typed in text nothing wraps, and a font measured by estimate
+  because the canvas does not ship it.
 - **`export_image` writes the drawing to an image file for a person.** It has
   the viewer draw the canvas on display — the whole drawing, or the extent of
   `ids` (with `isolate`, those objects alone) — to a PNG at `scale` (default 2,
@@ -71,6 +78,22 @@ covers that.
   shapes and the properties instead. Closing both sidebars keeps it expanded; only the switch collapses
   it again. The shape bar's "Other shapes" button opens every shape, with a
   search, in a panel beside the bar running down the canvas.
+- **`diagnose_canvas` measures a markdown card's body as the viewer draws
+  it.** While the file is open in the viewer and the viewer draws the same
+  text as the file (a person's unsaved edits there included), each markdown
+  card is measured on screen one at a time and a body that does not fit is an
+  error on that card, naming the size it needs and the region it has; one that
+  fits is no longer listed. Without a viewer, with another file on display, or
+  from the first card the viewer cannot measure (no answer within 8 s, a tab
+  too old to send the numbers, other text drawn), the cards are reported as
+  not checked, as before.
+- **`measure_rendered_text` measures a markdown card as the HTML it renders
+  to** — headings, lists and spacing included — rather than as the plain text
+  it holds, and reports no line count for it.
+- **`measure_text` gives no verdict for a markdown card.** It still reports
+  the plain-text lines and the content box, with a note that they are only a
+  lower bound on the rendered body and that `measure_rendered_text` measures it
+  as drawn; `jiscribe measure` answers the same way.
 - **A markdown card reads as rendered in `capture_canvas` and in
   `export_image`'s PNG** — headings, lists, tables, code and math — rather
   than as plain text. `export_image`'s SVG still holds plain text.

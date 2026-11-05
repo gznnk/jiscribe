@@ -15,6 +15,45 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Added
 
+- **A type can measure the text body it draws itself.** `ObjectTypeDefinition`
+  takes `textMeasurer` (`ObjectTextMeasurer`, returning an
+  `ObjectTextMeasurement`), which `CanvasHandle.measure.textSlot` calls in place
+  of the plain-text layout; core still adds the region and the overflow verdict.
+  `measureTextOverlayContent` (`@jiscribe/canvas/unstable`, and so
+  `@jiscribe/canvas-sdk`) lays content out in a `TextOverlayFrame` off screen and
+  returns its size, the building block for one. The markdown card declares one,
+  so `measure.textSlot` on it now measures the body as it is drawn — headings at
+  their larger size, block margins, tables — and reports a card the rendering
+  overflows as `isOverflowing: true` where the plain-text layout said it fit.
+  The ai-tools `measure_text` result says so too ("laid out as HTML blocks (no
+  line count)") and carries the numbers as `AiCanvasOpOutcome.textMeasurement`,
+  for a host to judge; while the page's fonts are still loading it measures
+  once more after `document.fonts.ready`, so a heading is not measured in its
+  fallback face.
+- **`diagnoseDoc` takes measurements of the bodies it cannot measure itself.**
+  `diagnoseDoc(doc, { measuredSourceText })` (`@jiscribe/doc-tools`) judges a
+  `"source"` body (the markdown card) from a `MeasuredSourceText` a browser
+  took, reporting an overflow as an error on the object and leaving a measured
+  body out of the "not checked" warning; `listSourceTextObjects(doc)` lists the
+  objects such a caller has to measure, and `resolveContentBox` reports
+  `isSourceText` on a `region`, so a tool can tell a plain-text lower bound
+  from a verdict (`formatSourceTextMeasureNote` is the sentence that says so,
+  shared by `jiscribe measure` and the MCP server). The MCP server's
+  `diagnose_canvas` is the first caller (see its changelog).
+- **`diagnoseDoc` reports three more things a reader cannot see as written**,
+  and `jiscribe diagnose` with it. An `svg` that references an internal id an
+  earlier `svg` also defines is a warning, all markup sharing one page. A Japanese line-start prohibition is
+  now looked for in text nothing wraps too — a `text` in its label layout and a
+  label drawn outside its shape — at the breaks the author typed. And a font
+  stack naming no family the canvas ships (or none installed) is one
+  document-wide warning, since text in it is measured by estimate.
+- **`@jiscribe/doc-tools/file` exports `diagnoseImageSources`**, which checks
+  the file each `image` `src` names against the `.jis` file's directory: a
+  missing file, a `src` no host accepts or an extension no host serves is an
+  error (the canvas draws a placeholder), and a link leading out of the
+  directory is a warning (the MCP viewer refuses it, other hosts follow it).
+  `jiscribe diagnose` runs it; `validate` does not. `isInsideRoot`, the
+  containment test the MCP host already used, moves here with it.
 - **Automatic layout for graphs.** `docOps.layoutObjects` (and the `layout_objects`
   AI tool over it) arranges objects as a layered graph the way a flowchart renderer
   does: the connectors between them decide the layers, each layer is ordered to
@@ -203,6 +242,17 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Changed
 
+- **Breaking: `TextSlotMeasurement.lineCount` is `number | null`.** A body laid
+  out as HTML blocks (the markdown card, or any type declaring `textMeasurer`)
+  has no line count and reports `null`; code that does arithmetic on it has to
+  handle that.
+- **`jiscribe measure` gives no verdict for a markdown card.** It still prints
+  the plain-text lines, the text box and the content box, but in place of
+  `fits` a note says those are only a lower bound on the rendered body, since
+  the card lays it out as HTML, and names the MCP server's
+  `measure_rendered_text` as what measures it as drawn. The JSON form carries
+  `fits: null` beside the note, and the exit code is 0, as for a type that
+  draws its label outside its box. `--height` is still required.
 - **Breaking: `ObjectOverlap.covers` gains `"both"`, for two boxes with all four
   edges equal.** `CanvasHandle.measure.findOverlaps` used to report such a pair as
   `"first"`; it now reports `"both"`. Code that reads the containing shape as

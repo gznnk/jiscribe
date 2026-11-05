@@ -17,6 +17,7 @@ import type { ObjectExtraConnectPointsCalculator } from "../rendering/objects/re
 import type { ObjectGeometryKeyCalculator } from "../rendering/objects/registry/ObjectGeometryKeyRegistry";
 import type { ObjectOutlineCalculator } from "../rendering/objects/registry/ObjectOutlineRegistry";
 import type { ObjectPartKindDefinition } from "../rendering/objects/registry/ObjectPartKindRegistry";
+import type { ObjectTextMeasurer } from "../rendering/objects/registry/ObjectTextMeasurerRegistry";
 import type { ObjectVisualBoundsCalculator } from "../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import type { ObjectMapperType } from "../states/objects/base/MapperTypes";
 import type { ObjectState } from "../states/objects/base/ObjectState";
@@ -99,6 +100,14 @@ export type ObjectTypeDefinition<
 	 * slot (see ObjectTextEditLineBreaksRegistry).
 	 */
 	textEditLineBreaks?: ObjectTextEditLineBreaksResolver;
+
+	/**
+	 * How `measure.textSlot` measures a slot of a type that draws its body
+	 * itself rather than through the shared text layout (`features.text:
+	 * "source"`). Omitted = the slot is measured as plain text with
+	 * `layoutVisualLines` (see ObjectTextMeasurerRegistry).
+	 */
+	textMeasurer?: ObjectTextMeasurer<TState>;
 
 	/** Hit-test / snap outline. Omitted = bounding-box rect/ellipse (see ObjectOutlineRegistry). */
 	outline?: ObjectOutlineCalculator;

@@ -1,4 +1,5 @@
-import { readdirSync } from "node:fs";
+import { mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -75,8 +76,8 @@ describe("formatWarningLine", () => {
 });
 
 describe("validate", () => {
-	it("prints one ok line per file and exits 0", () => {
-		const { code, stdout } = capture(() =>
+	it("prints one ok line per file and exits 0", async () => {
+		const { code, stdout } = await captureAsync(() =>
 			runCheckCommand([fixture("fitting.jis.json")], false),
 		);
 		expect(code).toBe(0);
@@ -84,8 +85,8 @@ describe("validate", () => {
 		expect(stdout).toMatch(/^ok /);
 	});
 
-	it("prints the parser's warnings and still exits 0, the document opening without the reported fields", () => {
-		const { code, stdout } = capture(() =>
+	it("prints the parser's warnings and still exits 0, the document opening without the reported fields", async () => {
+		const { code, stdout } = await captureAsync(() =>
 			runCheckCommand([fixture("oldForm.jis.json")], false),
 		);
 		expect(code).toBe(0);
@@ -99,7 +100,7 @@ describe("validate", () => {
 		expect(lines[lines.length - 1]).toMatch(/^ok /);
 	});
 
-	it("passes every shipped example diagram with no finding at all", () => {
+	it("passes every shipped example diagram with no finding at all", async () => {
 		// The real files, unmutated: a key constant a type forgot to declare, or a
 		// migration misreading a current form, shows up here first.
 		const diagramsDir = fileURLToPath(
@@ -109,54 +110,94 @@ describe("validate", () => {
 			.filter((name) => name.endsWith(".jis.json"))
 			.map((name) => join(diagramsDir, name));
 		expect(files.length).toBeGreaterThan(0);
-		const { code, stdout } = capture(() => runCheckCommand(files, false));
+		const { code, stdout } = await captureAsync(() =>
+			runCheckCommand(files, false),
+		);
 		expect(code).toBe(0);
 		expect(stdout.trim().split("\n")).toEqual(
 			files.map((file) => `ok ${file}`),
 		);
 	});
 
-	it("exits 1 and names the object for a document the parser rejects", () => {
-		const { code, stdout } = capture(() =>
+	it("exits 1 and names the object for a document the parser rejects", async () => {
+		const { code, stdout } = await captureAsync(() =>
 			runCheckCommand([fixture("broken.jis.json")], false),
 		);
 		expect(code).toBe(1);
 		expect(stdout).toMatch(/^error .*broken\.jis\.json duplicated /m);
 	});
 
-	it("leaves overflow to diagnose", () => {
-		expect(
-			capture(() => runCheckCommand([fixture("overflowing.jis.json")], false))
-				.code,
-		).toBe(0);
+	it("leaves overflow to diagnose", async () => {
+		const { code } = await captureAsync(() =>
+			runCheckCommand([fixture("overflowing.jis.json")], false),
+		);
+		expect(code).toBe(0);
 	});
 
-	it("reports a file it cannot read rather than throwing", () => {
-		const { code, stdout } = capture(() =>
+	it("reports a file it cannot read rather than throwing", async () => {
+		const { code, stdout } = await captureAsync(() =>
 			runCheckCommand(["no-such-file.jis.json"], false),
 		);
 		expect(code).toBe(1);
 		expect(stdout).toMatch(/cannot read/);
 	});
 
-	it("asks for files when given none", () => {
-		const { code, stderr } = capture(() => runCheckCommand([], false));
+	it("asks for files when given none", async () => {
+		const { code, stderr } = await captureAsync(() =>
+			runCheckCommand([], false),
+		);
 		expect(code).toBe(2);
 		expect(stderr).toMatch(/usage: jiscribe validate/);
 	});
 });
 
 describe("diagnose", () => {
-	it("reports the overflow validate lets through", () => {
-		const { code, stdout } = capture(() =>
+	it("reports the overflow validate lets through", async () => {
+		const { code, stdout } = await captureAsync(() =>
 			runCheckCommand([fixture("overflowing.jis.json")], true),
 		);
 		expect(code).toBe(1);
 		expect(stdout).toMatch(/^error .* cramped text overflows rect 60x40/m);
 	});
 
-	it("prints one JSON object for every file under --json", () => {
-		const { code, stdout } = capture(() =>
+	it("reports an image whose file is not beside the document, which validate leaves alone", async () => {
+		const dirPath = mkdtempSync(join(tmpdir(), "jiscribe-cli-images-"));
+		try {
+			const file = join(dirPath, "photo.jis.json");
+			writeFileSync(
+				file,
+				JSON.stringify({
+					version: 1,
+					root: [
+						{
+							id: "photo",
+							type: "image",
+							x: 0,
+							y: 0,
+							width: 80,
+							height: 60,
+							src: "missing.png",
+						},
+					],
+				}),
+			);
+			const diagnosed = await captureAsync(() => runCheckCommand([file], true));
+			expect(diagnosed.code).toBe(1);
+			expect(diagnosed.stdout).toMatch(
+				/^error .* photo src "missing\.png" names a file that does not exist/m,
+			);
+			vi.restoreAllMocks();
+			const validated = await captureAsync(() =>
+				runCheckCommand([file], false),
+			);
+			expect(validated.code).toBe(0);
+		} finally {
+			rmSync(dirPath, { recursive: true, force: true });
+		}
+	});
+
+	it("prints one JSON object for every file under --json", async () => {
+		const { code, stdout } = await captureAsync(() =>
 			runCheckCommand(["--json", fixture("fitting.jis.json")], true),
 		);
 		expect(code).toBe(0);
@@ -240,6 +281,68 @@ describe("measure", () => {
 		);
 		expect(stdout).not.toContain("content ");
 		expect(stdout).not.toContain("fits ");
+	});
+
+	it("measures a markdown card as plain text with a note in place of a verdict, and exits 0", () => {
+		// Far more than 120x40 holds: the plain-text numbers would say "no", but
+		// they only bound the drawn body from below, so no verdict is given
+		const { code, stdout } = capture(() =>
+			runMeasureCommand([
+				"--width",
+				"120",
+				"--height",
+				"40",
+				"--font-size",
+				"14",
+				"--shape",
+				"markdown",
+				"# 見出し\n\nこの箱には到底入りきらない長さの本文",
+			]),
+		);
+		expect(code).toBe(0);
+		expect(stdout).toMatch(/^content [\d.]+x[\d.]+$/m);
+		expect(stdout).toMatch(
+			/^note: shape markdown lays its body out as HTML .* lower bound .* measure_rendered_text$/m,
+		);
+		expect(stdout).not.toContain("fits ");
+	});
+
+	it("reports a markdown card's fit as null in the JSON, beside the note", () => {
+		const { code, stdout } = capture(() =>
+			runMeasureCommand([
+				"--width",
+				"120",
+				"--height",
+				"40",
+				"--font-size",
+				"14",
+				"--shape",
+				"markdown",
+				"--json",
+				"短い",
+			]),
+		);
+		expect(code).toBe(0);
+		const report = JSON.parse(stdout) as Record<string, unknown>;
+		expect(report.fits).toBeNull();
+		expect(report.note).toMatch(/lays its body out as HTML/);
+		expect(typeof report.contentWidth).toBe("number");
+	});
+
+	it("still insists on a height for a markdown card", () => {
+		const { code, stderr } = capture(() =>
+			runMeasureCommand([
+				"--width",
+				"120",
+				"--font-size",
+				"14",
+				"--shape",
+				"markdown",
+				"x",
+			]),
+		);
+		expect(code).toBe(2);
+		expect(stderr).toMatch(/--height is required for --shape markdown/);
 	});
 
 	it("lays a shape's outside label out as authored, wrapping at nothing", () => {
@@ -332,8 +435,8 @@ describe("measure", () => {
 });
 
 describe("a misspelled option", () => {
-	it("gives validate's usage instead of a stack trace", () => {
-		const { code, stderr } = capture(() =>
+	it("gives validate's usage instead of a stack trace", async () => {
+		const { code, stderr } = await captureAsync(() =>
 			runCheckCommand(["--jason", "a.jis.json"], false),
 		);
 		expect(code).toBe(2);
@@ -341,8 +444,8 @@ describe("a misspelled option", () => {
 		expect(stderr).toMatch(/usage: jiscribe validate/);
 	});
 
-	it("names diagnose in the usage it prints", () => {
-		const { code, stderr } = capture(() =>
+	it("names diagnose in the usage it prints", async () => {
+		const { code, stderr } = await captureAsync(() =>
 			runCheckCommand(["--jason", "a.jis.json"], true),
 		);
 		expect(code).toBe(2);

@@ -1,3 +1,4 @@
+import type { TextSlotStyle } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectTextStyleDefaultsRegistry";
 import {
 	TEXT_BOX_PADDING_X,
@@ -12,9 +13,16 @@ import type { Dimensions, Rect } from "@jiscribe/geometry";
 
 import { calcTransformedRectBounds } from "./calcTransformedRectBounds";
 import type { ObjectPartKindRegistry } from "../../rendering/objects/registry/ObjectPartKindRegistry";
+import type {
+	ObjectTextMeasurement,
+	ObjectTextMeasurerRegistry,
+} from "../../rendering/objects/registry/ObjectTextMeasurerRegistry";
 import { calcTextRegion } from "../../rendering/objects/utils/calcTextRegion";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
-import { isTextStyleState } from "../../states/objects/base/TextStyleState";
+import {
+	isTextStyleState,
+	type TextStyleState,
+} from "../../states/objects/base/TextStyleState";
 import { resolveTextObjectFont } from "../../states/objects/primitives/text/resolveTextObjectFont";
 import { readRichTextSlot } from "../../states/objects/types/TextSlots";
 import { TEXT_SLOT_PART_KIND } from "../selection/partKinds/textSlotPartKind";
@@ -38,7 +46,9 @@ export type TextSlotMeasurement = {
 	/**
 	 * Size the laid-out text takes, its box padding included, in the shape's
 	 * local px. Compare against `regionSize` to see how much a shape must grow
-	 * for the text to fit.
+	 * for the text to fit. Plain text reports its widest line; a body laid out
+	 * as HTML blocks (Markdown) reports the width measureTextOverlayContent
+	 * describes.
 	 */
 	textSize: Dimensions;
 	/**
@@ -47,13 +57,42 @@ export type TextSlotMeasurement = {
 	 * the text has.
 	 */
 	regionSize: Dimensions;
-	/** How many lines are drawn; a soft-wrapped line counts as one of its own. */
-	lineCount: number;
+	/**
+	 * How many lines are drawn; a soft-wrapped line counts as one of its own.
+	 * Null for a body laid out as HTML blocks (Markdown), which has headings,
+	 * margins and tables rather than lines of one height.
+	 */
+	lineCount: number | null;
 	/**
 	 * Whether the text is drawn clipped: the region hides whatever does not fit
 	 * on either axis (`overflow: hidden`).
 	 */
 	isOverflowing: boolean;
+};
+
+/** Lays the slot out as plain text, the way the shared TextOverlay draws it. */
+const layOutPlainText = (
+	object: TextStyleState,
+	slotId: string,
+	style: TextSlotStyle,
+	regionSize: Dimensions,
+): ObjectTextMeasurement => {
+	const lines = layoutVisualLines(
+		readRichTextSlot(object.text, slotId),
+		resolveTextObjectFont(style),
+		regionSize.width - TEXT_BOX_PADDING_X * 2,
+	);
+	return {
+		textSize: {
+			width:
+				lines.reduce((widest, line) => Math.max(widest, line.width), 0) +
+				TEXT_BOX_PADDING_X * 2,
+			height:
+				lines.reduce((total, line) => total + line.height, 0) +
+				TEXT_BOX_PADDING_Y * 2,
+		},
+		lineCount: lines.length,
+	};
 };
 
 /**
@@ -64,15 +103,18 @@ export type TextSlotMeasurement = {
  * The layout is simulated with the function the canvas draws and edits by
  * (`layoutVisualLines`), through the same region and style resolution the
  * overlay uses, so the answer matches the drawing wherever the drawn font is the
- * measured one. A type whose body is not plain text (Markdown) lays itself out
- * as HTML blocks instead and is measured only as the plain text it holds.
+ * measured one. A type that draws its body itself (Markdown, laid out as HTML
+ * blocks) is measured by its own `textMeasurer` instead, which lays the body out
+ * off screen the way its overlay draws it (see ObjectTextMeasurerRegistry).
+ * Either way the region and the overflow verdict are decided here.
  *
  * @param object - The object whose slot is measured; one that is not frame-based
  *   (a connector, a poly shape) has no text region and yields null
  * @param slotId - Key of the object's `text`; an absent key yields null
  * @param registries - The canvas's part kinds, whose `"textSlot"` kind places
  *   the slot, and per-type text-style defaults, i.e. the two lookups the drawn
- *   overlay resolves its box through
+ *   overlay resolves its box through, plus the per-type text measurers that
+ *   replace the plain-text layout for a type registering one
  * @returns The measurement, or null when the object holds no such slot
  */
 export const measureTextSlot = (
@@ -84,6 +126,7 @@ export const measureTextSlot = (
 			ObjectTextStyleDefaultsRegistry,
 			"resolveTextSlotStyle"
 		>;
+		objectTextMeasurer: Pick<ObjectTextMeasurerRegistry, "get">;
 	},
 ): TextSlotMeasurement | null => {
 	if (!isTransformedFrame(object) || !isTextStyleState(object)) {
@@ -105,34 +148,24 @@ export const measureTextSlot = (
 		width: Math.abs(region.width),
 		height: Math.abs(region.height),
 	};
-	const font = resolveTextObjectFont(
-		registries.objectTextStyleDefaults.resolveTextSlotStyle(
-			object.type,
-			slotId,
-			slot,
-		),
+	const style = registries.objectTextStyleDefaults.resolveTextSlotStyle(
+		object.type,
+		slotId,
+		slot,
 	);
 
-	const lines = layoutVisualLines(
-		readRichTextSlot(object.text, slotId),
-		font,
-		regionSize.width - TEXT_BOX_PADDING_X * 2,
-	);
-	const textSize = {
-		width:
-			lines.reduce((widest, line) => Math.max(widest, line.width), 0) +
-			TEXT_BOX_PADDING_X * 2,
-		height:
-			lines.reduce((total, line) => total + line.height, 0) +
-			TEXT_BOX_PADDING_Y * 2,
-	};
+	const textMeasurer = registries.objectTextMeasurer.get(object.type);
+	const { textSize, lineCount }: ObjectTextMeasurement =
+		textMeasurer === undefined
+			? layOutPlainText(object, slotId, style, regionSize)
+			: textMeasurer(object, slotId, { regionSize, style });
 
 	return {
 		textSlotId: slotId,
 		bounds: convertBoundingBoxToRect(calcTransformedRectBounds(region, object)),
 		textSize,
 		regionSize,
-		lineCount: lines.length,
+		lineCount,
 		isOverflowing:
 			textSize.height > regionSize.height + OVERFLOW_TOLERANCE ||
 			textSize.width > regionSize.width + OVERFLOW_TOLERANCE,

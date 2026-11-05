@@ -1,5 +1,5 @@
 import type { ObjectOverlap } from "@jiscribe/canvas";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { MAX_SVG_CHARS } from "../../canvasOps";
 import { applyHandleOp } from "../applyHandleOp";
@@ -160,6 +160,93 @@ describe("applyHandleOp (measuring)", () => {
 		expect(result.text).toContain("resize_objects");
 		expect(result.text).toContain("fontSize");
 		expect(result.text).toContain("set_texts");
+	});
+
+	it("says a body laid out as blocks has no line count, and carries the numbers on the outcome", async () => {
+		const measurement = {
+			textSlotId: "body",
+			bounds: { x: 0, y: 0, width: 200, height: 80 },
+			textSize: { width: 200, height: 132.5 },
+			regionSize: { width: 200, height: 80 },
+			lineCount: null,
+			isOverflowing: true,
+		};
+		const result = await applyHandleOp(
+			{ kind: "measureText", id: "md-1" },
+			createFakeHandleControl({ measureText: () => measurement }),
+		);
+
+		expect(result.ok).toBe(true);
+		expect(result.text).toContain("laid out as HTML blocks (no line count)");
+		expect(result.text).not.toContain("line(s)");
+		expect(result.text).toContain("52.5 px of height");
+		expect(result.textMeasurement).toEqual(measurement);
+	});
+
+	it("measures again once fonts still loading have settled", async () => {
+		let resolveFontsReady = (): void => {};
+		const fontsReady = new Promise<void>((resolve) => {
+			resolveFontsReady = resolve;
+		});
+		vi.stubGlobal("document", {
+			fonts: { status: "loading", ready: fontsReady },
+		});
+		try {
+			const measureText = vi
+				.fn()
+				.mockReturnValueOnce({
+					textSlotId: "body",
+					bounds: { x: 0, y: 0, width: 200, height: 80 },
+					textSize: { width: 200, height: 70 },
+					regionSize: { width: 200, height: 80 },
+					lineCount: null,
+					isOverflowing: false,
+				})
+				.mockReturnValueOnce({
+					textSlotId: "body",
+					bounds: { x: 0, y: 0, width: 200, height: 80 },
+					textSize: { width: 200, height: 90 },
+					regionSize: { width: 200, height: 80 },
+					lineCount: null,
+					isOverflowing: true,
+				});
+			const pending = applyHandleOp(
+				{ kind: "measureText", id: "md-1" },
+				createFakeHandleControl({ measureText }),
+			);
+			resolveFontsReady();
+			const result = await pending;
+
+			expect(measureText).toHaveBeenCalledTimes(2);
+			expect(result.textMeasurement?.isOverflowing).toBe(true);
+			expect(result.text).toContain("10 px of height");
+		} finally {
+			vi.unstubAllGlobals();
+		}
+	});
+
+	it("measures once when the fonts have already loaded", async () => {
+		vi.stubGlobal("document", {
+			fonts: { status: "loaded", ready: Promise.resolve() },
+		});
+		try {
+			const measureText = vi.fn().mockReturnValue({
+				textSlotId: "body",
+				bounds: { x: 0, y: 0, width: 120, height: 40 },
+				textSize: { width: 96, height: 36 },
+				regionSize: { width: 120, height: 40 },
+				lineCount: 2,
+				isOverflowing: false,
+			});
+			await applyHandleOp(
+				{ kind: "measureText", id: "rect-1" },
+				createFakeHandleControl({ measureText }),
+			);
+
+			expect(measureText).toHaveBeenCalledTimes(1);
+		} finally {
+			vi.unstubAllGlobals();
+		}
 	});
 
 	it("fails listing every reason when there is no text to measure", async () => {

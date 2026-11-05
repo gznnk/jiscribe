@@ -65,7 +65,7 @@ const describeTextSlotSize = ({
 	regionSize,
 	bounds,
 }: TextSlotMeasurement): string =>
-	`${lineCount} line(s) taking ${formatNumber(textSize.width)} x ${formatNumber(textSize.height)} px in a text region of ${formatNumber(regionSize.width)} x ${formatNumber(regionSize.height)} px, drawn at ${formatPoint(bounds)}`;
+	`${lineCount === null ? "laid out as HTML blocks (no line count)," : `${lineCount} line(s)`} taking ${formatNumber(textSize.width)} x ${formatNumber(textSize.height)} px in a text region of ${formatNumber(regionSize.width)} x ${formatNumber(regionSize.height)} px, drawn at ${formatPoint(bounds)}`;
 
 const describeTextSlot = (
 	id: string,
@@ -352,7 +352,18 @@ export const applyHandleOp = async (
 		case "fitView":
 			return applyFitView(op, handleControl);
 		case "measureText": {
-			const measurement = handleControl.measureText(op.id, op.slot);
+			let measurement = handleControl.measureText(op.id, op.slot);
+			// A type that measures its own body lays it out off screen at once, so a
+			// face the page has not loaded yet (a bold heading, a code font) is
+			// measured with its fallback; once the fonts settle, measure again
+			if (
+				measurement !== null &&
+				typeof document !== "undefined" &&
+				document.fonts?.status === "loading"
+			) {
+				await document.fonts.ready;
+				measurement = handleControl.measureText(op.id, op.slot);
+			}
 			if (measurement === null) {
 				const slotNote = op.slot === undefined ? "" : ` slot "${op.slot}" of`;
 				return {
@@ -360,7 +371,11 @@ export const applyHandleOp = async (
 					text: `nothing to measure at${slotNote} "${op.id}": either no object has that id, its type has no text region (connectors and poly shapes have none), or it holds no such text slot — describe_canvas lists the slots an object has`,
 				};
 			}
-			return { ok: true, text: describeTextSlot(op.id, measurement) };
+			return {
+				ok: true,
+				text: describeTextSlot(op.id, measurement),
+				textMeasurement: measurement,
+			};
 		}
 		case "findOverlaps": {
 			const overlaps = handleControl.findOverlaps(op.ids);

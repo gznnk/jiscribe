@@ -14,7 +14,7 @@ node engine/apps/cli/dist/index.mjs --help
 
 ```
 jiscribe validate <files...>   read it with the canvas parser; exit 1 on any error
-jiscribe diagnose <files...>   validate, then report text overflowing its shape
+jiscribe diagnose <files...>   validate, then report what a reader cannot see
 jiscribe measure  <text>       how a string lays out in a given box
 jiscribe render   <file>       draw the document to a .png or .svg
 jiscribe preview  <file>       write the document into one HTML file that draws it
@@ -26,6 +26,14 @@ jiscribe guide    <name>       print the drawing guide or the file-format guide
 `validate` / `diagnose` / `measure` print one finding per line
 (`<severity> <file> <objectId> <message>`) and take `--json` for the same content
 as one object. Globs are the shell's: `jiscribe validate 'diagrams/**/*.jis'`.
+
+`diagnose` adds to validation what `diagnoseDoc` finds — text overflowing its
+shape or opening a line on a closing mark, a connector label wider than its gap,
+an svg whose reference may resolve to another svg's id, a font measured only by estimate — and what
+`diagnoseImageSources` finds on disk: an `image` whose `src` names no file beside
+the document (an error, the canvas drawing a placeholder box), or one reached
+through a link out of the document's directory (a warning, the MCP viewer alone
+refusing it). It runs only on a file that validates.
 
 ## render
 

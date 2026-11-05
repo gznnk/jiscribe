@@ -13,13 +13,14 @@ the answers an AI gets and the answers CI gets cannot drift.
 
 ## API
 
-| Function                                          | What it answers                                                                                                                                                                                                       |
-| ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `validateDoc(text)`                               | Is this a sound document? Reads it with the canvas parser and returns what it found.                                                                                                                                  |
-| `measureWrappedText(text, font, availableWidth?)` | How many lines does this text become, and how big is the block?                                                                                                                                                       |
-| `resolveContentBox(shape)`                        | How much of a shape's box is its text actually laid out in — or is there no box to lay it in?                                                                                                                         |
-| `diagnoseDoc(doc)`                                | Does any text land where it should not — overflowing its shape, a connector label wider than the gap it sits in, a line opening on a closing mark (行頭禁則), a frame-based body running over the shape's decoration? |
-| `formatDiagnostics(diagnostics)`                  | What do those findings read as, one line each, for a person or an AI?                                                                                                                                                 |
+| Function                                          | What it answers                                                                                                                                                                                                                                                                                                        |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `validateDoc(text)`                               | Is this a sound document? Reads it with the canvas parser and returns what it found.                                                                                                                                                                                                                                   |
+| `measureWrappedText(text, font, availableWidth?)` | How many lines does this text become, and how big is the block?                                                                                                                                                                                                                                                        |
+| `resolveContentBox(shape)`                        | How much of a shape's box is its text actually laid out in — or is there no box to lay it in?                                                                                                                                                                                                                          |
+| `diagnoseDoc(doc, options?)`                      | Does any text land where it should not — overflowing its shape, a connector label wider than the gap it sits in, a line opening on a closing mark (行頭禁則), a frame-based body running over the shape's decoration? Is an svg's reference at risk of resolving to another svg's id? Which fonts were only estimated? |
+| `listSourceTextObjects(doc)`                      | Which objects hold a body only a drawn canvas can measure (markdown), for a host to measure and hand back as `options.measuredSourceText`?                                                                                                                                                                             |
+| `formatDiagnostics(diagnostics)`                  | What do those findings read as, one line each, for a person or an AI?                                                                                                                                                                                                                                                  |
 
 ### Canvas files: `@jiscribe/doc-tools/file`
 
@@ -40,8 +41,16 @@ this entry is where it lives.
 - `createEmptyCanvasDoc()` — the empty document a missing file starts as.
 - `prepareAtomicWrite` / `writeFileAtomically` / `readFileSnapshot` — the temp file
   and rename under every write, and the file identity a write-back checks against.
-- `realpathDeepestExisting(path)` / `isErrnoWithCode(error, code)` — the link
-  resolution under `toCanvasFilePath`, and the Node error test the layer uses.
+- `realpathDeepestExisting(path)` / `isInsideRoot(rootPath, targetPath)` /
+  `isErrnoWithCode(error, code)` — the link resolution under `toCanvasFilePath`,
+  the containment test to apply to what it resolves, and the Node error test the
+  layer uses.
+- `diagnoseImageSources(doc, canvasFilePath)` — whether every `image` names a file
+  a host can draw: a `src` relative to the `.jis`'s own directory, an image
+  extension, a regular file there. Each failure is an error, the canvas drawing a
+  placeholder box in its place; a link leading out of the directory is a warning,
+  the MCP viewer alone refusing it. `diagnoseDoc` reads no file, so this is the
+  half of `jiscribe diagnose` and `diagnose_canvas` that does.
 
 Every refusal is a `CanvasFileError` whose message can be shown as it is.
 
@@ -96,7 +105,9 @@ ships to the browser (`@fontsource/*`) and takes advances off them with fontkit.
 - A string is split into maximal stretches drawn from one file, and each stretch
   is laid out whole, so kerning and substitutions apply as they do in a browser.
 - A family the canvas does not ship is charged the 0.6em estimate instead. A
-  diagnosis of such a document is approximate, and says so.
+  diagnosis of such a document is approximate, and says so: `diagnoseDoc` names
+  each font stack it estimated in a document-wide warning, the default one
+  included when the `@fontsource` packages are not installed.
 
 Offering is idempotent and process-wide; every entry point here does it before
 measuring. **A browser is unaffected** — the canvas's own measurement outranks
@@ -117,13 +128,18 @@ that cannot tell "this shape holds no text" from "you misspelled the type" canno
 report either one usefully:
 
 - **`{ kind: "region", rect }`** — the region, in the shape's own coordinates,
-  with the shared text-box padding already subtracted.
+  with the shared text-box padding already subtracted. `isSourceText` marks a
+  type that lays its body out itself (markdown, as HTML): plain text measured
+  into the region only bounds what that body takes from below, so
+  `jiscribe measure` and the MCP `measure_text` give no verdict for it, and
+  `diagnoseDoc` judges it only from a measurement taken on a drawn canvas.
 - **`{ kind: "outside" }`** — the box does not hold the text: the shape draws its
   label outside the outline (the pictograms, the group markers), or divides the
   box into bands each sized from their own text (`record`), or carries no text at
   all and declares no region. Nothing about such a shape's size can make its text
-  overflow, so `diagnoseDoc` passes over it and `jiscribe measure` reports the
-  text's own size with no verdict. A type that stacks its content by a rule of
+  overflow, so `diagnoseDoc` does not measure it against the box (only where
+  the author's newlines open a line, a label being wrapped by nothing) and
+  `jiscribe measure` reports the text's own size with no verdict. A type that stacks its content by a rule of
   its own checks that content itself where it declares how
   (`ObjectDocDefinition.diagnoseOverflow`), and `diagnoseDoc` reports each
   finding as an error — a record too short for its compartments.
@@ -149,10 +165,17 @@ they are background, and a shape's own margin has room for them.
 
 ## What `diagnoseDoc` does not check
 
-Only facts about the document's own text — where it cannot be read (overflow, a
-label drawn over the shapes) and where its typography breaks a convention every
-document shares (a line opening on a closing punctuation mark, a frame-based
-body running over the shape's decoration). Those latter two are warnings: the
-text stays readable, and the remark is what a careful author would make.
-Spacing, aspect ratio and the rest of the layout rules in a project's own design
-guide are matters of taste and belong in a rule file, not in the default check.
+Only facts about what a reader of the document sees — text that cannot be read
+where it is drawn (overflow, a label drawn over the shapes), typography that
+breaks a convention every document shares (a line opening on a closing
+punctuation mark, a frame-based body running over the shape's decoration), and
+an svg reference that may resolve to another svg's markup. All but
+overflow are warnings: the remark is what a careful author would make, and the
+document may mean it.
+
+Shapes overlapping are not reported, not even one hidden whole under another's
+fill: shapes layered on purpose are common — in an illustration nearly every
+overlap is — and telling which is meant needs the author (the `find_overlaps`
+tool lists them). Spacing, aspect ratio and the rest of the
+layout rules in a project's own design guide are matters of taste and belong in
+a rule file, not in the default check.

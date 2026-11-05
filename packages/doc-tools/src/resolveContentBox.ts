@@ -42,6 +42,13 @@ export type ContentBoxResolution =
 			 * riding over a cylinder's cap from one that does not.
 			 */
 			declaredRegion: Rect;
+			/**
+			 * True for a type that lays its body out itself (`features.text:
+			 * "source"`, Markdown as HTML): the rectangle is still where it is drawn,
+			 * but text measured into it as plain lines is only a lower bound on what
+			 * the drawn body takes.
+			 */
+			isSourceText: boolean;
 	  }
 	| {
 			/**
@@ -71,7 +78,7 @@ export type ContentBoxResolution =
  * region is the whole box resolves to `{ x: -width / 2 + 6, y: -height / 2 + 2, … }`.
  *
  * @param shape - The object to measure: its `type`, its `width` / `height`, its `textVerticalBasis` if it sets one, and any field its type's region reads (see {@link ContentBoxShape})
- * @returns `{ kind: "region", rect, declaredRegion }` for a type whose box holds its one body, `{ kind: "outside" }` for one whose box does not (a label drawn outside the outline, a `"slots"` type whose text is not one body, no text at all, or a shipped type that declares no region), and `{ kind: "unknown" }` for a type name outside the shipped set
+ * @returns `{ kind: "region", rect, declaredRegion, isSourceText }` for a type whose box holds its one body, `{ kind: "outside" }` for one whose box does not (a label drawn outside the outline, a `"slots"` type whose text is not one body, no text at all, or a shipped type that declares no region), and `{ kind: "unknown" }` for a type name outside the shipped set
  */
 export const resolveContentBox = <TShape extends ContentBoxShape>(
 	shape: TShape,
@@ -99,5 +106,18 @@ export const resolveContentBox = <TShape extends ContentBoxShape>(
 		kind: "region",
 		rect: calcTextContentBox(applyTextVerticalBasis(region, shape, basis)),
 		declaredRegion: region,
+		isSourceText: definition.features.text === "source",
 	};
 };
+
+/**
+ * What a measurement of plain text into a `region` marked `isSourceText` is
+ * reported with in place of a fit verdict, worded once for `jiscribe measure`
+ * and the MCP `measure_text` tool. It names `measure_rendered_text`, the MCP
+ * tool that measures the drawn body.
+ *
+ * @param shape - Object type name as the caller spelled it, quoted into the note as is
+ * @returns One sentence with no `note:` prefix and no trailing newline
+ */
+export const formatSourceTextMeasureNote = (shape: string): string =>
+	`shape ${shape} lays its body out as HTML (headings, lists and spacing), so these plain-text numbers are only a lower bound on what it takes; to measure it as drawn, open the canvas in the jiscribe MCP viewer and call measure_rendered_text`;

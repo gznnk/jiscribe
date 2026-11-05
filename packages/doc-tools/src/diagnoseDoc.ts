@@ -25,7 +25,7 @@ import {
 	TEXT_LINE_HEIGHT,
 	TEXT_STYLE_FALLBACK,
 } from "@jiscribe/doc/unstable";
-import type { Rect } from "@jiscribe/geometry";
+import type { Dimensions, Rect } from "@jiscribe/geometry";
 import { standardObjectDocDefinitions } from "@jiscribe/standard-shapes/doc";
 
 import {
@@ -34,6 +34,7 @@ import {
 	resolveConnectorLabel,
 } from "./connectorLabelFit";
 import type { Diagnostic } from "./Diagnostic";
+import { flattenObjects } from "./flattenObjects";
 import {
 	describeLineStartProhibitions,
 	findLineStartProhibitions,
@@ -44,6 +45,8 @@ import {
 	offerNodeTextMeasurement,
 } from "./measureWrappedText";
 import { resolveContentBox } from "./resolveContentBox";
+import { diagnoseSvgIdCollisions } from "./svgIdCollisions";
+import { diagnoseUnmeasuredFonts } from "./unmeasuredFonts";
 
 /**
  * Height a text may exceed its content box by before a reader sees anything, in
@@ -60,19 +63,6 @@ import { resolveContentBox } from "./resolveContentBox";
  */
 const calcOverflowTolerance = (fontSize: number): number =>
 	(fontSize * (TEXT_LINE_HEIGHT - 1)) / 2;
-
-/**
- * The whole document's objects, group children included, in document order. Only a
- * group is walked into: what an object of an unknown type holds is kept unread
- * (`OpaqueObjectDoc`), so it is not checked either.
- */
-const flattenObjects = (objects: readonly ObjectDoc[]): ObjectDoc[] =>
-	objects.flatMap((object) => {
-		const children = (object as { children?: ObjectDoc[] }).children;
-		return object.type === "group" && Array.isArray(children)
-			? [object, ...flattenObjects(children)]
-			: [object];
-	});
 
 /** A single-body doc's own style fields, which sit flat on the object. */
 type TextBodyDoc = ObjectDoc & {
@@ -339,11 +329,13 @@ const diagnoseDecorationOverlap = (
  * somewhere Japanese typesetting allows. One diagnostic however many lines
  * offend: they are all the same remark about the same text, and the author fixes
  * them by rewriting or resizing once.
+ *
+ * @param wrapWidth - Width of the content box the lines were wrapped at, or null for text nothing wraps, whose breaks are the author's newlines alone
  */
 const diagnoseObjectTextLineStarts = (
 	object: ObjectDoc,
 	text: RichText,
-	box: Rect,
+	wrapWidth: number | null,
 	font: TextMeasureFont,
 	lines: readonly VisualLine[],
 ): Diagnostic[] => {
@@ -351,32 +343,151 @@ const diagnoseObjectTextLineStarts = (
 	if (prohibitions.length === 0) {
 		return [];
 	}
+	const wrapping =
+		wrapWidth === null
+			? "nothing wraps it"
+			: `content box ${round(wrapWidth)}px wide`;
 	return [
 		{
 			severity: "warning",
 			objectId: object.id,
-			message: `text in ${object.type} breaks a line before a character Japanese typesetting keeps off a line head: ${describeLineStartProhibitions(prohibitions)} (content box ${round(box.width)}px wide, font ${font.fontSize}px)`,
+			message: `text in ${object.type} breaks a line before a character Japanese typesetting keeps off a line head: ${describeLineStartProhibitions(prohibitions)} (${wrapping}, font ${font.fontSize}px)`,
 		},
 	];
 };
 
 /**
- * One warning per `"source"` type with text in the document, naming its objects,
- * so a caller does not read the silence of {@link diagnoseObjectText} as "fits".
- * The body is laid out by the shape's own renderer (Markdown as HTML), which the
- * shared typesetting cannot reproduce, so only the drawn canvas can tell.
+ * A `"source"` body as the drawn canvas measured it, the numbers
+ * {@link diagnoseDoc} words its finding from. The shape a browser's
+ * `measure.textSlot` answers with, cut to what the finding reads.
+ */
+export type MeasuredSourceText = {
+	/** The canvas's own verdict, its tolerance applied: it alone decides whether an error is reported, the sizes only word it. */
+	isOverflowing: boolean;
+	/** Size the laid-out body takes, padding included, in the shape's local px. */
+	textSize: Dimensions;
+	/** Size of the region the body is drawn in, in the shape's local px. */
+	regionSize: Dimensions;
+};
+
+/** What {@link diagnoseDoc} takes beyond the document. */
+export type DiagnoseDocOptions = {
+	/**
+	 * `"source"` bodies already measured as drawn, keyed by object id (the ids
+	 * {@link listSourceTextObjects} lists). Each one is reported from its
+	 * measurement and drops out of the unchecked warning; an id missing here
+	 * stays in it, and an id of anything else is ignored.
+	 */
+	measuredSourceText?: ReadonlyMap<string, MeasuredSourceText>;
+};
+
+/** Whether the object holds a `"source"` body with any text in it. */
+const isSourceTextObject = (object: ObjectDoc): boolean => {
+	const definition = standardObjectDocDefinitions.get(object.type);
+	const text = (object as TextBodyDoc).text;
+	return (
+		definition?.features.text === "source" &&
+		text !== undefined &&
+		richTextToPlain(text) !== ""
+	);
+};
+
+/**
+ * The objects whose body only a drawn canvas can measure: every object, group
+ * children included, of a `features.text: "source"` type (Markdown) holding
+ * text. What a host measures on screen to fill
+ * {@link DiagnoseDocOptions.measuredSourceText}.
+ *
+ * @param doc - A parsed document, as `validateDoc` returns
+ * @returns The objects in document order (a group before its children); empty when the document holds no such text
+ */
+export const listSourceTextObjects = (doc: CanvasDoc): ObjectDoc[] =>
+	flattenObjects(doc.root).filter(isSourceTextObject);
+
+/**
+ * What a measured `"source"` body is short of, naming only the axes that
+ * overflow (both when neither does by the sizes alone).
+ */
+const describeSourceTextShortfall = ({
+	textSize,
+	regionSize,
+}: MeasuredSourceText): string => {
+	const isWidthShort = textSize.width > regionSize.width;
+	const isHeightShort = textSize.height > regionSize.height;
+	if (isHeightShort && !isWidthShort) {
+		return `needs ${round(textSize.height)}px of height but the region is ${round(regionSize.height)}px tall`;
+	}
+	if (isWidthShort && !isHeightShort) {
+		return `needs ${round(textSize.width)}px of width but the region is ${round(regionSize.width)}px wide`;
+	}
+	return `needs ${round(textSize.width)}x${round(textSize.height)}px but the region is ${round(regionSize.width)}x${round(regionSize.height)}px`;
+};
+
+/**
+ * The finding about a `"source"` body measured as drawn, empty when it fits or
+ * was not measured.
+ */
+const diagnoseMeasuredSourceText = (
+	object: ObjectDoc,
+	measuredSourceText: ReadonlyMap<string, MeasuredSourceText> | undefined,
+): Diagnostic[] => {
+	const measurement = measuredSourceText?.get(object.id);
+	if (
+		measurement === undefined ||
+		!measurement.isOverflowing ||
+		!isSourceTextObject(object)
+	) {
+		return [];
+	}
+	const body = object as TextBodyDoc;
+	const size =
+		typeof body.width === "number" && typeof body.height === "number"
+			? ` ${body.width}x${body.height}`
+			: "";
+	return [
+		{
+			severity: "error",
+			objectId: object.id,
+			message: `text overflows ${object.type}${size}: the rendered body ${describeSourceTextShortfall(measurement)} (measured as drawn on the open canvas)`,
+		},
+	];
+};
+
+/**
+ * {@link diagnoseObjectTextLineStarts} for a body nothing wraps — a `text` in its
+ * label layout, a label its type hangs outside the box — laid out as authored,
+ * so the lines it looks at open after the author's own newlines (canvas-sdk
+ * `calcLabelBoxSize` sizes such a label the same way, with no width to wrap at).
+ */
+const diagnoseUnwrappedTextLineStarts = (
+	object: ObjectDoc,
+	text: RichText,
+	font: TextMeasureFont,
+): Diagnostic[] =>
+	diagnoseObjectTextLineStarts(
+		object,
+		text,
+		null,
+		font,
+		layoutTextLines(text, font),
+	);
+
+/**
+ * One warning per `"source"` type with text in the document that went
+ * unmeasured, naming its objects, so a caller does not read the silence of
+ * {@link diagnoseObjectText} as "fits". The body is laid out by the shape's own
+ * renderer (Markdown as HTML), which the shared typesetting cannot reproduce, so
+ * only the drawn canvas can tell.
  */
 const diagnoseUncheckedSourceText = (
 	objects: readonly ObjectDoc[],
+	measuredSourceText: ReadonlyMap<string, MeasuredSourceText> | undefined,
 ): Diagnostic[] => {
 	const idsByType = new Map<string, string[]>();
 	for (const object of objects) {
-		const definition = standardObjectDocDefinitions.get(object.type);
-		const text = (object as TextBodyDoc).text;
 		if (
-			definition?.features.text !== "source" ||
-			text === undefined ||
-			richTextToPlain(text) === ""
+			!isSourceTextObject(object) ||
+			measuredSourceText?.has(object.id) === true
 		) {
 			continue;
 		}
@@ -406,9 +517,16 @@ const diagnoseObjectText = (object: ObjectDoc): Diagnostic[] => {
 	if (text === undefined || richTextToPlain(text) === "") {
 		return [];
 	}
+	const typeDefaults = resolveBodyStyleDefaults(definition);
+	const font = resolveBodyFont(body, typeDefaults);
 	const boxWidth = resolveWrapBoxWidth(body, definition);
 	if (boxWidth === null) {
-		return [];
+		// A `text` in its label layout is drawn at whatever width it comes to. The
+		// other ways to have no wrap width (an ellipse storing no width) are not a
+		// layout that leaves the text unwrapped, and are passed over.
+		return object.type === "text" && body.textLayout !== "block"
+			? diagnoseUnwrappedTextLineStarts(object, text, font)
+			: [];
 	}
 	if (definition.textRegion === undefined) {
 		return [
@@ -419,8 +537,6 @@ const diagnoseObjectText = (object: ObjectDoc): Diagnostic[] => {
 			},
 		];
 	}
-	const typeDefaults = resolveBodyStyleDefaults(definition);
-	const font = resolveBodyFont(body, typeDefaults);
 	const drawnHeight = resolveDrawnHeight(
 		body,
 		definition,
@@ -436,6 +552,10 @@ const diagnoseObjectText = (object: ObjectDoc): Diagnostic[] => {
 		width: boxWidth,
 		height: drawnHeight.height,
 	});
+	if (resolution.kind === "outside") {
+		// A label hung outside the box is sized from its text alone.
+		return diagnoseUnwrappedTextLineStarts(object, text, font);
+	}
 	if (resolution.kind !== "region") {
 		return [];
 	}
@@ -467,7 +587,7 @@ const diagnoseObjectText = (object: ObjectDoc): Diagnostic[] => {
 					resolveBodyVerticalAlign(body, typeDefaults),
 				)
 			: []),
-		...diagnoseObjectTextLineStarts(object, text, box, font, lines),
+		...diagnoseObjectTextLineStarts(object, text, box.width, font, lines),
 	];
 };
 
@@ -630,6 +750,15 @@ const diagnoseConnectorConnectPoints = (
 	});
 };
 
+/** The finding a whole-document check keyed to this object, as a list to spread. */
+const readFinding = (
+	findings: ReadonlyMap<ObjectDoc, Diagnostic>,
+	object: ObjectDoc,
+): Diagnostic[] => {
+	const finding = findings.get(object);
+	return finding === undefined ? [] : [finding];
+};
+
 /**
  * Checks every object's text against the space its shape actually leaves for it:
  * the text is wrapped at
@@ -650,7 +779,9 @@ const diagnoseConnectorConnectPoints = (
  * — is a warning, one per text however many of its lines offend. The canvas
  * breaks lines the way the browser does and the browser applies no such rule, so
  * this is an appearance the author changes in the wording or the width rather
- * than a fault the drawing could fix.
+ * than a fault the drawing could fix. Text nothing wraps — a `text` in its label
+ * layout, a label its type hangs outside the box — is looked at too, laid out as
+ * authored, so the lines are the ones the author's newlines open.
  *
  * A body placed on the shape's whole height (`textVerticalBasis: "frame"`) is
  * additionally checked against the region its type declares: a block reaching
@@ -667,16 +798,29 @@ const diagnoseConnectorConnectPoints = (
  * ER entity no longer has — is drawn at the owner's center, and is a warning
  * ({@link diagnoseConnectorConnectPoints}).
  *
+ * What a reader cannot see as drawn is a warning too: an svg whose markup
+ * refers to an id an svg drawn before it also defines, the two sharing one page
+ * ({@link import("./svgIdCollisions").diagnoseSvgIdCollisions}). Whether an
+ * image's file is there is a matter of the disk rather than the document, and is
+ * `diagnoseImageSources` in `./file`.
+ *
+ * Text in a font stack naming no family the canvas ships — or none installed
+ * here, the default family's included — is measured by estimate, so every
+ * finding above is approximate for it; each such stack is named in one
+ * document-wide warning ({@link import("./unmeasuredFonts").diagnoseUnmeasuredFonts}).
+ *
  * Only text that cannot be read where it is drawn is reported as an error.
  * Spacing, aspect ratio and the other matters of style are deliberately left out:
  * the errors answer "would a reader see the text cut off", which is a fact about
  * the document rather than a matter of taste.
  *
- * Objects the check passes over: types whose text the box does not hold (a label
- * drawn outside the outline, a `record`'s text-sized bands, a shape with no
- * text), objects with no text, text nothing wraps (a `text` in its label layout,
- * whose box is measured from the text itself) and types outside the shipped set.
- * The overflow check additionally passes over an object with no stored `height`,
+ * Objects the text checks pass over: types whose text the box does not hold (a
+ * label drawn outside the outline — whose line heads are still looked at — a
+ * `record`'s text-sized bands, a shape with no text), objects with no text, a
+ * shape storing no width to wrap at (an `ellipse`), and types outside the
+ * shipped set. Text nothing wraps (a `text` in its label layout, whose box is
+ * measured from the text itself) cannot overflow, and only its line heads are
+ * looked at. The overflow check additionally passes over an object with no stored `height`,
  * which is sized from its text on every read — but where its lines fall is still
  * looked at, the width being the author's. A shipped type that holds text but
  * declares no region is reported as a warning rather than passed over silently —
@@ -684,25 +828,36 @@ const diagnoseConnectorConnectPoints = (
  * about the document. A `geometry: "point"` object whose type declares no size is
  * reported for the same reason ({@link diagnoseObjectBounds}): nothing can
  * measure a box the type never stated. A type whose body is source its own
- * renderer lays out (`features.text: "source"`, Markdown) is not measured
- * either, and the objects of it holding text are named in one document-wide
- * warning per type, after the per-object findings.
+ * renderer lays out (`features.text: "source"`, Markdown) is not measured here
+ * either: a body the caller measured on a drawn canvas
+ * (`options.measuredSourceText`) is judged from that measurement, and the rest
+ * of that type's objects holding text are named in one document-wide warning
+ * per type, after the per-object findings and before the font warnings.
  *
  * @param doc - A parsed document, as `validateDoc` returns; group children are checked along with the objects at the root
- * @returns One error per overflowing object and per message a type's declared overflow check returns, in document order, plus a warning per text whose lines start where typesetting forbids, per frame-placed body reaching outside its type's declared region, per connector whose label does not fit between its shapes, per connector end naming a connect point its owner does not offer, per object of a text-bearing type that declares no region, per point-geometry object whose type declares no size, and per `"source"` type whose text went unmeasured (no `objectId`; its objects are listed in the message); empty when everything fits
+ * @param options - Omitted, every `"source"` body is left unchecked; see {@link DiagnoseDocOptions}
+ * @returns One error per overflowing object (a measured `"source"` body included) and per message a type's declared overflow check returns, in document order, plus a warning per text whose lines start where typesetting forbids, per frame-placed body reaching outside its type's declared region, per connector whose label does not fit between its shapes, per connector end naming a connect point its owner does not offer, per object of a text-bearing type that declares no region, per point-geometry object whose type declares no size, and per svg referring to an id an earlier svg defines — all of these on their object, in document order — then per `"source"` type with text left unmeasured and per font stack measured by estimate (none of these with an `objectId`; the objects are listed in the message); empty when everything fits
  */
-export const diagnoseDoc = (doc: CanvasDoc): Diagnostic[] => {
+export const diagnoseDoc = (
+	doc: CanvasDoc,
+	options: DiagnoseDocOptions = {},
+): Diagnostic[] => {
+	const { measuredSourceText } = options;
 	const objects = flattenObjects(doc.root);
 	const objectsById = indexObjectsById(objects);
+	const svgIdCollisions = diagnoseSvgIdCollisions(objects);
 	return [
 		...objects.flatMap((object) => [
 			...diagnoseObjectText(object),
+			...diagnoseMeasuredSourceText(object, measuredSourceText),
 			...diagnoseDeclaredOverflow(object),
 			...diagnoseObjectBounds(object),
 			...diagnoseConnectorLabel(object, objectsById),
 			...diagnoseConnectorLabelLineStarts(object),
 			...diagnoseConnectorConnectPoints(object, objectsById),
+			...readFinding(svgIdCollisions, object),
 		]),
-		...diagnoseUncheckedSourceText(objects),
+		...diagnoseUncheckedSourceText(objects, measuredSourceText),
+		...diagnoseUnmeasuredFonts(objects),
 	];
 };

@@ -6,6 +6,8 @@
 // them (headlessLauncher, viewerRegistry), and importing them back out of the
 // composition root would make a cycle of it.
 
+import type { TextSlotMeasurement } from "@jiscribe/canvas";
+
 import type { BrowserOpenOptions } from "./openBrowser";
 import type { ViewerOp } from "../shared/canvasHostProtocol";
 import type { HostActionName } from "../shared/hostActionsRoute";
@@ -19,6 +21,19 @@ export type HandleOpOutcome = {
 	imagePngBase64?: string;
 	/** The exported file's bytes (base64), present only for a successful exportImage */
 	exportedImageBase64?: string;
+	/** The numbers behind a successful measureText, present only from a viewer that sends them */
+	textMeasurement?: TextSlotMeasurement;
+	/**
+	 * The file on display the window was held to (relative to workspaceRoot),
+	 * added by the host rather than sent by the window. Absent when no file text
+	 * was on display to hold it to
+	 */
+	relPath?: string;
+	/**
+	 * The revision the window was told to have drawn before answering (SHA-256
+	 * of the file text, see calcDocRevision), added by the host beside relPath
+	 */
+	revision?: string;
 };
 
 /** The result of openHeadlessViewer */
@@ -61,10 +76,10 @@ export type CanvasHost = {
 	openFile: (relPath: string) => Promise<void>;
 	/**
 	 * The file currently on display (relative to workspaceRoot), or null when none
-	 * is set. Nothing in the server reads it: the desktop app joins it to
-	 * workspaceRoot to record the canvas on display (when it quits and after an
-	 * Open…), and the tests have no other way of telling which file a switch
-	 * settled on
+	 * is set. diagnose_canvas reads it to ask the viewer to measure only the file
+	 * it diagnoses; the desktop app joins it to workspaceRoot to record the canvas
+	 * on display (when it quits and after an Open…), and the tests read it to tell
+	 * which file a switch settled on
 	 */
 	getOpenPath: () => string | null;
 	/**

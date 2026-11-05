@@ -157,6 +157,12 @@ canvas に残して SDK が再エクスポートする。物理的に移すと c
 （何が何 px 足りないかと直し方）を返す関数で、`diagnoseDoc` がそれぞれを図形の id
 付きのエラーにする。record が区画の高さで実例を示している。
 
+キャンバス側の `measure.textSlot` も、既定ではスロットを平文として測る。本体を自前の HTML
+として描く型（Markdown のような `features.text: "source"`）は、定義に `textMeasurer`
+を宣言する。中身はたいてい、overlay が描くのと同じ frame の props と本体を
+`measureTextOverlayContent` に渡す呼び出しで、測る箱が描く箱と同じになるよう両者で
+1 つのヘルパを共有する。markdown プラグインが実例（`measureMarkdownText`）。
+
 `createFrameObject` を通さず手描きするなら、それが解決していたものは自分で解決する
 （sticky が実例）。特に色は `resolveAutoColor(fill, "surface")` で解決し、**結果は
 SVG の `fill` 属性ではなく CSS で当てる**。`"auto"` の解決先は `var(--jiscribe-*)` で、

@@ -12,6 +12,7 @@ import type { ObjectGeometryKeyRegistry } from "../../rendering/objects/registry
 import type { ObjectOutlineRegistry } from "../../rendering/objects/registry/ObjectOutlineRegistry";
 import type { ObjectPartKindRegistry } from "../../rendering/objects/registry/ObjectPartKindRegistry";
 import type { ObjectSvgDefsRegistry } from "../../rendering/objects/registry/ObjectSvgDefsRegistry";
+import type { ObjectTextMeasurerRegistry } from "../../rendering/objects/registry/ObjectTextMeasurerRegistry";
 import type { ObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import type { ObjectAutoHeightRegistry } from "../../states/registry/ObjectAutoHeightRegistry";
 import type { ObjectContainerRegistry } from "../../states/registry/ObjectContainerRegistry";
@@ -78,6 +79,11 @@ export type CanvasRegistries = {
 	objectShapeStyleDefaults: ObjectShapeStyleDefaultsRegistry;
 	objectTextEditOverflow: ObjectTextEditOverflowRegistry;
 	objectTextEditLineBreaks: ObjectTextEditLineBreaksRegistry;
+	/**
+	 * Per-type measurers for a body the type lays out itself, read by
+	 * `measure.textSlot`; a type without one is measured as plain text.
+	 */
+	objectTextMeasurer: ObjectTextMeasurerRegistry;
 	objectOutline: ObjectOutlineRegistry;
 	objectAnchorRegion: ObjectAnchorRegionRegistry;
 	objectExtraConnectPoints: ObjectExtraConnectPointsRegistry;

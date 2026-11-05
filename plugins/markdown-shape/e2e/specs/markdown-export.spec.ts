@@ -1,6 +1,6 @@
-import type * as CanvasModule from "@jiscribe/canvas";
 import { test, expect } from "@jiscribe/canvas-sdk/testing/e2e";
-import type { JSHandle, Page } from "@playwright/test";
+
+import { loadHarnessDoc, readCanvasHandle } from "../support/harnessPage";
 
 /**
  * The image export of a markdown card: the PNG draws the rendered HTML, and the
@@ -32,24 +32,6 @@ const docText = JSON.stringify({
 	],
 });
 
-/** The global mountPluginHarness publishes the default page's handle on. */
-type HarnessWindow = {
-	__canvasHandle?: CanvasModule.CanvasHandle | null;
-	__setHarnessDoc?: (docText: string) => void;
-};
-
-const loadHarnessDoc = async (page: Page, text = docText): Promise<void> => {
-	await page.evaluate((json) => {
-		const hook = (window as unknown as HarnessWindow).__setHarnessDoc;
-		if (!hook) {
-			throw new Error(
-				"__setHarnessDoc is undefined (harness hook not installed)",
-			);
-		}
-		hook(json);
-	}, text);
-};
-
 /** A display formula followed by a paragraph, whose spacing the formula's margin sets. */
 const mathDocText = JSON.stringify({
 	version: 1,
@@ -66,22 +48,9 @@ const mathDocText = JSON.stringify({
 	],
 });
 
-const readCanvasHandle = (
-	page: Page,
-): Promise<JSHandle<CanvasModule.CanvasHandle>> =>
-	page.evaluateHandle(() => {
-		const handle = (window as unknown as HarnessWindow).__canvasHandle;
-		if (!handle) {
-			throw new Error(
-				"__canvasHandle is undefined (harness hook not installed)",
-			);
-		}
-		return handle;
-	});
-
 test.describe("markdown image export", () => {
 	test("draws the rendered table into the PNG", async ({ canvas, page }) => {
-		await loadHarnessDoc(page);
+		await loadHarnessDoc(page, docText);
 		await expect(canvas.objectById(CARD_ID)).toHaveCount(1);
 		await expect(page.locator("foreignObject table")).toHaveCount(1);
 		const handle = await readCanvasHandle(page);
@@ -136,7 +105,7 @@ test.describe("markdown image export", () => {
 	});
 
 	test("flattens the body to <text> in the SVG", async ({ canvas, page }) => {
-		await loadHarnessDoc(page);
+		await loadHarnessDoc(page, docText);
 		await expect(canvas.objectById(CARD_ID)).toHaveCount(1);
 		const handle = await readCanvasHandle(page);
 
