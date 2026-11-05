@@ -13,14 +13,14 @@ the answers an AI gets and the answers CI gets cannot drift.
 
 ## API
 
-| Function                                          | What it answers                                                                                                                                                                                                                                                                                                                                                         |
-| ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `validateDoc(text)`                               | Is this a sound document? Reads it with the canvas parser and returns what it found.                                                                                                                                                                                                                                                                                    |
-| `measureWrappedText(text, font, availableWidth?)` | How many lines does this text become, and how big is the block?                                                                                                                                                                                                                                                                                                         |
-| `resolveContentBox(shape)`                        | How much of a shape's box is its text actually laid out in — or is there no box to lay it in?                                                                                                                                                                                                                                                                           |
-| `diagnoseDoc(doc, options?)`                      | Does any text land where it should not — overflowing its shape, a connector label wider than the gap it sits in, a line opening on a closing mark (行頭禁則), a frame-based body running over the shape's decoration? Is any shape hidden under another's opaque fill, or an svg's reference at risk of resolving to another svg's id? Which fonts were only estimated? |
-| `listSourceTextObjects(doc)`                      | Which objects hold a body only a drawn canvas can measure (markdown), for a host to measure and hand back as `options.measuredSourceText`?                                                                                                                                                                                                                              |
-| `formatDiagnostics(diagnostics)`                  | What do those findings read as, one line each, for a person or an AI?                                                                                                                                                                                                                                                                                                   |
+| Function                                          | What it answers                                                                                                                                                                                                                                                                                                        |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `validateDoc(text)`                               | Is this a sound document? Reads it with the canvas parser and returns what it found.                                                                                                                                                                                                                                   |
+| `measureWrappedText(text, font, availableWidth?)` | How many lines does this text become, and how big is the block?                                                                                                                                                                                                                                                        |
+| `resolveContentBox(shape)`                        | How much of a shape's box is its text actually laid out in — or is there no box to lay it in?                                                                                                                                                                                                                          |
+| `diagnoseDoc(doc, options?)`                      | Does any text land where it should not — overflowing its shape, a connector label wider than the gap it sits in, a line opening on a closing mark (行頭禁則), a frame-based body running over the shape's decoration? Is an svg's reference at risk of resolving to another svg's id? Which fonts were only estimated? |
+| `listSourceTextObjects(doc)`                      | Which objects hold a body only a drawn canvas can measure (markdown), for a host to measure and hand back as `options.measuredSourceText`?                                                                                                                                                                             |
+| `formatDiagnostics(diagnostics)`                  | What do those findings read as, one line each, for a person or an AI?                                                                                                                                                                                                                                                  |
 
 ### Canvas files: `@jiscribe/doc-tools/file`
 
@@ -169,15 +169,13 @@ Only facts about what a reader of the document sees — text that cannot be read
 where it is drawn (overflow, a label drawn over the shapes), typography that
 breaks a convention every document shares (a line opening on a closing
 punctuation mark, a frame-based body running over the shape's decoration), and
-what cannot be seen at all (a shape whose whole box a later shape's opaque fill
-covers, an svg reference that may resolve to another svg's markup). All but
+an svg reference that may resolve to another svg's markup. All but
 overflow are warnings: the remark is what a careful author would make, and the
 document may mean it.
 
-A partial overlap is not reported — two shapes overlapping on purpose is common,
-and telling which is meant needs the author (the `find_overlaps` tool lists
-them). Neither is a cover the check cannot be sure of: a rotated shape, a
-silhouette other than the box or its ellipse, a fill whose opacity the string
-alone does not settle (`var(...)`). Spacing, aspect ratio and the rest of the
+Shapes overlapping are not reported, not even one hidden whole under another's
+fill: shapes layered on purpose are common — in an illustration nearly every
+overlap is — and telling which is meant needs the author (the `find_overlaps`
+tool lists them). Spacing, aspect ratio and the rest of the
 layout rules in a project's own design guide are matters of taste and belong in
 a rule file, not in the default check.
