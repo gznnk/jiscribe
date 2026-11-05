@@ -10,6 +10,7 @@ import type { ObjectOutlineRegistry } from "../../rendering/objects/registry/Obj
 import type { ObjectPartKindRegistry } from "../../rendering/objects/registry/ObjectPartKindRegistry";
 import type { ObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import type { ObjectAutoHeightRegistry } from "../../states/registry/ObjectAutoHeightRegistry";
+import type { ObjectContainerRegistry } from "../../states/registry/ObjectContainerRegistry";
 import type { ObjectContentResizerRegistry } from "../../states/registry/ObjectContentResizerRegistry";
 import type { ObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import type { CanvasControllerState } from "../CanvasTypes";
@@ -48,6 +49,11 @@ export interface ICanvasRegistries {
 	 * switches the selection between a stated height and one following the text.
 	 */
 	objectAutoHeight: ObjectAutoHeightRegistry;
+	/**
+	 * Which types are containers other objects sit inside, read by the automatic
+	 * layout commands so a container shape is sized around what lies in it.
+	 */
+	objectContainer: ObjectContainerRegistry;
 	/**
 	 * Per-type, per-slot text-style defaults, needed by the pure tree wherever it
 	 * reads a

@@ -1,7 +1,9 @@
 import type { Rect } from "@jiscribe/geometry";
 import {
 	LayoutDirections,
+	calcFacingSides,
 	computeLayeredLayout,
+	createTakenEnds,
 	type LaidOutEdge,
 	type LayeredLayoutResult,
 	type LayoutDirection,
@@ -13,16 +15,14 @@ import {
 import { DocOperationError } from "./errors";
 import { buildEndpoint } from "./utils/connectorEndpoints";
 import {
-	calcFacingEdgeAnchors,
-	createTakenEnds,
 	keepsOwnAnchor,
+	listTakenEnds,
 	readOwnerId,
 } from "./utils/layoutConnectorEnds";
 import {
 	type PlacedContainer,
 	type PlacedNode,
 	collectPlacements,
-	readTitleHeight,
 } from "./utils/layoutPlacements";
 import { requireFiniteNumber } from "./utils/numberArgs";
 import {
@@ -138,7 +138,6 @@ const buildGraph = (
 	nodes: readonly PlacedNode[],
 	containers: readonly PlacedContainer[],
 	edges: readonly ConnectorDoc[],
-	definitions: DocDefinitions,
 ): {
 	nodes: LayoutGraphNode[];
 	containers: LayoutGraphContainer[];
@@ -150,10 +149,10 @@ const buildGraph = (
 		height: bounds.height,
 		...(parentId !== undefined ? { parentId } : {}),
 	})),
-	containers: containers.map(({ object, parentId }) => ({
+	containers: containers.map(({ object, parentId, titleHeight }) => ({
 		id: object.id,
 		...(parentId !== undefined ? { parentId } : {}),
-		titleHeight: readTitleHeight(object, definitions),
+		titleHeight,
 	})),
 	edges: edges.map((connector) => {
 		const label = measureLabelBox(connector);
@@ -330,7 +329,7 @@ const redrawContainerConnectors = (
 			: requireObjectBounds(object, definitions);
 	};
 	const locatedOwners = locateObjects(doc, new Set(placedById.keys()));
-	const takenEnds = createTakenEnds(written);
+	const takenEnds = createTakenEnds(listTakenEnds(written));
 	const redrawnIds: string[] = [];
 	visitObjects(doc.root, (object) => {
 		if (!isConnectorObject(object)) {
@@ -351,7 +350,7 @@ const redrawContainerConnectors = (
 		if (sourceBox === undefined || targetBox === undefined) {
 			return;
 		}
-		const sides = calcFacingEdgeAnchors(sourceBox, targetBox);
+		const sides = calcFacingSides(sourceBox, targetBox);
 		if (!keepsOwnAnchor(connector.source)) {
 			connector.source = buildEndpoint(
 				locatedOwners,
@@ -433,7 +432,7 @@ export const layoutObjects = (
 	const nodeIds = new Set(nodes.map(({ object }) => object.id));
 	const { edges, selfLoops } = collectConnectors(doc, nodeIds);
 
-	const graph = buildGraph(nodes, containers, edges, definitions);
+	const graph = buildGraph(nodes, containers, edges);
 	const laidOut = computeLayeredLayout(
 		graph.nodes,
 		graph.edges,

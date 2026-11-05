@@ -19,6 +19,7 @@ import { createObjectPartKindRegistry } from "../../rendering/objects/registry/O
 import { createObjectSvgDefsRegistry } from "../../rendering/objects/registry/ObjectSvgDefsRegistry";
 import { createObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import { createObjectAutoHeightRegistry } from "../../states/registry/ObjectAutoHeightRegistry";
+import { createObjectContainerRegistry } from "../../states/registry/ObjectContainerRegistry";
 import { createObjectContentResizerRegistry } from "../../states/registry/ObjectContentResizerRegistry";
 import { createObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import { createObjectStateValidatorRegistry } from "../../states/registry/ObjectStateValidatorRegistry";
@@ -58,6 +59,7 @@ export const createCanvasRegistries = (
 		objectStateValidator: createObjectStateValidatorRegistry(),
 		objectContentResizer: createObjectContentResizerRegistry(),
 		objectAutoHeight: createObjectAutoHeightRegistry(),
+		objectContainer: createObjectContainerRegistry(),
 		objectComponent: createObjectComponentRegistry(),
 		objectTextStyleDefaults: createObjectTextStyleDefaultsRegistry(),
 		objectShapeStyleDefaults: createObjectShapeStyleDefaultsRegistry(),

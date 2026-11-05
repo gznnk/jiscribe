@@ -505,6 +505,9 @@ export const applyObjectDefinition = (
 	if (mayLeaveHeightOut) {
 		registries.objectAutoHeight.register(type);
 	}
+	if (definition.container) {
+		registries.objectContainer.register(type, definition.container);
+	}
 	const autoHeightPaddingEm = resolveAutoHeightPaddingEm(definition);
 	// A type whose doc may leave `height` out gets the shared derivation, which is
 	// inert for every object of it that states one — the two are mutually

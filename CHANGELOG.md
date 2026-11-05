@@ -42,6 +42,17 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   `LR` / `BT` / `RL`) and the two gaps are parameters; omitting ids lays out the
   whole canvas, and the drawing keeps its top-left corner. The algorithm is dagre's,
   wrapped in the new headless `@jiscribe/layout` package.
+- **Automatic layout from the canvas.** Two new commands, `layoutTopToBottom` and
+  `layoutLeftToRight`, run the same layout from the context menu and from the
+  properties sidebar (the Arrange section for a selection, the Canvas section with
+  nothing selected). With a selection, the selected objects are arranged as one
+  graph, and a selected container shape brings what lies inside it along; with
+  nothing selected, each part of the drawing joined by lines is arranged in place
+  and a part with no line is left alone. One run is one undo step, and a second
+  run that changes nothing records nothing. `@jiscribe/layout` now also exports the
+  pure steps the doc op and the canvas share: `resolvePlacements` (which objects
+  are nodes and which are containers), `splitLayoutGraph` (connected parts),
+  `isRectInside`, `calcFacingSides` and `createTakenEnds`.
 - **A stencil bar floats over the canvas.** `<Canvas stencilBar>` draws a
   column of buttons over the viewport's left edge, centred top to bottom below
   the top-left pill and scrolling when the room there is shorter, over the

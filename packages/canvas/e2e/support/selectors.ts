@@ -267,7 +267,7 @@ export const selectors = {
 	propertyPanelDocumentSet: (property: string, value: string) =>
 		`${PROPERTY_PANEL} [data-action="doc:${property}:${value}"]`,
 
-	/** A command button inside the sidebar (the Arrange section's stacking-order and grouping buttons). */
+	/** A command button inside the sidebar (the Arrange section's stacking-order, grouping and auto layout buttons; the Canvas section's auto layout buttons). */
 	propertyPanelCommand: (commandId: string) =>
 		`${PROPERTY_PANEL} [data-action="command:${commandId}"]`,
 

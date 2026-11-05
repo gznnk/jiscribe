@@ -155,28 +155,28 @@ that is the package to take.
 
 ## How it fits together
 
-| Package                      | What it is                                                                                                                             |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `@jiscribe/canvas`           | The engine: rendering, gestures, commands, state                                                                                       |
-| `@jiscribe/doc`              | The headless document layer: the `CanvasDoc` model, its parser, its editing ops and its `.jis.*` file I/O                              |
-| `@jiscribe/canvas-sdk`       | Shape-authoring kit for plugin authors, written against the canvas public API                                                          |
-| `@jiscribe/geometry`         | Geometry types and calculations (rects, ellipses, transforms, intersections)                                                           |
-| `@jiscribe/layout`           | Automatic layout of a graph of boxes: dagre's layered scheme with right-angled routes, behind `docOps.layoutObjects`                   |
-| `@jiscribe/markdown`         | Markdown rendering used by the markdown shape                                                                                          |
-| `@jiscribe/basic-validators` | Primitive runtime validators                                                                                                           |
-| `@jiscribe/utility-types`    | Shared TypeScript utility types                                                                                                        |
-| `@jiscribe/doc-schema`       | Generated JSON Schema, AI reference and Claude Code skill for the shipped shape set                                                    |
-| `@jiscribe/ai-tools`         | The canvas tool set an AI can call — declared free of any transport, and applied                                                       |
-| `@jiscribe/ai-tools-sdk`     | The contract a plugin offers AI tools for its own shapes through; plugins take it from `@jiscribe/canvas-sdk/tools`                    |
-| `@jiscribe/standard-shapes`  | The shipped shape set, bundled once for every host (doc + presentation entries)                                                        |
-| `@jiscribe/doc-tools`        | Validate / measure / diagnose over the standard set (Node text measurer included)                                                      |
-| `plugins/*`                  | The shipped shape sets — flowchart, UML, ER, table, container, general, annotation, sticky, markdown, Lucide, AWS, Azure, Google Cloud |
-| `apps/canvas-examples`       | Integration examples (one example = one file)                                                                                          |
-| `apps/cli`                   | The `jiscribe` command: validate / diagnose / measure / render / preview                                                               |
-| `apps/mcp`                   | MCP server: the tool set over stdio, with a local canvas viewer                                                                        |
-| `apps/desktop`               | The MCP server as a desktop app (proof of concept): Streamable HTTP, the viewer in its own window                                      |
-| `apps/claude-plugin`         | The Claude Code plugin: the MCP server and a generated drawing skill                                                                   |
-| `apps/vscode-extension`      | The Jiscribe VSCode extension                                                                                                          |
+| Package                      | What it is                                                                                                                                                 |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@jiscribe/canvas`           | The engine: rendering, gestures, commands, state                                                                                                           |
+| `@jiscribe/doc`              | The headless document layer: the `CanvasDoc` model, its parser, its editing ops and its `.jis.*` file I/O                                                  |
+| `@jiscribe/canvas-sdk`       | Shape-authoring kit for plugin authors, written against the canvas public API                                                                              |
+| `@jiscribe/geometry`         | Geometry types and calculations (rects, ellipses, transforms, intersections)                                                                               |
+| `@jiscribe/layout`           | Automatic layout of a graph of boxes: dagre's layered scheme with right-angled routes, behind `docOps.layoutObjects` and the canvas's auto layout commands |
+| `@jiscribe/markdown`         | Markdown rendering used by the markdown shape                                                                                                              |
+| `@jiscribe/basic-validators` | Primitive runtime validators                                                                                                                               |
+| `@jiscribe/utility-types`    | Shared TypeScript utility types                                                                                                                            |
+| `@jiscribe/doc-schema`       | Generated JSON Schema, AI reference and Claude Code skill for the shipped shape set                                                                        |
+| `@jiscribe/ai-tools`         | The canvas tool set an AI can call — declared free of any transport, and applied                                                                           |
+| `@jiscribe/ai-tools-sdk`     | The contract a plugin offers AI tools for its own shapes through; plugins take it from `@jiscribe/canvas-sdk/tools`                                        |
+| `@jiscribe/standard-shapes`  | The shipped shape set, bundled once for every host (doc + presentation entries)                                                                            |
+| `@jiscribe/doc-tools`        | Validate / measure / diagnose over the standard set (Node text measurer included)                                                                          |
+| `plugins/*`                  | The shipped shape sets — flowchart, UML, ER, table, container, general, annotation, sticky, markdown, Lucide, AWS, Azure, Google Cloud                     |
+| `apps/canvas-examples`       | Integration examples (one example = one file)                                                                                                              |
+| `apps/cli`                   | The `jiscribe` command: validate / diagnose / measure / render / preview                                                                                   |
+| `apps/mcp`                   | MCP server: the tool set over stdio, with a local canvas viewer                                                                                            |
+| `apps/desktop`               | The MCP server as a desktop app (proof of concept): Streamable HTTP, the viewer in its own window                                                          |
+| `apps/claude-plugin`         | The Claude Code plugin: the MCP server and a generated drawing skill                                                                                       |
+| `apps/vscode-extension`      | The Jiscribe VSCode extension                                                                                                                              |
 
 The `plugins/` directory is deliberately treated as _external_: those packages
 may only use the public API of `@jiscribe/canvas`, `@jiscribe/doc` and

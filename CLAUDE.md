@@ -20,7 +20,7 @@ packages/
   canvas/            engine (rendering, gestures, commands, state) + its e2e suite and the shared e2e kit
   canvas-sdk/        shape-authoring kit for plugin authors
   geometry/          geometry types and calculations
-  layout/            automatic layout of a graph of boxes (dagre's layered scheme, right-angled routes), used by doc's layoutObjects
+  layout/            automatic layout of a graph of boxes (dagre's layered scheme, right-angled routes), used by doc's layoutObjects and canvas's auto layout commands
   markdown/          markdown rendering
   basic-validators/  primitive runtime validators
   utility-types/     shared TypeScript utility types

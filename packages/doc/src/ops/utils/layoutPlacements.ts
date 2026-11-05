@@ -1,4 +1,5 @@
 import type { Rect } from "@jiscribe/geometry";
+import { type PlacementCandidate, resolvePlacements } from "@jiscribe/layout";
 
 import { type ObjectRecord, readChildren } from "./objectAccess";
 import {
@@ -19,7 +20,7 @@ const isContainerShape = (
  * Room the container's type keeps for its title band on this object; a group has none,
  * and a band that is not a finite positive number counts as none.
  */
-export const readTitleHeight = (
+const readTitleHeight = (
 	object: ObjectRecord,
 	definitions: DocDefinitions,
 ): number => {
@@ -36,17 +37,10 @@ export const readTitleHeight = (
 const isGroupObject = (object: ObjectRecord): boolean =>
 	object.type === GroupFeatures.type;
 
-const isRectInside = (outer: Rect, inner: Rect): boolean =>
-	inner.x >= outer.x &&
-	inner.y >= outer.y &&
-	inner.x + inner.width <= outer.x + outer.width &&
-	inner.y + inner.height <= outer.y + outer.height;
-
-/** `groupId` is the group the object was found in; `parentId` the container it ends up inside. */
+/** `parentId` is the container the object ends up inside. */
 export type PlacedNode = {
 	object: ObjectRecord;
 	bounds: Rect;
-	groupId?: string;
 	parentId?: string;
 };
 
@@ -58,15 +52,14 @@ export type PlacedContainer = {
 	object: ObjectRecord;
 	bounds: Rect;
 	isShape: boolean;
-	groupId?: string;
 	parentId?: string;
+	titleHeight: number;
 };
 
 /**
- * Sort the candidates into the nodes to place and the containers around them. A group's
- * members are its children; a container shape's members are the candidates at its own level
- * that lie inside it, the smallest such container winning when they nest. A container
- * holding nothing to place is a node like any other, so it still moves with the drawing.
+ * Sort the candidates into the nodes to place and the containers around them, by the
+ * rules of `resolvePlacements` (`@jiscribe/layout`): a group's members are its children,
+ * a container shape's are the candidates at its own level lying inside it.
  *
  * @param candidates - The objects named, or the root's objects; an object reached twice
  *   (a group and a child of it both named) counts once
@@ -81,109 +74,61 @@ export const collectPlacements = (
 	definitions: DocDefinitions,
 	skipsUnmeasurable: boolean,
 ): { nodes: PlacedNode[]; containers: PlacedContainer[] } => {
-	const nodes: PlacedNode[] = [];
-	const containers: PlacedContainer[] = [];
-	const seenIds = new Set<string>();
-	const measure = (object: ObjectRecord): Rect | undefined => {
-		if (!skipsUnmeasurable) {
-			return requireObjectBounds(object, definitions);
-		}
-		return getObjectBounds(object, definitions) ?? undefined;
-	};
-	const visit = (objects: readonly ObjectRecord[], groupId?: string): void => {
+	const objectById = new Map<string, ObjectRecord>();
+	const toCandidates = (
+		objects: readonly ObjectRecord[],
+	): PlacementCandidate[] => {
+		const placementCandidates: PlacementCandidate[] = [];
 		for (const object of objects) {
-			if (isConnectorObject(object) || seenIds.has(object.id)) {
+			if (isConnectorObject(object)) {
 				continue;
 			}
-			seenIds.add(object.id);
-			const bounds = measure(object);
+			const bounds = skipsUnmeasurable
+				? (getObjectBounds(object, definitions) ?? undefined)
+				: requireObjectBounds(object, definitions);
 			if (bounds === undefined) {
 				continue;
 			}
+			if (!objectById.has(object.id)) {
+				objectById.set(object.id, object);
+			}
 			if (isGroupObject(object)) {
-				containers.push({
-					object,
+				placementCandidates.push({
+					id: object.id,
 					bounds,
-					isShape: false,
-					groupId,
-					parentId: groupId,
+					kind: "group",
+					children: toCandidates(readChildren(object)),
 				});
-				visit(readChildren(object), object.id);
 			} else if (isContainerShape(object, definitions)) {
-				containers.push({
-					object,
+				placementCandidates.push({
+					id: object.id,
 					bounds,
-					isShape: true,
-					groupId,
-					parentId: groupId,
+					kind: "containerShape",
+					titleHeight: readTitleHeight(object, definitions),
 				});
 			} else {
-				nodes.push({ object, bounds, groupId, parentId: groupId });
+				placementCandidates.push({ id: object.id, bounds, kind: "node" });
 			}
 		}
+		return placementCandidates;
 	};
-	visit(candidates);
-	// Geometry decides what a container shape holds: among what sits at its level, the
-	// smallest container around a box is its parent.
-	const containerShapes = containers.filter(({ isShape }) => isShape);
-	const area = ({ bounds }: PlacedContainer): number =>
-		bounds.width * bounds.height;
-	const adopt = (placed: PlacedNode | PlacedContainer): void => {
-		let smallest: PlacedContainer | undefined;
-		for (const container of containerShapes) {
-			if (
-				container.object === placed.object ||
-				container.groupId !== placed.groupId ||
-				!isRectInside(container.bounds, placed.bounds)
-			) {
-				continue;
-			}
-			if (smallest === undefined || area(container) < area(smallest)) {
-				smallest = container;
-			}
-		}
-		if (smallest !== undefined) {
-			placed.parentId = smallest.object.id;
-		}
+	const { nodes, containers } = resolvePlacements(toCandidates(candidates));
+	const objectOf = (id: string): ObjectRecord =>
+		objectById.get(id) as ObjectRecord;
+	return {
+		nodes: nodes.map(({ id, bounds, parentId }) => ({
+			object: objectOf(id),
+			bounds,
+			...(parentId !== undefined ? { parentId } : {}),
+		})),
+		containers: containers.map(
+			({ id, bounds, isShape, parentId, titleHeight }) => ({
+				object: objectOf(id),
+				bounds,
+				isShape,
+				...(parentId !== undefined ? { parentId } : {}),
+				titleHeight,
+			}),
+		),
 	};
-	for (const placed of [...containers, ...nodes]) {
-		adopt(placed);
-	}
-	// A container holds something to place when a node sits in it, or in a container
-	// in it: mark the containers of every node, then every ancestor of a marked one.
-	const containerById = new Map(
-		containers.map((container) => [container.object.id, container] as const),
-	);
-	const occupiedIds = new Set<string>();
-	const markUpward = (containerId: string | undefined): void => {
-		let current = containerId;
-		while (current !== undefined && !occupiedIds.has(current)) {
-			occupiedIds.add(current);
-			current = containerById.get(current)?.parentId;
-		}
-	};
-	for (const node of nodes) {
-		markUpward(node.parentId);
-	}
-	const occupied = containers.filter(({ object }) =>
-		occupiedIds.has(object.id),
-	);
-	// An empty container shape is placed as a box of its own; an empty group holds
-	// nothing to place at all.
-	for (const container of containers) {
-		if (!occupiedIds.has(container.object.id) && container.isShape) {
-			nodes.push({
-				object: container.object,
-				bounds: container.bounds,
-				groupId: container.groupId,
-				parentId: container.parentId,
-			});
-		}
-	}
-	for (const placed of [...nodes, ...occupied]) {
-		if (placed.parentId !== undefined && !occupiedIds.has(placed.parentId)) {
-			placed.parentId = undefined;
-		}
-	}
-	return { nodes, containers: occupied };
 };
