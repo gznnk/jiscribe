@@ -280,7 +280,7 @@ export function createJiscribeMcpServer(
 		registerName("diagnose_canvas"),
 		{
 			description: [
-				"Check an existing .jis file: validation with the canvas parser plus a diagnosis of whether each shape's text actually fits inside it, and of what a reader cannot see — a shape hidden under another's opaque fill, an image whose file is missing.",
+				"Check an existing .jis file: validation with the canvas parser plus a diagnosis of whether each shape's text actually fits inside it, and of what a reader cannot see as drawn, such as an image whose file is missing.",
 				"Names the file by path, so a large diagram never has to be sent through the conversation; this is the only validation entry point, and it reports JSON syntax errors too.",
 				"The diagnosis only runs when the file itself validates, since a shape with an invalid size has no meaningful content box.",
 				"Returns one line per finding, or valid: true when there is nothing to report.",

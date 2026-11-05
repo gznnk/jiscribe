@@ -17,9 +17,7 @@ covers that.
 
 ### Added
 
-- **`diagnose_canvas` reports shapes and images a reader cannot see.** A shape
-  whose whole box is under a later shape's opaque fill is a warning naming the
-  cover, with `reorder_objects` and `set_style` as the fixes; an image whose
+- **`diagnose_canvas` reports images a reader cannot see, and more.** An image whose
   file is missing, or whose `src` no host accepts, is an error; an image
   reached through a link out of the diagram's directory is a warning, since
   this server's viewer refuses it. It also warns about an `svg` referencing an

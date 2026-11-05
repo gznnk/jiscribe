@@ -27,7 +27,7 @@ const USAGE = `usage: jiscribe <command> [options]
   validate <files...>   read the document with the canvas parser and report what it found
                         [--json]
   diagnose <files...>   validate, then report what a reader cannot see: text that overflows
-                        the shape holding it, a shape hidden under another, a missing image
+                        the shape holding it, a missing image
                         [--json]
   measure  <text>       report how the text lays out in a given box
                         --width <px> --font-size <px> [--bold] [--shape <type> --height <px>] [--json]
