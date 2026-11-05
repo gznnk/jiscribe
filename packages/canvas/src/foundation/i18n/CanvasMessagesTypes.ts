@@ -107,9 +107,9 @@ export type CanvasMessageStrings = {
 	propertyPanelViewScrollContent: string;
 	/** Label of the row holding the two automatic layout buttons */
 	propertyPanelAutoLayout: string;
-	/** Button running the top-to-bottom automatic layout; drawn in half the row, so keep it short (the command's label is its tooltip) */
+	/** Button running the top-to-bottom automatic layout; drawn in half the row after an arrow the panel draws itself, so keep it short and leave the arrow out (the command's label is its tooltip) */
 	propertyPanelAutoLayoutTopToBottom: string;
-	/** Button running the left-to-right automatic layout; drawn in half the row, so keep it short (the command's label is its tooltip) */
+	/** Button running the left-to-right automatic layout; drawn in half the row after an arrow the panel draws itself, so keep it short and leave the arrow out (the command's label is its tooltip) */
 	propertyPanelAutoLayoutLeftToRight: string;
 	/** Label of the color row (fill, stroke, font color) */
 	propertyPanelRowColor: string;

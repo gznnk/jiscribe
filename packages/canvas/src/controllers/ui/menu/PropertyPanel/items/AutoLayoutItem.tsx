@@ -7,23 +7,35 @@ import type { CanvasMessages } from "../../../../../foundation/i18n/CanvasMessag
 import { resolveCommandLabel } from "../../../../commands/CommandUtils";
 import { commandAction } from "../../../../gestures/handlers/menu/utils/menuActions";
 import { useCommandState } from "../../../../hooks/useCommandState";
+import { ArrowDownIcon } from "../../../icons/ArrowDownIcon";
+import { ArrowRightIcon } from "../../../icons/ArrowRightIcon";
 import {
 	PropertyCommandButton,
+	PropertyCommandButtonContent,
 	PropertyCommandGrid,
 } from "../common/PropertyControlsStyled";
 import { PropertyRow } from "../common/PropertyRow";
 
-/** Each layout command with the short text its button shows; the command's label is the tooltip. */
+/** Edge in px of the arrow drawn before each button's text; both arrows share it. */
+const ARROW_ICON_SIZE = 12;
+
+/**
+ * Each layout command with the arrow and the short text its button shows; the
+ * command's label is the tooltip.
+ */
 const AUTO_LAYOUT_BUTTONS: readonly {
 	commandId: string;
+	Icon: React.ComponentType<{ width?: number; height?: number }>;
 	readText: (messages: CanvasMessages) => string;
 }[] = [
 	{
 		commandId: "layoutTopToBottom",
+		Icon: ArrowDownIcon,
 		readText: (messages) => messages.propertyPanelAutoLayoutTopToBottom,
 	},
 	{
 		commandId: "layoutLeftToRight",
+		Icon: ArrowRightIcon,
 		readText: (messages) => messages.propertyPanelAutoLayoutLeftToRight,
 	},
 ];
@@ -43,7 +55,7 @@ const AutoLayoutItemComponent: React.FC<
 	return (
 		<PropertyRow label={messages.propertyPanelAutoLayout}>
 			<PropertyCommandGrid>
-				{AUTO_LAYOUT_BUTTONS.map(({ commandId, readText }) => {
+				{AUTO_LAYOUT_BUTTONS.map(({ commandId, Icon, readText }) => {
 					const resolved = resolveCommand(commandId);
 					if (!resolved) {
 						return null;
@@ -56,7 +68,10 @@ const AutoLayoutItemComponent: React.FC<
 							title={resolveCommandLabel(resolved.command, messages, locale)}
 							data-action={commandAction(commandId)}
 						>
-							{readText(messages)}
+							<PropertyCommandButtonContent>
+								<Icon width={ARROW_ICON_SIZE} height={ARROW_ICON_SIZE} />
+								<span>{readText(messages)}</span>
+							</PropertyCommandButtonContent>
 						</PropertyCommandButton>
 					);
 				})}

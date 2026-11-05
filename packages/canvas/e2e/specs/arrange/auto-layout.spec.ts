@@ -84,6 +84,31 @@ test.describe("automatic layout", () => {
 		for (const button of buttons) {
 			await expect(button).toBeEnabled();
 		}
+		// Each button draws its arrow as an icon of one shared size, clear of its text,
+		// rather than carrying an arrow character the font sizes per glyph.
+		const looks = await Promise.all(
+			buttons.map((button) =>
+				button.evaluate((element) => {
+					const icons = element.querySelectorAll("svg");
+					const iconBox = icons[0]?.getBoundingClientRect();
+					const textBox = element
+						.querySelector("span > span")
+						?.getBoundingClientRect();
+					return {
+						iconCount: icons.length,
+						iconSize: iconBox ? [iconBox.width, iconBox.height] : null,
+						gap: iconBox && textBox ? textBox.left - iconBox.right : null,
+						text: element.textContent ?? "",
+					};
+				}),
+			),
+		);
+		for (const look of looks) {
+			expect(look.iconCount).toBe(1);
+			expect(look.gap).toBeGreaterThan(0);
+			expect(look.text).not.toMatch(/[↓→←↑]/u);
+		}
+		expect(looks[0].iconSize).toEqual(looks[1].iconSize);
 
 		await canvas.selectAll();
 		await expect(
