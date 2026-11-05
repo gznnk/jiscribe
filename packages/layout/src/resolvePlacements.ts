@@ -14,7 +14,8 @@ export type PlacementCandidate = {
 	kind: "node" | "group" | "containerShape";
 	/**
 	 * Height in px of a container shape's title band (see
-	 * `LayoutGraphContainer.titleHeight`); read only on a container shape, defaults to 0.
+	 * `LayoutGraphContainer.titleHeight`), as the type answers it; read only on a
+	 * container shape. Missing, or anything but a finite positive number, counts as 0.
 	 */
 	titleHeight?: number;
 	/** A group's children, connectors left out; read only on a group. */
@@ -37,9 +38,15 @@ export type ResolvedContainer = {
 	isShape: boolean;
 	/** Id of the container this one sits inside, among the resolved containers. */
 	parentId?: string;
-	/** The candidate's `titleHeight` for a container shape; 0 for a group. */
+	/** The candidate's `titleHeight` for a container shape, 0 when it is not a finite positive number; 0 for a group. */
 	titleHeight: number;
 };
+
+/** The candidate's title band, with anything but a finite positive number read as none. */
+const readTitleHeight = ({ titleHeight }: PlacementCandidate): number =>
+	titleHeight !== undefined && Number.isFinite(titleHeight) && titleHeight > 0
+		? titleHeight
+		: 0;
 
 type Placement = {
 	candidate: PlacementCandidate;
@@ -162,7 +169,7 @@ export const resolvePlacements = (
 				bounds: placement.candidate.bounds,
 				isShape,
 				...parentOf(placement),
-				titleHeight: isShape ? (placement.candidate.titleHeight ?? 0) : 0,
+				titleHeight: isShape ? readTitleHeight(placement.candidate) : 0,
 			};
 		}),
 	};

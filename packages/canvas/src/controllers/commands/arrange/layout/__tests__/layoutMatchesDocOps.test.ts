@@ -4,7 +4,9 @@ import { describe, expect, it } from "vitest";
 
 import {
 	buildChainDoc,
+	buildKeptEndsDoc,
 	buildMixedDoc,
+	buildOvalRegionDoc,
 	buildRegionDoc,
 	layoutDocOps,
 	layoutRegistries,
@@ -132,6 +134,24 @@ describe("the layout commands write what the doc op writes", () => {
 		expectSameAsDocOps(
 			buildRegionDoc(),
 			["region-1", "rect-3"],
+			LayoutLeftToRightCommand.id,
+			"LR",
+		);
+	});
+
+	it("for an end on a declared connect point and a self loop", () => {
+		expectSameAsDocOps(
+			buildKeptEndsDoc(),
+			["ported-1", "rect-1", "rect-2"],
+			LayoutTopToBottomCommand.id,
+			"TB",
+		);
+	});
+
+	it("for a container moved whole", () => {
+		expectSameAsDocOps(
+			buildOvalRegionDoc(),
+			["oval-1", "rect-3"],
 			LayoutLeftToRightCommand.id,
 			"LR",
 		);

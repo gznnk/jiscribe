@@ -1,4 +1,3 @@
-import type { Rect } from "@jiscribe/geometry";
 import {
 	type LayoutGraphEdge,
 	type PlacementCandidate,
@@ -9,6 +8,7 @@ import {
 	splitLayoutGraph,
 } from "@jiscribe/layout";
 
+import { measureObjectBounds } from "./measureObjectBounds";
 import { resolveConnectorLabelBox } from "../../../../rendering/objects/connector/geometry/label/connectorLabelLayout";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import {
@@ -18,7 +18,6 @@ import {
 import { isGroupState } from "../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
-import { calcObjectBoundingBox } from "../../../utils/calcObjectBoundingBox";
 import { sortObjectIdsByZOrder } from "../../../utils/sortObjectIdsByZOrder";
 
 /** One graph to arrange on its own, as `computeLayeredLayout` takes it once sized. */
@@ -58,34 +57,19 @@ export const collectConnectorsInTreeOrder = (
 };
 
 /**
- * The title band a container type keeps on this object, read from its doc the way
- * the doc layer's layout reads it: anything but a finite positive number counts as none.
+ * The title band a container type answers for this object, read from its doc as the
+ * doc layer's layout reads it, or undefined when the type declares no container (the
+ * object is a box like any other). resolvePlacements reads a band that is not a
+ * finite positive number as none.
  */
-const readTitleHeight = (
+const readContainerTitleHeight = (
 	object: ObjectState,
 	registries: ICanvasRegistries,
 ): number | undefined => {
 	const container = registries.objectContainer.get(object.type);
-	if (container === undefined) {
-		return undefined;
-	}
-	const { titleHeight } = container(registries.objectMapper.toDoc(object));
-	return Number.isFinite(titleHeight) && titleHeight > 0 ? titleHeight : 0;
-};
-
-const measureObject = (
-	object: ObjectState,
-	objects: Record<string, ObjectState>,
-): Rect | undefined => {
-	const box = calcObjectBoundingBox(object, objects);
-	return box === null
+	return container === undefined
 		? undefined
-		: {
-				x: box.left,
-				y: box.top,
-				width: box.right - box.left,
-				height: box.bottom - box.top,
-			};
+		: container(registries.objectMapper.toDoc(object)).titleHeight;
 };
 
 /**
@@ -102,7 +86,7 @@ const toCandidates = (
 		if (object === undefined || isConnectorState(object)) {
 			return [];
 		}
-		const bounds = measureObject(object, state.objects);
+		const bounds = measureObjectBounds(object, state.objects);
 		if (bounds === undefined) {
 			return [];
 		}
@@ -116,7 +100,7 @@ const toCandidates = (
 				},
 			];
 		}
-		const titleHeight = readTitleHeight(object, registries);
+		const titleHeight = readContainerTitleHeight(object, registries);
 		return titleHeight === undefined
 			? [{ id, bounds, kind: "node" }]
 			: [{ id, bounds, kind: "containerShape", titleHeight }];
@@ -151,7 +135,7 @@ const collectSelectedCandidateIds = (
 		) {
 			continue;
 		}
-		const containerBox = measureObject(selected, state.objects);
+		const containerBox = measureObjectBounds(selected, state.objects);
 		if (containerBox === undefined) {
 			continue;
 		}
@@ -164,7 +148,7 @@ const collectSelectedCandidateIds = (
 			) {
 				continue;
 			}
-			const siblingBox = measureObject(sibling, state.objects);
+			const siblingBox = measureObjectBounds(sibling, state.objects);
 			if (siblingBox !== undefined && isRectInside(containerBox, siblingBox)) {
 				candidateIds.add(siblingId);
 			}
@@ -275,19 +259,33 @@ export const resolveLayoutScope = (
 };
 
 /**
- * Whether an automatic layout has anything to arrange: a selection resolving to two
- * or more nodes, or, with nothing selected, a connector joining two different
- * objects that are not connectors (a cheap stand-in for the parts resolveLayoutScope
- * keeps; a canvas whose only lines end on container shapes may still arrange nothing).
+ * Whether an automatic layout may have anything to arrange, answered without
+ * measuring anything, since the sidebar asks on every frame of a drag: a selection of
+ * at least two objects that are not connectors, or of one group or one shape whose
+ * type declares a container (what it holds is arranged); with nothing selected, a
+ * connector joining two different objects that are not connectors. A stand-in for
+ * resolveLayoutScope, which execute runs, returning the state unchanged when it finds
+ * nothing to arrange (a selection holding objects with no extent, a canvas whose only
+ * lines end on container shapes).
  */
 export const hasLayoutScope = (
 	state: CanvasControllerState,
 	registries: ICanvasRegistries,
 ): boolean => {
-	if (state.selection.objectIds.length > 0) {
+	const selectedIds = state.selection.objectIds;
+	if (selectedIds.length > 0) {
+		const selectedObjects = selectedIds.flatMap((id) => {
+			const object = state.objects[id];
+			return object === undefined || isConnectorState(object) ? [] : [object];
+		});
+		if (selectedObjects.length >= MIN_LAYOUT_NODES) {
+			return true;
+		}
+		const [sole] = selectedObjects;
 		return (
-			resolveCandidatePlacements(state, registries).nodes.length >=
-			MIN_LAYOUT_NODES
+			sole !== undefined &&
+			(isGroupState(sole) ||
+				registries.objectContainer.get(sole.type) !== undefined)
 		);
 	}
 	return Object.values(state.objects).some((object) => {

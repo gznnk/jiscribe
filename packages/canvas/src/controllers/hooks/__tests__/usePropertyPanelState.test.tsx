@@ -121,6 +121,21 @@ describe("usePropertyPanelState", () => {
 		expect(render(otherMoved)).toBe(first);
 	});
 
+	it("moves to the new state on any change of the objects while nothing is selected", () => {
+		const initial = { ...baseState(), selection: selectionOf([]) };
+		const { first, render } = mount(initial);
+		const panned = {
+			...initial,
+			viewport: { ...initial.viewport, minX: initial.viewport.minX + 10 },
+		};
+		expect(render(panned)).toBe(first);
+		const otherMoved = {
+			...panned,
+			objects: { ...panned.objects, other: rectAt("other", 200) },
+		};
+		expect(render(otherMoved)).toBe(otherMoved);
+	});
+
 	it("moves to the new state when the selected object changes", () => {
 		const initial = baseState();
 		const { render } = mount(initial);

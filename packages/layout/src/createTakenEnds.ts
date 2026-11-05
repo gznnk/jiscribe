@@ -19,7 +19,12 @@ export type TakenEnds = {
 	 * {@link EDGE_END_SPACING} from every end already there, within a tenth of the side
 	 * at either end, or the midpoint itself when nothing fits; taken from then on.
 	 *
-	 * @param box - The owner's box, for the side's length
+	 * @param ownerId - Matched against {@link TakenEnd.ownerId}; ends are tracked per
+	 *   owner and side, so an end on another object never crowds this one
+	 * @param side - The only side searched: when it is full the midpoint is handed out,
+	 *   never a position on a neighbouring side
+	 * @param box - The owner's box, for the side's length; a zero-length side
+	 *   always gets the midpoint
 	 */
 	place: (ownerId: string, side: LayoutSide, box: Rect) => LayoutEdgeAnchor;
 };

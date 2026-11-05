@@ -9,7 +9,10 @@ import { isPropertyPanelShown } from "../utils/sidebarsState";
  * entry. The selection comes first; after it, the objects the selection
  * names — each selected object and, for a group, its descendants — which is the
  * only part of `objects` any row looks at (a row's frame, style, note and parent
- * are all fields of those objects).
+ * are all fields of those objects). With nothing selected, `objects` itself takes
+ * their place: the Canvas section's auto layout buttons are enabled by the
+ * connectors anywhere in the drawing, which an undo or an external sync can add or
+ * remove while nothing is selected.
  *
  * Kept in step with what PropertyPanel and its rows read: a field added to the
  * panel's reads and left out here goes stale on screen without a warning.
@@ -22,6 +25,7 @@ const readPropertyPanelKey = (state: CanvasControllerState): unknown[] => {
 		),
 	]);
 	return [
+		state.selection.objectIds.length === 0 ? state.objects : null,
 		state.selection.objectIds,
 		state.selection.part,
 		state.mode,
@@ -46,7 +50,8 @@ const isSameKey = (previous: unknown[], next: unknown[]): boolean =>
  * which there is one on nearly every pointer move.
  *
  * The sidebar therefore sees the rest of the state (the viewport, the
- * history, objects outside the selection) as of the last change it cared
+ * history, objects outside the selection while something is selected) as of
+ * the last change it cared
  * about. Nothing it draws reads those, which is what makes the latch safe;
  * see `readPropertyPanelKey` for the reads it does make.
  *

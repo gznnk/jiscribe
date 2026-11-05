@@ -10,30 +10,6 @@ import {
 } from "./objectGeometry";
 import { GroupFeatures } from "../../model/objects/primitives/group/GroupDoc";
 
-/** A shape whose type declares itself a container other objects sit inside (`ObjectDocDefinition.container`). */
-const isContainerShape = (
-	object: ObjectRecord,
-	definitions: DocDefinitions,
-): boolean => definitions.get(object.type)?.container !== undefined;
-
-/**
- * Room the container's type keeps for its title band on this object; a group has none,
- * and a band that is not a finite positive number counts as none.
- */
-const readTitleHeight = (
-	object: ObjectRecord,
-	definitions: DocDefinitions,
-): number => {
-	const titleHeight = definitions
-		.get(object.type)
-		?.container?.(object).titleHeight;
-	return titleHeight !== undefined &&
-		Number.isFinite(titleHeight) &&
-		titleHeight > 0
-		? titleHeight
-		: 0;
-};
-
 const isGroupObject = (object: ObjectRecord): boolean =>
 	object.type === GroupFeatures.type;
 
@@ -92,6 +68,8 @@ export const collectPlacements = (
 			if (!objectById.has(object.id)) {
 				objectById.set(object.id, object);
 			}
+			// A type declaring `container` makes a container shape of every object of it.
+			const container = definitions.get(object.type)?.container;
 			if (isGroupObject(object)) {
 				placementCandidates.push({
 					id: object.id,
@@ -99,12 +77,12 @@ export const collectPlacements = (
 					kind: "group",
 					children: toCandidates(readChildren(object)),
 				});
-			} else if (isContainerShape(object, definitions)) {
+			} else if (container !== undefined) {
 				placementCandidates.push({
 					id: object.id,
 					bounds,
 					kind: "containerShape",
-					titleHeight: readTitleHeight(object, definitions),
+					titleHeight: container(object).titleHeight,
 				});
 			} else {
 				placementCandidates.push({ id: object.id, bounds, kind: "node" });

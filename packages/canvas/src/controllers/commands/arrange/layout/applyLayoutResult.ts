@@ -1,8 +1,7 @@
 import {
-	type EndpointRef,
 	type OwnedEndpointRef,
-	isConnectPointId,
-	toEquivalentEdgeAnchor,
+	isOnDeclaredConnectPoint,
+	listEdgeAnchoredEnds,
 } from "@jiscribe/doc/model/objects/types/EndpointRef";
 import { isFrame } from "@jiscribe/geometry";
 import type { Frame, Point, Rect } from "@jiscribe/geometry";
@@ -15,6 +14,7 @@ import {
 	createTakenEnds,
 } from "@jiscribe/layout";
 
+import { measureObjectBounds } from "./measureObjectBounds";
 import {
 	type LayoutScopeGraph,
 	collectConnectorsInTreeOrder,
@@ -26,16 +26,7 @@ import {
 } from "../../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
-import { calcObjectBoundingBox } from "../../../utils/calcObjectBoundingBox";
 import { moveObjectTree } from "../../../utils/moveObjectTree";
-
-/**
- * Whether an end sits on a connect point the owner's type declares beyond the four
- * edge midpoints (an ER entity's column): it is kept where the author put it.
- */
-const keepsOwnAnchor = (endpoint: EndpointRef): boolean =>
-	endpoint.anchor.kind === "connectPoint" &&
-	!isConnectPointId(endpoint.anchor.id);
 
 const toEdgeEndpoint = (
 	ownerId: string,
@@ -49,34 +40,6 @@ const toEdgeEndpoint = (
 const clearRoute = (connector: ConnectorState): ConnectorState => {
 	const { routing: _routing, ...rest } = connector;
 	return { ...rest, points: [] } as ConnectorState;
-};
-
-const noteTakenEnds = (
-	connector: ConnectorState,
-	takenEnds: TakenEnd[],
-): void => {
-	for (const endpoint of [connector.source, connector.target]) {
-		const ownerId = endpoint.owner?.id;
-		const edgeAnchor = toEquivalentEdgeAnchor(endpoint.anchor);
-		if (ownerId !== undefined && edgeAnchor !== null) {
-			takenEnds.push({ ownerId, side: edgeAnchor.side, t: edgeAnchor.t });
-		}
-	}
-};
-
-const measureBox = (
-	object: ObjectState,
-	objects: Record<string, ObjectState>,
-): Rect | undefined => {
-	const box = calcObjectBoundingBox(object, objects);
-	return box === null
-		? undefined
-		: {
-				x: box.left,
-				y: box.top,
-				width: box.right - box.left,
-				height: box.bottom - box.top,
-			};
 };
 
 /**
@@ -140,8 +103,8 @@ const layOutGraph = (
 		if (!isConnectorState(connector)) {
 			continue;
 		}
-		const sourceKept = keepsOwnAnchor(connector.source);
-		const targetKept = keepsOwnAnchor(connector.target);
+		const sourceKept = isOnDeclaredConnectPoint(connector.source);
+		const targetKept = isOnDeclaredConnectPoint(connector.target);
 		const keepsRoute = !(sourceKept || targetKept);
 		const { label } = connector;
 		const rerouted: ConnectorState = {
@@ -172,7 +135,7 @@ const layOutGraph = (
 				: {}),
 		};
 		objects[connector.id] = rerouted;
-		noteTakenEnds(rerouted, takenEnds);
+		takenEnds.push(...listEdgeAnchoredEnds([rerouted]));
 		writtenIds.push(connector.id);
 	}
 
@@ -250,7 +213,7 @@ const redrawContainerConnectors = (
 		...graphs.flatMap(({ nodes }) => nodes.map(({ id }) => id)),
 	]);
 	const boxOf = (id: string): Rect | undefined =>
-		arrangedIds.has(id) ? measureBox(objects[id], objects) : undefined;
+		arrangedIds.has(id) ? measureObjectBounds(objects[id], objects) : undefined;
 	const freeEnds = createTakenEnds(takenEnds);
 	const redrawnIds: string[] = [];
 	for (const srcConnector of collectConnectorsInTreeOrder(state)) {
@@ -275,13 +238,13 @@ const redrawContainerConnectors = (
 		const sides = calcFacingSides(sourceBox, targetBox);
 		const redrawn: ConnectorState = {
 			...clearRoute(connector),
-			source: keepsOwnAnchor(connector.source)
+			source: isOnDeclaredConnectPoint(connector.source)
 				? connector.source
 				: toEdgeEndpoint(
 						sourceId,
 						freeEnds.place(sourceId, sides.source.side, sourceBox),
 					),
-			target: keepsOwnAnchor(connector.target)
+			target: isOnDeclaredConnectPoint(connector.target)
 				? connector.target
 				: toEdgeEndpoint(
 						targetId,

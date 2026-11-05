@@ -10,15 +10,12 @@ import {
 	type LayoutGraphContainer,
 	type LayoutGraphEdge,
 	type LayoutGraphNode,
+	type TakenEnd,
 } from "@jiscribe/layout";
 
 import { DocOperationError } from "./errors";
 import { buildEndpoint } from "./utils/connectorEndpoints";
-import {
-	keepsOwnAnchor,
-	listTakenEnds,
-	readOwnerId,
-} from "./utils/layoutConnectorEnds";
+import { readOwnerId } from "./utils/layoutConnectorEnds";
 import {
 	type PlacedContainer,
 	type PlacedNode,
@@ -42,6 +39,10 @@ import {
 	CONNECTOR_LABEL_DEFAULTS,
 	type ConnectorDoc,
 } from "../model/objects/connector/ConnectorDoc";
+import {
+	isOnDeclaredConnectPoint,
+	listEdgeAnchoredEnds,
+} from "../model/objects/types/EndpointRef";
 import { calcTextBlockSize } from "../text/block/calcTextBlockSize";
 
 export type { LayoutDirection } from "@jiscribe/layout";
@@ -248,8 +249,8 @@ const writeRoutes = (
 	);
 	const writes: ConnectorWrite[] = laidOutEdges.map((laidOutEdge) => {
 		const connector = connectorById.get(laidOutEdge.id) as ConnectorDoc;
-		const sourceKept = keepsOwnAnchor(connector.source);
-		const targetKept = keepsOwnAnchor(connector.target);
+		const sourceKept = isOnDeclaredConnectPoint(connector.source);
+		const targetKept = isOnDeclaredConnectPoint(connector.target);
 		return {
 			connector,
 			laidOutEdge,
@@ -329,7 +330,8 @@ const redrawContainerConnectors = (
 			: requireObjectBounds(object, definitions);
 	};
 	const locatedOwners = locateObjects(doc, new Set(placedById.keys()));
-	const takenEnds = createTakenEnds(listTakenEnds(written));
+	const writtenEnds: TakenEnd[] = listEdgeAnchoredEnds(written);
+	const takenEnds = createTakenEnds(writtenEnds);
 	const redrawnIds: string[] = [];
 	visitObjects(doc.root, (object) => {
 		if (!isConnectorObject(object)) {
@@ -351,7 +353,7 @@ const redrawContainerConnectors = (
 			return;
 		}
 		const sides = calcFacingSides(sourceBox, targetBox);
-		if (!keepsOwnAnchor(connector.source)) {
+		if (!isOnDeclaredConnectPoint(connector.source)) {
 			connector.source = buildEndpoint(
 				locatedOwners,
 				sourceId,
@@ -359,7 +361,7 @@ const redrawContainerConnectors = (
 				definitions,
 			);
 		}
-		if (!keepsOwnAnchor(connector.target)) {
+		if (!isOnDeclaredConnectPoint(connector.target)) {
 			connector.target = buildEndpoint(
 				locatedOwners,
 				targetId,

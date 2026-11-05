@@ -3,7 +3,9 @@ import { describe, expect, it } from "vitest";
 
 import {
 	buildChainDoc,
+	buildKeptEndsDoc,
 	buildMixedDoc,
+	buildOvalRegionDoc,
 	buildRegionDoc,
 	layoutDocOps,
 	layoutRegistries,
@@ -218,7 +220,34 @@ describe("layout commands", () => {
 			expect(result.multiSelectGroup).not.toEqual(state.multiSelectGroup);
 		});
 
-		it("is not offered for fewer than two objects to place, nor while text is edited", () => {
+		it("is offered for two shapes, a sole group or a sole container shape, without measuring", () => {
+			const doc = buildChainDoc();
+			layoutDocOps.groupObjects(doc, ["rect-1", "rect-2"]);
+			const twoShapes = createState(buildChainDoc(), ["rect-4", "rect-5"]);
+			const soleGroup = createState(doc, ["group-1"]);
+			const soleRegion = createState(buildRegionDoc(), ["region-1"]);
+
+			for (const state of [twoShapes, soleGroup, soleRegion]) {
+				expect(
+					LayoutTopToBottomCommand.canExecute(state, layoutRegistries),
+				).toBe(true);
+			}
+		});
+
+		it("changes nothing for a sole container shape that holds nothing", () => {
+			const doc = buildRegionDoc();
+			layoutDocOps.deleteObjects(doc, ["rect-1", "rect-2"]);
+			const state = createState(doc, ["region-1"]);
+
+			expect(LayoutTopToBottomCommand.canExecute(state, layoutRegistries)).toBe(
+				true,
+			);
+			expect(LayoutTopToBottomCommand.execute(state, layoutRegistries)).toBe(
+				state,
+			);
+		});
+
+		it("is not offered for a sole plain shape, a connector alone, nor while text is edited", () => {
 			const single = createState(buildChainDoc(), ["rect-1"]);
 			const lineOnly = createState(buildChainDoc(), ["connector-1"]);
 			const editing: CanvasControllerState = {
@@ -258,6 +287,59 @@ describe("layout commands", () => {
 			expect(twice.commitVersion).toBe(once.commitVersion);
 			expect(twice.history.past).toHaveLength(once.history.past.length);
 		}
+	});
+
+	it("leaves an end on a declared connect point where it is, and the route to the engine", () => {
+		const result = runLayout(createState(buildKeptEndsDoc()));
+
+		const connector = result.objects["connector-1"] as ConnectorState;
+		expect(connector.source).toEqual({
+			owner: { id: "ported-1" },
+			anchor: { kind: "connectPoint", id: "east" },
+		});
+		expect(connector.target.anchor.kind).toBe("edge");
+		expect(connector.points).toEqual([]);
+		const reversed = result.objects["connector-4"] as ConnectorState;
+		expect(reversed.target).toEqual({
+			owner: { id: "ported-1" },
+			anchor: { kind: "connectPoint", id: "east" },
+		});
+		expect(reversed.source.anchor.kind).toBe("edge");
+	});
+
+	it("hands a self loop's route back to the engine", () => {
+		const state = createState(buildKeptEndsDoc());
+
+		const result = runLayout(state);
+
+		const selfLoop = result.objects["connector-3"] as ConnectorState;
+		const before = state.objects["connector-3"] as ConnectorState;
+		expect(before.points).toHaveLength(3);
+		expect(selfLoop.points).toEqual([]);
+		expect(selfLoop.routing).toBeUndefined();
+		// Its ends stay where they were.
+		expect(selfLoop.source).toEqual(before.source);
+		expect(selfLoop.target).toEqual(before.target);
+	});
+
+	it("moves a container whose geometry is not a rect's whole, keeping its size", () => {
+		const state = createState(buildOvalRegionDoc(), ["oval-1", "rect-3"]);
+
+		const result = runLayout(state);
+
+		const frameOf = (target: CanvasControllerState) =>
+			target.objects["oval-1"] as unknown as {
+				cx: number;
+				cy: number;
+				width: number;
+				height: number;
+			};
+		expect(frameOf(result).width).toBe(frameOf(state).width);
+		expect(frameOf(result).height).toBe(frameOf(state).height);
+		expect(frameOf(result)).not.toEqual(frameOf(state));
+		expect(topLeftOf(result, "rect-2").y).toBeGreaterThan(
+			topLeftOf(result, "rect-1").y,
+		);
 	});
 
 	it("re-anchors a line between arranged objects on the facing sides and drops its routing", () => {

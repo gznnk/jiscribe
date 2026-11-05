@@ -62,6 +62,17 @@ describe("resolvePlacements", () => {
 		]);
 	});
 
+	it.each([undefined, 0, -5, Number.NaN, Number.POSITIVE_INFINITY])(
+		"reads a title band of %s as none",
+		(titleHeight) => {
+			const { containers } = resolvePlacements([
+				containerShape("vpc", 0, 0, 200, 100, titleHeight),
+				box("a", 10, 10),
+			]);
+			expect(containers[0]?.titleHeight).toBe(0);
+		},
+	);
+
 	it("gives a box inside nested container shapes to the smallest one", () => {
 		const { nodes, containers } = resolvePlacements([
 			containerShape("outer", 0, 0, 400, 300),
