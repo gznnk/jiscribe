@@ -44,7 +44,6 @@ import {
 	layoutTextLines,
 	offerNodeTextMeasurement,
 } from "./measureWrappedText";
-import { diagnoseOccludedObjects } from "./occludedObjects";
 import { resolveContentBox } from "./resolveContentBox";
 import { diagnoseSvgIdCollisions } from "./svgIdCollisions";
 import { diagnoseUnmeasuredFonts } from "./unmeasuredFonts";
@@ -703,13 +702,9 @@ const readFinding = (
  * ER entity no longer has — is drawn at the owner's center, and is a warning
  * ({@link diagnoseConnectorConnectPoints}).
  *
- * What a reader cannot see at all is a warning too: a shape whose whole box a
- * shape drawn after it fills over with an opaque fill
- * ({@link import("./occludedObjects").diagnoseOccludedObjects}; a document
- * with too many shapes overlapping left to right gets one document-wide warning
- * that the check stopped instead), and an svg whose
- * markup refers to an id an svg drawn before it also defines, the two sharing one
- * page ({@link import("./svgIdCollisions").diagnoseSvgIdCollisions}). Whether an
+ * What a reader cannot see as drawn is a warning too: an svg whose markup
+ * refers to an id an svg drawn before it also defines, the two sharing one page
+ * ({@link import("./svgIdCollisions").diagnoseSvgIdCollisions}). Whether an
  * image's file is there is a matter of the disk rather than the document, and is
  * `diagnoseImageSources` in `./file`.
  *
@@ -743,12 +738,11 @@ const readFinding = (
  * warnings.
  *
  * @param doc - A parsed document, as `validateDoc` returns; group children are checked along with the objects at the root
- * @returns One error per overflowing object and per message a type's declared overflow check returns, in document order, plus a warning per text whose lines start where typesetting forbids, per frame-placed body reaching outside its type's declared region, per connector whose label does not fit between its shapes, per connector end naming a connect point its owner does not offer, per object of a text-bearing type that declares no region, per point-geometry object whose type declares no size, per object hidden under another's opaque fill, and per svg referring to an id an earlier svg defines — all of these on their object, in document order — then per `"source"` type whose text went unmeasured, one if the hidden-shape check stopped short, and per font stack measured by estimate (none of these with an `objectId`; the objects are listed in the message); empty when everything fits
+ * @returns One error per overflowing object and per message a type's declared overflow check returns, in document order, plus a warning per text whose lines start where typesetting forbids, per frame-placed body reaching outside its type's declared region, per connector whose label does not fit between its shapes, per connector end naming a connect point its owner does not offer, per object of a text-bearing type that declares no region, per point-geometry object whose type declares no size, and per svg referring to an id an earlier svg defines — all of these on their object, in document order — then per `"source"` type whose text went unmeasured and per font stack measured by estimate (none of these with an `objectId`; the objects are listed in the message); empty when everything fits
  */
 export const diagnoseDoc = (doc: CanvasDoc): Diagnostic[] => {
 	const objects = flattenObjects(doc.root);
 	const objectsById = indexObjectsById(objects);
-	const occlusions = diagnoseOccludedObjects(doc, objects);
 	const svgIdCollisions = diagnoseSvgIdCollisions(objects);
 	return [
 		...objects.flatMap((object) => [
@@ -758,11 +752,9 @@ export const diagnoseDoc = (doc: CanvasDoc): Diagnostic[] => {
 			...diagnoseConnectorLabel(object, objectsById),
 			...diagnoseConnectorLabelLineStarts(object),
 			...diagnoseConnectorConnectPoints(object, objectsById),
-			...readFinding(occlusions.hiddenObjects, object),
 			...readFinding(svgIdCollisions, object),
 		]),
 		...diagnoseUncheckedSourceText(objects),
-		...(occlusions.stopped === null ? [] : [occlusions.stopped]),
 		...diagnoseUnmeasuredFonts(objects),
 	];
 };

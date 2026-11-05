@@ -29,8 +29,7 @@ as one object. Globs are the shell's: `jiscribe validate 'diagrams/**/*.jis'`.
 
 `diagnose` adds to validation what `diagnoseDoc` finds — text overflowing its
 shape or opening a line on a closing mark, a connector label wider than its gap,
-a shape hidden under another's opaque fill, an svg whose reference may resolve to
-another svg's id, a font measured only by estimate — and what
+an svg whose reference may resolve to another svg's id, a font measured only by estimate — and what
 `diagnoseImageSources` finds on disk: an `image` whose `src` names no file beside
 the document (an error, the canvas drawing a placeholder box), or one reached
 through a link out of the document's directory (a warning, the MCP viewer alone

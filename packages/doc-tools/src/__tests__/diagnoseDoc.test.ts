@@ -46,6 +46,30 @@ describe("diagnoseDoc", () => {
 		expect(diagnoseDoc(readFixture("fitting.jis.json"))).toEqual([]);
 	});
 
+	it("leaves a shape drawn wholly under a later shape's opaque fill unreported", () => {
+		// Layering is the author's to judge: an illustration hides shapes on
+		// purpose, so covering is left to the find_overlaps tool.
+		const doc = parseDoc(
+			{
+				version: 1,
+				root: [
+					{ type: "rect", id: "under", x: 40, y: 40, width: 80, height: 40 },
+					{
+						type: "rect",
+						id: "cover",
+						x: 0,
+						y: 0,
+						width: 200,
+						height: 120,
+						fill: "#E2E8F0",
+					},
+				],
+			},
+			"a rect covered by a later opaque rect",
+		);
+		expect(diagnoseDoc(doc)).toEqual([]);
+	});
+
 	it("reports the object whose text does not fit, and only that one", () => {
 		const diagnostics = diagnoseDoc(readFixture("overflowing.jis.json"));
 		expect(diagnostics).toHaveLength(1);

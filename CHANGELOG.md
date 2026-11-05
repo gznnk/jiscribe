@@ -15,14 +15,9 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Added
 
-- **`diagnoseDoc` reports four more things a reader cannot see as written**,
-  and `jiscribe diagnose` with it. A shape whose whole box is under a later
-  shape's opaque fill is a warning naming the cover: the covers are the shipped
-  types whose fill paints their whole box or ellipse (`rect`, `ellipse`,
-  `container`, `sticky`, `markdown`, `record`, `umlComponent`, `table`,
-  `erEntity`, `awsGroup`), and partial overlaps are left to `find_overlaps`.
-  An `svg` that references an internal id an earlier `svg` also defines is a
-  warning, all markup sharing one page. A Japanese line-start prohibition is
+- **`diagnoseDoc` reports three more things a reader cannot see as written**,
+  and `jiscribe diagnose` with it. An `svg` that references an internal id an
+  earlier `svg` also defines is a warning, all markup sharing one page. A Japanese line-start prohibition is
   now looked for in text nothing wraps too — a `text` in its label layout and a
   label drawn outside its shape — at the breaks the author typed. And a font
   stack naming no family the canvas ships (or none installed) is one
