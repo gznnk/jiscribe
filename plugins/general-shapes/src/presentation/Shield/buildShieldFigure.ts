@@ -1,4 +1,4 @@
-import { calcShieldCurve } from "./calcShieldCurve";
+import { calcShieldCurve } from "../../schema/shield/calcShieldCurve";
 import type { PictogramFigureBuilder } from "../shared/PictogramFigure";
 
 /**

@@ -1,23 +1,16 @@
 import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
-import type { Dimensions, Rect } from "@jiscribe/geometry";
-
-import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import type { ObjectDocAnchorRegionCalculator } from "@jiscribe/doc/plugin/ObjectDocAnchorRegion";
+import type { Dimensions } from "@jiscribe/geometry";
 
 /**
- * Calculates the rect the shape's edge connect points are centered on, from its
- * state (untransformed width/height plus any per-shape fields), in the shape's
- * local coordinate space (origin at the center, top-left based Rect). The rect
- * only moves the ray origin — where the anchor lands is still decided by the
- * outline — so a silhouette that tapers (the off-page connector's bottom tip)
- * keeps its left/right anchors on the middle of the body instead of the
- * bounding box. Distinct from the text region, which may additionally inset for
- * readability. Implementations declare what they read via `TState` (most:
- * `ObjectAnchorRegionCalculator<Dimensions>`); the registry stores the default
- * instantiation, to which narrower readers are assignable by contravariance.
+ * The canvas's name for a type's anchor region declaration, which lives on the
+ * doc definition (see ObjectDocAnchorRegionCalculator,
+ * `ObjectDocDefinition.anchorRegion`): the registry calls it with the state, the
+ * doc layer with the doc.
  */
 export type ObjectAnchorRegionCalculator<
-	TState extends Dimensions = ObjectState & Dimensions,
-> = (state: TState) => Rect;
+	TState extends Dimensions = Dimensions,
+> = ObjectDocAnchorRegionCalculator<TState>;
 
 /**
  * Per-type registry of anchor region calculators. Types without a registered

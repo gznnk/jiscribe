@@ -29,6 +29,7 @@ export {
 	type LaidOutContainer,
 	type LaidOutEdge,
 	type LaidOutNode,
+	type LayoutAnchorRange,
 	type LayeredLayoutOptions,
 	type LayeredLayoutResult,
 	type LayoutEdgeAnchor,

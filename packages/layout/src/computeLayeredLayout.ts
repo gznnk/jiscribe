@@ -31,7 +31,8 @@ import {
  * container's title band is kept clear (reserveTitleBands); each label is placed on
  * its route (calcLabelPosition).
  *
- * @param nodes - The boxes to place, each with the size it keeps; ids must be distinct
+ * @param nodes - The boxes to place, each with the size it keeps; ids must be distinct.
+ *   A node's `anchorRanges` keeps every edge end on it inside the stretch it gives
  * @param edges - Directed edges between those ids. Several edges between the same pair are
  *   kept apart; an edge naming an id not in `nodes` is an error. An edge with a `label`
  *   gets room for it, in the gap it crosses or beside a rank it passes
@@ -58,10 +59,15 @@ export const computeLayeredLayout = (
 	const boundsById = new Map(
 		placed.nodes.map(({ id, bounds }) => [id, bounds] as const),
 	);
+	const anchorRangesById = new Map(
+		nodes.map(({ id, anchorRanges }) => [id, anchorRanges] as const),
+	);
 	const routes = placed.edges.map((dagreEdge) => ({
 		edge: dagreEdge.edge,
 		sourceBounds: boundsById.get(dagreEdge.edge.sourceId)!,
 		targetBounds: boundsById.get(dagreEdge.edge.targetId)!,
+		sourceAnchorRanges: anchorRangesById.get(dagreEdge.edge.sourceId),
+		targetAnchorRanges: anchorRangesById.get(dagreEdge.edge.targetId),
 		points: dropBorderPoints(dagreEdge.points, rows, axis),
 		labelPoint: dagreEdge.labelPoint,
 	}));

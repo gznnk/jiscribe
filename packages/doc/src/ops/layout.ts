@@ -7,14 +7,20 @@ import {
 	type LaidOutEdge,
 	type LayeredLayoutResult,
 	type LayoutDirection,
+	type LayoutEdgeAnchor,
 	type LayoutGraphContainer,
 	type LayoutGraphEdge,
 	type LayoutGraphNode,
+	type LayoutSide,
 	type TakenEnd,
 } from "@jiscribe/layout";
 
 import { DocOperationError } from "./errors";
 import { buildEndpoint } from "./utils/connectorEndpoints";
+import {
+	readLayoutAnchorRanges,
+	resolveLayoutAnchorShape,
+} from "./utils/layoutAnchorShapes";
 import { readOwnerId } from "./utils/layoutConnectorEnds";
 import {
 	type PlacedContainer,
@@ -35,10 +41,15 @@ import {
 	translateObject,
 } from "./utils/objectGeometry";
 import type { CanvasDoc } from "../model/canvas/CanvasDoc";
+import type { EdgeAnchorOutlineShape } from "../model/objects/connector/calcEdgeAnchorOutlineRange";
 import {
 	CONNECTOR_LABEL_DEFAULTS,
 	type ConnectorDoc,
 } from "../model/objects/connector/ConnectorDoc";
+import {
+	toAnchorRegionSidePosition,
+	toBoxSidePosition,
+} from "../model/objects/connector/convertEdgeAnchorRatio";
 import {
 	isOnDeclaredConnectPoint,
 	listEdgeAnchoredEnds,
@@ -134,22 +145,33 @@ const collectConnectors = (
 	return { edges, selfLoops };
 };
 
-/** The graph as the layout takes it, built from the placements and the connectors between them. */
+/**
+ * The graph as the layout takes it, built from the placements and the connectors
+ * between them; each node carries the stretch of its sides its outline reaches along.
+ */
 const buildGraph = (
 	nodes: readonly PlacedNode[],
 	containers: readonly PlacedContainer[],
 	edges: readonly ConnectorDoc[],
+	definitions: DocDefinitions,
 ): {
 	nodes: LayoutGraphNode[];
 	containers: LayoutGraphContainer[];
 	edges: LayoutGraphEdge[];
 } => ({
-	nodes: nodes.map(({ object, bounds, parentId }) => ({
-		id: object.id,
-		width: bounds.width,
-		height: bounds.height,
-		...(parentId !== undefined ? { parentId } : {}),
-	})),
+	nodes: nodes.map(({ object, bounds, parentId }) => {
+		const anchorRanges = readLayoutAnchorRanges(
+			object,
+			resolveLayoutAnchorShape(object, bounds, definitions),
+		);
+		return {
+			id: object.id,
+			width: bounds.width,
+			height: bounds.height,
+			...(parentId !== undefined ? { parentId } : {}),
+			...(anchorRanges !== undefined ? { anchorRanges } : {}),
+		};
+	}),
 	containers: containers.map(({ object, parentId, titleHeight }) => ({
 		id: object.id,
 		...(parentId !== undefined ? { parentId } : {}),
@@ -231,7 +253,9 @@ type ConnectorWrite = {
 
 /**
  * Give every edge its new ends and route. The ends are resolved first, so an owner
- * that does not offer the connect point leaves the document untouched.
+ * that does not offer the connect point leaves the document untouched. An end is
+ * written as a ratio of its owner's anchor region, where the layout chose it as one
+ * of the box.
  *
  * @returns The connectors written, in the layout's order
  */
@@ -239,14 +263,28 @@ const writeRoutes = (
 	doc: CanvasDoc,
 	laidOutEdges: readonly LaidOutEdge[],
 	edges: readonly ConnectorDoc[],
-	nodeIds: ReadonlySet<string>,
+	nodes: readonly PlacedNode[],
 	origin: { x: number; y: number },
 	definitions: DocDefinitions,
 ): ConnectorDoc[] => {
+	const nodeIds = new Set(nodes.map(({ object }) => object.id));
 	const locatedOwners = locateObjects(doc, nodeIds);
 	const connectorById = new Map(
 		edges.map((connector) => [connector.id, connector] as const),
 	);
+	const placedById = new Map(
+		nodes.map((placed) => [placed.object.id, placed] as const),
+	);
+	const toStoredAnchor = (
+		ownerId: string,
+		anchor: LaidOutEdge["source"],
+	): LaidOutEdge["source"] => {
+		const { object, bounds } = placedById.get(ownerId) as PlacedNode;
+		return toAnchorRegionSidePosition(
+			anchor,
+			resolveLayoutAnchorShape(object, bounds, definitions),
+		);
+	};
 	const writes: ConnectorWrite[] = laidOutEdges.map((laidOutEdge) => {
 		const connector = connectorById.get(laidOutEdge.id) as ConnectorDoc;
 		const sourceKept = isOnDeclaredConnectPoint(connector.source);
@@ -260,7 +298,10 @@ const writeRoutes = (
 				: buildEndpoint(
 						locatedOwners,
 						readOwnerId(connector.source) as string,
-						laidOutEdge.source,
+						toStoredAnchor(
+							readOwnerId(connector.source) as string,
+							laidOutEdge.source,
+						),
 						definitions,
 					),
 			target: targetKept
@@ -268,7 +309,10 @@ const writeRoutes = (
 				: buildEndpoint(
 						locatedOwners,
 						readOwnerId(connector.target) as string,
-						laidOutEdge.target,
+						toStoredAnchor(
+							readOwnerId(connector.target) as string,
+							laidOutEdge.target,
+						),
 						definitions,
 					),
 		};
@@ -329,9 +373,39 @@ const redrawContainerConnectors = (
 			? undefined
 			: requireObjectBounds(object, definitions);
 	};
+	// Read on the boxes as the placements left them: a container shape was resized.
+	const shapeOf = (id: string, box: Rect): EdgeAnchorOutlineShape =>
+		resolveLayoutAnchorShape(
+			placedById.get(id) as ObjectRecord,
+			box,
+			definitions,
+		);
 	const locatedOwners = locateObjects(doc, new Set(placedById.keys()));
-	const writtenEnds: TakenEnd[] = listEdgeAnchoredEnds(written);
+	// The ends are stored as ratios of the anchor region; the free spots are found on the box.
+	const writtenEnds: TakenEnd[] = listEdgeAnchoredEnds(written).map((end) => {
+		const box = boxOf(end.ownerId);
+		return box === undefined
+			? end
+			: toBoxSidePosition(end, shapeOf(end.ownerId, box));
+	});
 	const takenEnds = createTakenEnds(writtenEnds);
+	const placeEnd = (
+		ownerId: string,
+		side: LayoutSide,
+		box: Rect,
+	): LayoutEdgeAnchor => {
+		const object = placedById.get(ownerId) as ObjectRecord;
+		const shape = shapeOf(ownerId, box);
+		return toAnchorRegionSidePosition(
+			takenEnds.place(
+				ownerId,
+				side,
+				box,
+				readLayoutAnchorRanges(object, shape)?.[side],
+			),
+			shape,
+		);
+	};
 	const redrawnIds: string[] = [];
 	visitObjects(doc.root, (object) => {
 		if (!isConnectorObject(object)) {
@@ -357,7 +431,7 @@ const redrawContainerConnectors = (
 			connector.source = buildEndpoint(
 				locatedOwners,
 				sourceId,
-				takenEnds.place(sourceId, sides.source.side, sourceBox),
+				placeEnd(sourceId, sides.source.side, sourceBox),
 				definitions,
 			);
 		}
@@ -365,7 +439,7 @@ const redrawContainerConnectors = (
 			connector.target = buildEndpoint(
 				locatedOwners,
 				targetId,
-				takenEnds.place(targetId, sides.target.side, targetBox),
+				placeEnd(targetId, sides.target.side, targetBox),
 				definitions,
 			);
 		}
@@ -381,7 +455,8 @@ const redrawContainerConnectors = (
  * them decide the ranks (a source sits above, or left of, its targets), nodes of one rank
  * are ordered to reduce crossings, and every connector between two placed objects is
  * re-anchored onto the sides that now face each other (an edge anchor, placed toward where
- * the connector goes so several on one side fan out), with a right-angled route around the
+ * the connector goes so several on one side fan out, and kept where the owner's outline
+ * reaches along the side), with a right-angled route around the
  * objects in between written as its corners (none when it runs straight). A labelled
  * connector gets room for its label, which is moved onto the line at that spot. The
  * arrangement keeps the top-left corner the objects occupied together, so the drawing
@@ -402,7 +477,8 @@ const redrawContainerConnectors = (
  *   the engine, as is a self loop's
  * @param params - Direction and gaps; see {@link LayoutObjectsParams}
  * @param definitions - Type table `features.geometry`, `container` (and the title band
- *   it answers for each object) and the offered connect points are read from
+ *   it answers for each object), the offered connect points and the `outline` /
+ *   `anchorRegion` an end is kept on are read from
  * @returns Which objects moved, which containers were sized around them, and which
  *   connectors were re-anchored or rerouted
  * @throws {@link DocOperationError} for a spacing that is not a finite number of 0 or
@@ -434,7 +510,7 @@ export const layoutObjects = (
 	const nodeIds = new Set(nodes.map(({ object }) => object.id));
 	const { edges, selfLoops } = collectConnectors(doc, nodeIds);
 
-	const graph = buildGraph(nodes, containers, edges);
+	const graph = buildGraph(nodes, containers, edges, definitions);
 	const laidOut = computeLayeredLayout(
 		graph.nodes,
 		graph.edges,
@@ -454,7 +530,7 @@ export const layoutObjects = (
 		doc,
 		laidOut.edges,
 		edges,
-		nodeIds,
+		nodes,
 		origin,
 		definitions,
 	);

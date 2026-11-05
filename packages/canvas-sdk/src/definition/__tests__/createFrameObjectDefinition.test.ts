@@ -76,19 +76,27 @@ const demoDoc = { ...DEMO_DOC_DEFAULTS, id: "demo-1" } as unknown as DemoDoc;
 describe("createFrameObjectDefinition", () => {
 	it("spreads the doc definition and passes the UI fields through", () => {
 		const outline = () => [];
-		const definition = createFrameObjectDefinition<DemoDoc, DemoState>({
-			doc: demoDocDefinition,
-			component: DemoComponent,
+		const anchorRegion = () => ({ x: -10, y: -5, width: 20, height: 10 });
+		const docDefinition = createFrameObjectDoc({
+			features: DemoFeatures,
+			defaults: DEMO_DOC_DEFAULTS,
+			description: "Demo shape.",
 			outline,
+			anchorRegion,
+		});
+		const definition = createFrameObjectDefinition<DemoDoc, DemoState>({
+			doc: docDefinition,
+			component: DemoComponent,
 			stencils: [],
 		});
 
 		expect(definition.features).toBe(DemoFeatures);
-		expect(definition.validateDoc).toBe(demoDocDefinition.validateDoc);
-		expect(definition.factory).toBe(demoDocDefinition.factory);
+		expect(definition.validateDoc).toBe(docDefinition.validateDoc);
+		expect(definition.factory).toBe(docDefinition.factory);
 		expect(definition.description).toBe("Demo shape.");
 		expect(definition.component).toBe(DemoComponent);
 		expect(definition.outline).toBe(outline);
+		expect(definition.anchorRegion).toBe(anchorRegion);
 		expect(definition.stencils).toEqual([]);
 	});
 

@@ -77,6 +77,11 @@ export const stickyDocPlugin: CanvasDocPlugin = {
 };
 ```
 
+外形が箱と一致しない図形は、`outline` もここで宣言する（エッジのアンカーを一部に
+寄せたいなら `anchorRegion` も）。コネクターの端はその上に着き、自動レイアウトは
+エッジのアンカーを外形のある範囲に収める。UI 定義は `doc` からこの 2 つを
+引き継ぎ、自分では持たない。
+
 ```ts
 // src/definition.ts
 import type { ObjectTypeDefinition } from "@jiscribe/canvas";
@@ -134,7 +139,7 @@ canvas に残して SDK が再エクスポートする。物理的に移すと c
 | `createTypeStencils` / `createStencilIcon`                                                                               | ステンシル配列と、全アイコンが繰り返す `<svg>` ラッパー         |
 | `createInsetTextRegion`                                                                                                  | 領域が固定比率の inset でしかない場合の手書き `calc*TextRegion` |
 | `ShapeBodyPath` / `ShapeBodyPolygon`                                                                                     | frame 系図形が描くシルエット（線・塗り・掴める本体）            |
-| `calcRoundedRectOutline` / `centeredPolygonOutline` / `formatPolygonPoints`                                              | 手書きの輪郭計算                                                |
+| `calcRoundedRectOutline` / `centeredPolygonOutline`（`/doc` にもある）/ `formatPolygonPoints`                            | 手書きの輪郭計算                                                |
 | `calcBelowLabelTextRegion` / `calcBelowLabelVisualBounds` / `BelowLabelHitArea` / `BELOW_LABEL_STYLE_DEFAULTS`（`/doc`） | 「箱いっぱいに描くので文字を下へ吊る」機構一式                  |
 | `createParseCheckSuite`（`/testing`）                                                                                    | 図形パッケージが毎回書く parse-check テスト                     |
 | `createIconSetCatalog`（`/doc`）/ `createIconSetObject` / `createIconSetStencilCategory` / `./icon-set-generator`        | アイコンセットの名前引き・図形・プリセット・生成スクリプト      |

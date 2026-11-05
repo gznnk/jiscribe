@@ -78,6 +78,12 @@ export const stickyDocPlugin: CanvasDocPlugin = {
 };
 ```
 
+A shape whose silhouette is not its box declares `outline` here too (and
+`anchorRegion` where its edge anchors should center on part of it): connector
+ends land on it, and an automatic layout keeps its edge anchors where it
+reaches. The UI definition inherits both from `doc` and has no field of its own
+for them.
+
 ```ts
 // src/definition.ts
 import type { ObjectTypeDefinition } from "@jiscribe/canvas";
@@ -136,7 +142,7 @@ the full list):
 | `createTypeStencils` / `createStencilIcon`                                                                              | the stencil array and the `<svg>` wrapper every palette icon repeats       |
 | `createInsetTextRegion`                                                                                                 | a hand-written `calc*TextRegion` when the region is a fixed ratio inset    |
 | `ShapeBodyPath` / `ShapeBodyPolygon`                                                                                    | the styled silhouette every frame shape draws (stroked, filled, grabbable) |
-| `calcRoundedRectOutline` / `centeredPolygonOutline` / `formatPolygonPoints`                                             | hand-rolled outline maths                                                  |
+| `calcRoundedRectOutline` / `centeredPolygonOutline` (also `/doc`) / `formatPolygonPoints`                               | hand-rolled outline maths                                                  |
 | `calcBelowLabelTextRegion` / `calcBelowLabelVisualBounds` / `BelowLabelHitArea` / `BELOW_LABEL_STYLE_DEFAULTS` (`/doc`) | the "drawing fills the box, so the caption hangs underneath" trio          |
 | `createParseCheckSuite` (`/testing`)                                                                                    | the parse-check test every shape package writes                            |
 | `createIconSetCatalog` (`/doc`) / `createIconSetObject` / `createIconSetStencilCategory` / `./icon-set-generator`       | the name lookup, the shape, the presets and the generator of an icon set   |

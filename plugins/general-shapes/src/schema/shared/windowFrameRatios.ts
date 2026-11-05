@@ -6,3 +6,9 @@
  * declaration is headless (see ../textRegions).
  */
 export const WINDOW_TITLE_BAR_RATIO = 0.24;
+
+/**
+ * Corner radius as a fraction of the shorter side. Shared by the frame builder
+ * and both window shapes' outlines, which round the same corners the frame does.
+ */
+export const WINDOW_CORNER_RATIO = 0.07;

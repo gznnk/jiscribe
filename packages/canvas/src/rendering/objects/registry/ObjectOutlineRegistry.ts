@@ -1,24 +1,14 @@
 import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
-import type { Dimensions, Point } from "@jiscribe/geometry";
-
-import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import type { ObjectDocOutlineCalculator } from "@jiscribe/doc/plugin/ObjectDocOutline";
+import type { Dimensions } from "@jiscribe/geometry";
 
 /**
- * Produces a shape's true outline (the drawn silhouette — NOT the bounding
- * box) as a closed polygon in the shape's local coordinate space (origin at
- * the center, width/height units, before transform), from its state
- * (width/height plus any per-shape fields, e.g. the callout's tail in
- * `@jiscribe/plugin-annotation-shapes`). Curved
- * shapes return a sampled polyline. This is the single seam shared by the
- * connector endpoint resolver and the connection-anchor dots so both attach to
- * the drawn outline rather than the bounding box. Implementations declare what
- * they read via `TState` (most: `ObjectOutlineCalculator<Dimensions>`); the
- * registry stores the default instantiation, to which narrower readers are
- * assignable by contravariance.
+ * The canvas's name for a type's outline declaration, which lives on the doc
+ * definition (see ObjectDocOutlineCalculator, `ObjectDocDefinition.outline`): the
+ * registry calls it with the state, the doc layer with the doc.
  */
-export type ObjectOutlineCalculator<
-	TState extends Dimensions = ObjectState & Dimensions,
-> = (state: TState) => Point[];
+export type ObjectOutlineCalculator<TState extends Dimensions = Dimensions> =
+	ObjectDocOutlineCalculator<TState>;
 
 /**
  * Per-type registry of outline calculators. Types without a registered

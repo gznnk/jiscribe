@@ -4,8 +4,8 @@ import {
 	ShapeBodyPolygon,
 } from "@jiscribe/canvas-sdk";
 
-import { calcUmlPackagePoints } from "./calcUmlPackagePoints";
 import { UmlPackageTabDivider } from "./UmlPackageBoxStyled";
+import { calcUmlPackagePoints } from "../schema/calcUmlPackagePoints";
 import {
 	calcUmlPackageTabHeight,
 	UML_PACKAGE_TAB_WIDTH_RATIO,

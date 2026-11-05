@@ -1,13 +1,22 @@
 import {
+	type EdgeAnchorOutlineShape,
+	calcEdgeAnchorOutlineRanges,
+} from "@jiscribe/doc/model/objects/connector/calcEdgeAnchorOutlineRange";
+import {
+	toAnchorRegionSidePosition,
+	toBoxSidePosition,
+} from "@jiscribe/doc/model/objects/connector/convertEdgeAnchorRatio";
+import {
 	type OwnedEndpointRef,
 	isOnDeclaredConnectPoint,
 	listEdgeAnchoredEnds,
 } from "@jiscribe/doc/model/objects/types/EndpointRef";
-import { isFrame } from "@jiscribe/geometry";
+import { isFrame, isTransformedFrame } from "@jiscribe/geometry";
 import type { Frame, Point, Rect } from "@jiscribe/geometry";
 import {
 	type LayoutDirection,
 	type LayoutEdgeAnchor,
+	type LayoutGraphNode,
 	type TakenEnd,
 	calcFacingSides,
 	computeLayeredLayout,
@@ -36,6 +45,57 @@ const toEdgeEndpoint = (
 	anchor: { kind: "edge", side, t },
 });
 
+/**
+ * The object's outline and anchor region as its type declares them, on its
+ * untransformed box, as the doc layer's layout reads them from the doc; undefined
+ * for an object with no frame, whose ends the layout leaves as ratios of the box.
+ */
+const resolveAnchorShape = (
+	object: ObjectState,
+	registries: ICanvasRegistries,
+): EdgeAnchorOutlineShape | undefined => {
+	if (!isTransformedFrame(object)) {
+		return undefined;
+	}
+	return {
+		width: object.width,
+		height: object.height,
+		geometry: registries.objectMapper.getFeatures(object.type)?.geometry,
+		outline: registries.objectOutline.get(object.type)?.(object),
+		anchorRegion: registries.objectAnchorRegion.get(object.type)?.(object),
+	};
+};
+
+/**
+ * The stretch of each side the layout may end an edge on (see
+ * calcEdgeAnchorOutlineRange), or undefined for an object whose outline and anchor
+ * region take nothing off its box, or which is rotated or flipped: the layout places
+ * it by its box.
+ */
+const readAnchorRanges = (
+	object: ObjectState,
+	shape: EdgeAnchorOutlineShape | undefined,
+): LayoutGraphNode["anchorRanges"] => {
+	if (
+		shape === undefined ||
+		(shape.outline === undefined && shape.anchorRegion === undefined) ||
+		!isTransformedFrame(object) ||
+		object.rotation % 360 !== 0 ||
+		object.scaleX < 0 ||
+		object.scaleY < 0
+	) {
+		return undefined;
+	}
+	return calcEdgeAnchorOutlineRanges(shape);
+};
+
+/** A layout anchor (a ratio of the box's side) as the edge anchor stored (one of the anchor region's). */
+const toStoredAnchor = (
+	anchor: LayoutEdgeAnchor,
+	shape: EdgeAnchorOutlineShape | undefined,
+): LayoutEdgeAnchor =>
+	shape === undefined ? anchor : toAnchorRegionSidePosition(anchor, shape);
+
 /** The connector with its route left to the engine: no corners, no routing of its own. */
 const clearRoute = (connector: ConnectorState): ConnectorState => {
 	const { routing: _routing, ...rest } = connector;
@@ -60,13 +120,23 @@ const layOutGraph = (
 	takenEnds: TakenEnd[],
 	registries: ICanvasRegistries,
 ): string[] => {
-	const laidOut = computeLayeredLayout(
-		graph.nodes.map(({ id, bounds, parentId }) => ({
+	const shapeById = new Map(
+		graph.nodes.map(({ id }) => [
 			id,
-			width: bounds.width,
-			height: bounds.height,
-			...(parentId !== undefined ? { parentId } : {}),
-		})),
+			resolveAnchorShape(srcObjects[id], registries),
+		]),
+	);
+	const laidOut = computeLayeredLayout(
+		graph.nodes.map(({ id, bounds, parentId }) => {
+			const anchorRanges = readAnchorRanges(srcObjects[id], shapeById.get(id));
+			return {
+				id,
+				width: bounds.width,
+				height: bounds.height,
+				...(parentId !== undefined ? { parentId } : {}),
+				...(anchorRanges !== undefined ? { anchorRanges } : {}),
+			};
+		}),
 		graph.edges,
 		{ direction },
 		graph.containers.map(({ id, parentId, titleHeight }) => ({
@@ -107,19 +177,21 @@ const layOutGraph = (
 		const targetKept = isOnDeclaredConnectPoint(connector.target);
 		const keepsRoute = !(sourceKept || targetKept);
 		const { label } = connector;
+		const sourceId = connector.source.owner?.id as string;
+		const targetId = connector.target.owner?.id as string;
 		const rerouted: ConnectorState = {
 			...clearRoute(connector),
 			source: sourceKept
 				? connector.source
 				: toEdgeEndpoint(
-						connector.source.owner?.id as string,
-						laidOutEdge.source,
+						sourceId,
+						toStoredAnchor(laidOutEdge.source, shapeById.get(sourceId)),
 					),
 			target: targetKept
 				? connector.target
 				: toEdgeEndpoint(
-						connector.target.owner?.id as string,
-						laidOutEdge.target,
+						targetId,
+						toStoredAnchor(laidOutEdge.target, shapeById.get(targetId)),
 					),
 			points: keepsRoute ? laidOutEdge.points.map(toCanvasPoint) : [],
 			...(keepsRoute &&
@@ -135,7 +207,13 @@ const layOutGraph = (
 				: {}),
 		};
 		objects[connector.id] = rerouted;
-		takenEnds.push(...listEdgeAnchoredEnds([rerouted]));
+		// Kept as ratios of the box, which is what a line added later is placed on.
+		takenEnds.push(
+			...listEdgeAnchoredEnds([rerouted]).map((end) => {
+				const shape = shapeById.get(end.ownerId);
+				return shape === undefined ? end : toBoxSidePosition(end, shape);
+			}),
+		);
 		writtenIds.push(connector.id);
 	}
 
@@ -192,6 +270,7 @@ const layOutGraph = (
  * sides, its route left to the engine. Only a connector whose both ends were
  * arranged is redrawn; an end on a declared connect point stays there.
  *
+ * @param takenEnds - The ends already written, as ratios of their owner's box
  * @returns Ids of the connectors redrawn
  */
 const redrawContainerConnectors = (
@@ -199,6 +278,7 @@ const redrawContainerConnectors = (
 	graphs: readonly LayoutScopeGraph[],
 	objects: Record<string, ObjectState>,
 	takenEnds: readonly TakenEnd[],
+	registries: ICanvasRegistries,
 ): string[] => {
 	const containerShapeIds = new Set(
 		graphs.flatMap(({ containers }) =>
@@ -215,6 +295,24 @@ const redrawContainerConnectors = (
 	const boxOf = (id: string): Rect | undefined =>
 		arrangedIds.has(id) ? measureObjectBounds(objects[id], objects) : undefined;
 	const freeEnds = createTakenEnds(takenEnds);
+	// Read on the objects as the layout left them: a container shape was resized.
+	const placeEnd = (
+		ownerId: string,
+		side: LayoutEdgeAnchor["side"],
+		box: Rect,
+	): LayoutEdgeAnchor => {
+		const object = objects[ownerId];
+		const shape = resolveAnchorShape(object, registries);
+		return toStoredAnchor(
+			freeEnds.place(
+				ownerId,
+				side,
+				box,
+				readAnchorRanges(object, shape)?.[side],
+			),
+			shape,
+		);
+	};
 	const redrawnIds: string[] = [];
 	for (const srcConnector of collectConnectorsInTreeOrder(state)) {
 		const connector = objects[srcConnector.id];
@@ -242,13 +340,13 @@ const redrawContainerConnectors = (
 				? connector.source
 				: toEdgeEndpoint(
 						sourceId,
-						freeEnds.place(sourceId, sides.source.side, sourceBox),
+						placeEnd(sourceId, sides.source.side, sourceBox),
 					),
 			target: isOnDeclaredConnectPoint(connector.target)
 				? connector.target
 				: toEdgeEndpoint(
 						targetId,
-						freeEnds.place(targetId, sides.target.side, targetBox),
+						placeEnd(targetId, sides.target.side, targetBox),
 					),
 		};
 		objects[connector.id] = redrawn;
@@ -287,7 +385,7 @@ export const applyLayoutResult = (
 		),
 	);
 	writtenIds.push(
-		...redrawContainerConnectors(state, graphs, objects, takenEnds),
+		...redrawContainerConnectors(state, graphs, objects, takenEnds, registries),
 	);
 	return { objects, writtenIds };
 };

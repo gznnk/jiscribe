@@ -1,4 +1,4 @@
-import { calcFolderPoints } from "./calcFolderPoints";
+import { calcFolderPoints } from "../../schema/folder/calcFolderPoints";
 import type { PictogramFigureBuilder } from "../shared/PictogramFigure";
 import { buildPolygonPath } from "../shared/pictogramPaths";
 

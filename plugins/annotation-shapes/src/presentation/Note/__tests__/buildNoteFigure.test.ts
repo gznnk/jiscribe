@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { calcNoteFoldSize } from "../../../schema/note/calcNoteFoldSize";
+import { calcNotePoints } from "../../../schema/note/calcNotePoints";
 import { buildNoteFigure } from "../buildNoteFigure";
-import { calcNotePoints } from "../calcNotePoints";
 
 describe("calcNoteFoldSize", () => {
 	it("takes the fold off the shorter side, whichever that is", () => {

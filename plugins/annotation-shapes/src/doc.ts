@@ -25,8 +25,10 @@ import {
 	CalloutFeatures,
 } from "./schema/callout/CalloutDoc";
 import type { CalloutDoc } from "./schema/callout/CalloutDoc";
+import { calloutOutline } from "./schema/callout/calloutOutline";
 import { validateCalloutTail } from "./schema/callout/validateCalloutTail";
 import { NOTE_DOC_DEFAULTS, NoteFeatures } from "./schema/note/NoteDoc";
+import { noteOutline } from "./schema/note/noteOutline";
 import { createGroupMarkerObjectFactory } from "./schema/shared/createGroupMarkerObjectFactory";
 import { GROUP_MARKER_EXTRA_CONNECT_POINT_IDS } from "./schema/shared/groupMarkerConnectPointIds";
 import {
@@ -99,9 +101,14 @@ export const bracketWithStemDocDefinition: ObjectDocDefinition =
 		}),
 	);
 
+/**
+ * `outline` is required because the tail band leaves the body edge short of the
+ * bounding box.
+ */
 export const calloutDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: CalloutFeatures,
 	textRegion: calcCalloutTextRegion,
+	outline: calloutOutline,
 	defaults: CALLOUT_DOC_DEFAULTS,
 	extraKeys: ["tail"] satisfies readonly (keyof CalloutDoc)[],
 	description:
@@ -110,9 +117,15 @@ export const calloutDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	validateExtra: validateCalloutTail,
 });
 
+/**
+ * `outline` is required — the folded corner is cut off the bounding box, so
+ * without it a connector aimed at the note's center would stop in mid-air beside
+ * the fold.
+ */
 export const noteDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: NoteFeatures,
 	textRegion: calcNoteTextRegion,
+	outline: noteOutline,
 	// Top-left prose: the line's own leading plus TEXT_BOX_PADDING_Y already
 	// matches the left inset, so extra room would only open the top.
 	autoHeightPaddingEm: 0,

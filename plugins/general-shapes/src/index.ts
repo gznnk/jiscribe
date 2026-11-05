@@ -7,9 +7,10 @@
 // Each shape's ObjectDocDefinition / ObjectTypeDefinition is derived wholesale from
 // features/defaults by createFrameObjectDoc / createFrameObjectDefinition
 // (`@jiscribe/canvas-sdk/doc` / `@jiscribe/canvas-sdk`), so there is no per-shape
-// ObjectFactory / validate*Doc / Mapper / validate*State. The presentation parts
-// (createFrameObject / calcBelowLabelTextRegion / readTextSlot /
-// OUTLINE_CURVE_SEGMENTS / centeredPolygonOutline) come through `@jiscribe/canvas-sdk`.
+// ObjectFactory / validate*Doc / Mapper / validate*State. The outline parts
+// (OUTLINE_CURVE_SEGMENTS / centeredPolygonOutline / calcRoundedRectOutline) come
+// from `@jiscribe/canvas-sdk/doc`, the presentation parts (createFrameObject /
+// calcBelowLabelTextRegion / readTextSlot) through `@jiscribe/canvas-sdk`.
 // The headless parse entry point is ./doc (generalDocPlugin).
 // Shapes get one folder each (schema/<id>/, state/<id>/, presentation/<Pascal>/), and
 // parts shared by several shapes live in each layer's shared/.
@@ -29,6 +30,24 @@ export * from "./schema/server/ServerDoc";
 export * from "./schema/shield/ShieldDoc";
 export * from "./schema/smartphone/SmartphoneDoc";
 export * from "./schema/terminalWindow/TerminalWindowDoc";
+
+// The outlines are declared on the doc definitions (./doc), so they live in schema/.
+export { browserWindowOutline } from "./schema/browserWindow/browserWindowOutline";
+export { cloudOutline } from "./schema/cloud/cloudOutline";
+export { envelopeOutline } from "./schema/envelope/envelopeOutline";
+export { fileOutline } from "./schema/file/fileOutline";
+export { folderOutline } from "./schema/folder/folderOutline";
+export { gearOutline } from "./schema/gear/gearOutline";
+export { laptopOutline } from "./schema/laptop/laptopOutline";
+export { lockOutline } from "./schema/lock/lockOutline";
+export { packageOutline } from "./schema/package/packageOutline";
+export { queueOutline } from "./schema/queue/queueOutline";
+export { serverOutline } from "./schema/server/serverOutline";
+export { shieldOutline } from "./schema/shield/shieldOutline";
+export { smartphoneOutline } from "./schema/smartphone/smartphoneOutline";
+export { terminalWindowOutline } from "./schema/terminalWindow/terminalWindowOutline";
+export { calcGearPoints } from "./schema/gear/calcGearPoints";
+export { calcLaptopPoints } from "./schema/laptop/calcLaptopPoints";
 
 export * from "./state/actor/ActorState";
 export * from "./state/browserWindow/BrowserWindowState";

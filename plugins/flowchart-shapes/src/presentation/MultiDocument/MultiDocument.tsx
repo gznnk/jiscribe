@@ -3,8 +3,8 @@ import { ShapeBodyPath, createFrameObject } from "@jiscribe/canvas-sdk";
 import type { Rect } from "@jiscribe/geometry";
 
 import { buildOutsideSheetClipPath } from "./buildOutsideSheetClipPath";
-import { calcMultiDocumentSheets } from "./calcMultiDocumentSheets";
 import { MultiDocumentRootGroup } from "./MultiDocumentStyled";
+import { calcMultiDocumentSheets } from "../../schema/multiDocument/calcMultiDocumentSheets";
 import type { MultiDocumentState } from "../../state/multiDocument/MultiDocumentState";
 import { buildDocumentPath } from "../Document/buildDocumentPath";
 

@@ -29,4 +29,16 @@ describe("createTakenEnds", () => {
 		const takenEnds = createTakenEnds([{ ownerId: "a", side: "top", t: 0.5 }]);
 		expect(takenEnds.place("a", "top", narrow).t).toBe(0.5);
 	});
+
+	it("hands out the middle of the usable stretch and searches only within it", () => {
+		const gap = EDGE_END_SPACING / box.width;
+		const usable = { min: 0.5, max: 1 };
+		const takenEnds = createTakenEnds([]);
+		expect(takenEnds.place("a", "top", box, usable).t).toBe(0.75);
+		expect(takenEnds.place("a", "top", box, usable).t).toBe(0.75 - gap);
+		expect(takenEnds.place("a", "top", box, usable).t).toBe(0.75 + gap);
+		// 0.75 ± 2 gaps is 0.5 / 1, past the tenth kept clear at either end of the
+		// stretch (0.55 .. 0.95), so the side is full and the middle is handed out.
+		expect(takenEnds.place("a", "top", box, usable).t).toBe(0.75);
+	});
 });

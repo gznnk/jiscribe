@@ -13,8 +13,11 @@ import {
 } from "./support/docFixtures";
 import {
 	columnCardDefinition,
+	cutTopDefinition,
 	ovalRegionDefinition,
 	regionDefinition,
+	slantedDefinition,
+	tippedDefinition,
 } from "./support/pluginFixtures";
 
 describe("layoutObjects", () => {
@@ -627,5 +630,180 @@ describe("layoutObjects with container shapes and declared connect points", () =
 			);
 		}
 		expect(JSON.stringify(doc)).toBe(before);
+	});
+});
+
+describe("layoutObjects on shapes whose outline is not their box", () => {
+	const outlinedDocOps = createDocOps({
+		plugins: [
+			{
+				id: "outlined-plugin",
+				objects: {
+					slanted: slantedDefinition,
+					"cut-top": cutTopDefinition,
+					tipped: tippedDefinition,
+					region: regionDefinition,
+				},
+			},
+		],
+	});
+	type EdgeEnd = {
+		owner: { id: string };
+		anchor: { kind: string; side: string; t: number };
+	};
+	const readEnds = (doc: CanvasDoc, id: string): EdgeEnd[] => {
+		const connector = readObject(doc, id) as {
+			source: EdgeEnd;
+			target: EdgeEnd;
+		};
+		return [connector.source, connector.target];
+	};
+	/** Where a left / right edge anchor is drawn, in world y, given the owner's anchor region's local y and height. */
+	const drawnY = (
+		doc: CanvasDoc,
+		end: EdgeEnd,
+		region: { y: number; height: number },
+	): number => {
+		const owner = readObject(doc, end.owner.id) as Rect;
+		return owner.y + owner.height / 2 + region.y + region.height * end.anchor.t;
+	};
+
+	it("keeps every end on a parallelogram's bottom where its outline reaches", () => {
+		// A narrow box beside a wide one under the parallelogram: the narrow one's
+		// column falls past where the slanted side crosses the bottom's center line.
+		const doc = emptyDoc();
+		outlinedDocOps.addObject(doc, "slanted", { x: 0, y: 0 });
+		outlinedDocOps.addObject(doc, "rect", {
+			x: 0,
+			y: 200,
+			width: 60,
+			height: 40,
+		});
+		outlinedDocOps.addObject(doc, "rect", {
+			x: 100,
+			y: 200,
+			width: 160,
+			height: 80,
+		});
+		outlinedDocOps.connect(doc, { sourceId: "slanted-1", targetId: "rect-1" });
+		outlinedDocOps.connect(doc, { sourceId: "slanted-1", targetId: "rect-2" });
+
+		outlinedDocOps.layoutObjects(doc, undefined, { nodeSpacing: 20 });
+
+		for (const connectorId of ["connector-1", "connector-2"]) {
+			const [source] = readEnds(doc, connectorId);
+			expect(source.anchor).toMatchObject({ kind: "edge", side: "bottom" });
+			expect(source.anchor.t).toBeGreaterThanOrEqual(0.11 - 1e-6);
+			expect(source.anchor.t).toBeLessThanOrEqual(0.89 + 1e-6);
+		}
+		expectValid(doc);
+	});
+
+	it("lays a rotated parallelogram out by its box, its outline aside", () => {
+		const doc = emptyDoc();
+		outlinedDocOps.addObject(doc, "slanted", { x: 0, y: 0 });
+		outlinedDocOps.addObject(doc, "rect", {
+			x: 0,
+			y: 200,
+			width: 60,
+			height: 40,
+		});
+		outlinedDocOps.addObject(doc, "rect", {
+			x: 100,
+			y: 200,
+			width: 160,
+			height: 80,
+		});
+		outlinedDocOps.connect(doc, { sourceId: "slanted-1", targetId: "rect-1" });
+		outlinedDocOps.connect(doc, { sourceId: "slanted-1", targetId: "rect-2" });
+		outlinedDocOps.setRotation(doc, ["slanted-1"], 180);
+
+		outlinedDocOps.layoutObjects(doc, undefined, { nodeSpacing: 20 });
+
+		// Straight on the narrow box's column, past where the unturned outline reaches.
+		const [source] = readEnds(doc, "connector-1");
+		expect(source.anchor.t).toBeGreaterThan(0.89);
+	});
+
+	it("writes an end as a ratio of the anchor region, so a straight line meets a cut-top shape's side level", () => {
+		const doc = emptyDoc();
+		outlinedDocOps.addObject(doc, "rect", {
+			x: 0,
+			y: 0,
+			width: 160,
+			height: 100,
+		});
+		outlinedDocOps.addObject(doc, "cut-top", { x: 400, y: 300 });
+		outlinedDocOps.connect(doc, { sourceId: "rect-1", targetId: "cut-top-1" });
+
+		outlinedDocOps.layoutObjects(doc, undefined, { direction: "LR" });
+
+		const [source, target] = readEnds(doc, "connector-1");
+		// The middle of the body below the cut, which is the region's own middle.
+		expect(target.anchor).toMatchObject({ kind: "edge", side: "left", t: 0.5 });
+		expect(drawnY(doc, source, { y: -50, height: 100 })).toBeCloseTo(
+			drawnY(doc, target, { y: -30, height: 80 }),
+			6,
+		);
+		expect(readObject(doc, "connector-1").points).toEqual([]);
+	});
+
+	it("writes an end as a ratio of the anchor region, so a straight line meets a tipped shape's side level", () => {
+		const doc = emptyDoc();
+		outlinedDocOps.addObject(doc, "tipped", { x: 0, y: 0 });
+		outlinedDocOps.addObject(doc, "rect", {
+			x: 400,
+			y: 300,
+			width: 160,
+			height: 100,
+		});
+		outlinedDocOps.connect(doc, { sourceId: "tipped-1", targetId: "rect-1" });
+
+		outlinedDocOps.layoutObjects(doc, undefined, { direction: "LR" });
+
+		const [source, target] = readEnds(doc, "connector-1");
+		// Level with the box's middle, which is two thirds down the body above the tip.
+		expect(source.anchor).toMatchObject({ kind: "edge", side: "right" });
+		expect(source.anchor.t).toBeCloseTo(2 / 3, 9);
+		expect(drawnY(doc, source, { y: -50, height: 75 })).toBeCloseTo(
+			drawnY(doc, target, { y: -50, height: 100 }),
+			6,
+		);
+		expect(readObject(doc, "connector-1").points).toEqual([]);
+	});
+
+	it("finds a free spot for a line from a container shape on the box, clear of a stored end", () => {
+		// rect-1 inside the region feeds the cut-top shape; the region's own line to it
+		// is redrawn after, beside the end the chain left on its left side. That end is
+		// stored as 0.5 of the region (0.6 of the box), and the spot one
+		// EDGE_END_SPACING (0.2 of the 100 px side) above it is 0.4 of the box, stored
+		// as 0.25 of the region.
+		const doc = emptyDoc();
+		outlinedDocOps.addObject(doc, "region", {
+			x: 0,
+			y: 0,
+			width: 400,
+			height: 300,
+		});
+		outlinedDocOps.addObject(doc, "rect", {
+			x: 20,
+			y: 40,
+			width: 100,
+			height: 50,
+		});
+		outlinedDocOps.addObject(doc, "cut-top", { x: 600, y: 0 });
+		outlinedDocOps.connect(doc, { sourceId: "rect-1", targetId: "cut-top-1" });
+		outlinedDocOps.connect(doc, {
+			sourceId: "region-1",
+			targetId: "cut-top-1",
+		});
+
+		outlinedDocOps.layoutObjects(doc, undefined, { direction: "LR" });
+
+		const [, chainEnd] = readEnds(doc, "connector-1");
+		const [, redrawnEnd] = readEnds(doc, "connector-2");
+		expect(chainEnd.anchor).toMatchObject({ side: "left", t: 0.5 });
+		expect(redrawnEnd.anchor.side).toBe("left");
+		expect(redrawnEnd.anchor.t).toBeCloseTo(0.25, 9);
 	});
 });

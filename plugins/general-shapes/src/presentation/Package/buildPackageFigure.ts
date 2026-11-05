@@ -1,4 +1,4 @@
-import { calcPackagePoints } from "./calcPackagePoints";
+import { calcPackagePoints } from "../../schema/package/calcPackagePoints";
 import { PACKAGE_SHOULDER_RATIO } from "../../schema/package/PackageDoc";
 import type { PictogramFigureBuilder } from "../shared/PictogramFigure";
 import { buildPolygonPath } from "../shared/pictogramPaths";

@@ -1,6 +1,8 @@
 import type {
 	ObjectDoc,
+	ObjectDocAnchorRegionCalculator,
 	ObjectDocDefinition,
+	ObjectDocOutlineCalculator,
 	ObjectDocOverflowDiagnoser,
 	ObjectDocTextRegionCalculator,
 	ObjectDocValidateFn,
@@ -53,6 +55,22 @@ type FrameObjectDocCommonParams = {
 	 * holds its text leave `height` out of the document (`supportsAutoHeight`).
 	 */
 	textRegion?: ObjectDocTextRegionCalculator;
+
+	/**
+	 * The drawn silhouette, for a shape whose outline is not its box (see
+	 * `ObjectDocDefinition.outline`): what connector ends land on and what an
+	 * automatic layout keeps its edge anchors on. Carried into the definition
+	 * as-is, which is the one place it is declared — the UI definition built by
+	 * `createFrameObjectDefinition` inherits it. Omitted = the bounding box.
+	 */
+	outline?: ObjectDocOutlineCalculator;
+
+	/**
+	 * The band the edge anchors are centered on and measured along (see
+	 * `ObjectDocDefinition.anchorRegion`). Carried into the definition as-is.
+	 * Omitted = the full bounding box.
+	 */
+	anchorRegion?: ObjectDocAnchorRegionCalculator;
 
 	/**
 	 * Declares the shape a titled region other objects sit inside, answering the
@@ -156,6 +174,8 @@ export const createFrameObjectDoc = ({
 	defaults,
 	extraKeys,
 	textRegion,
+	outline,
+	anchorRegion,
 	container,
 	diagnoseOverflow,
 	autoHeight,
@@ -175,6 +195,8 @@ export const createFrameObjectDoc = ({
 	extraKeys,
 	factory: factory ?? createFrameObjectFactory(defaults, { supportsBounds }),
 	textRegion,
+	outline,
+	anchorRegion,
 	container,
 	diagnoseOverflow,
 	autoHeight,

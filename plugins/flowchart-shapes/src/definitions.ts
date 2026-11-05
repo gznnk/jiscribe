@@ -26,38 +26,24 @@ import {
 	subroutineDocDefinition,
 	trapezoidDocDefinition,
 } from "./doc";
-import { Card, cardOutline } from "./presentation/Card";
-import { Cross, crossOutline } from "./presentation/Cross";
-import { Db, dbOutline } from "./presentation/Db";
-import { Delay, delayOutline } from "./presentation/Delay";
-import { Diamond, diamondOutline } from "./presentation/Diamond";
-import { Display, displayOutline } from "./presentation/Display";
-import { Document, documentOutline } from "./presentation/Document";
-import { Extract, extractOutline } from "./presentation/Extract";
-import { Hexagon, hexagonOutline } from "./presentation/Hexagon";
-import {
-	LoopLimit,
-	calcLoopLimitAnchorRegion,
-	loopLimitOutline,
-} from "./presentation/LoopLimit";
-import { ManualInput, manualInputOutline } from "./presentation/ManualInput";
-import {
-	MultiDocument,
-	multiDocumentOutline,
-} from "./presentation/MultiDocument";
-import {
-	OffPageConnector,
-	calcOffPageConnectorAnchorRegion,
-	offPageConnectorOutline,
-} from "./presentation/OffPageConnector";
-import {
-	Parallelogram,
-	parallelogramOutline,
-} from "./presentation/Parallelogram";
-import { Stadium, stadiumOutline } from "./presentation/Stadium";
-import { StoredData, storedDataOutline } from "./presentation/StoredData";
+import { Card } from "./presentation/Card";
+import { Cross } from "./presentation/Cross";
+import { Db } from "./presentation/Db";
+import { Delay } from "./presentation/Delay";
+import { Diamond } from "./presentation/Diamond";
+import { Display } from "./presentation/Display";
+import { Document } from "./presentation/Document";
+import { Extract } from "./presentation/Extract";
+import { Hexagon } from "./presentation/Hexagon";
+import { LoopLimit } from "./presentation/LoopLimit";
+import { ManualInput } from "./presentation/ManualInput";
+import { MultiDocument } from "./presentation/MultiDocument";
+import { OffPageConnector } from "./presentation/OffPageConnector";
+import { Parallelogram } from "./presentation/Parallelogram";
+import { Stadium } from "./presentation/Stadium";
+import { StoredData } from "./presentation/StoredData";
 import { Subroutine } from "./presentation/Subroutine";
-import { Trapezoid, trapezoidOutline } from "./presentation/Trapezoid";
+import { Trapezoid } from "./presentation/Trapezoid";
 import type { CardDoc } from "./schema/card/CardDoc";
 import type { CrossDoc } from "./schema/cross/CrossDoc";
 import type { DbDoc } from "./schema/db/DbDoc";
@@ -145,13 +131,15 @@ import { TrapezoidIcon } from "./stencil/TrapezoidIcon";
  * against and what the overlay draws in are one function. The two shapes whose
  * label is sized from its own text (cross / extract) are the exception: their doc
  * side declares no region at all.
+ *
+ * `outline` / `anchorRegion` are declared on the doc definitions alone and reach
+ * these through `doc`.
  */
 export const cardDefinition: ObjectTypeDefinition<CardDoc, CardState> =
 	createFrameObjectDefinition<CardDoc, CardState>({
 		doc: cardDocDefinition,
 		component: Card,
 		textRegion: calcCardTextRegion,
-		outline: cardOutline,
 		stencils: createTypeStencils({
 			objectType: "card",
 			label: { en: "Card", ja: "カード" },
@@ -170,7 +158,6 @@ export const crossDefinition: ObjectTypeDefinition<CrossDoc, CrossState> =
 		component: Cross,
 		textRegion: calcBelowLabelTextRegion,
 		visualBounds: calcBelowLabelVisualBounds,
-		outline: crossOutline,
 		stencils: createTypeStencils({
 			objectType: "cross",
 			label: { en: "Junction", ja: "接合点" },
@@ -183,7 +170,6 @@ export const dbDefinition: ObjectTypeDefinition<DbDoc, DbState> =
 		doc: dbDocDefinition,
 		component: Db,
 		textRegion: calcDbTextRegion,
-		outline: dbOutline,
 		stencils: createTypeStencils({
 			objectType: "db",
 			label: { en: "Database", ja: "データベース" },
@@ -196,7 +182,6 @@ export const delayDefinition: ObjectTypeDefinition<DelayDoc, DelayState> =
 		doc: delayDocDefinition,
 		component: Delay,
 		textRegion: calcDelayTextRegion,
-		outline: delayOutline,
 		stencils: createTypeStencils({
 			objectType: "delay",
 			label: { en: "Delay", ja: "遅延" },
@@ -209,7 +194,6 @@ export const diamondDefinition: ObjectTypeDefinition<DiamondDoc, DiamondState> =
 		doc: diamondDocDefinition,
 		component: Diamond,
 		textRegion: calcDiamondTextRegion,
-		outline: diamondOutline,
 		stencils: createTypeStencils({
 			objectType: "diamond",
 			// Labelled "Decision" for its flowchart role; the type stays the generic
@@ -224,7 +208,6 @@ export const displayDefinition: ObjectTypeDefinition<DisplayDoc, DisplayState> =
 		doc: displayDocDefinition,
 		component: Display,
 		textRegion: calcDisplayTextRegion,
-		outline: displayOutline,
 		stencils: createTypeStencils({
 			objectType: "display",
 			label: { en: "Display", ja: "表示" },
@@ -239,7 +222,6 @@ export const documentDefinition: ObjectTypeDefinition<
 	doc: documentDocDefinition,
 	component: Document,
 	textRegion: calcDocumentTextRegion,
-	outline: documentOutline,
 	stencils: createTypeStencils({
 		objectType: "document",
 		label: { en: "Document", ja: "書類" },
@@ -258,7 +240,6 @@ export const extractDefinition: ObjectTypeDefinition<ExtractDoc, ExtractState> =
 		component: Extract,
 		textRegion: calcBelowLabelTextRegion,
 		visualBounds: calcBelowLabelVisualBounds,
-		outline: extractOutline,
 		stencils: createTypeStencils({
 			objectType: "extract",
 			label: { en: "Extract", ja: "抽出" },
@@ -271,7 +252,6 @@ export const hexagonDefinition: ObjectTypeDefinition<HexagonDoc, HexagonState> =
 		doc: hexagonDocDefinition,
 		component: Hexagon,
 		textRegion: calcHexagonTextRegion,
-		outline: hexagonOutline,
 		stencils: createTypeStencils({
 			objectType: "hexagon",
 			label: { en: "Preparation", ja: "準備" },
@@ -286,8 +266,6 @@ export const loopLimitDefinition: ObjectTypeDefinition<
 	doc: loopLimitDocDefinition,
 	component: LoopLimit,
 	textRegion: calcLoopLimitTextRegion,
-	outline: loopLimitOutline,
-	anchorRegion: calcLoopLimitAnchorRegion,
 	stencils: createTypeStencils({
 		objectType: "loopLimit",
 		label: { en: "Loop Limit", ja: "ループ端" },
@@ -302,7 +280,6 @@ export const manualInputDefinition: ObjectTypeDefinition<
 	doc: manualInputDocDefinition,
 	component: ManualInput,
 	textRegion: calcManualInputTextRegion,
-	outline: manualInputOutline,
 	stencils: createTypeStencils({
 		objectType: "manualInput",
 		label: { en: "Manual Input", ja: "手動入力" },
@@ -317,7 +294,6 @@ export const multiDocumentDefinition: ObjectTypeDefinition<
 	doc: multiDocumentDocDefinition,
 	component: MultiDocument,
 	textRegion: calcMultiDocumentTextRegion,
-	outline: multiDocumentOutline,
 	stencils: createTypeStencils({
 		objectType: "multiDocument",
 		label: { en: "Multi-document", ja: "複数書類" },
@@ -332,8 +308,6 @@ export const offPageConnectorDefinition: ObjectTypeDefinition<
 	doc: offPageConnectorDocDefinition,
 	component: OffPageConnector,
 	textRegion: calcOffPageConnectorTextRegion,
-	outline: offPageConnectorOutline,
-	anchorRegion: calcOffPageConnectorAnchorRegion,
 	stencils: createTypeStencils({
 		objectType: "offPageConnector",
 		label: { en: "Off-page connector", ja: "他ページ結合子" },
@@ -348,7 +322,6 @@ export const parallelogramDefinition: ObjectTypeDefinition<
 	doc: parallelogramDocDefinition,
 	component: Parallelogram,
 	textRegion: calcParallelogramTextRegion,
-	outline: parallelogramOutline,
 	stencils: createTypeStencils({
 		objectType: "parallelogram",
 		label: { en: "Data", ja: "データ" },
@@ -361,7 +334,6 @@ export const stadiumDefinition: ObjectTypeDefinition<StadiumDoc, StadiumState> =
 		doc: stadiumDocDefinition,
 		component: Stadium,
 		textRegion: calcStadiumTextRegion,
-		outline: stadiumOutline,
 		stencils: createTypeStencils({
 			objectType: "stadium",
 			label: { en: "Terminal", ja: "端子" },
@@ -376,7 +348,6 @@ export const storedDataDefinition: ObjectTypeDefinition<
 	doc: storedDataDocDefinition,
 	component: StoredData,
 	textRegion: calcStoredDataTextRegion,
-	outline: storedDataOutline,
 	stencils: createTypeStencils({
 		objectType: "storedData",
 		label: { en: "Stored Data", ja: "記憶データ" },
@@ -405,7 +376,6 @@ export const trapezoidDefinition: ObjectTypeDefinition<
 	doc: trapezoidDocDefinition,
 	component: Trapezoid,
 	textRegion: calcTrapezoidTextRegion,
-	outline: trapezoidOutline,
 	stencils: createTypeStencils({
 		objectType: "trapezoid",
 		label: { en: "Manual Operation", ja: "手操作" },

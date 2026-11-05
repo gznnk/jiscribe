@@ -1,10 +1,10 @@
-import type { ObjectOutlineCalculator } from "@jiscribe/canvas";
+import type { ObjectDocOutlineCalculator } from "@jiscribe/doc";
 import type { Dimensions } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
 import { calcArcX, parsePathArcs } from "../../../__tests__/support/pathArcs";
+import { delayOutline } from "../../../schema/delay/delayOutline";
 import { buildDelayPath } from "../buildDelayPath";
-import { delayOutline } from "../delayOutline";
 
 /**
  * The delay silhouette is written twice: the renderer draws one SVG arc
@@ -20,7 +20,7 @@ import { delayOutline } from "../delayOutline";
  * The outline reads nothing but width/height; its declaration types it against
  * the shape's whole State, so the cast is what lets a bare box stand in for one.
  */
-const calcOutline = delayOutline as ObjectOutlineCalculator<Dimensions>;
+const calcOutline = delayOutline as ObjectDocOutlineCalculator<Dimensions>;
 
 const SIZES: ReadonlyArray<Dimensions> = [
 	{ width: 140, height: 80 },

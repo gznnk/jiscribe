@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { generalPlugin } from "../plugin";
+import { generalDocPlugin } from "../doc";
 
 /**
  * Without an `outline` a shape falls back to its bounding box, which for a
@@ -16,7 +16,7 @@ const NO_SILHOUETTE_TYPES = new Set(["actor"]);
 
 describe("general shapes outline coverage", () => {
 	it("declares an outline for every shape that has a silhouette", () => {
-		const missing = Object.entries(generalPlugin.objects ?? {})
+		const missing = Object.entries(generalDocPlugin.objects ?? {})
 			.filter(
 				([type, definition]) =>
 					!NO_SILHOUETTE_TYPES.has(type) && definition?.outline === undefined,
@@ -27,7 +27,7 @@ describe("general shapes outline coverage", () => {
 
 	it("keeps the exception list honest", () => {
 		for (const type of NO_SILHOUETTE_TYPES) {
-			expect(generalPlugin.objects?.[type]?.outline).toBeUndefined();
+			expect(generalDocPlugin.objects?.[type]?.outline).toBeUndefined();
 		}
 	});
 });

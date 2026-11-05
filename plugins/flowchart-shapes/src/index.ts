@@ -1,10 +1,10 @@
 // External package of the 18 flowchart shapes. Fully moved out of core, building on the
 // tier 2 frame-family base implementation.
 // The headless parts of schema/** (createFrameObjectFactory / createFrameDocValidator /
-// validateOptionalNumber / AUTO_COLOR / DEFAULT_FONT_FAMILY) come from
-// `@jiscribe/canvas-sdk/doc`; the presentation / state / stencil parts (createFrameObject /
-// createFrameBehavior / createFrameMapper / createFrameStateValidator /
-// formatPolygonPoints / centeredPolygonOutline / OUTLINE_CURVE_SEGMENTS) come through
+// validateOptionalNumber / AUTO_COLOR / DEFAULT_FONT_FAMILY / centeredPolygonOutline /
+// OUTLINE_CURVE_SEGMENTS / calcRoundedRectOutline) come from `@jiscribe/canvas-sdk/doc`;
+// the presentation / state / stencil parts (createFrameObject / createFrameBehavior /
+// createFrameMapper / createFrameStateValidator / formatPolygonPoints) come through
 // `@jiscribe/canvas-sdk`. The headless parse entry point is ./doc (flowchartDocPlugin).
 // Every definition matches its counterpart in core (applyObjectDefinition.ts) exactly
 // (nothing is left out on purpose). The process / onPageConnector presets stay owned by

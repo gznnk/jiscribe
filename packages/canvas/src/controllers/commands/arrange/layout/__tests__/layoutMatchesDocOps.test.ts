@@ -6,8 +6,10 @@ import {
 	buildChainDoc,
 	buildKeptEndsDoc,
 	buildMixedDoc,
+	buildOutlinedDoc,
 	buildOvalRegionDoc,
 	buildRegionDoc,
+	buildRotatedOutlinedDoc,
 	layoutDocOps,
 	layoutRegistries,
 } from "./support/layoutFixtures";
@@ -154,6 +156,27 @@ describe("the layout commands write what the doc op writes", () => {
 			["oval-1", "rect-3"],
 			LayoutLeftToRightCommand.id,
 			"LR",
+		);
+	});
+
+	it("for shapes whose outline is not their box", () => {
+		expectSameAsDocOps(
+			buildOutlinedDoc(),
+			["slanted-1", "rect-1", "rect-2"],
+			LayoutTopToBottomCommand.id,
+			"TB",
+		);
+		expectSameAsDocOps(
+			buildOutlinedDoc(),
+			["region-1", "cut-top-1"],
+			LayoutLeftToRightCommand.id,
+			"LR",
+		);
+		expectSameAsDocOps(
+			buildRotatedOutlinedDoc(),
+			["slanted-1", "rect-1", "rect-2"],
+			LayoutTopToBottomCommand.id,
+			"TB",
 		);
 	});
 });

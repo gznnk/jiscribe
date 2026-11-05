@@ -1,19 +1,23 @@
+import {
+	EDGE_LOCAL_DIRECTIONS,
+	calcEdgeAnchorLocalOrigin,
+	calcLocalAnchorRegion,
+	calcLocalRayLanding,
+	calcRegionCenter,
+	clampAnchorRatio,
+} from "@jiscribe/doc/model/objects/connector/localAnchorRay";
 import type {
 	ConnectPointId,
 	EdgeAnchorSide,
 	EdgeAnchorSpec,
 } from "@jiscribe/doc/model/objects/types/EndpointRef";
-import type { GeometryType } from "@jiscribe/doc/model/objects/types/GeometryType";
 import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
 import {
 	calcAffineTransformedPoint,
 	calcEuclideanDistance,
 	calcInverseAffineTransformedPoint,
 	calcNonZeroSign,
-	calcOutlinePointAlongLocalRayForPolygon,
-	calcOutlinePointAlongLocalRayForRotatedEllipse,
 	calcRotatedPointWithTrig,
-	convertTransformedFrameToEllipse,
 	degreesToRadians,
 	roundToDecimal,
 	snapToDirection,
@@ -35,14 +39,6 @@ import type { ExtraConnectPoint } from "../../registry/ObjectExtraConnectPointsR
  */
 export type AnchorFrame = TransformedFrame & Pick<ObjectState, "features">;
 
-/** Outward direction of each local bounding-box edge in the shape's local space. */
-const EDGE_LOCAL_DIRECTIONS: Record<EdgeAnchorSide, Point> = {
-	top: { x: 0, y: -1 },
-	right: { x: 1, y: 0 },
-	bottom: { x: 0, y: 1 },
-	left: { x: -1, y: 0 },
-};
-
 /** Outward direction of each edge connect point in the shape's local space. */
 const CONNECT_POINT_LOCAL_DIRECTIONS: Record<ConnectPointId, Point> = {
 	topCenter: EDGE_LOCAL_DIRECTIONS.top,
@@ -51,141 +47,26 @@ const CONNECT_POINT_LOCAL_DIRECTIONS: Record<ConnectPointId, Point> = {
 	leftCenter: EDGE_LOCAL_DIRECTIONS.left,
 };
 
-/** The ratio held to 0..1; a non-finite one reads as the edge midpoint. */
-const clampAnchorRatio = (t: number): number => {
-	if (!Number.isFinite(t)) {
-		return 0.5;
-	}
-	return Math.min(1, Math.max(0, t));
-};
-
 /**
- * The anchor region in local, centered coordinates, falling back to the full
- * bounding box. Regions come from plugin calculators, several of which divide by
- * the shape size, so a degenerate shape can hand one back with NaN fields —
- * fall back rather than let it poison the coordinates derived from it.
+ * Where a ray cast in the shape's local space leaves the drawn edge (see
+ * calcLocalRayLanding), carried into world space by the shape's transform.
  */
-const calcLocalAnchorRegion = (
-	frame: TransformedFrame,
-	anchorRegion?: Rect | null,
-): Rect => {
-	if (
-		anchorRegion &&
-		Number.isFinite(anchorRegion.x) &&
-		Number.isFinite(anchorRegion.y) &&
-		Number.isFinite(anchorRegion.width) &&
-		Number.isFinite(anchorRegion.height)
-	) {
-		return anchorRegion;
-	}
-	return {
-		x: -frame.width / 2,
-		y: -frame.height / 2,
-		width: frame.width,
-		height: frame.height,
-	};
-};
-
-/**
- * Local center of the anchor region, which is the shape center whenever the
- * region falls back to the bounding box.
- */
-const calcRegionCenter = (region: Rect): Point => ({
-	x: region.x + region.width / 2,
-	y: region.y + region.height / 2,
-});
-
-/**
- * Where a ray cast in local space leaves the outline a geometry's box implies,
- * in world space; null where the ray misses it.
- */
-type LocalRayOutlineSnapper = (
-	frame: TransformedFrame,
-	localOrigin: Point,
-	localDirection: Point,
-) => Point | null;
-
-const snapLocalRayToEllipseOutline: LocalRayOutlineSnapper = (
-	frame,
-	localOrigin,
-	localDirection,
-) =>
-	calcOutlinePointAlongLocalRayForRotatedEllipse(
-		convertTransformedFrameToEllipse(frame),
-		localOrigin,
-		localDirection,
-	);
-
-/**
- * The outline a local ray lands on for each geometry, one entry per
- * GeometryType so that a geometry added to the union has to declare its own.
- * `null` marks a geometry whose box is the outline (`rect`, `point`) or is no
- * outline at all (`none` has no box, `poly` only ever arrives as the real
- * polygon its registry supplies): those take the bounding box. The counterpart
- * of `adjustToOutline`'s table for a center-anchored endpoint.
- */
-const localRayOutlineSnapperByGeometry: Record<
-	GeometryType,
-	LocalRayOutlineSnapper | null
-> = {
-	none: null,
-	rect: null,
-	ellipse: snapLocalRayToEllipseOutline,
-	poly: null,
-	point: null,
-};
-
-/**
- * Where a ray cast in the shape's local space leaves the drawn edge, in world
- * space. The registered outline polygon decides when there is one; otherwise
- * the outline the shape's geometry implies (the ellipse's arc); otherwise the
- * bounding box, which the ray meets on the axis it travels along, keeping the
- * origin's offset on the other axis.
- */
-const calcLocalRayLanding = (
+const calcWorldRayLanding = (
 	frame: AnchorFrame,
 	localOrigin: Point,
 	localDirection: Point,
 	outline?: readonly Point[] | null,
 ): Point => {
-	if (outline && outline.length >= 2) {
-		const onOutline = calcOutlinePointAlongLocalRayForPolygon(
-			outline,
-			frame,
-			localOrigin,
-			localDirection,
-		);
-		if (onOutline) {
-			return onOutline;
-		}
-	}
-
-	const geometry = frame.features?.geometry;
-	const snapToGeometryOutline = geometry
-		? localRayOutlineSnapperByGeometry[geometry]
-		: null;
-	if (snapToGeometryOutline) {
-		const onGeometryOutline = snapToGeometryOutline(
-			frame,
-			localOrigin,
-			localDirection,
-		);
-		if (onGeometryOutline) {
-			return onGeometryOutline;
-		}
-	}
-
-	const localX =
-		localDirection.x === 0
-			? localOrigin.x
-			: (localDirection.x * frame.width) / 2;
-	const localY =
-		localDirection.y === 0
-			? localOrigin.y
-			: (localDirection.y * frame.height) / 2;
+	const landing = calcLocalRayLanding(
+		frame,
+		frame.features?.geometry,
+		localOrigin,
+		localDirection,
+		outline,
+	);
 	return calcAffineTransformedPoint(
-		localX,
-		localY,
+		landing.x,
+		landing.y,
 		frame.scaleX,
 		frame.scaleY,
 		degreesToRadians(frame.rotation),
@@ -251,7 +132,7 @@ export const calcConnectPoint = (
 ): Point => {
 	const origin = calcRegionCenter(calcLocalAnchorRegion(frame, anchorRegion));
 	const direction = CONNECT_POINT_LOCAL_DIRECTIONS[connectPointId];
-	return calcLocalRayLanding(frame, origin, direction, outline);
+	return calcWorldRayLanding(frame, origin, direction, outline);
 };
 
 /**
@@ -276,24 +157,6 @@ export const calcConnectPointDirection = (
 		CONNECT_POINT_LOCAL_DIRECTIONS[connectPointId],
 	);
 	return snapToDirection(vector.x, vector.y);
-};
-
-/**
- * Local ray origin for an edge anchor: the ratio decides the coordinate along
- * the edge, the anchor region's center the coordinate across it. Keeping the
- * cross coordinate on the region center is what makes `t === 0.5` cast exactly
- * the ray {@link calcConnectPoint} casts for the matching edge midpoint.
- */
-const calcEdgeAnchorLocalOrigin = (
-	region: Rect,
-	anchor: EdgeAnchorSpec,
-): Point => {
-	const ratio = clampAnchorRatio(anchor.t);
-	const center = calcRegionCenter(region);
-	if (anchor.side === "top" || anchor.side === "bottom") {
-		return { x: region.x + region.width * ratio, y: center.y };
-	}
-	return { x: center.x, y: region.y + region.height * ratio };
 };
 
 /**
@@ -329,7 +192,7 @@ export const calcEdgeAnchorPoint = (
 	const region = calcLocalAnchorRegion(frame, anchorRegion);
 	const origin = calcEdgeAnchorLocalOrigin(region, anchor);
 	const direction = EDGE_LOCAL_DIRECTIONS[anchor.side];
-	return calcLocalRayLanding(frame, origin, direction, outline);
+	return calcWorldRayLanding(frame, origin, direction, outline);
 };
 
 /**

@@ -34,9 +34,9 @@ export type {
 } from "./presentation/calcRecordTextSlotRegions";
 
 export { UmlPackageBox } from "./presentation/UmlPackageBox";
-export { calcUmlPackagePoints } from "./presentation/calcUmlPackagePoints";
+export { calcUmlPackagePoints } from "./schema/calcUmlPackagePoints";
 export { calcUmlPackageTextRegion } from "./schema/textRegions";
-export { umlPackageOutline } from "./presentation/umlPackageOutline";
+export { umlPackageOutline } from "./schema/umlPackageOutline";
 
 export { UmlComponentBox } from "./presentation/UmlComponentBox";
 export {

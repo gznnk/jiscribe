@@ -16,6 +16,17 @@ export type { FrameObjectDocParams } from "./schema/createFrameObjectDoc";
 // same function: `.` re-exports this one rather than declaring its own.
 export { createInsetTextRegion } from "./schema/createInsetTextRegion";
 
+// The pieces a shape's `outline` is built from: a top-left polygon builder moved to
+// the centered origin the outline is read in, the sampling density of a curved
+// edge, and a rounded rectangle. Headless, since the outline is declared on the
+// doc definition (createFrameObjectDoc); `.` re-exports these same ones for the
+// renderer that draws the matching silhouette.
+export {
+	centeredPolygonOutline,
+	OUTLINE_CURVE_SEGMENTS,
+} from "./schema/outlineHelpers";
+export { calcRoundedRectOutline } from "./schema/calcRoundedRectOutline";
+
 // Typography defaults for a shape whose drawing fills its box and so hangs its
 // label underneath (calcBelowLabelTextRegion in `.`). Spread into that shape's
 // doc defaults: the layout measures the label with these, so a shape that draws

@@ -5,6 +5,9 @@ import type { LayoutDirection } from "./LayoutDirection";
 /** Side of a node's box an edge leaves from or arrives at, in the node's own coordinates. */
 export type LayoutSide = "top" | "right" | "bottom" | "left";
 
+/** A stretch of one side, as ratios of the side measured as in {@link LayoutEdgeAnchor}; `min <= max`. */
+export type LayoutAnchorRange = { min: number; max: number };
+
 export type LayoutGraphNode = {
 	id: string;
 	/** Width of the box the node occupies, in px; the layout never resizes it. */
@@ -13,6 +16,13 @@ export type LayoutGraphNode = {
 	height: number;
 	/** Id of the container the node sits inside, when it does; must be among the containers. */
 	parentId?: string;
+	/**
+	 * The stretch of each side an edge may end on, for a node whose drawn outline does
+	 * not reach along the whole side (a parallelogram's top and bottom): every anchor
+	 * the layout chooses on that side stays inside it. A side left out, or the field
+	 * left out, is usable from end to end (0..1).
+	 */
+	anchorRanges?: Partial<Record<LayoutSide, LayoutAnchorRange>>;
 };
 
 /**
@@ -66,10 +76,11 @@ export type LayoutEdgeAnchor = {
 	side: LayoutSide;
 	/**
 	 * Position along the side, 0..1 measured left to right on `top` / `bottom` and top to
-	 * bottom on `left` / `right`; 0.5 is the side's midpoint. Within
+	 * bottom on `left` / `right`; 0.5 is the side's midpoint. Always within the node's
+	 * {@link LayoutGraphNode.anchorRanges} for the side. Within
 	 * `EDGE_ANCHOR_STRAIGHT_RANGE` when that lets the edge leave in a straight line,
-	 * otherwise 0.5 for the only edge on its side and within `EDGE_ANCHOR_FAN_RANGE`
-	 * for one of several (see chooseEdgeAnchors).
+	 * otherwise the middle of the usable stretch for the only edge on its side and within
+	 * `EDGE_ANCHOR_FAN_RANGE` of that stretch for one of several (see chooseEdgeAnchors).
 	 */
 	t: number;
 };

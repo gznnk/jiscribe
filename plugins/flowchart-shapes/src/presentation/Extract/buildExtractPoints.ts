@@ -1,24 +1,6 @@
-import {
-	formatPolygonPoints,
-	centeredPolygonOutline,
-} from "@jiscribe/canvas-sdk";
-import type { Point } from "@jiscribe/geometry";
+import { formatPolygonPoints } from "@jiscribe/canvas-sdk";
 
-/**
- * Extract (upward-triangle) outline vertices (apex at top center, base along the
- * bottom) for a bounding box whose top-left corner is at (x, y). Single source
- * shared by the renderer, the draw-drag preview, and the connector outline calculator.
- */
-export const extractOutlinePoints = (
-	x: number,
-	y: number,
-	width: number,
-	height: number,
-): Point[] => [
-	{ x: x + width / 2, y },
-	{ x: x + width, y: y + height },
-	{ x, y: y + height },
-];
+import { extractOutlinePoints } from "../../schema/extract/extractOutline";
 
 export const buildExtractPoints = (
 	x: number,
@@ -26,5 +8,3 @@ export const buildExtractPoints = (
 	width: number,
 	height: number,
 ): string => formatPolygonPoints(extractOutlinePoints(x, y, width, height));
-
-export const extractOutline = centeredPolygonOutline(extractOutlinePoints);

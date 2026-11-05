@@ -23,6 +23,7 @@ import {
 	UML_PACKAGE_DOC_DEFAULTS,
 	UmlPackageFeatures,
 } from "./schema/UmlPackageDoc";
+import { umlPackageOutline } from "./schema/umlPackageOutline";
 import { validateRecordTextFields } from "./schema/validateRecordTextFields";
 
 /**
@@ -53,10 +54,15 @@ export const recordDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	},
 });
 
+/**
+ * `outline` is what puts a connector's center anchor on the notch beside the tab
+ * instead of on the bounding box.
+ */
 export const umlPackageDocDefinition: ObjectDocDefinition =
 	createFrameObjectDoc({
 		features: UmlPackageFeatures,
 		textRegion: calcUmlPackageTextRegion,
+		outline: umlPackageOutline,
 		defaults: UML_PACKAGE_DOC_DEFAULTS,
 		description: `UML package shape (a rectangle with a tab on its top-left corner), typically used for namespaces, modules and layers in UML package diagrams. ${RECT_GEOMETRY_NOTE} The rect is the outer bounds of the whole silhouette, tab included, and the text is laid out in the body below the tab. Distinct from "package", which is an isometric box for a build artifact or deployment unit, and from "container", which actually holds the objects placed inside it — this one is a plain shape with no children.`,
 		summary: "namespace, module, layer",

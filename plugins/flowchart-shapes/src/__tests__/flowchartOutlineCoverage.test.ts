@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { flowchartPlugin } from "../plugin";
+import { flowchartDocPlugin } from "../doc";
 import { buildSubroutinePath } from "../presentation/Subroutine/buildSubroutinePath";
 
 /**
@@ -19,7 +19,7 @@ const BOX_SILHOUETTE_TYPES = new Set(["subroutine"]);
 
 describe("flowchart shapes outline coverage", () => {
 	it("declares an outline for every shape whose silhouette is not its box", () => {
-		const missing = Object.entries(flowchartPlugin.objects ?? {})
+		const missing = Object.entries(flowchartDocPlugin.objects ?? {})
 			.filter(
 				([type, definition]) =>
 					!BOX_SILHOUETTE_TYPES.has(type) && definition?.outline === undefined,
@@ -30,7 +30,7 @@ describe("flowchart shapes outline coverage", () => {
 
 	it("keeps the exception list honest", () => {
 		for (const type of BOX_SILHOUETTE_TYPES) {
-			expect(flowchartPlugin.objects?.[type]?.outline).toBeUndefined();
+			expect(flowchartDocPlugin.objects?.[type]?.outline).toBeUndefined();
 		}
 	});
 

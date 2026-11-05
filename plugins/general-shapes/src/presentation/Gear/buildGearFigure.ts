@@ -1,4 +1,4 @@
-import { calcGearPoints } from "./calcGearPoints";
+import { calcGearPoints } from "../../schema/gear/calcGearPoints";
 import type { PictogramFigureBuilder } from "../shared/PictogramFigure";
 import { buildEllipsePath, buildPolygonPath } from "../shared/pictogramPaths";
 

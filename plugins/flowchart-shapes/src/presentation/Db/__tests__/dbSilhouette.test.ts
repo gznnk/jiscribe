@@ -2,8 +2,8 @@ import type { Point } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
 import { DB_CAP_RATIO } from "../../../schema/db/DbDoc";
+import { dbOutline } from "../../../schema/db/dbOutline";
 import { buildDbPaths } from "../buildDbPaths";
-import { dbOutline } from "../dbOutline";
 
 /**
  * The cylinder silhouette is written twice: the renderer draws two SVG arcs

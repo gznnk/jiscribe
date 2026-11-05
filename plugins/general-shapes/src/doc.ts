@@ -13,31 +13,45 @@ import {
 	BROWSER_WINDOW_DOC_DEFAULTS,
 	BrowserWindowFeatures,
 } from "./schema/browserWindow/BrowserWindowDoc";
+import { browserWindowOutline } from "./schema/browserWindow/browserWindowOutline";
 import { CLOUD_DOC_DEFAULTS, CloudFeatures } from "./schema/cloud/CloudDoc";
+import { cloudOutline } from "./schema/cloud/cloudOutline";
 import {
 	ENVELOPE_DOC_DEFAULTS,
 	EnvelopeFeatures,
 } from "./schema/envelope/EnvelopeDoc";
+import { envelopeOutline } from "./schema/envelope/envelopeOutline";
 import { FILE_DOC_DEFAULTS, FileFeatures } from "./schema/file/FileDoc";
+import { fileOutline } from "./schema/file/fileOutline";
 import { FOLDER_DOC_DEFAULTS, FolderFeatures } from "./schema/folder/FolderDoc";
+import { folderOutline } from "./schema/folder/folderOutline";
 import { GEAR_DOC_DEFAULTS, GearFeatures } from "./schema/gear/GearDoc";
+import { gearOutline } from "./schema/gear/gearOutline";
 import { LAPTOP_DOC_DEFAULTS, LaptopFeatures } from "./schema/laptop/LaptopDoc";
+import { laptopOutline } from "./schema/laptop/laptopOutline";
 import { LOCK_DOC_DEFAULTS, LockFeatures } from "./schema/lock/LockDoc";
+import { lockOutline } from "./schema/lock/lockOutline";
 import {
 	PACKAGE_DOC_DEFAULTS,
 	PackageFeatures,
 } from "./schema/package/PackageDoc";
+import { packageOutline } from "./schema/package/packageOutline";
 import { QUEUE_DOC_DEFAULTS, QueueFeatures } from "./schema/queue/QueueDoc";
+import { queueOutline } from "./schema/queue/queueOutline";
 import { SERVER_DOC_DEFAULTS, ServerFeatures } from "./schema/server/ServerDoc";
+import { serverOutline } from "./schema/server/serverOutline";
 import { SHIELD_DOC_DEFAULTS, ShieldFeatures } from "./schema/shield/ShieldDoc";
+import { shieldOutline } from "./schema/shield/shieldOutline";
 import {
 	SMARTPHONE_DOC_DEFAULTS,
 	SmartphoneFeatures,
 } from "./schema/smartphone/SmartphoneDoc";
+import { smartphoneOutline } from "./schema/smartphone/smartphoneOutline";
 import {
 	TERMINAL_WINDOW_DOC_DEFAULTS,
 	TerminalWindowFeatures,
 } from "./schema/terminalWindow/TerminalWindowDoc";
+import { terminalWindowOutline } from "./schema/terminalWindow/terminalWindowOutline";
 import {
 	calcCloudTextRegion,
 	calcFileTextRegion,
@@ -68,18 +82,25 @@ export const actorDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	summary: "user, role, stakeholder",
 });
 
+/**
+ * `outline` is what attaches a connector's center anchor to the bumpy silhouette
+ * instead of the bounding box (cloudOutline).
+ */
 export const cloudDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: CloudFeatures,
 	textRegion: calcCloudTextRegion,
+	outline: cloudOutline,
 	defaults: CLOUD_DOC_DEFAULTS,
 	description:
 		"Cloud shape, typically used for external systems/networks in architecture diagrams or fuzzy concepts in brainstorming. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a cloud. Text is laid out in a reduced central region inside the bumps, so give it generous width/height for longer text.",
 	summary: "external system, fuzzy concept",
 });
 
+/** `outline` rounds the rack's corners. */
 export const serverDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: ServerFeatures,
 	textRegion: calcOutsideBoxTextRegion,
+	outline: serverOutline,
 	defaults: SERVER_DOC_DEFAULTS,
 	description: `Server rack shape (a box divided into stacked units, each with a status light), typically used for hosts, nodes and long-running processes in architecture diagrams. ${RECT_GEOMETRY_NOTE} ${BELOW_LABEL_NOTE} A portrait aspect ratio (e.g. 90x110) looks best. Prefer "package" for something that is deployed rather than something that runs.`,
 	summary: "host, node, running process",
@@ -89,6 +110,7 @@ export const browserWindowDocDefinition: ObjectDocDefinition =
 	createFrameObjectDoc({
 		features: BrowserWindowFeatures,
 		textRegion: calcWindowTextRegion,
+		outline: browserWindowOutline,
 		defaults: BROWSER_WINDOW_DOC_DEFAULTS,
 		description: `Browser window shape (a frame with a title bar carrying three window buttons): the symbol that stands for a web UI, e.g. to show which screen calls which service. Its title bar and buttons are fractions of the box, so it reads at around its default size and turns into a giant bar with giant buttons when blown up — it is a node to point at, not a frame to lay a screen out inside. For a screen mockup, draw the regions with rect (or container for a titled one). ${RECT_GEOMETRY_NOTE} Text is laid out in the content area below the title bar, so a landscape aspect ratio (e.g. 160x110) suits it.`,
 		summary: "web UI node (a symbol, not a frame to lay a screen out in)",
@@ -98,30 +120,40 @@ export const terminalWindowDocDefinition: ObjectDocDefinition =
 	createFrameObjectDoc({
 		features: TerminalWindowFeatures,
 		textRegion: calcWindowTextRegion,
+		outline: terminalWindowOutline,
 		defaults: TERMINAL_WINDOW_DOC_DEFAULTS,
 		description: `Terminal window shape (the same frame as browserWindow, with a shell prompt in the title bar instead of the window buttons), typically used for CLIs, shell sessions and scripts. ${RECT_GEOMETRY_NOTE} Text is laid out in the content area below the title bar, so a landscape aspect ratio (e.g. 160x110) suits it.`,
 		summary: "CLI, shell session",
 	});
 
+/** `outline` puts a connector's center anchor on the tab's slanted edge. */
 export const folderDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: FolderFeatures,
 	textRegion: calcFolderTextRegion,
+	outline: folderOutline,
 	defaults: FOLDER_DOC_DEFAULTS,
 	description: `Folder shape (a tab on the top-left corner), typically used for directories and for grouping. ${RECT_GEOMETRY_NOTE} Text is laid out below the tab. For a frame that other objects are placed inside, use a container shape instead — this one is a plain icon and does not hold children.`,
 	summary: "directory, grouping",
 });
 
+/** `outline` puts a connector's center anchor on the folded corner's diagonal. */
 export const fileDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: FileFeatures,
 	textRegion: calcFileTextRegion,
+	outline: fileOutline,
 	defaults: FILE_DOC_DEFAULTS,
 	description: `File shape (a folded top-right corner), typically used for source files and configuration. ${RECT_GEOMETRY_NOTE} Text is laid out below the fold, so a portrait aspect ratio (e.g. 100x120) looks best. Distinct from the flowchart "document" (wavy bottom edge, a flowchart step) and "card" (clipped top-left corner), and from "note", which folds the same corner but is a comment box about the diagram rather than a thing the diagram is about.`,
 	summary: "source file, configuration",
 });
 
+/**
+ * The hexagon leaves every corner of the bounding box empty, so `outline` is
+ * what keeps a connector from stopping in mid-air.
+ */
 export const packageDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: PackageFeatures,
 	textRegion: calcOutsideBoxTextRegion,
+	outline: packageOutline,
 	defaults: PACKAGE_DOC_DEFAULTS,
 	description: `Isometric box shape, typically used for libraries, build artifacts and deployment units. ${RECT_GEOMETRY_NOTE} ${BELOW_LABEL_NOTE} The hexagon is a cube in isometric projection, so it reads as a cube only when the box is slightly taller than wide (e.g. 95x110); a square box widens it. Prefer "server" for something that runs rather than something that is deployed.`,
 	summary: "library, artifact, deployment unit",
@@ -130,6 +162,7 @@ export const packageDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 export const envelopeDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: EnvelopeFeatures,
 	textRegion: calcOutsideBoxTextRegion,
+	outline: envelopeOutline,
 	defaults: ENVELOPE_DOC_DEFAULTS,
 	description: `Closed envelope shape, typically used for a single message or event. ${RECT_GEOMETRY_NOTE} ${BELOW_LABEL_NOTE} A landscape aspect ratio (e.g. 120x84) looks best. Prefer "queue" for the buffer messages sit in rather than for one message.`,
 	summary: "message, event",
@@ -138,30 +171,44 @@ export const envelopeDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 export const queueDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: QueueFeatures,
 	textRegion: calcOutsideBoxTextRegion,
+	outline: queueOutline,
 	defaults: QUEUE_DOC_DEFAULTS,
 	description: `Queue shape (a row of cells), typically used for job queues, message queues and topics. ${RECT_GEOMETRY_NOTE} ${BELOW_LABEL_NOTE} It carries no direction mark, so which end is the head is whatever the connectors say. A wide, short aspect ratio (e.g. 160x70) looks best.`,
 	summary: "job queue, message queue",
 });
 
+/**
+ * `outline` follows the teeth: the gear never reaches a corner of its box, so the
+ * bounding box overshoots it by more than 40% on the diagonals (gearOutline).
+ */
 export const gearDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: GearFeatures,
 	textRegion: calcOutsideBoxTextRegion,
+	outline: gearOutline,
 	defaults: GEAR_DOC_DEFAULTS,
 	description: `Gear shape, typically used for services, batch jobs and daemons — work that runs on its own rather than being called through a UI. ${RECT_GEOMETRY_NOTE} ${BELOW_LABEL_NOTE} A square aspect ratio (e.g. 100x100) looks best; a stretched box gives a stretched gear.`,
 	summary: "service, batch job, daemon",
 });
 
+/**
+ * The shackle encloses nothing, so there is no silhouette to copy; `outline`
+ * traces the visible envelope instead — the body block with the arch on it
+ * (lockOutline).
+ */
 export const lockDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: LockFeatures,
 	textRegion: calcOutsideBoxTextRegion,
+	outline: lockOutline,
 	defaults: LOCK_DOC_DEFAULTS,
 	description: `Padlock shape, typically used for authentication steps and protected resources. ${RECT_GEOMETRY_NOTE} ${BELOW_LABEL_NOTE} A portrait aspect ratio (e.g. 80x100) looks best. Prefer "shield" for a boundary that other things sit behind.`,
 	summary: "authentication, protected resource",
 });
 
+/** `outline` follows the taper, which leaves the bottom corners of the box empty. */
 export const shieldDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: ShieldFeatures,
 	textRegion: calcShieldTextRegion,
+	outline: shieldOutline,
 	defaults: SHIELD_DOC_DEFAULTS,
 	description: `Shield shape, typically used for security boundaries and trust zones. ${RECT_GEOMETRY_NOTE} Text is laid out in the straight-sided upper part only, since the lower part tapers to a point — keep it short, or give the shape more height. Prefer "lock" for a single protected resource.`,
 	summary: "security boundary, trust zone",
@@ -171,14 +218,21 @@ export const smartphoneDocDefinition: ObjectDocDefinition =
 	createFrameObjectDoc({
 		features: SmartphoneFeatures,
 		textRegion: calcSmartphoneTextRegion,
+		outline: smartphoneOutline,
 		defaults: SMARTPHONE_DOC_DEFAULTS,
 		description: `Smartphone shape, typically used for mobile clients. ${RECT_GEOMETRY_NOTE} Text is laid out on the screen, which is narrow — keep it to a word or two, or widen the box. A portrait aspect ratio (e.g. 70x120) looks best.`,
 		summary: "mobile client",
 	});
 
+/**
+ * The drawing is two pieces, but their union is one closed polygon and only the
+ * base spans the full width, so `outline` is what keeps a connector off the empty
+ * top corners (laptopOutline).
+ */
 export const laptopDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: LaptopFeatures,
 	textRegion: calcLaptopTextRegion,
+	outline: laptopOutline,
 	defaults: LAPTOP_DOC_DEFAULTS,
 	description: `Laptop shape (screen over a splayed base), typically used for desktop and web clients. ${RECT_GEOMETRY_NOTE} Text is laid out on the screen, so the base band at the bottom of the box stays clear. A landscape aspect ratio (e.g. 140x100) looks best.`,
 	summary: "desktop client, web client",

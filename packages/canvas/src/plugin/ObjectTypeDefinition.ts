@@ -11,11 +11,9 @@ import type { ObjectTextEditOverflowResolver } from "../controllers/ui/editors/O
 import type { ObjectMenuSection } from "../controllers/ui/menu/ObjectMenu/ObjectMenuTypes";
 import type { PropertyPanelSection } from "../controllers/ui/menu/PropertyPanel/PropertyPanelTypes";
 import type { Stencil } from "../controllers/ui/objects/Stencil";
-import type { ObjectAnchorRegionCalculator } from "../rendering/objects/registry/ObjectAnchorRegionRegistry";
 import type { ObjectConnectionAnchorsDeclaration } from "../rendering/objects/registry/ObjectConnectionAnchorsRegistry";
 import type { ObjectExtraConnectPointsCalculator } from "../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import type { ObjectGeometryKeyCalculator } from "../rendering/objects/registry/ObjectGeometryKeyRegistry";
-import type { ObjectOutlineCalculator } from "../rendering/objects/registry/ObjectOutlineRegistry";
 import type { ObjectPartKindDefinition } from "../rendering/objects/registry/ObjectPartKindRegistry";
 import type { ObjectTextMeasurer } from "../rendering/objects/registry/ObjectTextMeasurerRegistry";
 import type { ObjectVisualBoundsCalculator } from "../rendering/objects/registry/ObjectVisualBoundsRegistry";
@@ -40,6 +38,10 @@ import type { ObjectStateValidator } from "../states/registry/ObjectStateValidat
  * a renderer has no use for. Most shipped shapes declare the very same function
  * on both sides; the ones that cannot are those whose region is sized from the
  * text itself (a below-label caption, a record's bands).
+ *
+ * The inherited `outline` / `anchorRegion` are the doc's too, and the canvas
+ * draws connector ends and connection anchors from them as they are: they read
+ * only fields a doc and a state share, so the canvas calls them with the state.
  *
  * `TDoc` / `TState` tie `mapper` / `behavior` / `selectionControls` to one state
  * type. A plugin declares a standalone definition with an explicit
@@ -108,12 +110,6 @@ export type ObjectTypeDefinition<
 	 * `layoutVisualLines` (see ObjectTextMeasurerRegistry).
 	 */
 	textMeasurer?: ObjectTextMeasurer<TState>;
-
-	/** Hit-test / snap outline. Omitted = bounding-box rect/ellipse (see ObjectOutlineRegistry). */
-	outline?: ObjectOutlineCalculator;
-
-	/** Band the edge connect points are centered on. Omitted = full bbox (see ObjectAnchorRegionRegistry). */
-	anchorRegion?: ObjectAnchorRegionCalculator;
 
 	/**
 	 * Named connection points this type offers on top of the four edge midpoints

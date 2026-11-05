@@ -8,9 +8,9 @@
 // ObjectFactory / validate*Doc / Mapper / validate*State (only the group marker factory
 // is swapped in, by passing schema/shared/createGroupMarkerObjectFactory). The headless
 // parts of schema/** (AUTO_COLOR / BELOW_LABEL_STYLE_DEFAULTS) come from
-// `@jiscribe/canvas-sdk/doc`; the presentation / controls parts (createFrameObject /
-// calcLabelBoxSize / readTextSlot / centeredPolygonOutline / SelectionControlPill) come
-// through `@jiscribe/canvas-sdk`.
+// `@jiscribe/canvas-sdk/doc`, as does centeredPolygonOutline for the outlines; the
+// presentation / controls parts (createFrameObject / calcLabelBoxSize / readTextSlot /
+// SelectionControlPill) come through `@jiscribe/canvas-sdk`.
 // The headless parse entry point is ./doc (annotationDocPlugin).
 // Shapes get one folder each (schema/<id>/, state/<id>/, presentation/<Pascal>/), and
 // parts shared by several shapes live in each layer's shared/. brace / bracket /
@@ -34,6 +34,15 @@ export * from "./schema/bracket/BracketDoc";
 export * from "./schema/bracketWithStem/BracketWithStemDoc";
 export * from "./schema/callout/CalloutDoc";
 export * from "./schema/note/NoteDoc";
+// The outlines are declared on the doc definitions (./doc), so they and the
+// point lists they are built from live in schema/.
+export { calloutOutline } from "./schema/callout/calloutOutline";
+export {
+	calcCalloutTailTipPoint,
+	isVerticalTailSide,
+} from "./schema/callout/calloutTailGeometry";
+export { calcNotePoints } from "./schema/note/calcNotePoints";
+export { noteOutline } from "./schema/note/noteOutline";
 
 export * from "./state/brace/BraceState";
 export * from "./state/bracket/BracketState";

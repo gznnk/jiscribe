@@ -1,5 +1,5 @@
-import { calcCalloutPolygon } from "./calloutTailGeometry";
 import type { CalloutTail } from "../../schema/callout/CalloutDoc";
+import { calcCalloutPolygon } from "../../schema/callout/calloutTailGeometry";
 
 /**
  * Builds the callout path (bubble body + tail) for a bounding box whose

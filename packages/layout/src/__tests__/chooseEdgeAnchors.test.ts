@@ -58,6 +58,35 @@ describe("chooseEdgeAnchors", () => {
 		expect(gs.source.t).toBe(0.8);
 	});
 
+	it("runs an edge between two shared sides straight within a side's usable stretch", () => {
+		// p's left is usable from its middle down; by rank alone the column would land
+		// a third of the way down p, above that stretch.
+		const tallG = ["g", at(0, 0, 128)] as const;
+		const tallP = ["p", at(200, 10, 100)] as const;
+		const pLeft = { left: { min: 0.5, max: 1 } };
+		const [gp, , rp] = chooseEdgeAnchors(
+			[
+				{ ...link("gp", tallG, tallP), targetAnchorRanges: pLeft },
+				link("gs", tallG, ["sql", at(200, 300)]),
+				{
+					...link("rp", ["r", at(0, 140)], tallP),
+					targetAnchorRanges: pLeft,
+				},
+			],
+			rows,
+			axis,
+		);
+
+		expect(gp.target.t).toBeGreaterThanOrEqual(0.5);
+		expect(gp.target.t).toBeLessThanOrEqual(1);
+		expect(columnOf(tallP[1], gp.target.t)).toBeCloseTo(
+			columnOf(tallG[1], gp.source.t),
+			6,
+		);
+		expect(rp.target.t).toBeGreaterThanOrEqual(0.5);
+		expect(rp.target.t).toBeLessThanOrEqual(1);
+	});
+
 	it("keeps the fanned ends when the two sides share no straight column", () => {
 		const below = ["below", at(200, 100)] as const;
 		const above = ["above", at(200, -100)] as const;

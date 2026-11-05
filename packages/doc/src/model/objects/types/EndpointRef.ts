@@ -44,8 +44,11 @@ export type EdgeAnchorSpec = {
 	/**
 	 * Position along that edge, 0..1. Measured left → right on `top`/`bottom`
 	 * and top → bottom on `left`/`right`, in local space (a flip mirrors where
-	 * the ratio lands rather than renumbering it). 0.5 is the edge midpoint,
-	 * i.e. the same place as the matching {@link ConnectPointId}.
+	 * the ratio lands rather than renumbering it), along the side of the owner
+	 * type's anchor region where it declares one
+	 * (`ObjectDocDefinition.anchorRegion`) and of the bounding box otherwise.
+	 * 0.5 is the edge midpoint, i.e. the same place as the matching
+	 * {@link ConnectPointId}.
 	 */
 	t: number;
 };

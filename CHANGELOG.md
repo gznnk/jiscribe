@@ -244,6 +244,23 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Changed
 
+- **Breaking: a type declares its `outline` and `anchorRegion` on its doc
+  definition.** Both move from `ObjectTypeDefinition` to `ObjectDocDefinition`
+  (typed `ObjectDocOutlineCalculator` / `ObjectDocAnchorRegionCalculator`, new
+  exports of `@jiscribe/doc`), which `ObjectTypeDefinition` inherits, so the
+  headless layer can read where a shape's silhouette runs. A plugin passing
+  `outline` / `anchorRegion` to `createFrameObjectDefinition` gets a type error:
+  pass them to `createFrameObjectDoc` (`@jiscribe/canvas-sdk/doc`), which now
+  takes both and carries them into the definition, and the UI definition picks
+  them up from `doc`. The calculator reads only fields a doc and a state share
+  under the same name, since the canvas calls it with the state and the doc
+  layer with the doc. `ObjectOutlineCalculator` / `ObjectAnchorRegionCalculator`
+  (`@jiscribe/canvas`) remain as aliases of the doc types, and their default
+  type argument is now `Dimensions` rather than `ObjectState & Dimensions`.
+  `centeredPolygonOutline`, `OUTLINE_CURVE_SEGMENTS` and
+  `calcRoundedRectOutline` are exported from `@jiscribe/canvas-sdk/doc` as well
+  as from `@jiscribe/canvas-sdk`. The shipped plugins' outline functions move
+  into their headless `schema/` layer and keep their package-root exports.
 - **Breaking: `TextSlotMeasurement.lineCount` is `number | null`.** A body laid
   out as HTML blocks (the markdown card, or any type declaring `textMeasurer`)
   has no line count and reports `null`; code that does arithmetic on it has to
@@ -445,6 +462,20 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Fixed
 
+- **Automatic layout keeps a connector's end on the drawn outline.** It chose
+  where along a side an end sits as a share of the bounding box, so on a shape
+  whose outline does not reach the whole side (a parallelogram's top and
+  bottom) it could pick a spot past the slanted side, and the line started in
+  mid-air beside the shape. `docOps.layoutObjects` and the canvas's layout
+  commands now keep every end within the stretch of the side where an anchor's
+  ray starts inside the outline and leaves it, from the type's `outline` and
+  `anchorRegion`; a rotated or flipped shape is left out, being laid out by its
+  box. `LayoutGraphNode` (`@jiscribe/layout`) takes that stretch per side as
+  `anchorRanges` (each a `LayoutAnchorRange`, now exported), and
+  `TakenEnds.place` takes one for its side. The ends are
+  also written as a share of the type's anchor region, which is how they are
+  drawn: on the loop limit's and the off-page connector's left and right sides a
+  line the layout ran straight used to meet the shape off level.
 - **A connector label with no `fill` masks the line in the document's
   `background`.** It drew in the theme's canvas colour, so on a document with its
   own opaque `background` every default label was a box of another colour, in the

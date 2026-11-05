@@ -1,0 +1,18 @@
+import type { ObjectDocAnchorRegionCalculator } from "@jiscribe/doc";
+import type { Dimensions } from "@jiscribe/geometry";
+import { calcInsetRect } from "@jiscribe/geometry";
+
+import { LOOP_LIMIT_CUT_RATIO } from "./LoopLimitDoc";
+
+/**
+ * Insets the top by the corner cut so the left/right anchors sit at the middle
+ * of the straight side rather than up in the bevelled part. The cut follows the
+ * shorter side (min(w, h) * LOOP_LIMIT_CUT_RATIO), so a constant ratio would
+ * misplace them at non-square aspect ratios.
+ */
+export const calcLoopLimitAnchorRegion: ObjectDocAnchorRegionCalculator<
+	Dimensions
+> = ({ width, height }) => {
+	const cut = Math.min(width, height) * LOOP_LIMIT_CUT_RATIO;
+	return calcInsetRect({ cx: 0, cy: 0, width, height }, { top: cut / height });
+};

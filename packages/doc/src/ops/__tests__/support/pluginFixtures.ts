@@ -310,3 +310,109 @@ export const ovalRegionDefinition: ObjectDocDefinition = {
 	validateDoc: () => [],
 	container: () => ({ titleHeight: 0 }),
 };
+
+/**
+ * A parallelogram whose top edge is shifted right by 22% of the width, the way the
+ * flowchart plugin's is (which a doc test cannot import): its top and bottom only reach
+ * along 0.11 .. 0.89 of the box's side on the center line. Created 160 by 80.
+ */
+export const slantedDefinition: ObjectDocDefinition = {
+	features: {
+		type: "slanted",
+		geometry: "rect",
+		transform: true,
+		connectable: true,
+	},
+	validateDoc: () => [],
+	outline: ({ width, height }) => {
+		const skew = width * 0.22;
+		return [
+			{ x: -width / 2 + skew, y: -height / 2 },
+			{ x: width / 2, y: -height / 2 },
+			{ x: width / 2 - skew, y: height / 2 },
+			{ x: -width / 2, y: height / 2 },
+		];
+	},
+	factory: createFrameObjectFactory({
+		type: "slanted",
+		width: 160,
+		height: 80,
+	}),
+};
+
+/**
+ * Corners cut off the top (by a fifth of the shorter side) and the edge anchors
+ * centered on the body below the cut, the way the flowchart plugin's loop limit
+ * declares them. Created 160 by 100, so the cut is 20 and the anchor region's left
+ * and right sides run over the box's 0.2 .. 1.
+ */
+export const cutTopDefinition: ObjectDocDefinition = {
+	features: {
+		type: "cut-top",
+		geometry: "rect",
+		transform: true,
+		connectable: true,
+	},
+	validateDoc: () => [],
+	outline: ({ width, height }) => {
+		const cut = Math.min(width, height) * 0.2;
+		return [
+			{ x: -width / 2 + cut, y: -height / 2 },
+			{ x: width / 2 - cut, y: -height / 2 },
+			{ x: width / 2, y: -height / 2 + cut },
+			{ x: width / 2, y: height / 2 },
+			{ x: -width / 2, y: height / 2 },
+			{ x: -width / 2, y: -height / 2 + cut },
+		];
+	},
+	anchorRegion: ({ width, height }) => {
+		const cut = Math.min(width, height) * 0.2;
+		return {
+			x: -width / 2,
+			y: -height / 2 + cut,
+			width,
+			height: height - cut,
+		};
+	},
+	factory: createFrameObjectFactory({
+		type: "cut-top",
+		width: 160,
+		height: 100,
+	}),
+};
+
+/**
+ * A body with a tip below it (the bottom quarter) and the edge anchors centered on the
+ * body, the way the flowchart plugin's off-page connector declares them. Created 160
+ * by 100, so the anchor region's left and right sides run over the box's 0 .. 0.75.
+ */
+export const tippedDefinition: ObjectDocDefinition = {
+	features: {
+		type: "tipped",
+		geometry: "rect",
+		transform: true,
+		connectable: true,
+	},
+	validateDoc: () => [],
+	outline: ({ width, height }) => {
+		const shoulderY = height / 2 - height * 0.25;
+		return [
+			{ x: -width / 2, y: -height / 2 },
+			{ x: width / 2, y: -height / 2 },
+			{ x: width / 2, y: shoulderY },
+			{ x: 0, y: height / 2 },
+			{ x: -width / 2, y: shoulderY },
+		];
+	},
+	anchorRegion: ({ width, height }) => ({
+		x: -width / 2,
+		y: -height / 2,
+		width,
+		height: height * 0.75,
+	}),
+	factory: createFrameObjectFactory({
+		type: "tipped",
+		width: 160,
+		height: 100,
+	}),
+};

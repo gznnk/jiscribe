@@ -186,6 +186,105 @@ describe("computeLayeredLayout", () => {
 		]);
 	});
 
+	it("leaves a column outside a side's usable stretch instead of running straight to it", () => {
+		// The same drawing as above, but a's bottom only reaches from 0.11 to 0.89 (a
+		// parallelogram's): both columns fall outside it, so both ends fan out within it.
+		const usable = { min: 0.11, max: 0.89 };
+		const result = computeLayeredLayout(
+			[
+				{ ...box("a"), anchorRanges: { bottom: usable } },
+				{ id: "b", width: 60, height: 40 },
+				box("c"),
+			],
+			[
+				{ id: "ab", sourceId: "a", targetId: "b" },
+				{ id: "ac", sourceId: "a", targetId: "c" },
+			],
+			{ nodeSpacing: 20 },
+		);
+
+		const ab = result.edges.find(({ id }) => id === "ab");
+		const ac = result.edges.find(({ id }) => id === "ac");
+		// EDGE_ANCHOR_FAN_RANGE taken as shares of 0.11..0.89.
+		expect(ab?.source.t).toBeCloseTo(0.11 + 0.78 * 0.8, 9);
+		expect(ac?.source.t).toBeCloseTo(0.11 + 0.78 * 0.2, 9);
+		expect(ab?.points.length).toBeGreaterThan(0);
+	});
+
+	it("centres a side's only edge on its usable stretch, and runs the other end straight to it", () => {
+		// b's left side is usable on its lower half only (a loop limit's body below the cut).
+		const result = computeLayeredLayout(
+			[box("a"), { ...box("b"), anchorRanges: { left: { min: 0.5, max: 1 } } }],
+			[{ id: "ab", sourceId: "a", targetId: "b" }],
+			{ direction: "LR" },
+		);
+
+		const [a, b] = result.nodes.map(({ bounds }) => bounds);
+		const [ab] = result.edges;
+		expect(ab.target).toEqual({ side: "left", t: 0.75 });
+		expect(a.y + a.height * ab.source.t).toBeCloseTo(
+			b.y + b.height * ab.target.t,
+			9,
+		);
+		expect(ab.points).toEqual([]);
+	});
+
+	it("centres the only edge on a side on its usable stretch when no straight line is possible", () => {
+		const usable = { min: 0.5, max: 1 };
+		const result = computeLayeredLayout(
+			[
+				box("root"),
+				{ ...box("left"), anchorRanges: { top: usable } },
+				{ ...box("right"), anchorRanges: { top: usable } },
+			],
+			[
+				{ id: "e1", sourceId: "root", targetId: "left" },
+				{ id: "e2", sourceId: "root", targetId: "right" },
+			],
+			{ nodeSpacing: 200 },
+		);
+
+		expect(result.edges.map(({ target }) => target.t)).toEqual([0.75, 0.75]);
+	});
+
+	it("fans several edges out within the side's usable stretch", () => {
+		const result = computeLayeredLayout(
+			[
+				{ ...box("root"), anchorRanges: { bottom: { min: 0.3, max: 0.7 } } },
+				box("left"),
+				box("right"),
+			],
+			[
+				{ id: "e1", sourceId: "root", targetId: "left" },
+				{ id: "e2", sourceId: "root", targetId: "right" },
+			],
+			{ nodeSpacing: 200 },
+		);
+
+		const sourceRatios = result.edges.map(({ source }) => source.t).sort();
+		// EDGE_ANCHOR_FAN_RANGE taken as shares of 0.3..0.7.
+		expect(sourceRatios[0]).toBeCloseTo(0.38, 9);
+		expect(sourceRatios[1]).toBeCloseTo(0.62, 9);
+	});
+
+	it("keeps a bundle's ends inside the side's usable stretch", () => {
+		const usable = { min: 0.5, max: 0.55 };
+		const result = computeLayeredLayout(
+			[{ ...box("a"), anchorRanges: { bottom: usable } }, box("b")],
+			[
+				{ id: "down", sourceId: "a", targetId: "b" },
+				{ id: "back", sourceId: "b", targetId: "a" },
+			],
+		);
+
+		for (const edge of result.edges) {
+			const onA = edge.id === "down" ? edge.source : edge.target;
+			expect(onA.side).toBe("bottom");
+			expect(onA.t).toBeGreaterThanOrEqual(usable.min);
+			expect(onA.t).toBeLessThanOrEqual(usable.max);
+		}
+	});
+
 	it("keeps room for a label in the gap it crosses and says where on the route it sits", () => {
 		const result = computeLayeredLayout(
 			[box("a"), box("b")],

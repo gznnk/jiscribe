@@ -18,7 +18,6 @@ import { calcRecordTextSlotRegions } from "./presentation/calcRecordTextSlotRegi
 import { RecordBox } from "./presentation/RecordBox";
 import { UmlComponentBox } from "./presentation/UmlComponentBox";
 import { UmlPackageBox } from "./presentation/UmlPackageBox";
-import { umlPackageOutline } from "./presentation/umlPackageOutline";
 import { isRecordListTextSlotId } from "./schema/RecordDoc";
 import type { RecordDoc } from "./schema/RecordDoc";
 import { calcUmlPackageTextRegion } from "./schema/textRegions";
@@ -93,9 +92,8 @@ export const recordDefinition: ObjectTypeDefinition<RecordDoc, RecordState> = {
 };
 
 /**
- * `outline` is what puts a connector's center anchor on the notch beside the tab
- * instead of on the bounding box, and `textRegion` keeps the name in the body, so
- * a first line cannot run into the tab. `menu` stays undeclared, so it is derived
+ * `textRegion` keeps the name in the body, so a first line cannot run into the
+ * tab. `menu` stays undeclared, so it is derived
  * from the features, unlike the record's.
  */
 export const umlPackageDefinition: ObjectTypeDefinition<
@@ -105,7 +103,6 @@ export const umlPackageDefinition: ObjectTypeDefinition<
 	doc: umlPackageDocDefinition,
 	component: UmlPackageBox,
 	textRegion: calcUmlPackageTextRegion,
-	outline: umlPackageOutline,
 	stencils: createTypeStencils({
 		objectType: "umlPackage",
 		label: { en: "Package", ja: "パッケージ" },
@@ -114,7 +111,7 @@ export const umlPackageDefinition: ObjectTypeDefinition<
 });
 
 /**
- * No `outline` and no `textRegion`: the silhouette is the bounding box itself
+ * No `textRegion`, and no `outline` on its doc definition: the silhouette is the bounding box itself
  * (the icon is drawn inside it), which is exactly what both default to, and the
  * name is centered over the whole box.
  */

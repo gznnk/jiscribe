@@ -40,12 +40,13 @@ export { FRAME_BORDER_HIT_STROKE_WIDTH } from "./presentation/frameBorderHitStro
 
 // Outline helpers for drawing frame-based plugin shapes and their connector
 // outline. The `points` string they are drawn with is `formatPolygonPoints`, in
-// the unstable surface re-exported above.
+// the unstable surface re-exported above. Headless, and re-exported from `./doc`
+// as well, where the shape's doc definition declares its `outline` with them.
 export {
 	centeredPolygonOutline,
 	OUTLINE_CURVE_SEGMENTS,
-} from "./presentation/outlineHelpers";
-export { calcRoundedRectOutline } from "./presentation/calcRoundedRectOutline";
+} from "./schema/outlineHelpers";
+export { calcRoundedRectOutline } from "./schema/calcRoundedRectOutline";
 
 // For shapes whose text region is nothing but a fixed ratio inset of the box
 // (most non-below-label shapes): pass the ratios in place of a hand-written

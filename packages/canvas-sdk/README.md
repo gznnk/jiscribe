@@ -42,12 +42,14 @@ ESM 専用、など）。1 ファイル 1 エントリで対応させること�
   導出して `ObjectDocDefinition` を丸ごと返す。族固有 factory は `factory:` で上書き可
   （`supportsBounds` と型排他）。`extraKeys` はその型が持つフィールド名の唯一の宣言で、
   パーサーはそれと features から集合を組み立て、集合に無い名前を warning で報告して
-  doc から取り除く（**`extraKeys` の書き漏れは保存時のデータ消失になる**）
+  doc から取り除く（**`extraKeys` の書き漏れは保存時のデータ消失になる**）。外形
+  `outline` とアンカー領域 `anchorRegion` もここで宣言する（UI 定義はそれを引き継ぐ
+  だけで、別に渡す口は無い）
 - `createFrameObjectDefinition<TDoc, TState>({ doc, component, ... })` — mapper /
   stateValidator / behavior を doc.features から充填して `ObjectTypeDefinition` を返す。
   図形固有のフィールド名は doc 定義の `extraKeys` から読む（宣言は
   `createFrameObjectDoc` 側 1 箇所）。`isExtraStateValid` と、`textRegion` /
-  `outline` / `stencils` 等の任意フィールドを透過
+  `visualBounds` / `stencils` 等の任意フィールドを透過
 
 どちらも糖衣であり、`ObjectDocDefinition` / `ObjectTypeDefinition` の直書きは引き続き
 第一級（例: uml の record は mapper が派生物のため definition を直書き）。
@@ -56,14 +58,15 @@ ESM 専用、など）。1 ファイル 1 エントリで対応させること�
 
 - `ShapeBodyPolygon` / `ShapeBodyPath` — 図形本体の styled 基底（stroke / fill props +
   掴めるカーソル + focus 輪郭消し）
-- `calcRoundedRectOutline` — 角丸矩形の輪郭点列サンプリング
+- `calcRoundedRectOutline` — 角丸矩形の輪郭点列サンプリング（`/doc` からも import できる）
 - below-label 機構（`calcBelowLabelTextRegion` / `calcBelowLabelVisualBounds` /
   `BelowLabelHitArea` / `BELOW_LABEL_STYLE_DEFAULTS`）— 箱いっぱいに描く図形の
   「文字を箱の下へ吊る」一式
 - `calcLabelBoxSize` — 上記のラベル箱の採寸だけを取り出したもの。箱の下以外へ
   ラベルを吊る図形（グループマーカー等）が置き場所だけ自前で決めるときに使う
-- `centeredPolygonOutline` / `OUTLINE_CURVE_SEGMENTS`（点列を `points` 属性へ書くのは
-  canvas の unstable 面が持つ `formatPolygonPoints`。この sdk からも import できる）
+- `centeredPolygonOutline` / `OUTLINE_CURVE_SEGMENTS`（`/doc` からも import できる。
+  doc 定義の `outline` はこちらで組む。点列を `points` 属性へ書くのは canvas の
+  unstable 面が持つ `formatPolygonPoints`。この sdk からも import できる）
 
 ### stencil 部材
 

@@ -103,12 +103,94 @@ export const portedPlugin: CanvasPlugin = {
 	},
 };
 
+const slantedFeatures = {
+	type: "slanted",
+	geometry: "rect",
+	transform: true,
+	connectable: true,
+} as const;
+
+const cutTopFeatures = {
+	type: "cut-top",
+	geometry: "rect",
+	transform: true,
+	connectable: true,
+} as const;
+
+/**
+ * Two types whose outline is not their box: `slanted`, a parallelogram whose top edge
+ * is shifted right by 22% of the width (its top and bottom reach along 0.11 .. 0.89 of
+ * the box's side on the center line), and `cut-top`, with its top corners cut off by a
+ * fifth of the shorter side and its edge anchors centered on the body below the cut,
+ * the way the flowchart plugin's parallelogram and loop limit are.
+ */
+export const outlinedPlugin: CanvasPlugin = {
+	id: "outlined-plugin",
+	objects: {
+		slanted: defineObject({
+			features: slantedFeatures,
+			validateDoc: () => [],
+			outline: ({ width, height }) => {
+				const skew = width * 0.22;
+				return [
+					{ x: -width / 2 + skew, y: -height / 2 },
+					{ x: width / 2, y: -height / 2 },
+					{ x: width / 2 - skew, y: height / 2 },
+					{ x: -width / 2, y: height / 2 },
+				];
+			},
+			factory: createFrameObjectFactory({
+				type: "slanted",
+				width: 160,
+				height: 80,
+			}),
+			mapper: createFrameMapper<ObjectDoc, RegionState>(slantedFeatures),
+			stateValidator: () => true,
+			component: () => null,
+			behavior: createFrameBehavior<RegionState>(),
+		}),
+		"cut-top": defineObject({
+			features: cutTopFeatures,
+			validateDoc: () => [],
+			outline: ({ width, height }) => {
+				const cut = Math.min(width, height) * 0.2;
+				return [
+					{ x: -width / 2 + cut, y: -height / 2 },
+					{ x: width / 2 - cut, y: -height / 2 },
+					{ x: width / 2, y: -height / 2 + cut },
+					{ x: width / 2, y: height / 2 },
+					{ x: -width / 2, y: height / 2 },
+					{ x: -width / 2, y: -height / 2 + cut },
+				];
+			},
+			anchorRegion: ({ width, height }) => {
+				const cut = Math.min(width, height) * 0.2;
+				return {
+					x: -width / 2,
+					y: -height / 2 + cut,
+					width,
+					height: height - cut,
+				};
+			},
+			factory: createFrameObjectFactory({
+				type: "cut-top",
+				width: 160,
+				height: 100,
+			}),
+			mapper: createFrameMapper<ObjectDoc, RegionState>(cutTopFeatures),
+			stateValidator: () => true,
+			component: () => null,
+			behavior: createFrameBehavior<RegionState>(),
+		}),
+	},
+};
+
 export const layoutRegistries = createCanvasRegistries({
-	plugins: [regionPlugin, portedPlugin],
+	plugins: [regionPlugin, portedPlugin, outlinedPlugin],
 });
 
 export const layoutDocOps = createDocOps({
-	plugins: [regionPlugin, portedPlugin],
+	plugins: [regionPlugin, portedPlugin, outlinedPlugin],
 });
 
 const emptyDoc = (): CanvasDoc => ({ version: 1, root: [] });
@@ -306,5 +388,48 @@ export const buildOvalRegionDoc = (): CanvasDoc => {
 		height: 40,
 	});
 	layoutDocOps.connect(doc, { sourceId: "rect-1", targetId: "rect-2" });
+	return doc;
+};
+
+/**
+ * A parallelogram feeding a narrow and a wide rect, whose columns fall past where its
+ * slanted sides cross the bottom; and, for left to right, a region holding rect-3,
+ * which feeds the cut-top shape, with a line from the region itself to it as well, so
+ * the redrawn line lands beside an end stored as a ratio of the anchor region.
+ */
+export const buildOutlinedDoc = (): CanvasDoc => {
+	const doc = emptyDoc();
+	layoutDocOps.addObject(doc, "slanted", { x: 0, y: 0 });
+	layoutDocOps.addObject(doc, "rect", { x: 0, y: 200, width: 60, height: 40 });
+	layoutDocOps.addObject(doc, "rect", {
+		x: 100,
+		y: 200,
+		width: 160,
+		height: 80,
+	});
+	layoutDocOps.connect(doc, { sourceId: "slanted-1", targetId: "rect-1" });
+	layoutDocOps.connect(doc, { sourceId: "slanted-1", targetId: "rect-2" });
+	layoutDocOps.addObject(doc, "region", {
+		x: 0,
+		y: 600,
+		width: 400,
+		height: 300,
+	});
+	layoutDocOps.addObject(doc, "rect", {
+		x: 20,
+		y: 660,
+		width: 100,
+		height: 50,
+	});
+	layoutDocOps.addObject(doc, "cut-top", { x: 600, y: 600 });
+	layoutDocOps.connect(doc, { sourceId: "rect-3", targetId: "cut-top-1" });
+	layoutDocOps.connect(doc, { sourceId: "region-1", targetId: "cut-top-1" });
+	return doc;
+};
+
+/** {@link buildOutlinedDoc} with the parallelogram turned upside down, which the layout places by its box. */
+export const buildRotatedOutlinedDoc = (): CanvasDoc => {
+	const doc = buildOutlinedDoc();
+	layoutDocOps.setRotation(doc, ["slanted-1"], 180);
 	return doc;
 };

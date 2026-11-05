@@ -1,4 +1,4 @@
-import type { ObjectOutlineCalculator } from "@jiscribe/canvas";
+import type { ObjectDocOutlineCalculator } from "@jiscribe/doc";
 import type { Dimensions, Point } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
@@ -40,16 +40,10 @@ const SIZES: ReadonlyArray<Dimensions> = [
 	{ width: 20, height: 20 },
 ];
 
-/**
- * Every outline in this package reads nothing but width/height; the definition
- * types it against the shape's whole State, so the cast is what lets a bare box
- * stand in for one.
- */
-const outlinesOf = (): Array<[string, ObjectOutlineCalculator<Dimensions>]> =>
+/** Every outline this package declares, by type. */
+const outlinesOf = (): Array<[string, ObjectDocOutlineCalculator]> =>
 	Object.entries(flowchartPlugin.objects ?? {}).flatMap(([type, definition]) =>
-		definition?.outline
-			? [[type, definition.outline as ObjectOutlineCalculator<Dimensions>]]
-			: [],
+		definition?.outline ? [[type, definition.outline]] : [],
 	);
 
 /**

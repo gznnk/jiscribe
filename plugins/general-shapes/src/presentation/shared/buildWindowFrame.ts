@@ -2,13 +2,10 @@ import {
 	buildHorizontalLinePath,
 	buildRoundedRectPath,
 } from "./pictogramPaths";
-import { WINDOW_TITLE_BAR_RATIO } from "../../schema/shared/windowFrameRatios";
-
-/**
- * Corner radius as a fraction of the shorter side. Exported because both window
- * shapes' outlines round the same corners the frame does.
- */
-export const WINDOW_CORNER_RATIO = 0.07;
+import {
+	WINDOW_CORNER_RATIO,
+	WINDOW_TITLE_BAR_RATIO,
+} from "../../schema/shared/windowFrameRatios";
 
 export type WindowFrame = {
 	/** The whole window silhouette: the only filled, hit-tested part. */

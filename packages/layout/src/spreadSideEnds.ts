@@ -1,3 +1,6 @@
+import { FULL_ANCHOR_RANGE } from "./anchorRange";
+import type { LayoutAnchorRange } from "./types";
+
 /** One edge end on a side of a box, as the spreading sees it. */
 export type SideEnd = {
 	/** Position along the side, 0..1, as the anchor rules chose it. */
@@ -13,18 +16,22 @@ export type SideEnd = {
 /**
  * Open up the ends of a side that sit closer than `minimumGap` to each other, in the
  * order of their headings: an end is moved on only as far as the one before it makes
- * it, and the stack is moved back when it would run past the side's end. Pure: the
- * input is left alone.
+ * it, and the stack is moved back when it would run past the end of the side's usable
+ * stretch. Pure: the input is left alone.
  *
  * @param ends - The ends on one side, in any order
  * @param extent - Length of the side in px, which turns `minimumGap` into a ratio
  * @param minimumGap - Least distance in px two ends may have
- * @returns The ends' new positions, by the same index as `ends`, each within 0..1
+ * @param usable - The stretch of the side the ends may sit on, as ratios of the whole
+ *   side; defaults to all of it. A stack too wide for it keeps the gaps it can and
+ *   piles the rest against its start
+ * @returns The ends' new positions, by the same index as `ends`, each within `usable`
  */
 export const spreadSideEnds = (
 	ends: readonly SideEnd[],
 	extent: number,
 	minimumGap: number,
+	usable: LayoutAnchorRange = FULL_ANCHOR_RANGE,
 ): number[] => {
 	const positions = ends.map(({ t }) => t);
 	if (ends.length < 2 || extent <= 0) {
@@ -42,14 +49,14 @@ export const spreadSideEnds = (
 		const previous = positions[order[rank - 1]];
 		positions[order[rank]] = Math.max(positions[order[rank]], previous + gap);
 	}
-	// Backward: pull the stack back from past the side's end, keeping the gaps.
+	// Backward: pull the stack back from past the usable end, keeping the gaps.
 	positions[order[order.length - 1]] = Math.min(
-		1,
+		usable.max,
 		positions[order[order.length - 1]],
 	);
 	for (let rank = order.length - 2; rank >= 0; rank -= 1) {
 		const next = positions[order[rank + 1]];
 		positions[order[rank]] = Math.min(positions[order[rank]], next - gap);
 	}
-	return positions.map((position) => Math.max(0, position));
+	return positions.map((position) => Math.max(usable.min, position));
 };

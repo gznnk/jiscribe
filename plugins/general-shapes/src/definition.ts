@@ -24,26 +24,20 @@ import {
 	terminalWindowDocDefinition,
 } from "./doc";
 import { Actor } from "./presentation/Actor";
-import {
-	BrowserWindow,
-	browserWindowOutline,
-} from "./presentation/BrowserWindow";
-import { Cloud, cloudOutline } from "./presentation/Cloud";
-import { Envelope, envelopeOutline } from "./presentation/Envelope";
-import { File, fileOutline } from "./presentation/File";
-import { Folder, folderOutline } from "./presentation/Folder";
-import { Gear, gearOutline } from "./presentation/Gear";
-import { Laptop, laptopOutline } from "./presentation/Laptop";
-import { Lock, lockOutline } from "./presentation/Lock";
-import { Package, packageOutline } from "./presentation/Package";
-import { Queue, queueOutline } from "./presentation/Queue";
-import { Server, serverOutline } from "./presentation/Server";
-import { Shield, shieldOutline } from "./presentation/Shield";
-import { Smartphone, smartphoneOutline } from "./presentation/Smartphone";
-import {
-	TerminalWindow,
-	terminalWindowOutline,
-} from "./presentation/TerminalWindow";
+import { BrowserWindow } from "./presentation/BrowserWindow";
+import { Cloud } from "./presentation/Cloud";
+import { Envelope } from "./presentation/Envelope";
+import { File } from "./presentation/File";
+import { Folder } from "./presentation/Folder";
+import { Gear } from "./presentation/Gear";
+import { Laptop } from "./presentation/Laptop";
+import { Lock } from "./presentation/Lock";
+import { Package } from "./presentation/Package";
+import { Queue } from "./presentation/Queue";
+import { Server } from "./presentation/Server";
+import { Shield } from "./presentation/Shield";
+import { Smartphone } from "./presentation/Smartphone";
+import { TerminalWindow } from "./presentation/TerminalWindow";
 import type { ActorDoc } from "./schema/actor/ActorDoc";
 import type { BrowserWindowDoc } from "./schema/browserWindow/BrowserWindowDoc";
 import type { CloudDoc } from "./schema/cloud/CloudDoc";
@@ -117,17 +111,12 @@ export const actorDefinition: ObjectTypeDefinition<ActorDoc, ActorState> =
 		}),
 	});
 
-/**
- * `outline` is what attaches a connector's center anchor to the bumpy silhouette
- * instead of the bounding box (cloudOutline). `menu` stays undeclared, so it is
- * derived from the features as before the move.
- */
+/** `menu` stays undeclared, so it is derived from the features as before the move. */
 export const cloudDefinition: ObjectTypeDefinition<CloudDoc, CloudState> =
 	createFrameObjectDefinition<CloudDoc, CloudState>({
 		doc: cloudDocDefinition,
 		component: Cloud,
 		textRegion: calcCloudTextRegion,
-		outline: cloudOutline,
 		stencils: createTypeStencils({
 			objectType: "cloud",
 			label: { en: "Cloud", ja: "雲" },
@@ -135,14 +124,13 @@ export const cloudDefinition: ObjectTypeDefinition<CloudDoc, CloudState> =
 		}),
 	});
 
-/** Rack units fill the box, so the label hangs below it; `outline` rounds its corners. */
+/** Rack units fill the box, so the label hangs below it. */
 export const serverDefinition: ObjectTypeDefinition<ServerDoc, ServerState> =
 	createFrameObjectDefinition<ServerDoc, ServerState>({
 		doc: serverDocDefinition,
 		component: Server,
 		textRegion: calcBelowLabelTextRegion,
 		visualBounds: calcBelowLabelVisualBounds,
-		outline: serverOutline,
 		stencils: createTypeStencils({
 			objectType: "server",
 			label: { en: "Server", ja: "サーバー" },
@@ -158,7 +146,6 @@ export const browserWindowDefinition: ObjectTypeDefinition<
 	doc: browserWindowDocDefinition,
 	component: BrowserWindow,
 	textRegion: calcWindowTextRegion,
-	outline: browserWindowOutline,
 	stencils: createTypeStencils({
 		objectType: "browserWindow",
 		label: { en: "Browser window", ja: "ブラウザ画面" },
@@ -174,7 +161,6 @@ export const terminalWindowDefinition: ObjectTypeDefinition<
 	doc: terminalWindowDocDefinition,
 	component: TerminalWindow,
 	textRegion: calcWindowTextRegion,
-	outline: terminalWindowOutline,
 	stencils: createTypeStencils({
 		objectType: "terminalWindow",
 		label: { en: "Terminal", ja: "端末" },
@@ -183,7 +169,6 @@ export const terminalWindowDefinition: ObjectTypeDefinition<
 });
 
 /**
- * `outline` puts a connector's center anchor on the tab's slanted edge.
  * `textRegion` places the text in the body below the tab, so a first line
  * cannot run into the notch the tab leaves on the top-right.
  */
@@ -192,7 +177,6 @@ export const folderDefinition: ObjectTypeDefinition<FolderDoc, FolderState> =
 		doc: folderDocDefinition,
 		component: Folder,
 		textRegion: calcFolderTextRegion,
-		outline: folderOutline,
 		stencils: createTypeStencils({
 			objectType: "folder",
 			label: { en: "Folder", ja: "フォルダ" },
@@ -200,13 +184,11 @@ export const folderDefinition: ObjectTypeDefinition<FolderDoc, FolderState> =
 		}),
 	});
 
-/** `outline` puts a connector's center anchor on the folded corner's diagonal. */
 export const fileDefinition: ObjectTypeDefinition<FileDoc, FileState> =
 	createFrameObjectDefinition<FileDoc, FileState>({
 		doc: fileDocDefinition,
 		component: File,
 		textRegion: calcFileTextRegion,
-		outline: fileOutline,
 		stencils: createTypeStencils({
 			objectType: "file",
 			label: { en: "File", ja: "ファイル" },
@@ -214,17 +196,12 @@ export const fileDefinition: ObjectTypeDefinition<FileDoc, FileState> =
 		}),
 	});
 
-/**
- * The hexagon leaves every corner of the bounding box empty, so `outline` is
- * what keeps a connector from stopping in mid-air.
- */
 export const packageDefinition: ObjectTypeDefinition<PackageDoc, PackageState> =
 	createFrameObjectDefinition<PackageDoc, PackageState>({
 		doc: packageDocDefinition,
 		component: Package,
 		textRegion: calcBelowLabelTextRegion,
 		visualBounds: calcBelowLabelVisualBounds,
-		outline: packageOutline,
 		stencils: createTypeStencils({
 			objectType: "package",
 			label: { en: "Package", ja: "パッケージ" },
@@ -241,7 +218,6 @@ export const envelopeDefinition: ObjectTypeDefinition<
 	component: Envelope,
 	textRegion: calcBelowLabelTextRegion,
 	visualBounds: calcBelowLabelVisualBounds,
-	outline: envelopeOutline,
 	stencils: createTypeStencils({
 		objectType: "envelope",
 		label: { en: "Envelope", ja: "封筒" },
@@ -256,7 +232,6 @@ export const queueDefinition: ObjectTypeDefinition<QueueDoc, QueueState> =
 		component: Queue,
 		textRegion: calcBelowLabelTextRegion,
 		visualBounds: calcBelowLabelVisualBounds,
-		outline: queueOutline,
 		stencils: createTypeStencils({
 			objectType: "queue",
 			label: { en: "Queue", ja: "キュー" },
@@ -264,17 +239,12 @@ export const queueDefinition: ObjectTypeDefinition<QueueDoc, QueueState> =
 		}),
 	});
 
-/**
- * `outline` follows the teeth: the gear never reaches a corner of its box, so the
- * bounding box overshoots it by more than 40% on the diagonals (gearOutline).
- */
 export const gearDefinition: ObjectTypeDefinition<GearDoc, GearState> =
 	createFrameObjectDefinition<GearDoc, GearState>({
 		doc: gearDocDefinition,
 		component: Gear,
 		textRegion: calcBelowLabelTextRegion,
 		visualBounds: calcBelowLabelVisualBounds,
-		outline: gearOutline,
 		stencils: createTypeStencils({
 			objectType: "gear",
 			label: { en: "Gear", ja: "歯車" },
@@ -282,18 +252,12 @@ export const gearDefinition: ObjectTypeDefinition<GearDoc, GearState> =
 		}),
 	});
 
-/**
- * The shackle encloses nothing, so there is no silhouette to copy; `outline`
- * traces the visible envelope instead — the body block with the arch on it
- * (lockOutline).
- */
 export const lockDefinition: ObjectTypeDefinition<LockDoc, LockState> =
 	createFrameObjectDefinition<LockDoc, LockState>({
 		doc: lockDocDefinition,
 		component: Lock,
 		textRegion: calcBelowLabelTextRegion,
 		visualBounds: calcBelowLabelVisualBounds,
-		outline: lockOutline,
 		stencils: createTypeStencils({
 			objectType: "lock",
 			label: { en: "Lock", ja: "錠" },
@@ -302,7 +266,6 @@ export const lockDefinition: ObjectTypeDefinition<LockDoc, LockState> =
 	});
 
 /**
- * `outline` follows the taper, which leaves the bottom corners of the box empty.
  * `textRegion` keeps the text in the shield's straight-sided upper part, above
  * the shoulders where the flanks start closing in on the tip. The lower part is
  * left empty on purpose: a centered line there would sit in the taper and clip
@@ -313,7 +276,6 @@ export const shieldDefinition: ObjectTypeDefinition<ShieldDoc, ShieldState> =
 		doc: shieldDocDefinition,
 		component: Shield,
 		textRegion: calcShieldTextRegion,
-		outline: shieldOutline,
 		stencils: createTypeStencils({
 			objectType: "shield",
 			label: { en: "Shield", ja: "盾" },
@@ -331,7 +293,6 @@ export const smartphoneDefinition: ObjectTypeDefinition<
 	doc: smartphoneDocDefinition,
 	component: Smartphone,
 	textRegion: calcSmartphoneTextRegion,
-	outline: smartphoneOutline,
 	stencils: createTypeStencils({
 		objectType: "smartphone",
 		label: { en: "Smartphone", ja: "スマートフォン" },
@@ -339,18 +300,12 @@ export const smartphoneDefinition: ObjectTypeDefinition<
 	}),
 });
 
-/**
- * Text sits on the screen, so it stays clear of the base below it. The drawing
- * is two pieces, but their union is one closed polygon and only the base spans
- * the full width, so `outline` is what keeps a connector off the empty top
- * corners (laptopOutline).
- */
+/** Text sits on the screen, so it stays clear of the base below it. */
 export const laptopDefinition: ObjectTypeDefinition<LaptopDoc, LaptopState> =
 	createFrameObjectDefinition<LaptopDoc, LaptopState>({
 		doc: laptopDocDefinition,
 		component: Laptop,
 		textRegion: calcLaptopTextRegion,
-		outline: laptopOutline,
 		stencils: createTypeStencils({
 			objectType: "laptop",
 			label: { en: "Laptop", ja: "ノート PC" },

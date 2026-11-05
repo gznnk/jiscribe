@@ -21,12 +21,8 @@ import {
 import { Brace } from "./presentation/Brace";
 import { Bracket } from "./presentation/Bracket";
 import { BracketWithStem } from "./presentation/BracketWithStem";
-import {
-	Callout,
-	calloutGeometryKey,
-	calloutOutline,
-} from "./presentation/Callout";
-import { Note, noteOutline } from "./presentation/Note";
+import { Callout, calloutGeometryKey } from "./presentation/Callout";
+import { Note } from "./presentation/Note";
 import {
 	calcGroupMarkerConnectPoints,
 	calcGroupMarkerTextRegion,
@@ -169,15 +165,13 @@ export const bracketWithStemDefinition: ObjectTypeDefinition<
  * a connector attached to the callout keeps the endpoints it resolved before the
  * drag. Text
  * goes inside the bubble body as it does in the note, so there is no label
- * outside the box and no `visualBounds` to widen; `outline` is required because
- * the tail band leaves the body edge short of the bounding box.
+ * outside the box and no `visualBounds` to widen.
  */
 export const calloutDefinition: ObjectTypeDefinition<CalloutDoc, CalloutState> =
 	createFrameObjectDefinition<CalloutDoc, CalloutState>({
 		doc: calloutDocDefinition,
 		component: Callout,
 		textRegion: calcCalloutTextRegion,
-		outline: calloutOutline,
 		geometryKey: calloutGeometryKey,
 		isExtraStateValid: (state) =>
 			state.tail === undefined || isCalloutTail(state.tail),
@@ -198,16 +192,13 @@ export const calloutDefinition: ObjectTypeDefinition<CalloutDoc, CalloutState> =
 /**
  * Like the callout, and unlike the group markers, the note takes its text inside
  * the box, so there is no label hanging outside it and no `visualBounds` to
- * widen. `outline` on the other hand is required — the folded corner is cut off
- * the bounding box, so without it a connector aimed at the note's center would
- * stop in mid-air beside the fold.
+ * widen.
  */
 export const noteDefinition: ObjectTypeDefinition<NoteDoc, NoteState> =
 	createFrameObjectDefinition<NoteDoc, NoteState>({
 		doc: noteDocDefinition,
 		component: Note,
 		textRegion: calcNoteTextRegion,
-		outline: noteOutline,
 		stencils: createTypeStencils({
 			objectType: "note",
 			label: { en: "Note", ja: "ノート" },

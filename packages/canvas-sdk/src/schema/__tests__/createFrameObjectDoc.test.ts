@@ -61,6 +61,20 @@ describe("createFrameObjectDoc", () => {
 		expect(definition.container).toBe(container);
 	});
 
+	it("carries the outline and the anchor region into the definition as-is", () => {
+		const outline = () => [];
+		const anchorRegion = () => ({ x: -10, y: -5, width: 20, height: 10 });
+		const definition = createFrameObjectDoc({
+			features: DemoFeatures,
+			defaults: DEMO_DOC_DEFAULTS,
+			outline,
+			anchorRegion,
+		});
+
+		expect(definition.outline).toBe(outline);
+		expect(definition.anchorRegion).toBe(anchorRegion);
+	});
+
 	it("derives a doc validator from features", () => {
 		const { validateDoc } = createFrameObjectDoc({
 			features: DemoFeatures,

@@ -6,11 +6,11 @@ import {
 } from "@jiscribe/geometry";
 import { memo } from "react";
 
+import { resolveCalloutTail } from "../schema/callout/CalloutDoc";
 import {
 	calcCalloutTailTipPoint,
 	isVerticalTailSide,
-} from "../presentation/Callout";
-import { resolveCalloutTail } from "../schema/callout/CalloutDoc";
+} from "../schema/callout/calloutTailGeometry";
 import type { CalloutState } from "../state/callout/CalloutState";
 
 /**

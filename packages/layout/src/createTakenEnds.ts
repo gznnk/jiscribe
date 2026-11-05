@@ -1,32 +1,52 @@
 import type { Rect } from "@jiscribe/geometry";
 
+import {
+	FULL_ANCHOR_RANGE,
+	calcAnchorRangeMidpoint,
+	scaleIntoAnchorRange,
+} from "./anchorRange";
 import { EDGE_END_SPACING } from "./chooseEdgeAnchors";
-import type { LayoutEdgeAnchor, LayoutSide } from "./types";
+import type { LayoutAnchorRange, LayoutEdgeAnchor, LayoutSide } from "./types";
+
+/** How far from the middle of the usable stretch a handed-out end may go, as shares of it. */
+const PLACE_RANGE: LayoutAnchorRange = { min: 0.1, max: 0.9 };
 
 /** An end already sitting on a side of an object. */
 export type TakenEnd = {
 	/** Id of the object the end sits on. */
 	ownerId: string;
 	side: LayoutSide;
-	/** Position along the side, 0..1 as in {@link LayoutEdgeAnchor}. */
+	/**
+	 * Position along the side, 0..1 as in {@link LayoutEdgeAnchor}: a ratio of the box's
+	 * side, the one the layout hands out, so an end stored as a ratio of some other
+	 * stretch has to be given back in this one.
+	 */
 	t: number;
 };
 
 /** Hands out free positions on the sides of objects; see {@link createTakenEnds}. */
 export type TakenEnds = {
 	/**
-	 * The position on `side` of the owner nearest the side's midpoint that keeps
-	 * {@link EDGE_END_SPACING} from every end already there, within a tenth of the side
-	 * at either end, or the midpoint itself when nothing fits; taken from then on.
+	 * The position on `side` of the owner nearest the middle of the side's usable
+	 * stretch that keeps {@link EDGE_END_SPACING} from every end already there, kept a
+	 * tenth of that stretch clear at either end, or the middle itself when nothing
+	 * fits; taken from then on.
 	 *
 	 * @param ownerId - Matched against {@link TakenEnd.ownerId}; ends are tracked per
 	 *   owner and side, so an end on another object never crowds this one
-	 * @param side - The only side searched: when it is full the midpoint is handed out,
+	 * @param side - The only side searched: when it is full the middle is handed out,
 	 *   never a position on a neighbouring side
 	 * @param box - The owner's box, for the side's length; a zero-length side
-	 *   always gets the midpoint
+	 *   always gets the middle
+	 * @param usable - The stretch of the side an end may sit on, as ratios of the
+	 *   side (see `LayoutGraphNode.anchorRanges`); defaults to all of it
 	 */
-	place: (ownerId: string, side: LayoutSide, box: Rect) => LayoutEdgeAnchor;
+	place: (
+		ownerId: string,
+		side: LayoutSide,
+		box: Rect,
+		usable?: LayoutAnchorRange,
+	) => LayoutEdgeAnchor;
 };
 
 /**
@@ -53,22 +73,24 @@ export const createTakenEnds = (taken: readonly TakenEnd[]): TakenEnds => {
 		take(ownerId, side, t);
 	}
 	return {
-		place: (ownerId, side, box) => {
+		place: (ownerId, side, box, usable = FULL_ANCHOR_RANGE) => {
 			const extent =
 				side === "top" || side === "bottom" ? box.width : box.height;
 			const positions = positionsBySide.get(keyOf(ownerId, side)) ?? [];
 			const gap = extent > 0 ? EDGE_END_SPACING / extent : 0;
 			const isFree = (t: number): boolean =>
 				positions.every((position) => Math.abs(position - t) >= gap);
-			let t = 0.5;
-			if (!isFree(0.5)) {
-				for (let step = gap; 0.5 + step <= 0.9; step += gap) {
-					if (isFree(0.5 - step)) {
-						t = 0.5 - step;
+			const middle = calcAnchorRangeMidpoint(usable);
+			const searched = scaleIntoAnchorRange(usable, PLACE_RANGE);
+			let t = middle;
+			if (!isFree(middle)) {
+				for (let step = gap; middle + step <= searched.max; step += gap) {
+					if (isFree(middle - step)) {
+						t = middle - step;
 						break;
 					}
-					if (isFree(0.5 + step)) {
-						t = 0.5 + step;
+					if (isFree(middle + step)) {
+						t = middle + step;
 						break;
 					}
 				}

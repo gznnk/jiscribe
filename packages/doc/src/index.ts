@@ -167,6 +167,10 @@ export {
 	calcFullBoxTextRegion,
 	calcOutsideBoxTextRegion,
 } from "./plugin/ObjectDocTextRegion";
+// The silhouette and the anchor band a doc definition carries, for a type whose
+// outline is not its box: a plugin author implementing one needs the shape of it.
+export type { ObjectDocOutlineCalculator } from "./plugin/ObjectDocOutline";
+export type { ObjectDocAnchorRegionCalculator } from "./plugin/ObjectDocAnchorRegion";
 // The overflow declaration a doc definition carries, for a type that lays some of
 // its content out by a rule of its own: a plugin author implementing one needs the
 // shape of it.

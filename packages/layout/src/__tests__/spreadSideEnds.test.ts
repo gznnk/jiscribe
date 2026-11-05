@@ -45,4 +45,33 @@ describe("spreadSideEnds", () => {
 		expect(positions[1]).toBeCloseTo(0.88, 6);
 		expect(positions[2]).toBe(1);
 	});
+
+	it("keeps the stack inside the usable stretch it is given", () => {
+		const positions = spreadSideEnds(
+			[
+				{ t: 0.55, heading: 0.9 },
+				{ t: 0.55, heading: 1.5 },
+				{ t: 0.55, heading: 2 },
+			],
+			100,
+			12,
+			{ min: 0.2, max: 0.6 },
+		);
+		expect(positions[0]).toBeCloseTo(0.36, 6);
+		expect(positions[1]).toBeCloseTo(0.48, 6);
+		expect(positions[2]).toBe(0.6);
+	});
+
+	it("piles a stack too wide for the usable stretch against its start", () => {
+		const positions = spreadSideEnds(
+			[
+				{ t: 0.5, heading: 0 },
+				{ t: 0.5, heading: 1 },
+			],
+			100,
+			12,
+			{ min: 0.45, max: 0.5 },
+		);
+		expect(positions).toEqual([0.45, 0.5]);
+	});
 });

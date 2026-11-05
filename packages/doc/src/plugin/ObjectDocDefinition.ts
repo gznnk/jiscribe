@@ -1,4 +1,6 @@
+import type { ObjectDocAnchorRegionCalculator } from "./ObjectDocAnchorRegion";
 import type { ObjectDocBoundsCalculator } from "./ObjectDocBounds";
+import type { ObjectDocOutlineCalculator } from "./ObjectDocOutline";
 import type { ObjectDocOverflowDiagnoser } from "./ObjectDocOverflow";
 import type { ObjectDocTextRegionCalculator } from "./ObjectDocTextRegion";
 import type { ObjectDocValidateFn } from "./ObjectDocValidateFn";
@@ -70,6 +72,21 @@ export type ObjectDocDefinition = {
 	 * type offers none, so the doc ops refuse any other id on it.
 	 */
 	extraConnectPointIds?: (doc: ObjectDoc) => readonly string[];
+
+	/**
+	 * The drawn silhouette, for a type whose outline is not the box its geometry
+	 * implies (see {@link ObjectDocOutlineCalculator}): where a connector end and a
+	 * connection anchor land on the canvas, and the stretch of each side an
+	 * automatic layout keeps its edge anchors on. Omitted = the bounding-box
+	 * rectangle, or the ellipse for a `geometry: "ellipse"` type.
+	 */
+	outline?: ObjectDocOutlineCalculator;
+
+	/**
+	 * The band the edge anchors are centered on and measured along (see
+	 * {@link ObjectDocAnchorRegionCalculator}). Omitted = the full bounding box.
+	 */
+	anchorRegion?: ObjectDocAnchorRegionCalculator;
 
 	/**
 	 * Declared by a titled region other objects sit inside (a VPC, a subsystem

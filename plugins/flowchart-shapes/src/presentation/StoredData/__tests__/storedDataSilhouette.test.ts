@@ -1,11 +1,11 @@
-import type { ObjectOutlineCalculator } from "@jiscribe/canvas";
+import type { ObjectDocOutlineCalculator } from "@jiscribe/doc";
 import type { Dimensions, Point } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
 import type { PathArc } from "../../../__tests__/support/pathArcs";
 import { calcArcX, parsePathArcs } from "../../../__tests__/support/pathArcs";
+import { storedDataOutline } from "../../../schema/storedData/storedDataOutline";
 import { buildStoredDataPath } from "../buildStoredDataPath";
-import { storedDataOutline } from "../storedDataOutline";
 
 /**
  * The stored-data silhouette is written twice: the renderer draws two SVG arcs
@@ -21,7 +21,7 @@ import { storedDataOutline } from "../storedDataOutline";
  * The outline reads nothing but width/height; its declaration types it against
  * the shape's whole State, so the cast is what lets a bare box stand in for one.
  */
-const calcOutline = storedDataOutline as ObjectOutlineCalculator<Dimensions>;
+const calcOutline = storedDataOutline as ObjectDocOutlineCalculator<Dimensions>;
 
 /** The path's two vertical caps, told apart by which x each stands at. */
 const capsOf = (
