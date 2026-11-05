@@ -83,61 +83,67 @@ const calcSideRatio = (
 	axis: LayoutAxis,
 ): number => (column - axis.acrossStart(bounds)) / axis.acrossExtent(bounds);
 
-/**
- * An end's anchor, with where along the side the edge is headed (the unclamped ratio
- * of the column it travels in next), which orders the ends sharing a side.
- */
-type EndAnchor = { anchor: LayoutEdgeAnchor; heading: number };
+/** The column (a coordinate across the rank axis) at `ratio` along the box's side. */
+const columnAt = (bounds: Rect, ratio: number, axis: LayoutAxis): number =>
+	axis.acrossStart(bounds) + ratio * axis.acrossExtent(bounds);
 
 /**
- * The anchor for one end of an edge, given the column the edge travels in beyond
- * that end. On the column itself when the column crosses the side, so the edge
- * leaves straight; else at the side's midpoint when this is the side's only edge,
- * since a jog in the gap is then unavoidable and a centred one reads best; else
- * leaning toward the column, so the edges sharing the side fan out.
+ * The anchor for one end of an edge, given where along the side the edge is headed
+ * (the unclamped ratio of the column it travels in beyond that end). On the column
+ * itself when the column crosses the side, so the edge leaves straight; else at the
+ * side's midpoint when this is the side's only edge, since a jog in the gap is then
+ * unavoidable and a centred one reads best; else leaning toward the column, so the
+ * edges sharing the side fan out.
  */
 const calcEndAnchor = (
-	bounds: Rect,
 	side: LayoutSide,
-	column: number,
+	heading: number,
 	isOnlyEdgeOnSide: boolean,
-	axis: LayoutAxis,
-): EndAnchor => {
-	const ratio = calcSideRatio(bounds, column, axis);
-	if (isWithin(ratio, EDGE_ANCHOR_STRAIGHT_RANGE)) {
-		return { anchor: { side, t: ratio }, heading: ratio };
+): LayoutEdgeAnchor => {
+	if (isWithin(heading, EDGE_ANCHOR_STRAIGHT_RANGE)) {
+		return { side, t: heading };
 	}
 	if (isOnlyEdgeOnSide) {
-		return { anchor: { side, t: 0.5 }, heading: ratio };
+		return { side, t: 0.5 };
 	}
-	return {
-		anchor: { side, t: clampRatio(ratio, EDGE_ANCHOR_FAN_RANGE) },
-		heading: ratio,
-	};
+	return { side, t: clampRatio(heading, EDGE_ANCHOR_FAN_RANGE) };
 };
 
-type WorkingEdge = EdgeToAnchor & {
+/** The key that groups the edges joining one pair of boxes, whichever way they run. */
+const bundleKey = (edge: LayoutGraphEdge): string =>
+	[edge.sourceId, edge.targetId].sort().join("\u0000");
+
+/** An edge with its facing sides and where along each the edge is headed. */
+type HeadedEdge = EdgeToAnchor & {
 	sourceSide: LayoutSide;
 	targetSide: LayoutSide;
-	source: LayoutEdgeAnchor;
-	target: LayoutEdgeAnchor;
+	/** Where along the source side the edge is headed, unclamped (see SideEnd). */
 	sourceHeading: number;
+	/** Where along the target side the edge is headed, unclamped (see SideEnd). */
 	targetHeading: number;
 	/** True for an edge between neighbouring ranks, which travels in no slot column. */
 	isAdjacent: boolean;
+	/** True when the source end is the only edge end on its side. */
+	sourceAlone: boolean;
+	/** True when the target end is the only edge end on its side. */
+	targetAlone: boolean;
+};
+
+type WorkingEdge = HeadedEdge & {
+	source: LayoutEdgeAnchor;
+	target: LayoutEdgeAnchor;
 	labelPosition?: number;
 };
 
 /**
- * Both ends of every edge, by the facing sides and the column the edge travels in
- * next to each end (see calcEndAnchor); two boxes in neighbouring ranks share one
- * column when either centre crosses the other's unshared side.
+ * Every edge's facing sides and headings: toward the other box's centre for an edge
+ * between neighbouring ranks, else toward the slot column next to each end.
  */
-const anchorEnds = (
+const headEnds = (
 	edges: readonly EdgeToAnchor[],
 	rows: RowIndex,
 	axis: LayoutAxis,
-): WorkingEdge[] => {
+): HeadedEdge[] => {
 	const sided = edges.map((edge) => ({
 		...edge,
 		...calcFacingSides(edge.sourceBounds, edge.targetBounds, axis),
@@ -159,86 +165,213 @@ const anchorEnds = (
 		const { edge, sourceBounds, targetBounds, sourceSide, targetSide } =
 			working;
 		const slotColumns = readSlotColumns(working.points, rows, axis);
-		const sourceAlone = isOnlyEdgeOnSide(edge.sourceId, sourceSide);
-		const targetAlone = isOnlyEdgeOnSide(edge.targetId, targetSide);
-		let source: EndAnchor;
-		let target: EndAnchor;
-		if (slotColumns.length === 0) {
-			const targetCentreRatio = calcSideRatio(
-				sourceBounds,
-				axis.acrossCentre(targetBounds),
-				axis,
-			);
-			const sourceCentreRatio = calcSideRatio(
-				targetBounds,
-				axis.acrossCentre(sourceBounds),
-				axis,
-			);
-			if (
-				targetAlone &&
-				isWithin(targetCentreRatio, EDGE_ANCHOR_STRAIGHT_RANGE)
-			) {
-				source = {
-					anchor: { side: sourceSide, t: targetCentreRatio },
-					heading: targetCentreRatio,
-				};
-				target = {
-					anchor: { side: targetSide, t: 0.5 },
-					heading: sourceCentreRatio,
-				};
-			} else if (
-				sourceAlone &&
-				isWithin(sourceCentreRatio, EDGE_ANCHOR_STRAIGHT_RANGE)
-			) {
-				source = {
-					anchor: { side: sourceSide, t: 0.5 },
-					heading: targetCentreRatio,
-				};
-				target = {
-					anchor: { side: targetSide, t: sourceCentreRatio },
-					heading: sourceCentreRatio,
-				};
-			} else {
-				source = calcEndAnchor(
-					sourceBounds,
-					sourceSide,
-					axis.acrossCentre(targetBounds),
-					sourceAlone,
-					axis,
-				);
-				target = calcEndAnchor(
-					targetBounds,
-					targetSide,
-					axis.acrossCentre(sourceBounds),
-					targetAlone,
-					axis,
-				);
-			}
-		} else {
-			// Each end meets the slot column the edge travels in next to it.
-			source = calcEndAnchor(
-				sourceBounds,
-				sourceSide,
-				slotColumns[0],
-				sourceAlone,
-				axis,
-			);
-			target = calcEndAnchor(
-				targetBounds,
-				targetSide,
-				slotColumns[slotColumns.length - 1],
-				targetAlone,
-				axis,
-			);
-		}
+		const isAdjacent = slotColumns.length === 0;
 		return {
 			...working,
-			source: source.anchor,
-			target: target.anchor,
-			sourceHeading: source.heading,
-			targetHeading: target.heading,
-			isAdjacent: slotColumns.length === 0,
+			sourceHeading: calcSideRatio(
+				sourceBounds,
+				isAdjacent ? axis.acrossCentre(targetBounds) : slotColumns[0],
+				axis,
+			),
+			targetHeading: calcSideRatio(
+				targetBounds,
+				isAdjacent
+					? axis.acrossCentre(sourceBounds)
+					: slotColumns[slotColumns.length - 1],
+				axis,
+			),
+			isAdjacent,
+			sourceAlone: isOnlyEdgeOnSide(edge.sourceId, sourceSide),
+			targetAlone: isOnlyEdgeOnSide(edge.targetId, targetSide),
 		};
+	});
+};
+
+/**
+ * Both ends of an edge by the column it travels in next to each end (see
+ * calcEndAnchor); two boxes in neighbouring ranks share one column when either centre
+ * crosses the other's unshared side.
+ */
+const anchorEnd = (headed: HeadedEdge): WorkingEdge => {
+	const {
+		sourceSide,
+		targetSide,
+		sourceHeading,
+		targetHeading,
+		sourceAlone,
+		targetAlone,
+	} = headed;
+	if (headed.isAdjacent) {
+		if (targetAlone && isWithin(sourceHeading, EDGE_ANCHOR_STRAIGHT_RANGE)) {
+			return {
+				...headed,
+				source: { side: sourceSide, t: sourceHeading },
+				target: { side: targetSide, t: 0.5 },
+			};
+		}
+		if (sourceAlone && isWithin(targetHeading, EDGE_ANCHOR_STRAIGHT_RANGE)) {
+			return {
+				...headed,
+				source: { side: sourceSide, t: 0.5 },
+				target: { side: targetSide, t: targetHeading },
+			};
+		}
+	}
+	return {
+		...headed,
+		source: calcEndAnchor(sourceSide, sourceHeading, sourceAlone),
+		target: calcEndAnchor(targetSide, targetHeading, targetAlone),
+	};
+};
+
+/**
+ * Puts on one straight column each edge between neighbouring ranks whose sides are
+ * both shared and which no other edge bundles with: the mean of where the end's rank
+ * by heading puts it on each side, kept where both sides can meet it straight. An edge
+ * keeps its ends when no such column exists or spreading either side's ends would move
+ * its end, or the end of an edge already put on a column, off it. Edges are decided in
+ * order, each against the ends as already decided. Mutates the edges.
+ */
+const straightenSharedEdges = (
+	edges: readonly WorkingEdge[],
+	axis: LayoutAxis,
+): void => {
+	type SideEndRef = { edgeIndex: number; end: "source" | "target" };
+	const endsBySide = new Map<string, SideEndRef[]>();
+	const bundleSizes = new Map<string, number>();
+	edges.forEach((working, edgeIndex) => {
+		for (const end of ["source", "target"] as const) {
+			const nodeId =
+				end === "source" ? working.edge.sourceId : working.edge.targetId;
+			const key = sideKey(nodeId, working[end].side);
+			const ends = endsBySide.get(key);
+			if (ends === undefined) {
+				endsBySide.set(key, [{ edgeIndex, end }]);
+			} else {
+				ends.push({ edgeIndex, end });
+			}
+		}
+		if (working.isAdjacent) {
+			const key = bundleKey(working.edge);
+			bundleSizes.set(key, (bundleSizes.get(key) ?? 0) + 1);
+		}
+	});
+	const headingOf = ({ edgeIndex, end }: SideEndRef): number =>
+		end === "source"
+			? edges[edgeIndex].sourceHeading
+			: edges[edgeIndex].targetHeading;
+	for (const ends of endsBySide.values()) {
+		ends.sort(
+			(a, b) => headingOf(a) - headingOf(b) || a.edgeIndex - b.edgeIndex,
+		);
+	}
+
+	/** The end's side ordered by heading, and the end's place in it. */
+	const locateEnd = (
+		working: WorkingEdge,
+		edgeIndex: number,
+		end: "source" | "target",
+	): { ends: readonly SideEndRef[]; rank: number } => {
+		const nodeId =
+			end === "source" ? working.edge.sourceId : working.edge.targetId;
+		const ends = endsBySide.get(sideKey(nodeId, working[end].side)) ?? [];
+		return {
+			ends,
+			rank: ends.findIndex(
+				(ref) => ref.edgeIndex === edgeIndex && ref.end === end,
+			),
+		};
+	};
+	/** Where an end ranked among a side's ends would sit on it with all of them evenly spaced. */
+	const idealRatioOf = ({
+		ends,
+		rank,
+	}: {
+		ends: readonly SideEndRef[];
+		rank: number;
+	}): number => (rank + 1) / (ends.length + 1);
+	/** Indices of the edges already put on a column. */
+	const straightened = new Set<number>();
+	/**
+	 * Whether the end at `t`, and every end on its side already put on a column, would
+	 * stay where it is when the side's ends are spread (see spreadSideEnds), the others
+	 * where they stand now.
+	 */
+	const holdsWhenSpread = (
+		ends: readonly SideEndRef[],
+		rank: number,
+		t: number,
+		extent: number,
+	): boolean => {
+		const positions = ends.map((ref, index) =>
+			index === rank ? t : edges[ref.edgeIndex][ref.end].t,
+		);
+		const spread = spreadSideEnds(
+			ends.map((ref, index) => ({
+				t: positions[index],
+				heading: headingOf(ref),
+			})),
+			extent,
+			EDGE_END_SPACING,
+		);
+		return ends.every(
+			(ref, index) =>
+				(index !== rank && !straightened.has(ref.edgeIndex)) ||
+				spread[index] === positions[index],
+		);
+	};
+
+	edges.forEach((working, edgeIndex) => {
+		if (
+			!working.isAdjacent ||
+			working.sourceAlone ||
+			working.targetAlone ||
+			(bundleSizes.get(bundleKey(working.edge)) ?? 0) > 1
+		) {
+			return;
+		}
+		const { sourceBounds, targetBounds } = working;
+		const shared = {
+			min: Math.max(
+				columnAt(sourceBounds, EDGE_ANCHOR_STRAIGHT_RANGE.min, axis),
+				columnAt(targetBounds, EDGE_ANCHOR_STRAIGHT_RANGE.min, axis),
+			),
+			max: Math.min(
+				columnAt(sourceBounds, EDGE_ANCHOR_STRAIGHT_RANGE.max, axis),
+				columnAt(targetBounds, EDGE_ANCHOR_STRAIGHT_RANGE.max, axis),
+			),
+		};
+		if (shared.min > shared.max) {
+			return;
+		}
+		const sourcePlace = locateEnd(working, edgeIndex, "source");
+		const targetPlace = locateEnd(working, edgeIndex, "target");
+		const column = clampRatio(
+			(columnAt(sourceBounds, idealRatioOf(sourcePlace), axis) +
+				columnAt(targetBounds, idealRatioOf(targetPlace), axis)) /
+				2,
+			shared,
+		);
+		const sourceT = calcSideRatio(sourceBounds, column, axis);
+		const targetT = calcSideRatio(targetBounds, column, axis);
+		if (
+			holdsWhenSpread(
+				sourcePlace.ends,
+				sourcePlace.rank,
+				sourceT,
+				axis.acrossExtent(sourceBounds),
+			) &&
+			holdsWhenSpread(
+				targetPlace.ends,
+				targetPlace.rank,
+				targetT,
+				axis.acrossExtent(targetBounds),
+			)
+		) {
+			working.source = { side: working.source.side, t: sourceT };
+			working.target = { side: working.target.side, t: targetT };
+			straightened.add(edgeIndex);
+		}
 	});
 };
 
@@ -256,9 +389,7 @@ const spreadBundles = (
 		if (!working.isAdjacent) {
 			continue;
 		}
-		const key = [working.edge.sourceId, working.edge.targetId]
-			.sort()
-			.join("\u0000");
+		const key = bundleKey(working.edge);
 		const bundle = bundles.get(key);
 		if (bundle === undefined) {
 			bundles.set(key, [working]);
@@ -377,8 +508,9 @@ const spreadEndsOnSides = (
 /**
  * Where every edge meets its two boxes: on the sides facing each other along the rank
  * axis, straight on the column the edge travels in when that crosses the side, at the
- * midpoint for a side's only edge, fanned out for several; edges joining one pair of
- * boxes run side by side, and ends that would touch are opened to arrowhead width in
+ * midpoint for a side's only edge, fanned out for several; an edge between neighbouring
+ * ranks whose two sides are both shared runs on one straight column when one fits clear
+ * of its neighbours; edges joining one pair of boxes run side by side, and ends that would touch are opened to arrowhead width in
  * the order their edges are headed.
  *
  * @param edges - Dagre's routes, container borders dropped, with the boxes they join
@@ -391,7 +523,8 @@ export const chooseEdgeAnchors = (
 	rows: RowIndex,
 	axis: LayoutAxis,
 ): AnchoredEdge[] => {
-	const working = anchorEnds(edges, rows, axis);
+	const working = headEnds(edges, rows, axis).map(anchorEnd);
+	straightenSharedEdges(working, axis);
 	spreadBundles(working, axis);
 	spreadEndsOnSides(working, axis);
 	return working.map(({ source, target, labelPosition }) => ({

@@ -60,7 +60,9 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   reduce crossings, and every connector between two placed objects is re-anchored
   onto the facing sides (straight on the column it travels in where that crosses
   the side, at the midpoint when it is the side's only connector, fanned out
-  along a side several of them share) and given
+  along a side several of them share; one between neighbouring ranks whose sides
+  are both shared runs on a single straight column where both sides have room for
+  it) and given
   a right-angled route around the objects between them, on a lane of its own where
   it overlaps another route crossing the same gap sideways; two connectors joining
   the same pair run side by side, and the ends sharing a side sit in the order their
