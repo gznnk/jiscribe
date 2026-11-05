@@ -155,6 +155,50 @@ export const toEquivalentEdgeAnchor = (
 };
 
 /**
+ * Whether an end sits on a connect point its owner's type declares beyond the four
+ * edge midpoints (an ER entity's column): the type, not an edge, says where on the
+ * owner the line belongs, so an automatic layout leaves that end where it is.
+ *
+ * @param endpoint The end to test; a built-in edge midpoint id, an edge, a center
+ *   or a free anchor all answer false
+ */
+export const isOnDeclaredConnectPoint = (endpoint: EndpointRef): boolean =>
+	endpoint.anchor.kind === "connectPoint" &&
+	!isConnectPointId(endpoint.anchor.id);
+
+/** An end of a connector standing at a position along one side of its owner. */
+export type EdgeAnchoredEnd = {
+	ownerId: string;
+	side: EdgeAnchorSide;
+	/** Position along the side, 0..1; see {@link EdgeAnchorSpec}. */
+	t: number;
+};
+
+/**
+ * The ends of `connectors` standing at a position along a side of their owner (an
+ * edge anchor, or a built-in edge midpoint as `t` 0.5; see toEquivalentEdgeAnchor),
+ * source before target, connector by connector.
+ *
+ * @param connectors Anything carrying a `source` and a `target`, doc or state; an end
+ *   with no owner, on the centre, or on a declared connect point is left out
+ */
+export const listEdgeAnchoredEnds = (
+	connectors: readonly { source: EndpointRef; target: EndpointRef }[],
+): EdgeAnchoredEnd[] => {
+	const ends: EdgeAnchoredEnd[] = [];
+	for (const { source, target } of connectors) {
+		for (const endpoint of [source, target]) {
+			const ownerId = endpoint.owner?.id;
+			const edgeAnchor = toEquivalentEdgeAnchor(endpoint.anchor);
+			if (ownerId !== undefined && edgeAnchor !== null) {
+				ends.push({ ownerId, side: edgeAnchor.side, t: edgeAnchor.t });
+			}
+		}
+	}
+	return ends;
+};
+
+/**
  * Every AnchorKind as a lookup table. Typed as a full Record so that adding a member
  * to AnchorSpec without listing it here is a compile error: a missing member would
  * make stripUnknownContent read a valid anchor as unknown and silently drop the

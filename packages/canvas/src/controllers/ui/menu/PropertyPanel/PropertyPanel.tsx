@@ -3,6 +3,7 @@ import { memo, useState } from "react";
 import { SelectionStyleReaderContext } from "../SelectionStyleReaderContext";
 import { usePropertyPanelSections } from "./hooks/usePropertyPanelSections";
 import { ArrowHeadsItem } from "./items/ArrowHeadsItem";
+import { AutoLayoutItem } from "./items/AutoLayoutItem";
 import type { BuiltinItemProps } from "./items/BuiltinItemProps";
 import {
 	BackgroundItem,
@@ -289,6 +290,7 @@ const PropertyPanelComponent: React.FC<PropertyPanelProps> = ({
 								/>
 								<ViewOpenItem view={canvasState.view} />
 								<ViewScrollItem view={canvasState.view} />
+								<AutoLayoutItem canvasState={canvasState} />
 							</PropertyPanelAccordion>
 						)}
 						{!showsCanvasSection &&
@@ -349,6 +351,7 @@ const PropertyPanelComponent: React.FC<PropertyPanelProps> = ({
 								{showsGroupingItem && (
 									<GroupingItem canvasState={canvasState} />
 								)}
+								<AutoLayoutItem canvasState={canvasState} />
 							</PropertyPanelAccordion>
 						)}
 						{showsMetaSection && (

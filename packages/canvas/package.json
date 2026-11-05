@@ -46,6 +46,7 @@
 		"@jiscribe/basic-validators": "workspace:*",
 		"@jiscribe/doc": "workspace:*",
 		"@jiscribe/geometry": "workspace:*",
+		"@jiscribe/layout": "workspace:*",
 		"@jiscribe/utility-types": "workspace:*",
 		"dompurify": "catalog:",
 		"react": "catalog:",

@@ -573,6 +573,9 @@ importers:
       '@jiscribe/geometry':
         specifier: workspace:*
         version: link:../geometry
+      '@jiscribe/layout':
+        specifier: workspace:*
+        version: link:../layout
       '@jiscribe/utility-types':
         specifier: workspace:*
         version: link:../utility-types

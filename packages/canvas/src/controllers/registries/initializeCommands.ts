@@ -2,6 +2,10 @@ import type { CanvasRegistries } from "./CanvasRegistries";
 import type { CanvasPlugin } from "../../plugin/CanvasPlugin";
 import { BringForwardCommand } from "../commands/arrange/BringForwardCommand";
 import { BringToFrontCommand } from "../commands/arrange/BringToFrontCommand";
+import {
+	LayoutLeftToRightCommand,
+	LayoutTopToBottomCommand,
+} from "../commands/arrange/layout/LayoutCommands";
 import { moveCommands } from "../commands/arrange/MoveCommands";
 import { SendBackwardCommand } from "../commands/arrange/SendBackwardCommand";
 import { SendToBackCommand } from "../commands/arrange/SendToBackCommand";
@@ -70,6 +74,9 @@ export const ALL_COMMANDS: Command[] = [
 	BringForwardCommand,
 	SendBackwardCommand,
 	SendToBackCommand,
+	// Automatic layout commands
+	LayoutTopToBottomCommand,
+	LayoutLeftToRightCommand,
 	// Move (nudge) commands: 8 commands (up/down/left/right x normal/Shift)
 	...moveCommands,
 	// Arrow commands

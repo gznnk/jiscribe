@@ -340,6 +340,26 @@ export const PropertyCommandButton = styled.button`
 	}
 `;
 
+/** The inside of a {@link PropertyCommandButton} that pairs an icon with its text. */
+export const PropertyCommandButtonContent = styled.span`
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	max-width: 100%;
+	vertical-align: middle;
+
+	& > svg {
+		flex: none;
+	}
+
+	& > span {
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+`;
+
 /** Wrapper of a text field, drawn as a number field's box without the spinner column. */
 export const PropertyTextFieldRoot = styled.div`
 	flex: 1;

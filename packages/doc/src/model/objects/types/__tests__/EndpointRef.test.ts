@@ -6,7 +6,9 @@ import {
 	isConnectPointId,
 	isEdgeAnchorSide,
 	isFreeEndpointRef,
+	isOnDeclaredConnectPoint,
 	isOwnedEndpointRef,
+	listEdgeAnchoredEnds,
 	isSameEndpoint,
 	toEquivalentEdgeAnchor,
 } from "../EndpointRef";
@@ -287,5 +289,64 @@ describe("toEquivalentEdgeAnchor", () => {
 		expect(
 			toEquivalentEdgeAnchor({ kind: "connectPoint", id: "tip" }),
 		).toBeNull();
+	});
+});
+
+describe("isOnDeclaredConnectPoint", () => {
+	it("answers true for a connect point id the type declares", () => {
+		expect(
+			isOnDeclaredConnectPoint({
+				owner: { id: "a" },
+				anchor: { kind: "connectPoint", id: "col:0:left" },
+			}),
+		).toBe(true);
+	});
+
+	it("answers false for a built-in midpoint, an edge, a centre and a free end", () => {
+		for (const endpoint of [
+			{ owner: { id: "a" }, anchor: { kind: "connectPoint", id: "topCenter" } },
+			{ owner: { id: "a" }, anchor: { kind: "edge", side: "left", t: 0.2 } },
+			{ owner: { id: "a" }, anchor: { kind: "center" } },
+			{ anchor: { kind: "free", point: { x: 0, y: 0 } } },
+		] as const) {
+			expect(isOnDeclaredConnectPoint(endpoint)).toBe(false);
+		}
+	});
+});
+
+describe("listEdgeAnchoredEnds", () => {
+	it("lists the ends on a side, source before target, and leaves the rest out", () => {
+		expect(
+			listEdgeAnchoredEnds([
+				{
+					source: {
+						owner: { id: "a" },
+						anchor: { kind: "connectPoint", id: "bottomCenter" },
+					},
+					target: {
+						owner: { id: "b" },
+						anchor: { kind: "edge", side: "top", t: 0.3 },
+					},
+				},
+				{
+					source: { owner: { id: "a" }, anchor: { kind: "center" } },
+					target: {
+						owner: { id: "c" },
+						anchor: { kind: "connectPoint", id: "col:0:left" },
+					},
+				},
+				{
+					source: { anchor: { kind: "free", point: { x: 0, y: 0 } } },
+					target: {
+						owner: { id: "c" },
+						anchor: { kind: "edge", side: "left", t: 0.5 },
+					},
+				},
+			]),
+		).toEqual([
+			{ ownerId: "a", side: "bottom", t: 0.5 },
+			{ ownerId: "b", side: "top", t: 0.3 },
+			{ ownerId: "c", side: "left", t: 0.5 },
+		]);
 	});
 });
