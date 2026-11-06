@@ -21,6 +21,7 @@ import {
 import { calcObjectBoundingBox } from "./calcObjectBoundingBox";
 import { sortObjectIdsByZOrder } from "./sortObjectIdsByZOrder";
 import type { ConnectorRouteRegistries } from "./VisualExtentRegistries";
+import { readCachedObjectOutline } from "../../rendering/objects/connector/geometry/endpoints/readCachedObjectOutline";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { isConnectorState } from "../../states/objects/connector/ConnectorState";
 import { isGroupState } from "../../states/objects/primitives/group/GroupState";
@@ -73,7 +74,7 @@ const isPointOnFrame = (
 		object.cy,
 	);
 
-	const outline = registries.objectOutline.get(object.type)?.(object);
+	const outline = readCachedObjectOutline(object, registries.objectOutline);
 	if (outline && outline.length >= 3) {
 		return isPointInPolygon(local, outline);
 	}

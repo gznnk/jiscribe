@@ -29,6 +29,7 @@ import {
 	type LayoutScopeGraph,
 	collectConnectorsInTreeOrder,
 } from "./resolveLayoutScope";
+import { readCachedObjectOutline } from "../../../../rendering/objects/connector/geometry/endpoints/readCachedObjectOutline";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import {
 	type ConnectorState,
@@ -62,7 +63,7 @@ const resolveAnchorShape = (
 		width: object.width,
 		height: object.height,
 		geometry: registries.objectMapper.getFeatures(object.type)?.geometry,
-		outline: registries.objectOutline.get(object.type)?.(object),
+		outline: readCachedObjectOutline(object, registries.objectOutline),
 		anchorRegion: registries.objectAnchorRegion.get(object.type)?.(object),
 	};
 };

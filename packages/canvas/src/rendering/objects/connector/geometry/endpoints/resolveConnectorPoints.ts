@@ -2,6 +2,7 @@ import { isConnectorDrawnOrthogonal } from "@jiscribe/doc/model/objects/connecto
 import { isTransformedFrame, type Point, type Rect } from "@jiscribe/geometry";
 
 import { adjustToOutline } from "./adjustToOutline";
+import { readCachedObjectOutline } from "./readCachedObjectOutline";
 import { resolveEndpoint } from "./resolveEndpoint";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../../states/objects/connector/ConnectorState";
@@ -18,22 +19,25 @@ import {
 } from "../routing";
 
 /**
- * Reads a shape's local outline polygon from the registry, or null when the
- * shape is not a frame or has no registered outline (rect/ellipse fall through
- * to their analytic handling in resolveEndpoint / adjustToOutline).
+ * Reads a shape's local outline polygon from the registry (readCachedObjectOutline),
+ * or null when the shape is not a frame or has no registered outline (rect/ellipse
+ * fall through to their analytic handling in resolveEndpoint / adjustToOutline).
  */
 const resolveOutline = (
 	obj: ObjectState | null | undefined,
 	outlineRegistry: Pick<ObjectOutlineRegistry, "get"> | null | undefined,
-): Point[] | null => {
-	if (!obj || !outlineRegistry) {
+): readonly Point[] | null => {
+	// The registry lookup goes first: most types register no outline, and the
+	// frame check reads seven fields.
+	if (
+		!obj ||
+		!outlineRegistry ||
+		outlineRegistry.get(obj.type) === undefined ||
+		!isTransformedFrame(obj)
+	) {
 		return null;
 	}
-	const calculator = outlineRegistry.get(obj.type);
-	if (!calculator || !isTransformedFrame(obj)) {
-		return null;
-	}
-	return calculator(obj);
+	return readCachedObjectOutline(obj, outlineRegistry) ?? null;
 };
 
 /**

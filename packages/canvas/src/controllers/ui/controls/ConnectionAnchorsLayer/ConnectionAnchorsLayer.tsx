@@ -3,6 +3,7 @@ import type { Point, Rect } from "@jiscribe/geometry";
 import { memo, useMemo } from "react";
 
 import { calcEdgeAnchorPoint } from "../../../../rendering/objects/connector/geometry/calcConnectPoint";
+import { readCachedObjectOutline } from "../../../../rendering/objects/connector/geometry/endpoints/readCachedObjectOutline";
 import type { ObjectAnchorRegionRegistry } from "../../../../rendering/objects/registry/ObjectAnchorRegionRegistry";
 import { useObjectAnchorRegionRegistry } from "../../../../rendering/objects/registry/ObjectAnchorRegionRegistryContext";
 import type { ObjectConnectionAnchorsRegistry } from "../../../../rendering/objects/registry/ObjectConnectionAnchorsRegistry";
@@ -40,7 +41,7 @@ type ConnectionAnchorsLayerProps = {
 
 type ResolvedAnchorGeometry = {
 	/** The object's true outline polygon (null = bounding-box fallback in the dot components). */
-	outline: Point[] | null;
+	outline: readonly Point[] | null;
 	/** The band the edge anchors are centered on (null = full bounding box). */
 	anchorRegion: Rect | null;
 	/** The anchors the object's type declares beyond the edge ones (null = none). */
@@ -72,7 +73,7 @@ const resolveAnchorGeometry = (
 		return EMPTY_ANCHOR_GEOMETRY;
 	}
 	return {
-		outline: outlineRegistry.get(obj.type)?.(obj) ?? null,
+		outline: readCachedObjectOutline(obj, outlineRegistry) ?? null,
 		anchorRegion: anchorRegionRegistry.get(obj.type)?.(obj) ?? null,
 		extraConnectPoints: extraConnectPointsRegistry.get(obj.type)?.(obj) ?? null,
 	};

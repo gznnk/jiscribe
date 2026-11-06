@@ -490,6 +490,9 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   keystroke.** The AWS, Azure and Google Cloud catalogs (`createIconSetCatalog`)
   and the Lucide set build a ranked search index on the first search and filter
   it after that; the results are unchanged.
+- **A shape's outline is computed once per state, not per frame.** A connector
+  redrawn while the shape at its other end stands still reuses that shape's
+  outline, as do the connection anchors, hit testing and auto layout.
 
 ### Removed
 

@@ -16,6 +16,7 @@ import { findConnectableTargetAt } from "./utils/findConnectableTargetAt";
 import { getEditingEndpoint } from "./utils/getEditingEndpoint";
 import { isSameConnectorEndpoints } from "./utils/isSameConnectorEndpoints";
 import { snapFreeEndpointStraight } from "./utils/snapFreeEndpointStraight";
+import { readCachedObjectOutline } from "../../../../../rendering/objects/connector/geometry/endpoints/readCachedObjectOutline";
 import { resolveEndpointOwner } from "../../../../../rendering/objects/connector/geometry/endpoints/resolveEndpointOwner";
 import type { ExtraConnectPoint } from "../../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
@@ -114,7 +115,7 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 			return { zoom };
 		}
 		return {
-			outline: registries.objectOutline.get(obj.type)?.(obj) ?? null,
+			outline: readCachedObjectOutline(obj, registries.objectOutline) ?? null,
 			anchorRegion: registries.objectAnchorRegion.get(obj.type)?.(obj) ?? null,
 			extraConnectPoints:
 				registries.objectExtraConnectPoints.get(obj.type)?.(obj) ?? null,
