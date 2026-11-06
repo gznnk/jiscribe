@@ -483,6 +483,9 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   matched on its text and resolved font, so moving, rotating or resizing a
   `features.text: "label"` shape, an annotation bracket or an AWS group measures
   nothing while the caption is unchanged.
+- **An AWS, Azure or Google Cloud icon is not rebuilt while the shape around it
+  is rotated, resized or has its label edited.** `IconSetArt` (canvas-sdk) is
+  memoized on its `drawing`.
 
 ### Removed
 
