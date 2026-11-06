@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { RectFeatures } from "../../model/objects/primitives/rect/RectDoc";
+import { calcFullBoxTextRegion } from "../../plugin/ObjectDocTextRegion";
 import type { ObjectDocValidateFn } from "../../plugin/ObjectDocValidateFn";
 import { createDocValidatorRegistry } from "../ObjectDocValidatorRegistry";
 
@@ -10,7 +11,11 @@ describe("ObjectDocValidatorRegistry", () => {
 	it("hasType answers for a registered type and for one never registered", () => {
 		const registry = createDocValidatorRegistry({
 			presetDefinitions: {
-				rect: { features: RectFeatures, validateDoc: noopValidate },
+				rect: {
+					features: RectFeatures,
+					validateDoc: noopValidate,
+					textRegion: calcFullBoxTextRegion,
+				},
 			},
 		});
 
@@ -25,6 +30,7 @@ describe("ObjectDocValidatorRegistry", () => {
 			presetDefinitions: {
 				rect: {
 					features: RectFeatures,
+					textRegion: calcFullBoxTextRegion,
 					validateDoc: () => [
 						{ path: "root[0]", message: "always fails", severity: "error" },
 					],

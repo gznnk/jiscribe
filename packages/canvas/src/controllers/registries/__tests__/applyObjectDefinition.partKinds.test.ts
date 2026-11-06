@@ -1,3 +1,4 @@
+import { calcFullBoxTextRegion } from "@jiscribe/doc/plugin/ObjectDocTextRegion";
 import { describe, expect, it } from "vitest";
 
 import { defineObject } from "../../../plugin/ObjectTypeDefinition";
@@ -16,6 +17,7 @@ const buildFakeDefinition = (
 	defineObject({
 		features: { type, geometry: "rect", ...(text ? { text } : {}) },
 		validateDoc: () => [],
+		...(text === "body" ? { textRegion: calcFullBoxTextRegion } : {}),
 		mapper: {
 			toDoc: (state) => ({ id: state.id, type }),
 			toState: (doc) => ({ id: doc.id, type }),

@@ -39,12 +39,16 @@ const labelTypes = [...standardObjectDocDefinitions]
 	.map(([type]) => type);
 
 describe("the published schema's label text types", () => {
-	it("covers the twelve shipped types hanging their text below the box", () => {
+	it("covers the sixteen shipped types drawing a caption sized from its own text", () => {
 		expect(labelTypes.sort()).toEqual(
 			[
 				"actor",
+				"awsGroup",
 				"awsIcon",
 				"azureIcon",
+				"brace",
+				"bracket",
+				"bracketWithStem",
 				"cross",
 				"envelope",
 				"extract",

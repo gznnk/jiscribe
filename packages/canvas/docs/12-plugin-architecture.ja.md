@@ -78,8 +78,8 @@ headless 半分である。パース層がその型を知り、doc を検証し�
 `textRegion` も含めてそのまま引き継ぐ。だから `CanvasPlugin` は `CanvasDocPlugin` に
 **構造的に代入できる** — 同じ `plugins` 配列が `<Canvas>` にもパーサーにも渡せる。
 
-doc の `textRegion` は headless の答え（はみ出し検査・高さ自動の判定）で、「箱が
-文字を持たない」を `null` で答えられるので、キャンバスが文字を描く位置ではない。
+doc の `textRegion` は headless の答え（はみ出し検査・高さ自動の計測）で、キャンバスが
+文字を描く位置ではない。`"body"` / `"source"` の型は宣言が必須で、`"label"` の型は宣言しない。
 キャンバス上の置き場所は `"textSlot"` 部分種別の `region`（`(state, slotId) => Rect`。
 1 スロットずつ）か `regions`（`(state) => Record<slotId, Rect>`。全スロットを 1 回で）
 で宣言する。`createTextSlotPartKindDefinition({ region })` /

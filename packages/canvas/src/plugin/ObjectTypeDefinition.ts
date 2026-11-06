@@ -31,14 +31,16 @@ import type { ObjectStateValidator } from "../states/registry/ObjectStateValidat
  * definition, and `CanvasPlugin.objects` flows into `createCanvasParser` unchanged.
  *
  * The inherited `textRegion` is the doc's, for the headless checks and the
- * auto-height verdict; it is not where the canvas draws the text. That is the
- * `"textSlot"` part kind's `region` / `regions` (createTextSlotPartKindDefinition
- * in `partKinds`, or `createFrameObjectDefinition({ textRegion })`), since a doc
- * declaration may answer "the box does not hold the text at all" (`null`), which
- * a renderer has no use for. Most shipped shapes declare the very same function
- * on both sides; the ones that cannot are those whose region is sized from the
- * text itself (an AWS group's title band, a record's bands). A `features.text:
- * "label"` type declares neither: the core places its caption.
+ * auto-height measurement; it is not where the canvas draws the text. That is
+ * the `"textSlot"` part kind's `region` / `regions`
+ * (createTextSlotPartKindDefinition in `partKinds`, or
+ * `createFrameObjectDefinition({ textRegion })`), the whole box when none is
+ * declared. Most shipped shapes declare the very same function on both sides;
+ * the ones that cannot are those whose region is sized from the text itself (a
+ * record's bands). A `features.text: "label"` type declares no doc
+ * `textRegion`: the core hangs its caption under the box, unless the type
+ * places it itself (a group marker's caption beyond its tip, an AWS group's
+ * title band) by declaring a `"textSlot"` kind and `visualBounds` together.
  *
  * The inherited `outline` / `anchorRegion` are the doc's too, and the canvas
  * draws connector ends and connection anchors from them as they are: they read

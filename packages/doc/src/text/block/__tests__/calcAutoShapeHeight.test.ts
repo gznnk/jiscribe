@@ -3,10 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import type { TextVerticalBasis } from "../../../model/objects/types/text/TextVerticalBasis";
 import type { ObjectDocTextRegionCalculator } from "../../../plugin/ObjectDocTextRegion";
-import {
-	calcFullBoxTextRegion,
-	calcOutsideBoxTextRegion,
-} from "../../../plugin/ObjectDocTextRegion";
+import { calcFullBoxTextRegion } from "../../../plugin/ObjectDocTextRegion";
 import {
 	FALLBACK_CHAR_WIDTH,
 	FALLBACK_FONT,
@@ -168,19 +165,6 @@ describe("calcAutoShapeHeight", () => {
 		expect(fits(height! - 1)).toBe(false);
 	});
 
-	it("answers null where the type's box does not hold its text at all", () => {
-		expect(
-			calcAutoShapeHeight(
-				{ width: 200, height: 0 },
-				"anything",
-				FALLBACK_FONT,
-				calcOutsideBoxTextRegion,
-				undefined,
-				AUTO_HEIGHT_COMFORT_PADDING_EM,
-			),
-		).toBeNull();
-	});
-
 	it("answers null where no height fits, a region of its own height here", () => {
 		// A header band: as tall as the text box's padding whatever the shape does,
 		// so a line of text never fits and the search reaches its ceiling.
@@ -263,18 +247,18 @@ describe("calcAutoShapeHeight", () => {
 		expect(fitsMirror(height! - 1)).toBe(false);
 	});
 
-	it("searches through a region that only exists above a minimum height", () => {
-		// A plugin may answer null below the height its drawing needs: null at one
-		// height is that height not fitting, not a verdict on the type.
+	it("searches through a region that only opens above a minimum height", () => {
+		// A region squeezed to nothing below the height its drawing needs: no
+		// height there fits, which is not a verdict on the taller ones.
 		const aboveMinimumOnly: ObjectDocTextRegionCalculator = (doc) =>
-			(doc.height as number) >= 150
+			doc.height >= 150
 				? {
-						x: -(doc.width as number) / 2,
-						y: -(doc.height as number) / 2,
-						width: doc.width as number,
-						height: doc.height as number,
+						x: -doc.width / 2,
+						y: -doc.height / 2,
+						width: doc.width,
+						height: doc.height,
 					}
-				: null;
+				: { x: 0, y: 0, width: 0, height: 0 };
 
 		expect(
 			calcAutoShapeHeight(

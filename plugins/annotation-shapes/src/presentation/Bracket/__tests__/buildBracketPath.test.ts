@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { GROUP_MARKER_DIRECTIONS } from "../../../schema/shared/GroupMarkerFields";
+import { calcGroupMarkerTip } from "../../../schema/shared/groupMarkerGeometry";
 import { readPathPoints } from "../../__tests__/support/readPathPoints";
-import { calcGroupMarkerTip } from "../../shared/groupMarkerGeometry";
 import { buildBracketPath } from "../buildBracketPath";
 
 describe("buildBracketPath", () => {

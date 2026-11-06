@@ -52,10 +52,10 @@ export type ContentBoxResolution =
 	  }
 	| {
 			/**
-			 * The type's box does not hold its text: the label is drawn outside the
-			 * outline, the box is divided into bands each sized from their own text,
-			 * or the type carries no text at all. No width and height can make such a
-			 * text overflow.
+			 * The type's box does not hold one body of text: its caption is sized
+			 * from its own text (`features.text: "label"`), its text is keyed slots,
+			 * or it carries no text at all. No width and height can make such a text
+			 * overflow.
 			 */
 			kind: "outside";
 	  }
@@ -78,7 +78,7 @@ export type ContentBoxResolution =
  * region is the whole box resolves to `{ x: -width / 2 + 6, y: -height / 2 + 2, … }`.
  *
  * @param shape - The object to measure: its `type`, its `width` / `height`, its `textVerticalBasis` if it sets one, and any field its type's region reads (see {@link ContentBoxShape})
- * @returns `{ kind: "region", rect, declaredRegion, isSourceText }` for a type whose box holds its one body, `{ kind: "outside" }` for one whose box does not (a label drawn outside the outline, a `"slots"` type whose text is not one body, no text at all, or a shipped type that declares no region), and `{ kind: "unknown" }` for a type name outside the shipped set
+ * @returns `{ kind: "region", rect, declaredRegion, isSourceText }` for a `"body"` / `"source"` type, whose box holds its one body; `{ kind: "outside" }` for a `"label"` type (its caption sized from its own text), a `"slots"` type whose text is not one body, and one with no text at all; and `{ kind: "unknown" }` for a type name outside the shipped set
  */
 export const resolveContentBox = <TShape extends ContentBoxShape>(
 	shape: TShape,
@@ -87,15 +87,21 @@ export const resolveContentBox = <TShape extends ContentBoxShape>(
 	if (definition === undefined) {
 		return { kind: "unknown" };
 	}
-	// The box asked about is the one body's: a type whose text is keyed slots has
-	// no single body to place, whatever its region declares for a slot.
-	if (!isSingleBodyText(definition.features.text)) {
+	// The box asked about is the one body's: a caption is sized from its own text
+	// wherever the type places it, and a type whose text is keyed slots has no
+	// single body to place, whatever its region declares for a slot.
+	if (
+		definition.features.text === "label" ||
+		!isSingleBodyText(definition.features.text)
+	) {
 		return { kind: "outside" };
 	}
-	const region = definition.textRegion?.(shape, BODY_TEXT_SLOT_ID) ?? null;
-	if (region === null) {
+	// Narrows the type only: a "body" / "source" type always declares one
+	// (resolveDocDefinitions refuses it otherwise), so this is never taken.
+	if (definition.textRegion === undefined) {
 		return { kind: "outside" };
 	}
+	const region = definition.textRegion(shape, BODY_TEXT_SLOT_ID);
 	// An unknown value reads as the default rather than as an error: this package
 	// also runs over documents the parser has not stripped (a hand-built shape,
 	// `measure`'s size probes), and the field is a pure enum there too.

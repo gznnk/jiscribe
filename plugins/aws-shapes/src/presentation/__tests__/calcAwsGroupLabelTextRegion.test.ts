@@ -1,7 +1,9 @@
+import { calcLabelBoxSize } from "@jiscribe/canvas-sdk";
 import { describe, expect, it } from "vitest";
 
 import {
 	AWS_GROUP_CORNER_ICON_SIZE,
+	AWS_GROUP_DOC_DEFAULTS,
 	AWS_GROUP_LABEL_GAP,
 	AWS_GROUP_PADDING,
 } from "../../schema/AwsGroupDoc";
@@ -62,6 +64,21 @@ describe("calcAwsGroupLabelTextRegion", () => {
 			SLOT,
 		);
 		expect(twoLines.height).toBeGreaterThan(oneLine.height);
+	});
+
+	it("measures the label in the type's own body defaults, not the shared caption ones", () => {
+		const state = withText("vpc", "VPC");
+		const region = calcAwsGroupLabelTextRegion(state, SLOT);
+		const inTypeDefaults = calcLabelBoxSize(state.text, SLOT, {
+			fontSize: AWS_GROUP_DOC_DEFAULTS.fontSize,
+			fontWeight: AWS_GROUP_DOC_DEFAULTS.fontWeight,
+		});
+		expect({ width: region.width, height: region.height }).toEqual(
+			inTypeDefaults,
+		);
+		expect(region.height).toBeLessThan(
+			calcLabelBoxSize(state.text, SLOT).height,
+		);
 	});
 
 	it("centers the label on the corner icon's row", () => {

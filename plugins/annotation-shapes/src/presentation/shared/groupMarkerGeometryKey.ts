@@ -3,11 +3,11 @@ import type {
 	ObjectState,
 } from "@jiscribe/canvas";
 
+import type { GroupMarkerTipFields } from "../../schema/shared/GroupMarkerFields";
 import {
 	resolveGroupMarkerDirection,
 	resolveGroupMarkerTipPosition,
-} from "./groupMarkerGeometry";
-import type { GroupMarkerTipFields } from "../../schema/shared/GroupMarkerFields";
+} from "../../schema/shared/groupMarkerGeometry";
 
 /**
  * The two fields that move the tip without touching the frame — the tip drag and

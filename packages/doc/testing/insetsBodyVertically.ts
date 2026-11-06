@@ -35,9 +35,6 @@ export const insetsBodyVertically = (
 	const textRegion = definition.textRegion ?? calcFullBoxTextRegion;
 	return TEXT_REGION_PROBE_BOXES.every((box) => {
 		const region = textRegion(box, BODY_TEXT_SLOT_ID);
-		if (region === null) {
-			return false;
-		}
 		const boxTop = -box.height / 2;
 		const boxBottom = box.height / 2;
 		const regionBottom = region.y + region.height;

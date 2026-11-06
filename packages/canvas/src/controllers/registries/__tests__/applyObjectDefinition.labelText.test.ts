@@ -24,7 +24,7 @@ const labelFeatures: ObjectFeatures = {
 	text: "label",
 };
 
-/** A `"label"` type the way a plugin declares one: no placement of its own. */
+/** A `"label"` type the way most plugins declare one: no placement of its own. */
 const buildLabelDefinition = (
 	defaults?: Record<string, unknown>,
 ): ObjectTypeDefinition =>
@@ -127,26 +127,77 @@ describe("applyObjectDefinition: a label text type", () => {
 		);
 	});
 
+	it("registers the text slot kind and visual bounds it declares together, as they are", () => {
+		const besideTheBox = (box: Dimensions) => ({
+			x: box.width / 2 + 10,
+			y: -10,
+			width: 50,
+			height: 20,
+		});
+		const declaredBounds = () => ({ x: -32, y: -32, width: 124, height: 64 });
+		const registries = createTestRegistries();
+		applyObjectDefinition(registries, "captioned", {
+			...buildLabelDefinition(),
+			partKinds: [createTextSlotPartKindDefinition({ region: besideTheBox })],
+			visualBounds: declaredBounds,
+		});
+
+		expect(
+			registries.objectPartKind
+				.get("captioned", TEXT_SLOT_PART_KIND)
+				?.region?.(captionedObject("Lambda"), "body"),
+		).toEqual({ x: 42, y: -10, width: 50, height: 20 });
+		expect(registries.objectVisualBounds.get("captioned")).toBe(declaredBounds);
+	});
+
 	it.each([
 		[
 			"visualBounds",
+			'a "textSlot" part kind',
 			{
 				visualBounds: () => ({ x: 0, y: 0, width: 1, height: 1 }),
 			},
 		],
 		[
 			'a "textSlot" part kind',
-			{ partKinds: [createTextSlotPartKindDefinition()] },
+			"visualBounds",
+			{
+				partKinds: [
+					createTextSlotPartKindDefinition({ region: calcFullBoxTextRegion }),
+				],
+			},
 		],
-		["textRegion", { textRegion: calcFullBoxTextRegion }],
-	])("refuses a type declaring %s of its own", (declared, extra) => {
+	])("refuses a type declaring %s without %s", (declared, missing, extra) => {
 		expect(() =>
 			applyObjectDefinition(createTestRegistries(), "captioned", {
 				...buildLabelDefinition(),
 				...extra,
 			} as ObjectTypeDefinition),
 		).toThrow(
-			`ObjectTypeDefinition "captioned": features.text "label" has its caption placed under the box by the core (calcLabelTextRegion); remove its ${declared}`,
+			`ObjectTypeDefinition "captioned": features.text "label" places its caption itself only by declaring both a "textSlot" part kind and visualBounds; declares ${declared} but no ${missing}`,
+		);
+	});
+
+	it("refuses a declared text slot kind placing nothing, which would spread the caption over the box", () => {
+		expect(() =>
+			applyObjectDefinition(createTestRegistries(), "captioned", {
+				...buildLabelDefinition(),
+				partKinds: [createTextSlotPartKindDefinition()],
+				visualBounds: () => ({ x: 0, y: 0, width: 1, height: 1 }),
+			}),
+		).toThrow(
+			'ObjectTypeDefinition "captioned": features.text "label" declares a "textSlot" part kind with no region or regions, which would place the caption over the whole box',
+		);
+	});
+
+	it("refuses a doc textRegion of its own", () => {
+		expect(() =>
+			applyObjectDefinition(createTestRegistries(), "captioned", {
+				...buildLabelDefinition(),
+				textRegion: calcFullBoxTextRegion,
+			}),
+		).toThrow(
+			'ObjectTypeDefinition "captioned": features.text "label" has its caption placed on the canvas side (under the box by the core, calcLabelTextRegion, or by a declared "textSlot" part kind); remove its doc textRegion',
 		);
 	});
 

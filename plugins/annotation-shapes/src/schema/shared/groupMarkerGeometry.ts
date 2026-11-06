@@ -3,11 +3,11 @@ import type { Point } from "@jiscribe/geometry";
 import type {
 	GroupMarkerDirection,
 	GroupMarkerTipFields,
-} from "../../schema/shared/GroupMarkerFields";
+} from "./GroupMarkerFields";
 import {
 	GROUP_MARKER_DIRECTION_DEFAULT,
 	GROUP_MARKER_TIP_POSITION_DEFAULT,
-} from "../../schema/shared/GroupMarkerFields";
+} from "./GroupMarkerFields";
 
 /** The two axes of a group marker's box, named by role rather than by x / y. */
 export type GroupMarkerAxes = {

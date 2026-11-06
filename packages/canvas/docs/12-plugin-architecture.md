@@ -84,8 +84,9 @@ every doc field over untouched — `textRegion` included — which is why a full
 array feeds both `<Canvas>` and the parser.
 
 The doc's `textRegion` is the headless answer (the overflow checks, the
-auto-height verdict) and may say "the box does not hold the text" with `null`, so
-it is not what the canvas draws with. A type places its text on the canvas through
+auto-height measurement), not what the canvas draws with; a `"body"` /
+`"source"` type has to declare one, and a `"label"` type none. A type places its
+text on the canvas through
 the `"textSlot"` part kind's `region` (`(state, slotId) => Rect`, one slot at a
 time) or `regions` (`(state) => Record<slotId, Rect>`, every slot in one call),
 built with `createTextSlotPartKindDefinition({ region })` /

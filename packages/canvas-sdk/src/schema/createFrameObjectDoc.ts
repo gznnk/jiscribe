@@ -48,13 +48,12 @@ type FrameObjectDocCommonParams = {
 	extraKeys?: readonly string[];
 
 	/**
-	 * Where the shape lays its text out (see `ObjectDocDefinition.textRegion`).
-	 * Pass the same function the UI definition registers as its `textRegion`, or
-	 * `calcOutsideBoxTextRegion` for a shape that places its label outside the
-	 * box itself. A `features.text: "label"` type passes none, its caption being
-	 * placed by the core. It also reaches the derived validator, which is what
-	 * lets a shape whose box holds its text leave `height` out of the document
-	 * (`supportsAutoHeight`).
+	 * Where the shape lays its text out (see `ObjectDocDefinition.textRegion`):
+	 * the rectangle the headless checks and the auto-height measurement read,
+	 * `calcFullBoxTextRegion` for the whole box. Where the canvas draws the text
+	 * is the UI definition's `textRegion` (the `"textSlot"` part kind), and the
+	 * shipped shapes pass the same function to both sides. Required of a
+	 * `"body"` / `"source"` shape; a `"label"` shape declares none.
 	 */
 	textRegion?: ObjectDocTextRegionCalculator;
 
@@ -89,11 +88,10 @@ type FrameObjectDocCommonParams = {
 	diagnoseOverflow?: ObjectDocOverflowDiagnoser;
 
 	/**
-	 * Pass `false` for a shape whose box must not be sized from its text even
-	 * though its `textRegion` says it could — one whose height is settled by
-	 * something else (the children it frames), or whose body is not drawn by the
-	 * shared text layout (see `ObjectDocDefinition.autoHeight`). Omit it in every
-	 * other case and let the region decide.
+	 * Pass `false` for a `"body"` shape whose box must not be sized from its
+	 * text, its height being settled by something else (the children it frames;
+	 * see `ObjectDocDefinition.autoHeight`). Omit it in every other case. It also
+	 * reaches the derived validator, which is what keeps `height` required.
 	 */
 	autoHeight?: false;
 
@@ -192,7 +190,6 @@ export const createFrameObjectDoc = ({
 }: FrameObjectDocParams): ObjectDocDefinition => ({
 	features,
 	validateDoc: createFrameDocValidator(features, validateExtra, {
-		textRegion,
 		autoHeight,
 	}),
 	extraKeys,

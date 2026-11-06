@@ -486,17 +486,20 @@ const checkDeclaredStyleFields = (
 };
 
 /**
- * Refuses a `features.text: "label"` type declaring a placement of its own: the
- * core places the caption ({@link createLabelTextSlotPartKind},
- * {@link createLabelTextVisualBounds}), so a
- * `visualBounds`, a `"textSlot"` part kind or a doc `textRegion` would be a
- * second answer for where it is. The doc's `textRegion` is compared against
- * undefined rather than tested for presence: `createFrameObjectDoc` writes the
- * key whether or not the type gave one, and the UI definition inherits it.
+ * Refuses a `features.text: "label"` type whose own placement would disagree
+ * with what is drawn. The core places the caption under the box
+ * ({@link createLabelTextSlotPartKind}, {@link createLabelTextVisualBounds})
+ * unless the type declares both a `"textSlot"` part kind and `visualBounds`;
+ * one without the other leaves the caption and its extent in different places,
+ * and a kind with no `region` / `regions` would spread the caption over the
+ * whole box. A doc `textRegion` is refused outright, the doc side holding no
+ * place for a caption. It is compared against undefined rather than tested for
+ * presence: `createFrameObjectDoc` writes the key whether or not the type gave
+ * one, and the UI definition inherits it.
  *
  * @param type - The type being registered; named in the error
  * @param definition - Its whole definition
- * @throws When a `"label"` type declares any of the three, naming the type and each one it declares
+ * @throws When a `"label"` type declares a doc `textRegion`, only one of a `"textSlot"` part kind and `visualBounds`, or a `"textSlot"` kind placing nothing, naming the type and what it declares
  */
 const checkLabelTextDefinition = (
 	type: ObjectType,
@@ -505,16 +508,31 @@ const checkLabelTextDefinition = (
 	if (definition.features.text !== "label") {
 		return;
 	}
-	const declared = [
-		...(definition.visualBounds === undefined ? [] : ["visualBounds"]),
-		...(definition.partKinds?.some((part) => part.kind === TEXT_SLOT_PART_KIND)
-			? [`a "${TEXT_SLOT_PART_KIND}" part kind`]
-			: []),
-		...(definition.textRegion === undefined ? [] : ["textRegion"]),
-	];
-	if (declared.length > 0) {
+	if (definition.textRegion !== undefined) {
 		throw new Error(
-			`ObjectTypeDefinition "${type}": features.text "label" has its caption placed under the box by the core (calcLabelTextRegion); remove its ${declared.join(", ")}`,
+			`ObjectTypeDefinition "${type}": features.text "label" has its caption placed on the canvas side (under the box by the core, calcLabelTextRegion, or by a declared "${TEXT_SLOT_PART_KIND}" part kind); remove its doc textRegion`,
+		);
+	}
+	const textSlotKinds = (definition.partKinds ?? []).filter(
+		(part) => part.kind === TEXT_SLOT_PART_KIND,
+	);
+	const declaresTextSlotKind = textSlotKinds.length > 0;
+	const declaresVisualBounds = definition.visualBounds !== undefined;
+	if (declaresTextSlotKind !== declaresVisualBounds) {
+		const [declared, missing] = declaresTextSlotKind
+			? [`a "${TEXT_SLOT_PART_KIND}" part kind`, "visualBounds"]
+			: ["visualBounds", `a "${TEXT_SLOT_PART_KIND}" part kind`];
+		throw new Error(
+			`ObjectTypeDefinition "${type}": features.text "label" places its caption itself only by declaring both a "${TEXT_SLOT_PART_KIND}" part kind and visualBounds; declares ${declared} but no ${missing}`,
+		);
+	}
+	if (
+		textSlotKinds.some(
+			(part) => part.region === undefined && part.regions === undefined,
+		)
+	) {
+		throw new Error(
+			`ObjectTypeDefinition "${type}": features.text "label" declares a "${TEXT_SLOT_PART_KIND}" part kind with no region or regions, which would place the caption over the whole box`,
 		);
 	}
 };
@@ -523,8 +541,8 @@ const checkLabelTextDefinition = (
 type LabelTextState = ObjectState & Dimensions & Pick<TextStyleState, "text">;
 
 /**
- * The `"textSlot"` part kind of a `features.text: "label"` type, which no such
- * type declares: the caption placed by the doc layer (calcLabelTextRegion).
+ * The `"textSlot"` part kind of a `features.text: "label"` type that declares
+ * none: the caption placed by the doc layer (calcLabelTextRegion).
  *
  * @param typeDefaults - The type's own body defaults, the ones its overlay is drawn with (ObjectTextStyleDefaultsRegistry), so the caption is measured in the font it is drawn in
  */
@@ -537,8 +555,8 @@ const createLabelTextSlotPartKind = (
 	});
 
 /**
- * The visual bounds of a `features.text: "label"` type, which no such type
- * declares: its box widened by the caption (calcLabelTextVisualBounds).
+ * The visual bounds of a `features.text: "label"` type that declares none: its
+ * box widened by the caption (calcLabelTextVisualBounds).
  *
  * @param typeDefaults - As {@link createLabelTextSlotPartKind} takes them
  */
@@ -693,8 +711,8 @@ export const applyObjectDefinition = (
 	// anything, one body or several: the ids are the keys of its `text`, so there
 	// is nothing per type to say. Declaring `"textSlot"` itself replaces that
 	// default rather than colliding with it (the rule `menu` and `propertyPanel`
-	// already follow); a `"label"` type, which may not declare one, gets the
-	// caption's placement instead. Whichever is registered is placed here, so
+	// already follow); a `"label"` type declaring none gets the caption's
+	// placement under the box instead. Whichever is registered is placed here, so
 	// every reader of a slot's box gets the fallback and the vertical basis from
 	// one spot.
 	const declaredPartKinds = (definition.partKinds ?? []).map((part) =>

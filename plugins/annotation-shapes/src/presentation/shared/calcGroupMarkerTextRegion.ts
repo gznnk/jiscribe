@@ -3,13 +3,13 @@ import { calcLabelBoxSize } from "@jiscribe/canvas-sdk";
 import type { TextSlot } from "@jiscribe/doc";
 import type { Dimensions, Rect } from "@jiscribe/geometry";
 
+import type { GroupMarkerDirection } from "../../schema/shared/GroupMarkerFields";
+import { GROUP_MARKER_LABEL_GAP } from "../../schema/shared/GroupMarkerFields";
 import {
 	calcGroupMarkerTip,
 	resolveGroupMarkerDirection,
 	resolveGroupMarkerTipPosition,
-} from "./groupMarkerGeometry";
-import type { GroupMarkerDirection } from "../../schema/shared/GroupMarkerFields";
-import { GROUP_MARKER_LABEL_GAP } from "../../schema/shared/GroupMarkerFields";
+} from "../../schema/shared/groupMarkerGeometry";
 
 /**
  * What the label layout reads off the state: the box the marker fills, where its
@@ -35,9 +35,10 @@ type GroupMarkerLabelState = Dimensions & {
  *
  * Register as the type's `textRegion`, so the drawn label and the in-place
  * editor resolve the same rectangle; while editing, the grafted draft text
- * reaches here, so the box follows every keystroke. Pair it with
- * `calcGroupMarkerVisualBounds`, or zoom-to-fit and the export viewBox crop the
- * label away.
+ * reaches here, so the box follows every keystroke. A `"label"` type places its
+ * caption itself only by declaring this and `calcGroupMarkerVisualBounds`
+ * together, which is also what keeps zoom-to-fit and the export viewBox from
+ * cropping the label away.
  *
  * @param state The shape's box, tip placement, and text slots.
  * @param slotId Which slot to place; a shape with no such slot lays out an empty label.

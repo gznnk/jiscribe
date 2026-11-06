@@ -83,8 +83,8 @@ describe("createFrameObjectDoc", () => {
 
 		expect(validateDoc(validDoc, "objects[0]")).toEqual([]);
 
-		const { height: _height, ...missingHeight } = validDoc;
-		expect(validateDoc(missingHeight, "objects[0]").length).toBeGreaterThan(0);
+		const { width: _width, ...missingWidth } = validDoc;
+		expect(validateDoc(missingWidth, "objects[0]").length).toBeGreaterThan(0);
 	});
 
 	it("appends validateExtra after the feature-derived checks", () => {

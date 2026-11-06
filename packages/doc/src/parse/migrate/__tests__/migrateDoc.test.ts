@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { ObjectDocDefinition } from "../../../plugin/ObjectDocDefinition";
+import { calcFullBoxTextRegion } from "../../../plugin/ObjectDocTextRegion";
 import { createDocValidatorRegistry } from "../../../registries/ObjectDocValidatorRegistry";
 import { migrateDoc } from "../migrateDoc";
 
@@ -15,6 +16,7 @@ const markdownDefinition: ObjectDocDefinition = {
 		text: "source",
 	},
 	validateDoc: () => [],
+	textRegion: calcFullBoxTextRegion,
 };
 
 const slottedDefinition: ObjectDocDefinition = {

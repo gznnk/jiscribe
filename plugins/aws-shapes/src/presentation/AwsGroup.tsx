@@ -44,11 +44,11 @@ export const AwsGroup = createFrameObject<AwsGroupState>((state, shape) => {
 		state.kind,
 		shape.strokeWidth,
 	);
-	const labelRegion = calcAwsGroupLabelTextRegion(state, BODY_TEXT_SLOT_ID);
-	const headerTop = Math.min(top + AWS_GROUP_PADDING, labelRegion.y);
+	const labelBand = calcAwsGroupLabelTextRegion(state, BODY_TEXT_SLOT_ID);
+	const headerTop = Math.min(top + AWS_GROUP_PADDING, labelBand.y);
 	const headerBottom = Math.max(
 		top + AWS_GROUP_HEADER_HEIGHT,
-		labelRegion.y + labelRegion.height,
+		labelBand.y + labelBand.height,
 	);
 	const cornerIconName = readAwsGroupKindStyle(state.kind).cornerIcon;
 	const cornerIcon =

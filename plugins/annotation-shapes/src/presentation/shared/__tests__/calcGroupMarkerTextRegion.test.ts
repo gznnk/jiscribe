@@ -3,9 +3,9 @@ import { describe, expect, it } from "vitest";
 
 import type { GroupMarkerDirection } from "../../../schema/shared/GroupMarkerFields";
 import { GROUP_MARKER_LABEL_GAP } from "../../../schema/shared/GroupMarkerFields";
+import { calcGroupMarkerTip } from "../../../schema/shared/groupMarkerGeometry";
 import { calcGroupMarkerTextRegion } from "../calcGroupMarkerTextRegion";
 import { calcGroupMarkerVisualBounds } from "../calcGroupMarkerVisualBounds";
-import { calcGroupMarkerTip } from "../groupMarkerGeometry";
 
 const stateOf = (
 	direction: GroupMarkerDirection,

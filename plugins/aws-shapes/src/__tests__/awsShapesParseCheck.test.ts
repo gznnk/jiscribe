@@ -1,4 +1,5 @@
 import { createParseCheckSuite } from "@jiscribe/canvas-sdk/testing";
+import { supportsAutoHeight } from "@jiscribe/doc";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -192,7 +193,7 @@ describe("awsGroupDocDefinition", () => {
 	});
 
 	it("does not size the frame from its title", () => {
-		expect(awsGroupDocDefinition.autoHeight).toBe(false);
+		expect(supportsAutoHeight(awsGroupDocDefinition)).toBe(false);
 	});
 
 	it("is drawn by dragging a box, unlike the icon", () => {

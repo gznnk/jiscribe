@@ -1,7 +1,7 @@
 import type { GroupMarkerDirection } from "../../schema/shared/GroupMarkerFields";
+import { calcGroupMarkerAxes } from "../../schema/shared/groupMarkerGeometry";
 import type { CanonicalGroupMarkerCommand } from "../shared/buildGroupMarkerPath";
 import { buildGroupMarkerPath } from "../shared/buildGroupMarkerPath";
-import { calcGroupMarkerAxes } from "../shared/groupMarkerGeometry";
 
 /**
  * The canonical square bracket: the spine is the outer edge itself (x = 0), with

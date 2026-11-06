@@ -27,12 +27,6 @@ export {
 } from "./schema/outlineHelpers";
 export { calcRoundedRectOutline } from "./schema/calcRoundedRectOutline";
 
-// Typography defaults for a `features.text: "body"` shape placing a label sized
-// from its own text itself (calcLabelBoxSize in `.`). Spread into that shape's doc
-// defaults. A `features.text: "label"` type spreads `@jiscribe/doc`'s
-// LABEL_TEXT_STYLE_DEFAULTS instead.
-export { BELOW_LABEL_STYLE_DEFAULTS } from "./schema/belowLabelStyleDefaults";
-
 // Icon sets shipped as generated data (AWS Architecture Icons and the like): the
 // name lookup over one set's catalog, and the data types the generated catalog
 // and drawing modules are written against. The drawing side is `.`'s

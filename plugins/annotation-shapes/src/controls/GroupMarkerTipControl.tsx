@@ -11,7 +11,7 @@ import {
 	isVerticalGroupMarker,
 	resolveGroupMarkerDirection,
 	resolveGroupMarkerTipPosition,
-} from "../presentation/shared";
+} from "../schema/shared/groupMarkerGeometry";
 import type { GroupMarkerControlState } from "../state/shared/GroupMarkerControlState";
 
 /**
