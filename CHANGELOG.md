@@ -486,6 +486,10 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 - **An AWS, Azure or Google Cloud icon is not rebuilt while the shape around it
   is rotated, resized or has its label edited.** `IconSetArt` (canvas-sdk) is
   memoized on its `drawing`.
+- **Searching the stencil library no longer re-ranks every icon on each
+  keystroke.** The AWS, Azure and Google Cloud catalogs (`createIconSetCatalog`)
+  and the Lucide set build a ranked search index on the first search and filter
+  it after that; the results are unchanged.
 
 ### Removed
 

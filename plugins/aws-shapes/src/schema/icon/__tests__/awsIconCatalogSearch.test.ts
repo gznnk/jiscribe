@@ -35,7 +35,7 @@ describe("awsIconCatalog.search ranking", () => {
 		expect(search("lambda").names[0]).toBe("service/aws-lambda");
 	});
 
-	// startsWithNeedle looks past the layer prefix, so a longer name that opens
+	// the prefix check looks past the layer prefix, so a longer name that opens
 	// with the term outranks a shorter one that only holds it somewhere inside
 	it("ranks a prefix match above a shorter name that merely contains the term", () => {
 		const { names } = search("ec2");

@@ -1,7 +1,16 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { createIconSetCatalog } from "../createIconSetCatalog";
 import type { IconSetCatalogEntry } from "../IconSetTypes";
+import { normalizeIconSetName } from "../normalizeIconSetName";
+
+// Passed through, so the calls a search makes can be counted.
+vi.mock("../normalizeIconSetName", async (importOriginal) => {
+	const original = await importOriginal<{
+		normalizeIconSetName: typeof normalizeIconSetName;
+	}>();
+	return { normalizeIconSetName: vi.fn(original.normalizeIconSetName) };
+});
 
 type TestEntry = IconSetCatalogEntry & { size: string };
 
@@ -205,6 +214,61 @@ describe("createIconSetCatalog: search and browse", () => {
 			"microsoft-storage",
 		]);
 		expect(catalog.search("kv").names).toEqual(["key-vault"]);
+	});
+
+	it("ranks prefix matches first, then shorter names, then alphabetically", () => {
+		const ranked = createIconSetCatalog<TestEntry>({
+			...analyticsSetBase,
+			entries: {
+				"service/step-functions": entry("Step Functions", "Lambda Workflows"),
+				"cloud-lambda-runner": entry("Cloud Runner", "Analytics"),
+				"resource/lambda-function": entry("Function", "Analytics"),
+				"service/api-gateway": entry("API Gateway", "Analytics"),
+				"lambda-edge": entry("Edge", "Analytics"),
+				"service/xray": entry("Lambda Tracer", "Analytics"),
+				"service/lambda": entry("Lambda", "Analytics"),
+				"lambda-auth": entry("Auth", "Analytics"),
+				"service/glue": entry("Glue", "Analytics"),
+			},
+			aliases: { "lambda-proxy": "service/api-gateway" },
+			browseGroups: [
+				{
+					id: "all",
+					label: "All",
+					categories: ["Analytics", "Lambda Workflows"],
+				},
+			],
+		});
+		expect(ranked.search("Lambda")).toEqual({
+			names: [
+				// Starting with the term, past a layer prefix too.
+				"lambda-auth",
+				"lambda-edge",
+				"service/lambda",
+				"resource/lambda-function",
+				// Holding it in the label, the name, an alias, the category.
+				"service/xray",
+				"cloud-lambda-runner",
+				"service/api-gateway",
+				"service/step-functions",
+			],
+			total: 8,
+		});
+	});
+
+	it("does not normalize the labels and categories again on a later search", () => {
+		const fresh = createIconSetCatalog<TestEntry>({
+			...analyticsSetBase,
+			entries: {
+				"data-lake": entry("Data Lake", "Analytics"),
+				"data-pipeline": entry("Data Pipeline", "Analytics"),
+			},
+		});
+		fresh.search("data");
+		vi.mocked(normalizeIconSetName).mockClear();
+		expect(fresh.search("lake").names).toEqual(["data-lake"]);
+		// The term alone.
+		expect(normalizeIconSetName).toHaveBeenCalledTimes(1);
 	});
 
 	it("puts the palette first within a section", () => {

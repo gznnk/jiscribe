@@ -26,17 +26,50 @@ export const searchIconNames = (
 		return { names: [], total: 0 };
 	}
 
-	const byName = Object.keys(ICON_NODES).filter((name) =>
-		name.includes(needle),
-	);
-	const byFormerName = Object.entries(ICON_ALIASES)
-		.filter(([alias]) => alias.includes(needle))
-		.map(([, current]) => current);
-	const matched = [...new Set([...byName, ...byFormerName])].sort(
-		(left, right) =>
-			Number(right.startsWith(needle)) - Number(left.startsWith(needle)) ||
-			left.length - right.length ||
-			left.localeCompare(right),
-	);
+	const prefixMatches = new Set<string>();
+	const otherMatches = new Set<string>();
+	for (const { searchedName, currentName } of readSearchIndex()) {
+		if (searchedName.includes(needle)) {
+			(currentName.startsWith(needle) ? prefixMatches : otherMatches).add(
+				currentName,
+			);
+		}
+	}
+	const matched = [...prefixMatches, ...otherMatches];
 	return { names: matched.slice(0, MAX_RESULTS), total: matched.length };
+};
+
+/** A spelling a search matches against, with the current name it answers with. */
+type SearchIndexEntry = {
+	/** A current name, or a superseded one. */
+	searchedName: string;
+	/** The name a match hands back: the spelling itself, or what it was renamed to. */
+	currentName: string;
+};
+
+/**
+ * Every current and superseded name, ordered by the current name: shortest first,
+ * then alphabetically. Built on first use, then kept, as the library searches on
+ * every keystroke.
+ */
+let searchIndex: SearchIndexEntry[] | null = null;
+
+const readSearchIndex = (): SearchIndexEntry[] => {
+	if (searchIndex === null) {
+		searchIndex = [
+			...Object.keys(ICON_NODES).map((name) => ({
+				searchedName: name,
+				currentName: name,
+			})),
+			...Object.entries(ICON_ALIASES).map(([formerName, currentName]) => ({
+				searchedName: formerName,
+				currentName,
+			})),
+		].sort(
+			(left, right) =>
+				left.currentName.length - right.currentName.length ||
+				left.currentName.localeCompare(right.currentName),
+		);
+	}
+	return searchIndex;
 };

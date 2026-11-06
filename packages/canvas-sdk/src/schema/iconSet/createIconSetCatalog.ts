@@ -87,6 +87,20 @@ export type IconSetCatalog<TEntry extends IconSetCatalogEntry> = {
 	validateIconName: ObjectDocValidateFn;
 };
 
+/** One name of the search index, with the spellings a search matches against. */
+type SearchIndexEntry = {
+	/** The canonical name, the one a search hands back. */
+	name: string;
+	/** The name past its first `/`-segment, the whole name when it has none. */
+	unlayeredName: string;
+	/** The entry's label after normalizeIconSetName. */
+	normalizedLabel: string;
+	/** The entry's category after normalizeIconSetName. */
+	normalizedCategory: string;
+	/** The alias spellings pointing at the name, as written in the alias table. */
+	aliases: readonly string[];
+};
+
 /** How many a search lays out at once. Past this, narrowing the search is quicker than scrolling. */
 const MAX_SEARCH_RESULTS = 105;
 
@@ -103,9 +117,9 @@ const hasOwnKey = (record: object, key: string): boolean =>
  * spelling variants), suggestions for a miss, the library search and the
  * "show all" sections, and the validator a doc definition registers.
  *
- * The shorthand, joined-spelling and word-set indexes are built on first use,
- * so a host that only parses documents carrying canonical names never builds
- * them.
+ * The shorthand, joined-spelling, word-set and search indexes are built on
+ * first use, so a host that only parses documents carrying canonical names
+ * never builds them.
  *
  * @param config - the set's tables; `entries`, `aliases` and `palette` are read,
  *   never copied, so they must not change afterwards
@@ -248,22 +262,56 @@ export const createIconSetCatalog = <TEntry extends IconSetCatalogEntry>(
 	}
 
 	/**
-	 * The names whose own name, label, alias or category holds the term. The
-	 * category lets a term stand in for a category, as in the stencil library's
-	 * search ("compute" lists all of Compute).
+	 * Every name with the spellings a search matches against, shortest first and
+	 * then alphabetically, so a search only has to split it on the prefix match.
+	 * The library searches on every keystroke. Built on first use.
 	 */
-	const findMatches = (needle: string): string[] =>
-		Object.entries(entries)
-			.filter(
-				([name, entry]) =>
-					name.includes(needle) ||
-					normalizeIconSetName(entry.label).includes(needle) ||
-					normalizeIconSetName(entry.category).includes(needle) ||
-					(aliasesByName.get(name) ?? []).some((alias) =>
-						alias.includes(needle),
-					),
-			)
-			.map(([name]) => name);
+	let searchIndex: SearchIndexEntry[] | null = null;
+
+	const readSearchIndex = (): SearchIndexEntry[] => {
+		if (searchIndex === null) {
+			searchIndex = Object.entries(entries)
+				.map(([name, entry]) => ({
+					name,
+					unlayeredName: name.slice(name.indexOf("/") + 1),
+					normalizedLabel: normalizeIconSetName(entry.label),
+					normalizedCategory: normalizeIconSetName(entry.category),
+					aliases: aliasesByName.get(name) ?? [],
+				}))
+				.sort(
+					(left, right) =>
+						left.name.length - right.name.length ||
+						left.name.localeCompare(right.name),
+				);
+		}
+		return searchIndex;
+	};
+
+	/**
+	 * The names whose own name, label, alias or category holds the term, prefix
+	 * matches first, then shortest, then alphabetical. The category lets a term
+	 * stand in for a category, as in the stencil library's search ("compute"
+	 * lists all of Compute).
+	 */
+	const findMatches = (needle: string): string[] => {
+		const prefixMatches: string[] = [];
+		const otherMatches: string[] = [];
+		for (const indexed of readSearchIndex()) {
+			if (
+				indexed.name.includes(needle) ||
+				indexed.normalizedLabel.includes(needle) ||
+				indexed.normalizedCategory.includes(needle) ||
+				indexed.aliases.some((alias) => alias.includes(needle))
+			) {
+				// A layer prefix such as `service/` would otherwise miss every time.
+				const startsWithNeedle =
+					indexed.name.startsWith(needle) ||
+					indexed.unlayeredName.startsWith(needle);
+				(startsWithNeedle ? prefixMatches : otherMatches).push(indexed.name);
+			}
+		}
+		return [...prefixMatches, ...otherMatches];
+	};
 
 	const search = (query: string): IconSetSearchResult => {
 		const needle = normalizeIconSetName(query);
@@ -271,7 +319,7 @@ export const createIconSetCatalog = <TEntry extends IconSetCatalogEntry>(
 		if (query.trim() === "") {
 			matched = [...paletteNames];
 		} else if (needle !== "") {
-			matched = sortByRelevance(findMatches(needle), needle);
+			matched = findMatches(needle);
 		}
 		return {
 			names: matched.slice(0, MAX_SEARCH_RESULTS),
@@ -387,21 +435,3 @@ const assertTablesConsistent = <TEntry extends IconSetCatalogEntry>({
 
 /** A name with its `-` and `/` dropped: `big-query` and `bigquery` both become `bigquery`. */
 const joinIconSetName = (name: string): string => name.replace(/[-/]/g, "");
-
-/** Prefix matches first, then shortest, then alphabetical. */
-const sortByRelevance = (names: string[], needle: string): string[] =>
-	[...names].sort(
-		(left, right) =>
-			Number(startsWithNeedle(right, needle)) -
-				Number(startsWithNeedle(left, needle)) ||
-			left.length - right.length ||
-			left.localeCompare(right),
-	);
-
-/**
- * Whether the name starts with the term, with or without its first `/`-segment
- * (or a layer prefix such as `service/` would miss every time).
- */
-const startsWithNeedle = (name: string, needle: string): boolean =>
-	name.startsWith(needle) ||
-	name.slice(name.indexOf("/") + 1).startsWith(needle);
