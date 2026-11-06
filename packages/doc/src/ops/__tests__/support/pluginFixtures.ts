@@ -102,9 +102,11 @@ export const cappedDefinition: ObjectDocDefinition = {
 };
 
 /**
- * A body-text shape whose label it places below its outline itself, the way an
- * AWS group places its band: its declared region lies outside the box, so it declares no
- * `textVerticalBasis` and a body placement has nothing to move on it.
+ * A body-text shape declaring a region below its outline: the region lies
+ * outside the box, so it declares no `textVerticalBasis` and a body placement
+ * has nothing to move on it. No shipped type is in this state (a caption below
+ * the box is a `"label"` type, which declares no region), so the case is staged
+ * here.
  */
 export const belowLabelDefinition: ObjectDocDefinition = {
 	features: {
