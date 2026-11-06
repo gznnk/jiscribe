@@ -1,11 +1,12 @@
 import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
+import type { ObjectDocLabelRegionCalculator } from "@jiscribe/doc/plugin/ObjectDocLabelRegion";
 import { calcFullBoxTextRegion } from "@jiscribe/doc/plugin/ObjectDocTextRegion";
 import {
 	calcLabelTextRegion,
 	calcLabelTextVisualBounds,
 } from "@jiscribe/doc/text/label/calcLabelTextRegion";
 import type { Dimensions } from "@jiscribe/geometry";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { defineObject } from "../../../plugin/ObjectTypeDefinition";
 import type { ObjectTypeDefinition } from "../../../plugin/ObjectTypeDefinition";
@@ -127,6 +128,57 @@ describe("applyObjectDefinition: a label text type", () => {
 		);
 	});
 
+	it("places its caption and widens its visual bounds where its labelRegion says", () => {
+		const besideTheBox: ObjectDocLabelRegionCalculator = (box) => ({
+			x: box.width / 2 + 10,
+			y: -10,
+			width: 50,
+			height: 20,
+		});
+		const registries = createTestRegistries();
+		applyObjectDefinition(registries, "captioned", {
+			...buildLabelDefinition(),
+			labelRegion: besideTheBox,
+		});
+
+		expect(
+			registries.objectPartKind
+				.get("captioned", TEXT_SLOT_PART_KIND)
+				?.region?.(captionedObject("Lambda"), "body"),
+		).toEqual({ x: 42, y: -10, width: 50, height: 20 });
+		const visualBounds = registries.objectVisualBounds.get("captioned");
+		expect(visualBounds?.(captionedObject("Lambda"))).toEqual({
+			x: -32,
+			y: -32,
+			width: 124,
+			height: 64,
+		});
+		expect(visualBounds?.(captionedObject(""))).toEqual({
+			x: -32,
+			y: -32,
+			width: 64,
+			height: 64,
+		});
+	});
+
+	it("hands its labelRegion the type's own body defaults", () => {
+		const labelRegion = vi.fn(calcLabelTextRegion);
+		const registries = createTestRegistries();
+		applyObjectDefinition(registries, "captioned", {
+			...buildLabelDefinition({ fontSize: 30 }),
+			labelRegion,
+		});
+
+		registries.objectPartKind
+			.get("captioned", TEXT_SLOT_PART_KIND)
+			?.region?.(captionedObject("Lambda"), "body");
+		expect(labelRegion).toHaveBeenCalledWith(
+			expect.objectContaining({ width: 64, height: 64 }),
+			{ text: "Lambda" },
+			expect.objectContaining({ fontSize: 30 }),
+		);
+	});
+
 	it.each([
 		[
 			"visualBounds",
@@ -146,7 +198,7 @@ describe("applyObjectDefinition: a label text type", () => {
 				...extra,
 			} as ObjectTypeDefinition),
 		).toThrow(
-			`ObjectTypeDefinition "captioned": features.text "label" has its caption placed under the box by the core (calcLabelTextRegion); remove its ${declared}`,
+			`ObjectTypeDefinition "captioned": features.text "label" has its caption placed by the core from labelRegion (below the box when omitted, calcLabelTextRegion); remove its ${declared}`,
 		);
 	});
 

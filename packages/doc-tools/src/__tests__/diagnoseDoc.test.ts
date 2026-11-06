@@ -394,21 +394,6 @@ describe("diagnoseDoc", () => {
 		});
 	});
 
-	it("warns rather than passes over a text-bearing type that declares no region", () => {
-		// Unreachable with the shipped set — every `text: "body"` type declares one
-		// — so the gap is staged here, which is what the warning is a guard against.
-		const rect = standardObjectDocDefinitions.get(
-			"rect",
-		) as ObjectDocDefinition;
-		vi.spyOn(standardObjectDocDefinitions, "get").mockImplementation((type) =>
-			type === "rect" ? { ...rect, textRegion: undefined } : undefined,
-		);
-
-		const diagnostics = diagnoseDoc(readFixture("overflowing.jis.json"));
-		expect(diagnostics.every((one) => one.severity === "warning")).toBe(true);
-		expect(diagnostics[0].message).toMatch(/rect declares no text region/);
-	});
-
 	describe("a point-geometry type that declares no box", () => {
 		/** A document holding one text, the shipped type whose doc stores no size. */
 		const textDoc = (): CanvasDoc =>

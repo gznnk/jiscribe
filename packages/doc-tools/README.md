@@ -119,9 +119,9 @@ this one, so an offer made in a process that draws is declined.
 text goes on its doc definition (`ObjectDocDefinition.textRegion`), as a function
 of the doc: the box, plus whatever field the outline depends on — the callout's
 `tail`, the container's `headerHeight`. The rendering layer's
-`ObjectTypeDefinition` registers **the same function**, so what a browser draws
-the text in and what a Node-side diagnosis measures against are one declaration,
-and this package restates nothing.
+`ObjectTypeDefinition` inherits **that very declaration** and draws the text in
+it, so what a browser draws the text in and what a Node-side diagnosis measures
+against are one declaration, and this package restates nothing.
 
 Three answers are possible, and `resolveContentBox` keeps them apart — a caller
 that cannot tell "this shape holds no text" from "you misspelled the type" cannot
@@ -133,11 +133,11 @@ report either one usefully:
   into the region only bounds what that body takes from below, so
   `jiscribe measure` and the MCP `measure_text` give no verdict for it, and
   `diagnoseDoc` judges it only from a measurement taken on a drawn canvas.
-- **`{ kind: "outside" }`** — the box does not hold the text: the shape draws its
-  label outside the outline (the pictograms, the group markers), or divides the
-  box into bands each sized from their own text (`record`), or carries no text at
-  all and declares no region. Nothing about such a shape's size can make its text
-  overflow, so `diagnoseDoc` does not measure it against the box (only where
+- **`{ kind: "outside" }`** — the box does not hold one body of text: the shape's
+  text is a caption sized from its own text (`features.text: "label"` — the
+  pictograms, the group markers, an AWS group's title), or its box is divided
+  into slots (`record`, `table`), or it carries no text at all. Nothing about such
+  a shape's size can make its text overflow, so `diagnoseDoc` does not measure it against the box (only where
   the author's newlines open a line, a label being wrapped by nothing) and
   `jiscribe measure` reports the text's own size with no verdict. A type that stacks its content by a rule of
   its own checks that content itself where it declares how
@@ -146,8 +146,8 @@ report either one usefully:
 - **`{ kind: "unknown" }`** — the type is not one this build ships, so nothing
   declares anything about it. `jiscribe measure` and the MCP `measure_text` tool
   report it as an error. Within a document the case does not arise: a type the
-  parser does not know never reaches `diagnoseDoc`, which does report a warning
-  for a shipped text-bearing type that declares no region.
+  parser does not know never reaches `diagnoseDoc`, and a `"body"` / `"source"`
+  type declaring no region is refused when the parser is built.
 
 ## The connector label check
 

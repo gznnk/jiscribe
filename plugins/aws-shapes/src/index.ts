@@ -40,10 +40,8 @@ export {
 	readAwsGroupKindStyle,
 } from "./schema/awsGroupKinds";
 export type { AwsGroupKindStyle } from "./schema/awsGroupKinds";
-export {
-	calcAwsGroupLabelTextRegion,
-	calcAwsGroupVisualBounds,
-} from "./presentation/calcAwsGroupLabelTextRegion";
+export { calcAwsGroupLabelRegion } from "./schema/calcAwsGroupLabelRegion";
+export type { AwsGroupLabelBox } from "./schema/calcAwsGroupLabelRegion";
 export { validateAwsGroupKind } from "./schema/validateAwsGroupKind";
 
 export { AwsGroup } from "./presentation/AwsGroup";

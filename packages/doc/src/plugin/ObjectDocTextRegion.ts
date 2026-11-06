@@ -12,25 +12,18 @@ import type { Dimensions, Rect } from "@jiscribe/geometry";
  *
  * Implementations declare what they read through `TDoc` and take only the
  * parameters they use: a single-body shape's calculator is a one-argument
- * function of its box, and stays assignable to this type. The pair of parameters
- * mirrors the canvas's `ObjectTextRegionCalculator` (`@jiscribe/canvas`, the
- * text slot part kind's `region`), so one function reading the box alone serves
- * both sides.
- *
- * `null` means the box does not hold that slot at all — the shape draws its
- * label outside the outline. Nothing about such a shape's width and height can
- * make that text overflow.
+ * function of its box, and stays assignable to this type. The canvas calls the
+ * same declaration with an object's state to place the slot (the `"textSlot"`
+ * part kind's `region` it builds from it), so read only the width/height and
+ * the type's own fields (`extraKeys`), which a state carries too.
  */
 export type ObjectDocTextRegionCalculator<
 	TDoc extends Dimensions = Dimensions,
-> = (doc: TDoc, slotId: string) => Rect | null;
+> = (doc: TDoc, slotId: string) => Rect;
 
 /**
  * The whole bounding box: what a shape whose outline takes nothing off its text
  * declares (`rect`, `sticky`, `markdown`).
- *
- * Typed as returning a plain `Rect` rather than the nullable declaration type, so
- * the same function serves as the canvas's text slot region as well.
  *
  * @param doc - The shape's untransformed box; a zero side yields a zero-sided rect rather than NaN
  * @returns The bounding box in local coordinates (shape center as origin)
@@ -41,17 +34,3 @@ export const calcFullBoxTextRegion = ({ width, height }: Dimensions): Rect => ({
 	width,
 	height,
 });
-
-/**
- * No region at all: what a shape declares when its box does not hold its text —
- * a label it places outside the outline itself (the group markers, an AWS
- * group's band), bands each sized from their own text (`record`), or a type
- * carrying no text. A caption hung below the box is a `features.text: "label"`
- * type instead, which declares no region (calcLabelTextRegion).
- *
- * @param doc - The shape's untransformed box; unread, the answer being the same at every size
- * @returns Always null
- */
-export const calcOutsideBoxTextRegion: ObjectDocTextRegionCalculator<
-	Dimensions
-> = () => null;

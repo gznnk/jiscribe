@@ -6,7 +6,6 @@
 // presentation / state / stencil.
 import { createFrameObjectDoc } from "@jiscribe/canvas-sdk/doc";
 import type { CanvasDocPlugin, ObjectDocDefinition } from "@jiscribe/doc";
-import { calcOutsideBoxTextRegion } from "@jiscribe/doc";
 
 import type { BraceDoc } from "./schema/brace/BraceDoc";
 import { BRACE_DOC_DEFAULTS, BraceFeatures } from "./schema/brace/BraceDoc";
@@ -29,6 +28,7 @@ import { calloutOutline } from "./schema/callout/calloutOutline";
 import { validateCalloutTail } from "./schema/callout/validateCalloutTail";
 import { NOTE_DOC_DEFAULTS, NoteFeatures } from "./schema/note/NoteDoc";
 import { noteOutline } from "./schema/note/noteOutline";
+import { calcGroupMarkerLabelRegion } from "./schema/shared/calcGroupMarkerLabelRegion";
 import { createGroupMarkerObjectFactory } from "./schema/shared/createGroupMarkerObjectFactory";
 import { GROUP_MARKER_EXTRA_CONNECT_POINT_IDS } from "./schema/shared/groupMarkerConnectPointIds";
 import {
@@ -52,7 +52,7 @@ export const braceDocDefinition: ObjectDocDefinition =
 	withGroupMarkerTipConnectPoint(
 		createFrameObjectDoc({
 			features: BraceFeatures,
-			textRegion: calcOutsideBoxTextRegion,
+			labelRegion: calcGroupMarkerLabelRegion,
 			defaults: BRACE_DOC_DEFAULTS,
 			extraKeys: [
 				"direction",
@@ -70,7 +70,7 @@ export const bracketDocDefinition: ObjectDocDefinition =
 	withGroupMarkerTipConnectPoint(
 		createFrameObjectDoc({
 			features: BracketFeatures,
-			textRegion: calcOutsideBoxTextRegion,
+			labelRegion: calcGroupMarkerLabelRegion,
 			defaults: BRACKET_DOC_DEFAULTS,
 			extraKeys: ["direction"] satisfies readonly (keyof BracketDoc)[],
 			description:
@@ -87,7 +87,7 @@ export const bracketWithStemDocDefinition: ObjectDocDefinition =
 	withGroupMarkerTipConnectPoint(
 		createFrameObjectDoc({
 			features: BracketWithStemFeatures,
-			textRegion: calcOutsideBoxTextRegion,
+			labelRegion: calcGroupMarkerLabelRegion,
 			defaults: BRACKET_WITH_STEM_DOC_DEFAULTS,
 			extraKeys: [
 				"direction",

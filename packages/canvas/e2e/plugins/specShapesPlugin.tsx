@@ -20,6 +20,7 @@
  */
 
 // Relative, never through @jiscribe/canvas-sdk: canvas may not depend on the kit it ships.
+import { calcFullBoxTextRegion } from "@jiscribe/doc";
 import {
 	AUTO_COLOR,
 	DEFAULT_FONT_FAMILY,
@@ -439,6 +440,7 @@ const Card = memo(CardComponent);
 const cardDefinition: ObjectTypeDefinition<CardDoc, CardState> = {
 	features: CardFeatures,
 	validateDoc: createFrameDocValidator(CardFeatures),
+	textRegion: calcFullBoxTextRegion,
 	factory: createFrameObjectFactory(CARD_DOC_DEFAULTS, {
 		supportsBounds: false,
 	}),
@@ -495,6 +497,7 @@ const memoDefinition: ObjectTypeDefinition<MemoDoc, MemoState> = {
 	features: MemoFeatures,
 	defaults: MEMO_DOC_DEFAULTS,
 	validateDoc: createFrameDocValidator(MemoFeatures),
+	textRegion: calcFullBoxTextRegion,
 	factory: createFrameObjectFactory(MEMO_DOC_DEFAULTS, {
 		supportsBounds: false,
 	}),

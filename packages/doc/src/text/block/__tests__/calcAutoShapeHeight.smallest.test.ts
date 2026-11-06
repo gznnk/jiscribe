@@ -39,9 +39,6 @@ const createFitTest = (
 	const comfortPadding = font.fontSize * AUTO_HEIGHT_COMFORT_PADDING_EM;
 	return (shape, height) => {
 		const region = textRegion({ ...shape, height }, "body");
-		if (region === null) {
-			return false;
-		}
 		const box = calcTextContentBox(region);
 		let textHeight = textHeightByWidth.get(box.width);
 		if (textHeight === undefined) {
@@ -114,8 +111,8 @@ describe("the derived height is the smallest one the text fits in", () => {
 							AUTO_HEIGHT_COMFORT_PADDING_EM,
 						);
 						if (height === null) {
-							// A region holding no text at all, and one whose height the box
-							// does not move: no height fits, so there is none to check.
+							// A region whose height the box does not move: no height fits,
+							// so there is none to check.
 							expect(holdsTextAt(shape, EXHAUSTIVE_WALK_CEILING), where).toBe(
 								false,
 							);

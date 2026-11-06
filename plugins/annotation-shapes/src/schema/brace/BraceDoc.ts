@@ -1,8 +1,5 @@
-import {
-	AUTO_COLOR,
-	BELOW_LABEL_STYLE_DEFAULTS,
-} from "@jiscribe/canvas-sdk/doc";
-import { DEFAULT_STROKE_WIDTH } from "@jiscribe/doc";
+import { AUTO_COLOR } from "@jiscribe/canvas-sdk/doc";
+import { DEFAULT_STROKE_WIDTH, LABEL_TEXT_STYLE_DEFAULTS } from "@jiscribe/doc";
 import type { CreateObjectType, ObjectFeatures } from "@jiscribe/doc";
 
 import type {
@@ -21,7 +18,7 @@ import {
  * transforms and selection work with the same mechanism as Rect. The box is the
  * bracket alone: its short side is the depth the curve bulges by, its long side
  * the span the arms cover. The label is *not* in the box — it is sized from its
- * own text and hung off the tip (calcGroupMarkerTextRegion), so naming the group
+ * own text and hung off the tip (calcGroupMarkerLabelRegion), so naming the group
  * never competes with the bracket for room.
  *
  * The brace carries no fill: the path is open, so a fill would paint the region
@@ -32,7 +29,7 @@ export const BraceFeatures = {
 	geometry: "rect",
 	transform: true,
 	stroke: true,
-	text: "body",
+	text: "label",
 	connectable: true,
 } as const satisfies ObjectFeatures;
 
@@ -56,5 +53,6 @@ export const BRACE_DOC_DEFAULTS: Omit<BraceDoc, "id"> = {
 	direction: GROUP_MARKER_DIRECTION_DEFAULT,
 	tipPosition: GROUP_MARKER_TIP_POSITION_DEFAULT,
 	text: "",
-	...BELOW_LABEL_STYLE_DEFAULTS,
+	...LABEL_TEXT_STYLE_DEFAULTS,
+	labelFill: "transparent",
 } as const as BraceDoc;

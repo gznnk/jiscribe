@@ -62,7 +62,7 @@ export const resizeAutoHeightStateToContent = (
 		state.textVerticalBasis,
 		paddingEm,
 	);
-	// A height nothing derives (the region never holds this text — see
+	// A height nothing derives (no height fits this text in the region — see
 	// calcAutoShapeHeight) leaves the box where the last measurement put it,
 	// that being a better answer than shrinking the shape to nothing. The
 	// mapper's fresh seed has had no measurement yet — its height is 0 — and a

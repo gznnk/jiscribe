@@ -75,6 +75,17 @@ describe("createFrameObjectDoc", () => {
 		expect(definition.anchorRegion).toBe(anchorRegion);
 	});
 
+	it("carries a caption's label region into the definition as-is", () => {
+		const labelRegion = () => ({ x: 0, y: 50, width: 40, height: 20 });
+		const definition = createFrameObjectDoc({
+			features: { ...DemoFeatures, text: "label" },
+			defaults: DEMO_DOC_DEFAULTS,
+			labelRegion,
+		});
+
+		expect(definition.labelRegion).toBe(labelRegion);
+	});
+
 	it("derives a doc validator from features", () => {
 		const { validateDoc } = createFrameObjectDoc({
 			features: DemoFeatures,
@@ -83,8 +94,8 @@ describe("createFrameObjectDoc", () => {
 
 		expect(validateDoc(validDoc, "objects[0]")).toEqual([]);
 
-		const { height: _height, ...missingHeight } = validDoc;
-		expect(validateDoc(missingHeight, "objects[0]").length).toBeGreaterThan(0);
+		const { width: _width, ...missingWidth } = validDoc;
+		expect(validateDoc(missingWidth, "objects[0]").length).toBeGreaterThan(0);
 	});
 
 	it("appends validateExtra after the feature-derived checks", () => {

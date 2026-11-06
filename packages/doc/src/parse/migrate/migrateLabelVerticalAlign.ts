@@ -1,10 +1,11 @@
 import type { ObjectMigration } from "./ObjectMigration";
 
 /**
- * A `verticalAlign` on a caption hung below the box, from before a `"label"`
- * text was held to the typography it can use (`textStyleKeysOf`): dropped, the
- * caption's box being sized from its text and leaving the block nowhere to move.
- * It was drawn the same whatever it said, so nothing on screen changes.
+ * A `verticalAlign` on a caption sized from its own text, from before a `"label"`
+ * text was held to the typography it can use (`textStyleKeysOf`), or before the
+ * type became a `"label"` one: dropped, the caption's box being sized from its
+ * text and leaving the block nowhere to move. It was drawn the same whatever it
+ * said, so nothing on screen changes.
  */
 export const migrateLabelVerticalAlign: ObjectMigration = (
 	node,

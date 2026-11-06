@@ -194,6 +194,8 @@ const resolveDrawnHeight = (
 	if (typeof body.height === "number") {
 		return { height: body.height, heightIsDrawn: true };
 	}
+	// The first test narrows the type only: a "body" type always declares a
+	// region (resolveDocDefinitions refuses it otherwise).
 	if (definition.textRegion === undefined || !supportsAutoHeight(definition)) {
 		return { height: 0, heightIsDrawn: false };
 	}
@@ -538,15 +540,6 @@ const diagnoseObjectText = (object: ObjectDoc): Diagnostic[] => {
 			? diagnoseUnwrappedTextLineStarts(object, text, font)
 			: [];
 	}
-	if (definition.textRegion === undefined) {
-		return [
-			{
-				severity: "warning",
-				objectId: object.id,
-				message: `${object.type} declares no text region, so its text is not checked against the shape (ObjectDocDefinition.textRegion)`,
-			},
-		];
-	}
 	const drawnHeight = resolveDrawnHeight(
 		body,
 		definition,
@@ -562,10 +555,6 @@ const diagnoseObjectText = (object: ObjectDoc): Diagnostic[] => {
 		width: boxWidth,
 		height: drawnHeight.height,
 	});
-	if (resolution.kind === "outside") {
-		// A label hung outside the box is sized from its text alone.
-		return diagnoseUnwrappedTextLineStarts(object, text, font);
-	}
 	if (resolution.kind !== "region") {
 		return [];
 	}
@@ -629,8 +618,8 @@ const diagnoseDeclaredOverflow = (object: ObjectDoc): Diagnostic[] => {
  * every op working off one — reporting bounds, aligning, distributing, finding
  * overlaps — passes it over.
  *
- * A warning rather than an error, and reported the same way a missing text region
- * is: the document is sound, and the gap is in the shape set.
+ * A warning rather than an error: the document is sound, and the gap is in the
+ * shape set.
  */
 const diagnoseObjectBounds = (object: ObjectDoc): Diagnostic[] => {
 	const definition = standardObjectDocDefinitions.get(object.type);

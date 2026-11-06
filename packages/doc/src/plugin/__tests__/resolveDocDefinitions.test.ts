@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { ObjectFeatures } from "../../model/objects/types/ObjectFeatures";
+import { calcLabelTextRegion } from "../../text/label/calcLabelTextRegion";
 import type { ObjectDocDefinition } from "../ObjectDocDefinition";
 import { calcFullBoxTextRegion } from "../ObjectDocTextRegion";
 import { resolveDocDefinitions } from "../resolveDocDefinitions";
@@ -43,7 +44,7 @@ describe("resolveDocDefinitions: a label text type", () => {
 		expect(() =>
 			resolveWith(labelDefinition({ textRegion: calcFullBoxTextRegion })),
 		).toThrow(
-			'ObjectDocDefinition "label-icon": features.text "label" is placed under the box by the core (calcLabelTextRegion); declare no textRegion',
+			'ObjectDocDefinition "label-icon": features.text "label" places its caption through labelRegion (below the box when omitted, calcLabelTextRegion); declare no textRegion',
 		);
 	});
 
@@ -61,5 +62,58 @@ describe("resolveDocDefinitions: a label text type", () => {
 		).toThrow(
 			'ObjectDocDefinition "label-icon": features.text "label" needs geometry "rect", the caption being placed under a stored width and height (declares "point")',
 		);
+	});
+});
+
+describe("resolveDocDefinitions: the label region", () => {
+	it("accepts one on a label text type", () => {
+		expect(() =>
+			resolveWith(labelDefinition({ labelRegion: calcLabelTextRegion })),
+		).not.toThrow();
+	});
+
+	it("refuses one on a type holding no caption", () => {
+		expect(() =>
+			resolveWith(
+				labelDefinition({
+					features: { text: "body" },
+					textRegion: calcFullBoxTextRegion,
+					labelRegion: calcLabelTextRegion,
+				}),
+			),
+		).toThrow(
+			'ObjectDocDefinition "label-icon": labelRegion places a features.text "label" caption, which this type does not hold (declares "body")',
+		);
+	});
+
+	it("accepts the undefined one createFrameObjectDoc writes when none is given", () => {
+		expect(() =>
+			resolveWith(
+				labelDefinition({
+					features: { text: "body" },
+					textRegion: calcFullBoxTextRegion,
+					labelRegion: undefined,
+				}),
+			),
+		).not.toThrow();
+	});
+});
+
+describe("resolveDocDefinitions: a body text type", () => {
+	it.each(["body", "source"] as const)(
+		"refuses a %s type declaring no text region",
+		(text) => {
+			expect(() =>
+				resolveWith(labelDefinition({ features: { text } })),
+			).toThrow(
+				`ObjectDocDefinition "label-icon": features.text "${text}" needs a textRegion, the body being laid out inside the box (calcFullBoxTextRegion for the whole of it)`,
+			);
+		},
+	);
+
+	it("accepts a slots type declaring none, its slots placed on its part kind", () => {
+		expect(() =>
+			resolveWith(labelDefinition({ features: { text: "slots" } })),
+		).not.toThrow();
 	});
 });

@@ -20,7 +20,6 @@ import { UmlComponentBox } from "./presentation/UmlComponentBox";
 import { UmlPackageBox } from "./presentation/UmlPackageBox";
 import { isRecordListTextSlotId } from "./schema/RecordDoc";
 import type { RecordDoc } from "./schema/RecordDoc";
-import { calcUmlPackageTextRegion } from "./schema/textRegions";
 import type { UmlComponentDoc } from "./schema/UmlComponentDoc";
 import type { UmlPackageDoc } from "./schema/UmlPackageDoc";
 import { recordToDoc, recordToState } from "./state/RecordMapper";
@@ -102,7 +101,6 @@ export const umlPackageDefinition: ObjectTypeDefinition<
 > = createFrameObjectDefinition<UmlPackageDoc, UmlPackageState>({
 	doc: umlPackageDocDefinition,
 	component: UmlPackageBox,
-	textRegion: calcUmlPackageTextRegion,
 	stencils: createTypeStencils({
 		objectType: "umlPackage",
 		label: { en: "Package", ja: "パッケージ" },
@@ -111,8 +109,8 @@ export const umlPackageDefinition: ObjectTypeDefinition<
 });
 
 /**
- * No `textRegion`, and no `outline` on its doc definition: the silhouette is the bounding box itself
- * (the icon is drawn inside it), which is exactly what both default to, and the
+ * No `outline` on its doc definition, and a `textRegion` of the whole box: the
+ * silhouette is the bounding box itself (the icon is drawn inside it), and the
  * name is centered over the whole box.
  */
 export const umlComponentDefinition: ObjectTypeDefinition<

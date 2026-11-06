@@ -12,6 +12,7 @@ import type {
 	TextSlotStyle,
 } from "../../model/objects/types/text/TextSlot";
 import { readTextSlotContent } from "../../model/objects/types/text/TextSlot";
+import type { ObjectDocLabelRegionCalculator } from "../../plugin/ObjectDocLabelRegion";
 
 /** Empty band between the bottom edge of the box and the top of a caption. */
 export const LABEL_TEXT_GAP = 4;
@@ -23,9 +24,10 @@ export const LABEL_TEXT_GAP = 4;
  * the box is what keeps it legible when the drawing is scaled down. It has no
  * maximum width: it runs sideways past the shape until the author breaks it.
  *
- * The one placement of every such type, which none of them declares: the canvas
+ * The placement of every such type that declares no `labelRegion` of its own
+ * (`ObjectDocDefinition.labelRegion`, whose type this function has): the canvas
  * registers it as the type's text slot region, and a headless reader asks it
- * directly, `textRegion` being the question of whether the box holds its text.
+ * directly.
  *
  * @param box - The shape's untransformed box; only its height is read, the caption being centred on the origin whatever the width. A zero height puts the caption {@link LABEL_TEXT_GAP} below the centre
  * @param body - The caption's content and styling (see calcLabelTextBoxSize); undefined sizes an empty caption, which still has the minimum box
@@ -48,18 +50,20 @@ export const calcLabelTextRegion = (
 
 /**
  * The drawn extent of a `features.text: "label"` type: its box, widened by the
- * caption (calcLabelTextRegion). An empty caption draws nothing and so adds no
- * extent, or every such shape would reserve a band of empty space below itself.
+ * caption. An empty caption draws nothing and so adds no extent, or every such
+ * shape would reserve a band of empty space beside itself.
  *
- * @param box - The shape's untransformed box; the result covers all of it
+ * @param box - The shape's untransformed box, plus whatever fields `labelRegion` reads; the result covers all of the box
  * @param body - The caption's content and styling (see calcLabelTextBoxSize); undefined, one with no `text`, and one whose text has no characters all leave the box alone
  * @param typeDefaults - The type's defaults for its body slot (see calcLabelTextBoxSize)
+ * @param labelRegion - Where the type places its caption (`ObjectDocDefinition.labelRegion`); omitted = below the box ({@link calcLabelTextRegion})
  * @returns The union of the box and the caption in local coordinates (shape centre as origin)
  */
-export const calcLabelTextVisualBounds = (
-	box: Dimensions,
+export const calcLabelTextVisualBounds = <TBox extends Dimensions>(
+	box: TBox,
 	body: Partial<TextSlot> | undefined,
 	typeDefaults: TextSlotStyle | undefined,
+	labelRegion: ObjectDocLabelRegionCalculator<TBox> = calcLabelTextRegion,
 ): Rect => {
 	const figure: Rect = {
 		x: -box.width / 2,
@@ -75,7 +79,7 @@ export const calcLabelTextVisualBounds = (
 	}
 	const extent = unionBoundingBoxes([
 		convertRectToBoundingBox(figure),
-		convertRectToBoundingBox(calcLabelTextRegion(box, body, typeDefaults)),
+		convertRectToBoundingBox(labelRegion(box, body, typeDefaults)),
 	]);
 	return extent === null ? figure : convertBoundingBoxToRect(extent);
 };

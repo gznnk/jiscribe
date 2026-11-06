@@ -2,10 +2,6 @@ import { describe, expect, it } from "vitest";
 
 import { builtinObjectDocDefinitions } from "../builtinObjectDocDefinitions";
 import type { ObjectDocDefinition } from "../ObjectDocDefinition";
-import {
-	calcFullBoxTextRegion,
-	calcOutsideBoxTextRegion,
-} from "../ObjectDocTextRegion";
 import { supportsAutoHeight } from "../supportsAutoHeight";
 
 /** A rect-geometry body-text type, the shape of every candidate. */
@@ -16,26 +12,8 @@ const boxFeatures: ObjectDocDefinition["features"] = {
 };
 
 describe("supportsAutoHeight", () => {
-	it("is true for a box that lays its text out inside itself", () => {
-		expect(
-			supportsAutoHeight({
-				features: boxFeatures,
-				textRegion: calcFullBoxTextRegion,
-			}),
-		).toBe(true);
-	});
-
-	it("is false for a shape whose label is drawn outside its outline", () => {
-		expect(
-			supportsAutoHeight({
-				features: boxFeatures,
-				textRegion: calcOutsideBoxTextRegion,
-			}),
-		).toBe(false);
-	});
-
-	it("is false for a type that declares no region at all", () => {
-		expect(supportsAutoHeight({ features: boxFeatures })).toBe(false);
+	it("is true for a box that lays its body out inside itself", () => {
+		expect(supportsAutoHeight({ features: boxFeatures })).toBe(true);
 	});
 
 	it("is false where there is no stored height to leave out", () => {
@@ -43,7 +21,6 @@ describe("supportsAutoHeight", () => {
 			expect(
 				supportsAutoHeight({
 					features: { ...boxFeatures, geometry },
-					textRegion: calcFullBoxTextRegion,
 				}),
 			).toBe(false);
 		}
@@ -53,18 +30,13 @@ describe("supportsAutoHeight", () => {
 		expect(
 			supportsAutoHeight({
 				features: { ...boxFeatures, text: "slots" },
-				textRegion: calcFullBoxTextRegion,
 			}),
 		).toBe(false);
 	});
 
-	it("is false where the type denies what its own region implies", () => {
+	it("is false where the type denies what its features imply", () => {
 		expect(
-			supportsAutoHeight({
-				features: boxFeatures,
-				textRegion: calcFullBoxTextRegion,
-				autoHeight: false,
-			}),
+			supportsAutoHeight({ features: boxFeatures, autoHeight: false }),
 		).toBe(false);
 	});
 
@@ -83,14 +55,13 @@ describe("supportsAutoHeight on a source-text type", () => {
 		expect(
 			supportsAutoHeight({
 				features: { ...boxFeatures, text: "source" },
-				textRegion: calcFullBoxTextRegion,
 			}),
 		).toBe(false);
 	});
 });
 
 describe("supportsAutoHeight on a label-text type", () => {
-	it("is false, the caption hanging below a box it does not size", () => {
+	it("is false, the caption being sized from its own text rather than the box", () => {
 		expect(
 			supportsAutoHeight({ features: { ...boxFeatures, text: "label" } }),
 		).toBe(false);

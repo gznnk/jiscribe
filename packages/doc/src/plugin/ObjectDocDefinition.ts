@@ -1,5 +1,6 @@
 import type { ObjectDocAnchorRegionCalculator } from "./ObjectDocAnchorRegion";
 import type { ObjectDocBoundsCalculator } from "./ObjectDocBounds";
+import type { ObjectDocLabelRegionCalculator } from "./ObjectDocLabelRegion";
 import type { ObjectDocOutlineCalculator } from "./ObjectDocOutline";
 import type { ObjectDocOverflowDiagnoser } from "./ObjectDocOverflow";
 import type { ObjectDocTextRegionCalculator } from "./ObjectDocTextRegion";
@@ -102,35 +103,32 @@ export type ObjectDocDefinition = {
 
 	/**
 	 * Where the type lays one text slot out, given a doc of it: the rectangle the
-	 * canvas places that slot in, answerable with no rendering layer present. A
-	 * declaration for any text form — the one `body` of a `"body"` / `"source"`
-	 * type, a cell or a band of a `"slots"` type — the headless counterpart of the
-	 * `"textSlot"` part kind's `region` on the canvas side, which the UI
-	 * definition builds from the same calculator wherever it can, so a headless
-	 * check (`@jiscribe/doc-tools`) and the canvas do not disagree about it.
+	 * text is placed in, answerable with no rendering layer present. Declared once
+	 * for both sides: a headless check (`@jiscribe/doc-tools`) measures against it,
+	 * and the canvas builds the `"textSlot"` part kind's `region` from it, so the
+	 * two cannot disagree about where the text is.
 	 *
-	 * Today's readers ask for the body alone (the overflow check, the content box,
-	 * {@link import("./supportsAutoHeight").supportsAutoHeight}), and each gates on
-	 * `features.text` itself, so a `"slots"` type may leave this out until a
-	 * reader asks for its slots.
-	 *
-	 * `null` from the calculator means the box does not hold that slot (a label
-	 * drawn outside the outline); omitting the field means the type has not
-	 * declared one at all, which a checker reports rather than guessing at.
-	 * Declaring a rectangle is also what lets a document leave the type's
-	 * `height` out and have it follow the text
-	 * ({@link import("./supportsAutoHeight").supportsAutoHeight}), so a
-	 * `geometry: "rect"` type's declaration decides the shape of its schema too.
-	 * Every type holding a single body (`features.text: "body"` / `"source"`)
-	 * should declare one — {@link import("./ObjectDocTextRegion").calcFullBoxTextRegion}
-	 * for a plain box,
-	 * {@link import("./ObjectDocTextRegion").calcOutsideBoxTextRegion} for a label
-	 * the type places outside the outline itself. A `features.text: "label"` type
-	 * must not declare one: its caption is placed by the core
-	 * ({@link import("../text/label/calcLabelTextRegion").calcLabelTextRegion}),
-	 * and the parser refuses the definition otherwise (resolveDocDefinitions).
+	 * A declaration for any text form — the one `body` of a `"body"` / `"source"`
+	 * type, a cell or a band of a `"slots"` type. Every `"body"` / `"source"` type
+	 * must declare one ({@link import("./ObjectDocTextRegion").calcFullBoxTextRegion}
+	 * for a plain box), and the parser and the canvas refuse the definition
+	 * otherwise (resolveDocDefinitions, applyObjectDefinition). A `"slots"` type may
+	 * leave it out and place its slots on its `"textSlot"` part kind instead, the
+	 * whole box being what an undeclared kind gives. A `features.text: "label"`
+	 * type must not declare one: its caption's place is {@link labelRegion}'s.
 	 */
 	textRegion?: ObjectDocTextRegionCalculator;
+
+	/**
+	 * Where a `features.text: "label"` type places its caption, sized from the
+	 * caption's own text (see {@link ObjectDocLabelRegionCalculator}). Omitted =
+	 * centred below the box
+	 * ({@link import("../text/label/calcLabelTextRegion").calcLabelTextRegion}).
+	 * The canvas uses it both as the `"textSlot"` part kind's `region` and to
+	 * widen the type's visual bounds by the caption. Only a `"label"` type may
+	 * declare one; the parser refuses it on any other (resolveDocDefinitions).
+	 */
+	labelRegion?: ObjectDocLabelRegionCalculator;
 
 	/**
 	 * Reports content the type places itself that its box is too small for (see
@@ -144,20 +142,16 @@ export type ObjectDocDefinition = {
 	diagnoseOverflow?: ObjectDocOverflowDiagnoser;
 
 	/**
-	 * Set to `false` by a type whose box must not be sized from the text laid out
-	 * in its region, even though {@link textRegion} says it could — the one
-	 * declaration {@link import("./supportsAutoHeight").supportsAutoHeight} cannot
-	 * derive from the region, since neither reason is visible in a rectangle:
+	 * Set to `false` by a `geometry: "rect"`, `"body"` type whose box must not be
+	 * sized from the text laid out in its region, its height being settled by
+	 * something other than the text (`container` is as tall as the children it
+	 * frames; its region is only the title band) — the one declaration
+	 * {@link import("./supportsAutoHeight").supportsAutoHeight} cannot derive
+	 * from the features. A `"source"` type needs none: its body is not drawn by
+	 * the shared text layout, which the features already say.
 	 *
-	 * - the height is settled by something other than the text (`container` is as
-	 *   tall as the children it frames; its region is only the title band)
-	 * - the body is not drawn by the shared text layout, so measuring it as
-	 *   wrapped plain text gives a height the shape is not drawn at (`markdown`
-	 *   renders its source)
-	 *
-	 * There is no `true`: a type may only ever deny what its region implies, never
-	 * claim what it does not — leaving this out is the normal case and lets the
-	 * region decide.
+	 * There is no `true`: a type may only ever deny what its features imply, never
+	 * claim what they do not — leaving this out is the normal case.
 	 */
 	autoHeight?: false;
 

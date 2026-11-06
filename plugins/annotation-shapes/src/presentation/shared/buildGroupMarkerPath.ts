@@ -1,7 +1,7 @@
 import type { Point } from "@jiscribe/geometry";
 
-import { mapCanonicalGroupMarkerPoint } from "./groupMarkerGeometry";
 import type { GroupMarkerDirection } from "../../schema/shared/GroupMarkerFields";
+import { mapCanonicalGroupMarkerPoint } from "../../schema/shared/groupMarkerGeometry";
 
 /** One SVG path command in canonical marker space: the letter plus the points it takes. */
 export type CanonicalGroupMarkerCommand = {

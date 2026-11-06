@@ -11,11 +11,11 @@ import { TEXT_SLOT_STYLE_KEYS } from "./TextSlot";
  * - 'source': The same single body, written in a language the shape renders
  *   itself (SourceTextStyleDoc). A plain string only, and no emphasis
  *   typography, both being what the language's own syntax carries.
- * - 'label': The same single body as 'body', hung below the box as a caption
- *   sized from its own text (LabelTextStyleDoc) rather than laid out inside the
- *   box. Every such type places it the same way (calcLabelTextRegion), so a type
- *   declares no region of its own, and the body takes no `verticalAlign`, having
- *   no room in its box to move through.
+ * - 'label': The same single body as 'body', as a caption sized from its own
+ *   text (LabelTextStyleDoc) rather than laid out inside the box. The type says
+ *   where it goes (`ObjectDocDefinition.labelRegion`), below the box by default
+ *   (calcLabelTextRegion), and the body takes no `verticalAlign`, having no box
+ *   of fixed height to move through.
  * - 'slots': Named slots (keyed-form doc), each a TextSlot styled on its own;
  *   the slot set is closed and spelled out by the type.
  */

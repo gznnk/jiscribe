@@ -1,15 +1,11 @@
 import { RectFeatures } from "./RectDoc";
-import { calcFullBoxTextRegion } from "../../../../plugin/ObjectDocTextRegion";
 import type { ObjectDocValidateFn } from "../../../../plugin/ObjectDocValidateFn";
 import { createFrameDocValidator } from "../../validators/createFrameDocValidator";
 
 /**
- * Validates a RectDoc (Frame-family shared logic generated from features). The
- * text region is handed over as well, being what makes `height` optional here —
- * it must stay the one the definition registers.
+ * Validates a RectDoc (Frame-family shared logic generated from features). Its
+ * `height` is optional, a `"body"` rect being sized from its text
+ * (supportsAutoHeight).
  */
-export const validateRectDoc: ObjectDocValidateFn = createFrameDocValidator(
-	RectFeatures,
-	undefined,
-	{ textRegion: calcFullBoxTextRegion },
-);
+export const validateRectDoc: ObjectDocValidateFn =
+	createFrameDocValidator(RectFeatures);

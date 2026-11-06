@@ -30,15 +30,41 @@ const checkTextVerticalBasisFeature = (
 };
 
 /**
- * Refuses a `features.text: "label"` type declaring what the label already
- * settles or cannot work with. The caption is placed the same way for every
- * such type (calcLabelTextRegion), so a `textRegion` of its own would leave two
- * answers for where the text is; it takes no `verticalAlign`, so a
- * `textVerticalBasis` would have nothing to measure; and the placement reads a
- * stored width and height, which only a `geometry: "rect"` type has.
+ * Refuses a type whose single body is laid out inside its box (`features.text`
+ * `"body"` / `"source"`) declaring no `textRegion`: the canvas places the body
+ * there and the headless checks measure against it, so a missing one would leave
+ * both guessing.
  *
- * `textRegion` is compared against undefined rather than tested for presence:
+ * Compared against undefined rather than tested for presence:
  * `createFrameObjectDoc` writes the key whether or not the type gave one.
+ */
+const checkBodyTextRegion = (
+	type: string,
+	definition: ObjectDocDefinition,
+): void => {
+	const { text } = definition.features;
+	if (
+		(text === "body" || text === "source") &&
+		definition.textRegion === undefined
+	) {
+		throw new Error(
+			`ObjectDocDefinition "${type}": features.text "${text}" needs a textRegion, the body being laid out inside the box (calcFullBoxTextRegion for the whole of it)`,
+		);
+	}
+};
+
+/**
+ * Refuses a `features.text: "label"` type declaring what the label already
+ * settles or cannot work with, and a `labelRegion` on any other type. The
+ * caption's place is `labelRegion`'s, so a `textRegion` of its own would leave
+ * two answers for where the text is; it takes no `verticalAlign`, so a
+ * `textVerticalBasis` would have nothing to measure; and the placement reads a
+ * stored width and height, which only a `geometry: "rect"` type has. A
+ * `labelRegion` on a type with no caption would be accepted and never read.
+ *
+ * `textRegion` and `labelRegion` are compared against undefined rather than
+ * tested for presence: `createFrameObjectDoc` writes the keys whether or not the
+ * type gave them.
  */
 const checkLabelTextFeature = (
 	type: string,
@@ -46,6 +72,11 @@ const checkLabelTextFeature = (
 ): void => {
 	const { features } = definition;
 	if (features.text !== "label") {
+		if (definition.labelRegion !== undefined) {
+			throw new Error(
+				`ObjectDocDefinition "${type}": labelRegion places a features.text "label" caption, which this type does not hold (declares ${features.text === undefined ? "no text" : `"${features.text}"`})`,
+			);
+		}
 		return;
 	}
 	if (features.geometry !== "rect") {
@@ -60,7 +91,7 @@ const checkLabelTextFeature = (
 	}
 	if (definition.textRegion !== undefined) {
 		throw new Error(
-			`ObjectDocDefinition "${type}": features.text "label" is placed under the box by the core (calcLabelTextRegion); declare no textRegion`,
+			`ObjectDocDefinition "${type}": features.text "label" places its caption through labelRegion (below the box when omitted, calcLabelTextRegion); declare no textRegion`,
 		);
 	}
 };
@@ -81,7 +112,8 @@ const checkLabelTextFeature = (
  * @param config - The preset / plugin sources to merge; omit for the built-in set as-is
  * @returns One definition per type, keyed by the `type` each was registered under
  * @throws When two sources claim one type, or when a definition's own declarations
- *   contradict each other ({@link checkTextVerticalBasisFeature},
+ *   contradict each other or leave out one its text needs
+ *   ({@link checkTextVerticalBasisFeature}, {@link checkBodyTextRegion},
  *   {@link checkLabelTextFeature})
  */
 export const resolveDocDefinitions = (
@@ -109,6 +141,7 @@ export const resolveDocDefinitions = (
 	const duplicateMessages: string[] = [];
 	sourcedDefinitions.forEach(({ type, definition, origin }) => {
 		checkTextVerticalBasisFeature(type, definition);
+		checkBodyTextRegion(type, definition);
 		checkLabelTextFeature(type, definition);
 		const firstOrigin = originByType.get(type);
 		if (firstOrigin !== undefined) {

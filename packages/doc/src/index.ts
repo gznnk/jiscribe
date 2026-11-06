@@ -112,8 +112,8 @@ export {
 // these beside the slot's own keys.
 export { TEXT_BODY_KEYS } from "./model/objects/base/TextStyleDoc";
 // The narrower single-body doc forms: one for a type that renders its text from a
-// source language of its own (features.text: "source"), one for a type hanging
-// its text below the box as a caption (features.text: "label"), with the fields
+// source language of its own (features.text: "source"), one for a type drawing
+// its text as a caption sized from itself (features.text: "label"), with the fields
 // that caption carries beyond its slot's styling.
 export type {
 	LabelTextStyleDoc,
@@ -166,9 +166,11 @@ export type { ObjectDocDefinition } from "./plugin/ObjectDocDefinition";
 // The box declaration a doc definition carries, for the types whose geometry does
 // not settle their box: a plugin author annotating one needs the shape of it.
 export type { ObjectDocBoundsCalculator } from "./plugin/ObjectDocBounds";
-// Where a `features.text: "label"` type hangs its caption, which no such type
-// declares: the core places every one of them this way, the canvas and a headless
-// reader alike. The creation typography the types spread into their defaults.
+// Where a `features.text: "label"` type places its caption: the declaration a
+// type gives to place it itself, and the default below the box the core uses for
+// every one that declares none. The creation typography the types spread into
+// their defaults.
+export type { ObjectDocLabelRegionCalculator } from "./plugin/ObjectDocLabelRegion";
 export {
 	calcLabelTextRegion,
 	calcLabelTextVisualBounds,
@@ -176,13 +178,10 @@ export {
 } from "./text/label/calcLabelTextRegion";
 export { calcLabelTextBoxSize } from "./text/label/calcLabelTextBoxSize";
 export { LABEL_TEXT_STYLE_DEFAULTS } from "./text/label/labelTextStyleDefaults";
-// The text-region declaration a doc definition carries, and the two answers most
-// types give: the whole box, and "the box does not hold the text at all".
+// The text-region declaration a doc definition carries, and the answer most types
+// give: the whole box.
 export type { ObjectDocTextRegionCalculator } from "./plugin/ObjectDocTextRegion";
-export {
-	calcFullBoxTextRegion,
-	calcOutsideBoxTextRegion,
-} from "./plugin/ObjectDocTextRegion";
+export { calcFullBoxTextRegion } from "./plugin/ObjectDocTextRegion";
 // The silhouette and the anchor band a doc definition carries, for a type whose
 // outline is not its box: a plugin author implementing one needs the shape of it.
 export type { ObjectDocOutlineCalculator } from "./plugin/ObjectDocOutline";
@@ -191,9 +190,9 @@ export type { ObjectDocAnchorRegionCalculator } from "./plugin/ObjectDocAnchorRe
 // its content out by a rule of its own: a plugin author implementing one needs the
 // shape of it.
 export type { ObjectDocOverflowDiagnoser } from "./plugin/ObjectDocOverflow";
-// Whether a type may leave `height` out of the document, which is what that
-// declaration decides: the schema generator relaxes the field for exactly these
-// types, and the doc-ops refuse to switch any other.
+// Whether a type may leave `height` out of the document: the schema generator
+// relaxes the field for exactly these types, and the doc-ops refuse to switch any
+// other.
 export { supportsAutoHeight } from "./plugin/supportsAutoHeight";
 export type { AutoHeightDeclaration } from "./plugin/supportsAutoHeight";
 // The rule a point-geometry type is held to: it has to declare as `bounds` the

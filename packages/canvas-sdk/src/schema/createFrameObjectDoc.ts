@@ -2,6 +2,7 @@ import type {
 	ObjectDoc,
 	ObjectDocAnchorRegionCalculator,
 	ObjectDocDefinition,
+	ObjectDocLabelRegionCalculator,
 	ObjectDocOutlineCalculator,
 	ObjectDocOverflowDiagnoser,
 	ObjectDocTextRegionCalculator,
@@ -48,15 +49,21 @@ type FrameObjectDocCommonParams = {
 	extraKeys?: readonly string[];
 
 	/**
-	 * Where the shape lays its text out (see `ObjectDocDefinition.textRegion`).
-	 * Pass the same function the UI definition registers as its `textRegion`, or
-	 * `calcOutsideBoxTextRegion` for a shape that places its label outside the
-	 * box itself. A `features.text: "label"` type passes none, its caption being
-	 * placed by the core. It also reaches the derived validator, which is what
-	 * lets a shape whose box holds its text leave `height` out of the document
-	 * (`supportsAutoHeight`).
+	 * Where the shape lays its text out (see `ObjectDocDefinition.textRegion`),
+	 * `calcFullBoxTextRegion` for the whole box. Required of a `"body"` /
+	 * `"source"` shape and refused on a `"label"` one. The UI definition built by
+	 * `createFrameObjectDefinition` inherits it, and the canvas draws and edits
+	 * the text in it.
 	 */
 	textRegion?: ObjectDocTextRegionCalculator;
+
+	/**
+	 * Where a `features.text: "label"` shape places its caption (see
+	 * `ObjectDocDefinition.labelRegion`). Omitted = centred below the box. Refused
+	 * on any other shape. The UI definition inherits it, and the canvas places
+	 * the caption and widens the shape's visual bounds by it.
+	 */
+	labelRegion?: ObjectDocLabelRegionCalculator;
 
 	/**
 	 * The drawn silhouette, for a shape whose outline is not its box (see
@@ -89,11 +96,10 @@ type FrameObjectDocCommonParams = {
 	diagnoseOverflow?: ObjectDocOverflowDiagnoser;
 
 	/**
-	 * Pass `false` for a shape whose box must not be sized from its text even
-	 * though its `textRegion` says it could — one whose height is settled by
-	 * something else (the children it frames), or whose body is not drawn by the
-	 * shared text layout (see `ObjectDocDefinition.autoHeight`). Omit it in every
-	 * other case and let the region decide.
+	 * Pass `false` for a `"body"` shape whose box must not be sized from its
+	 * text, its height being settled by something else (the children it frames;
+	 * see `ObjectDocDefinition.autoHeight`). Omit it in every other case. It also
+	 * reaches the derived validator, which is what keeps `height` required.
 	 */
 	autoHeight?: false;
 
@@ -177,6 +183,7 @@ export const createFrameObjectDoc = ({
 	defaults,
 	extraKeys,
 	textRegion,
+	labelRegion,
 	outline,
 	anchorRegion,
 	container,
@@ -192,12 +199,12 @@ export const createFrameObjectDoc = ({
 }: FrameObjectDocParams): ObjectDocDefinition => ({
 	features,
 	validateDoc: createFrameDocValidator(features, validateExtra, {
-		textRegion,
 		autoHeight,
 	}),
 	extraKeys,
 	factory: factory ?? createFrameObjectFactory(defaults, { supportsBounds }),
 	textRegion,
+	labelRegion,
 	outline,
 	anchorRegion,
 	container,

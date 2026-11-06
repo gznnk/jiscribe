@@ -136,6 +136,8 @@ const readObjectHeight = (
 		return readNumber(object.height);
 	}
 	const definition = definitions.get(object.type);
+	// The region test narrows the type only: a type supportsAutoHeight accepts is
+	// a "body" one, which always declares a region (resolveDocDefinitions).
 	if (definition?.textRegion === undefined || !supportsAutoHeight(definition)) {
 		return 0;
 	}

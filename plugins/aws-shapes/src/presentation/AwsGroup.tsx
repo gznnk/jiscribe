@@ -5,7 +5,9 @@ import {
 	IconSetArtGroup,
 	readIconSetArt,
 	readIconSetViewBoxSize,
+	useObjectTextStyleDefaultsRegistry,
 } from "@jiscribe/canvas-sdk";
+import type React from "react";
 
 import {
 	AwsGroupBody,
@@ -13,7 +15,6 @@ import {
 	AwsGroupOutline,
 	AwsGroupOutlineHitArea,
 } from "./AwsGroupStyled";
-import { calcAwsGroupLabelTextRegion } from "./calcAwsGroupLabelTextRegion";
 import { resolveAwsGroupStroke } from "./resolveAwsGroupStroke";
 import { AWS_ICON_DRAWINGS } from "../drawing/iconDrawings.generated";
 import {
@@ -22,14 +23,47 @@ import {
 	AWS_GROUP_PADDING,
 } from "../schema/AwsGroupDoc";
 import { readAwsGroupKindStyle } from "../schema/awsGroupKinds";
+import { calcAwsGroupLabelRegion } from "../schema/calcAwsGroupLabelRegion";
 import { awsIconCatalog } from "../schema/icon/awsIconCatalog";
 import type { AwsGroupState } from "../state/AwsGroupState";
 
 /**
+ * The badge's row, grabbable out to the right edge (container's header band does
+ * the same). A label taller than the row raises it, so the label is placed here
+ * the way the core places its text: calcAwsGroupLabelRegion, measured with the
+ * type's own body defaults.
+ */
+const AwsGroupHeader: React.FC<{ state: AwsGroupState }> = ({ state }) => {
+	const typeDefaults = useObjectTextStyleDefaultsRegistry().get(
+		state.type,
+		BODY_TEXT_SLOT_ID,
+	);
+	const top = -state.height / 2;
+	const labelRegion = calcAwsGroupLabelRegion(
+		state,
+		state.text?.[BODY_TEXT_SLOT_ID],
+		typeDefaults,
+	);
+	const headerTop = Math.min(top + AWS_GROUP_PADDING, labelRegion.y);
+	const headerBottom = Math.max(
+		top + AWS_GROUP_HEADER_HEIGHT,
+		labelRegion.y + labelRegion.height,
+	);
+	return (
+		<AwsGroupHeaderHitArea
+			x={-state.width / 2 + AWS_GROUP_PADDING}
+			y={headerTop}
+			width={Math.max(0, state.width - AWS_GROUP_PADDING * 2)}
+			height={headerBottom - headerTop}
+		/>
+	);
+};
+
+/**
  * Draws awsGroup: the body, the border and the top-left corner badge, under two
  * invisible hit areas (the header row and the border itself). The label goes
- * into the band calcAwsGroupLabelTextRegion sizes from the text, drawn by
- * createFrameObject.
+ * into the band the doc definition's `labelRegion` (calcAwsGroupLabelRegion)
+ * sizes from the text, drawn by createFrameObject.
  *
  * The colour and line style come from resolveAwsGroupStroke rather than from
  * `shape`: a type holds one default apiece, which cannot express nineteen kinds.
@@ -43,12 +77,6 @@ export const AwsGroup = createFrameObject<AwsGroupState>((state, shape) => {
 		state.strokeDashType,
 		state.kind,
 		shape.strokeWidth,
-	);
-	const labelRegion = calcAwsGroupLabelTextRegion(state, BODY_TEXT_SLOT_ID);
-	const headerTop = Math.min(top + AWS_GROUP_PADDING, labelRegion.y);
-	const headerBottom = Math.max(
-		top + AWS_GROUP_HEADER_HEIGHT,
-		labelRegion.y + labelRegion.height,
 	);
 	const cornerIconName = readAwsGroupKindStyle(state.kind).cornerIcon;
 	const cornerIcon =
@@ -78,14 +106,7 @@ export const AwsGroup = createFrameObject<AwsGroupState>((state, shape) => {
 				fillColor={shape.fillColor}
 				fillAlpha={shape.fillAlpha}
 			/>
-			{/* The badge's row is grabbable out to the right edge (container's header
-			    band does the same). A label taller than the row raises it. */}
-			<AwsGroupHeaderHitArea
-				x={left + AWS_GROUP_PADDING}
-				y={headerTop}
-				width={Math.max(0, width - AWS_GROUP_PADDING * 2)}
-				height={headerBottom - headerTop}
-			/>
+			<AwsGroupHeader state={state} />
 			{cornerIcon !== null && cornerScale > 0 && (
 				<IconSetArtGroup
 					transform={`translate(${left + AWS_GROUP_PADDING} ${top + AWS_GROUP_PADDING}) scale(${cornerScale})`}

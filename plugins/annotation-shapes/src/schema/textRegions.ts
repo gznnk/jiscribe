@@ -1,10 +1,11 @@
 // Where the two shapes that take their text inside the box lay it out, declared
-// once for both halves of their definitions: the doc definitions (./doc.ts, what
-// a headless overflow check measures against) and the UI definitions
-// (../definitions.ts, what the overlay draws and the editor edits in).
+// on their doc definitions (./doc.ts): what a headless overflow check measures
+// against, and, inherited by the UI definitions, what the overlay draws and the
+// editor edits in.
 //
 // The three group markers are absent: their label hangs beyond the tip, sized
-// from its own text, so they declare `calcOutsideBoxTextRegion` instead.
+// from its own text, so they declare a `labelRegion` instead
+// (./shared/calcGroupMarkerLabelRegion).
 import type { Rect } from "@jiscribe/geometry";
 import { calcInsetRect } from "@jiscribe/geometry";
 

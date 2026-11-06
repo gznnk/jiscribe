@@ -1,8 +1,8 @@
-// Where each general shape lays its text out, declared once for both halves of
-// its definition: the doc definition (./doc.ts, what a headless overflow check
-// measures against) and the UI definition (../definition.ts, what the overlay
-// draws and the editor edits in). Headless on purpose — a number here is derived
-// from the very ratio the drawing is built from, so the two cannot drift.
+// Where each general shape lays its text out, declared on its doc definition
+// (./doc.ts): what a headless overflow check measures against, and, inherited by
+// the UI definition, what the overlay draws and the editor edits in. Headless on
+// purpose — a number here is derived from the very ratio the drawing is built from,
+// so the two cannot drift.
 //
 // The pictograms (actor / server / package / envelope / queue / gear / lock) are
 // absent: their drawing fills the box and the label hangs below it, sized from

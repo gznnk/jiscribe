@@ -7,9 +7,10 @@
 // (`@jiscribe/canvas-sdk/doc` / `@jiscribe/canvas-sdk`), so there is no per-shape
 // ObjectFactory / validate*Doc / Mapper / validate*State (only the group marker factory
 // is swapped in, by passing schema/shared/createGroupMarkerObjectFactory). The headless
-// parts of schema/** (AUTO_COLOR / BELOW_LABEL_STYLE_DEFAULTS) come from
-// `@jiscribe/canvas-sdk/doc`, as does centeredPolygonOutline for the outlines; the
-// presentation / controls parts (createFrameObject / calcLabelBoxSize / readTextSlot /
+// parts of schema/** take AUTO_COLOR from `@jiscribe/canvas-sdk/doc`, as they do
+// centeredPolygonOutline for the outlines, and the caption typography and measurement
+// (LABEL_TEXT_STYLE_DEFAULTS / calcLabelTextBoxSize) from `@jiscribe/doc`; the
+// presentation / controls parts (createFrameObject / readTextSlot /
 // SelectionControlPill) come through `@jiscribe/canvas-sdk`.
 // The headless parse entry point is ./doc (annotationDocPlugin).
 // Shapes get one folder each (schema/<id>/, state/<id>/, presentation/<Pascal>/), and
@@ -24,6 +25,17 @@
 // marker's direction / tipPosition).
 // The toolbar exposes all 5 shapes under one annotationStencilCategory.
 export * from "./schema/shared/GroupMarkerFields";
+export {
+	calcGroupMarkerAxes,
+	calcGroupMarkerTip,
+	isVerticalGroupMarker,
+	mapCanonicalGroupMarkerPoint,
+	resolveGroupMarkerDirection,
+	resolveGroupMarkerTipPosition,
+} from "./schema/shared/groupMarkerGeometry";
+export type { GroupMarkerAxes } from "./schema/shared/groupMarkerGeometry";
+export { calcGroupMarkerLabelRegion } from "./schema/shared/calcGroupMarkerLabelRegion";
+export type { GroupMarkerLabelBox } from "./schema/shared/calcGroupMarkerLabelRegion";
 export {
 	validateGroupMarkerDirection,
 	validateGroupMarkerTipFields,

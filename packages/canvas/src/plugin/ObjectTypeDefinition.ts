@@ -30,19 +30,18 @@ import type { ObjectStateValidator } from "../states/registry/ObjectStateValidat
  * extends {@link ObjectDocDefinition}, a UI definition is structurally a doc
  * definition, and `CanvasPlugin.objects` flows into `createCanvasParser` unchanged.
  *
- * The inherited `textRegion` is the doc's, for the headless checks and the
- * auto-height verdict; it is not where the canvas draws the text. That is the
- * `"textSlot"` part kind's `region` / `regions` (createTextSlotPartKindDefinition
- * in `partKinds`, or `createFrameObjectDefinition({ textRegion })`), since a doc
- * declaration may answer "the box does not hold the text at all" (`null`), which
- * a renderer has no use for. Most shipped shapes declare the very same function
- * on both sides; the ones that cannot are those whose region is sized from the
- * text itself (an AWS group's title band, a record's bands). A `features.text:
- * "label"` type declares neither: the core places its caption.
+ * The inherited `textRegion` is the doc's, and it is also where the canvas draws
+ * the text: registration builds the `"textSlot"` part kind's `region` from it
+ * (applyObjectDefinition), so a `"body"` / `"source"` type declares its place
+ * once and declares no `"textSlot"` kind placing the slots beside it. A
+ * `"slots"` type may place its slots on its own kind instead (a record's bands,
+ * a table's cells, `regions`). A `features.text: "label"` type declares
+ * neither: the core places its caption where the inherited `labelRegion` says,
+ * below the box when it says nothing.
  *
- * The inherited `outline` / `anchorRegion` are the doc's too, and the canvas
- * draws connector ends and connection anchors from them as they are: they read
- * only fields a doc and a state share, so the canvas calls them with the state.
+ * The inherited `textRegion` / `labelRegion` / `outline` / `anchorRegion` are
+ * called with the state as they are: they read only fields a doc and a state
+ * share (the box and the type's own `extraKeys`).
  *
  * `TDoc` / `TState` tie `mapper` / `behavior` / `selectionControls` to one state
  * type. A plugin declares a standalone definition with an explicit

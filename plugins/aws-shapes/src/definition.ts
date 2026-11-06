@@ -4,10 +4,6 @@ import { createFrameObjectDefinition } from "@jiscribe/canvas-sdk";
 import { awsGroupDocDefinition, awsIconDocDefinition } from "./doc";
 import { AwsGroup } from "./presentation/AwsGroup";
 import { AwsIcon } from "./presentation/AwsIcon";
-import {
-	calcAwsGroupLabelTextRegion,
-	calcAwsGroupVisualBounds,
-} from "./presentation/calcAwsGroupLabelTextRegion";
 import type { AwsGroupDoc } from "./schema/AwsGroupDoc";
 import { isAwsGroupKind } from "./schema/AwsGroupDoc";
 import type { AwsIconDoc } from "./schema/AwsIconDoc";
@@ -48,8 +44,8 @@ export const awsIconDefinition: ObjectTypeDefinition<AwsIconDoc, AwsIconState> =
 
 /**
  * The label band is sized from the text and a long label runs past the frame's
- * right edge, so without a declared `visualBounds` zoom-to-fit and the export
- * would crop that off.
+ * right edge; the core widens the visual bounds by the doc definition's
+ * `labelRegion`, so zoom-to-fit and the export do not crop that off.
  *
  * The stroke menu is offered: the default follows `kind`, but telling two VPCs
  * apart in one diagram is worth an override (resolveAwsGroupStroke). AWS frames
@@ -61,8 +57,6 @@ export const awsGroupDefinition: ObjectTypeDefinition<
 > = createFrameObjectDefinition<AwsGroupDoc, AwsGroupState>({
 	doc: awsGroupDocDefinition,
 	component: AwsGroup,
-	textRegion: calcAwsGroupLabelTextRegion,
-	visualBounds: calcAwsGroupVisualBounds,
 	// The same range the doc validation accepts. The drawing side falls back to
 	// the default kind, so an unknown one is stopped at the state's door.
 	isExtraStateValid: (state) =>
@@ -78,12 +72,15 @@ export const awsGroupDefinition: ObjectTypeDefinition<
 				{ type: "borderStyle", radius: false },
 			],
 		},
+		// The label's background sits under the section id every label type's
+		// does, so selecting this beside another label type keeps it.
+		{ id: "label-style", items: [{ type: "labelBackgroundColor" }] },
 		{
 			id: "text",
 			items: [
 				{ type: "font" },
 				{ type: "textFormat" },
-				{ type: "textAlignment" },
+				{ type: "textAlignment", vertical: false },
 			],
 		},
 	],

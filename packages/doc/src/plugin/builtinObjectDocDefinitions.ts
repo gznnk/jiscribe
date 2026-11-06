@@ -69,7 +69,7 @@ import { validateTextDoc } from "../model/objects/primitives/text/validateTextDo
  *
  * `textRegion` is declared by every type that holds text: it is what a headless
  * overflow check measures against (`@jiscribe/doc-tools`), and the UI table
- * registers the same calculator, so the two cannot drift. The types carrying no
+ * inherits it as the place the canvas draws the text, so the two cannot drift. The types carrying no
  * text at all (group / polygon / polyline / connector / svg / image) leave it out.
  *
  * `bounds` is declared by every `geometry: "point"` type — text alone among the

@@ -10,6 +10,7 @@ import { RectFeatures } from "../../model/objects/primitives/rect/RectDoc";
 import { TextFeatures } from "../../model/objects/primitives/text/TextDoc";
 import type { ObjectFeatures } from "../../model/objects/types/ObjectFeatures";
 import type { SemanticDiagnostic } from "../../model/types/SemanticDiagnostic";
+import { calcFullBoxTextRegion } from "../../plugin/ObjectDocTextRegion";
 import type { ObjectDocValidateFn } from "../../plugin/ObjectDocValidateFn";
 import { createDocValidatorRegistry } from "../../registries/ObjectDocValidatorRegistry";
 import { validateDocKeys } from "../validateDocKeys";
@@ -30,7 +31,16 @@ const validateWith = (
 ): SemanticDiagnostic[] => {
 	const registry = createDocValidatorRegistry({
 		presetDefinitions: {
-			[features.type]: { features, validateDoc, extraKeys },
+			[features.type]: {
+				features,
+				validateDoc,
+				extraKeys,
+				// What a body laid out inside the box has to declare; refused on a caption.
+				textRegion:
+					features.text === "body" || features.text === "source"
+						? calcFullBoxTextRegion
+						: undefined,
+			},
 		},
 	});
 	const typeDiagnostics = registry.validate(features.type, obj, "root[0]");

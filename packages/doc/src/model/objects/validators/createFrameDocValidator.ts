@@ -31,9 +31,10 @@ import type { ObjectFeatures } from "../types/ObjectFeatures";
  *
  * @param features - Geometry kind and capability flags; decides which builders run
  * @param extra - Shape-specific checks, run after the ones features imply
- * @param declaration - The type's `textRegion` and `autoHeight`, which are what
- *   decide whether its `height` may be left out (see `supportsAutoHeight`). Pass
- *   the very pair the definition carries; omitting it keeps `height` required
+ * @param declaration - The type's `autoHeight`, which with `features` decides
+ *   whether its `height` may be left out (see `supportsAutoHeight`). Pass the
+ *   very value the definition carries; omitting it lets a `geometry: "rect"`,
+ *   `text: "body"` type leave `height` out
  */
 export const createFrameDocValidator = (
 	features: ObjectFeatures,

@@ -55,7 +55,7 @@ export const AWS_GROUP_LABEL_GAP = 6;
 /**
  * Height in local px of the header band along the top edge: the padding above the
  * corner badge and the badge itself, which the label row is centred on
- * (calcAwsGroupLabelTextRegion). A label wrapping onto more lines than the badge is
+ * (calcAwsGroupLabelRegion). A label wrapping onto more lines than the badge is
  * tall runs below it.
  */
 export const AWS_GROUP_HEADER_HEIGHT =
@@ -80,7 +80,7 @@ export const AwsGroupFeatures = {
 	transform: true,
 	stroke: true,
 	fill: true,
-	text: "body",
+	text: "label",
 	connectable: true,
 } as const satisfies ObjectFeatures;
 
@@ -123,11 +123,11 @@ export const AWS_GROUP_DOC_DEFAULTS: Omit<AwsGroupDoc, "id"> = {
 	strokeWidth: DEFAULT_STROKE_WIDTH,
 	text: "",
 	textAlign: "left",
-	verticalAlign: "middle",
 	fontColor: AUTO_COLOR,
 	fontSize: 14,
 	fontFamily: DEFAULT_FONT_FAMILY,
 	fontWeight: "bold",
+	labelFill: "transparent",
 } as const as AwsGroupDoc;
 
 /**

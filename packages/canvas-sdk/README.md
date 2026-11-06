@@ -43,14 +43,15 @@ ESM 専用、など）。1 ファイル 1 エントリで対応させること�
   （`supportsBounds` と型排他）。`extraKeys` はその型が持つフィールド名の唯一の宣言で、
   パーサーはそれと features から集合を組み立て、集合に無い名前を warning で報告して
   doc から取り除く（**`extraKeys` の書き漏れは保存時のデータ消失になる**）。外形
-  `outline` とアンカー領域 `anchorRegion` もここで宣言する（UI 定義はそれを引き継ぐ
-  だけで、別に渡す口は無い）
+  `outline` とアンカー領域 `anchorRegion`、文字の領域 `textRegion`（`"body"` /
+  `"source"` の型は必須）と `"label"` 型のラベルの置き場所 `labelRegion` もここで宣言する
+  （UI 定義はそれを引き継ぐだけで、別に渡す口は無い。core が `textRegion` /
+  `labelRegion` から文字スロットの部品種を作る）
 - `createFrameObjectDefinition<TDoc, TState>({ doc, component, ... })` — mapper /
   stateValidator / behavior を doc.features から充填して `ObjectTypeDefinition` を返す。
   図形固有のフィールド名は doc 定義の `extraKeys` から読む（宣言は
-  `createFrameObjectDoc` 側 1 箇所）。`isExtraStateValid` と、`textRegion` /
-  `visualBounds` / `stencils` 等の任意フィールドを透過（`features.text: "label"` の型に
-  `textRegion` を渡すと throw）
+  `createFrameObjectDoc` 側 1 箇所）。`isExtraStateValid` と、`partKinds` /
+  `visualBounds` / `stencils` 等の任意フィールドを透過
 
 どちらも糖衣であり、`ObjectDocDefinition` / `ObjectTypeDefinition` の直書きは引き続き
 第一級（例: uml の record は mapper が派生物のため definition を直書き）。
@@ -64,10 +65,10 @@ ESM 専用、など）。1 ファイル 1 エントリで対応させること�
   掴み領域。ラベルの位置・見た目の範囲・背景の四角は core が `calcLabelTextRegion`
   （`@jiscribe/doc`）から決めるので、図形が宣言するのはこれを自分の `data-kind` グループに
   置くことと、doc の既定に `LABEL_TEXT_STYLE_DEFAULTS`（`@jiscribe/doc`）を spread する
-  ことだけ（`textRegion` / `visualBounds` は渡さない。渡すと拒否される）
-- `calcLabelBoxSize` / `BELOW_LABEL_STYLE_DEFAULTS`（`/doc`）— 文字から大きさを決める
-  ラベル箱の採寸と、その既定書体。箱の下以外へラベルを吊る `"body"` の図形（グループ
-  マーカー・awsGroup 等）が置き場所だけ自前で決めるときに使う
+  ことだけ（`textRegion` / `visualBounds` は渡さない。渡すと拒否される）。ラベルを箱の下
+  以外に置く `"label"` 図形（グループマーカー・awsGroup）は doc 定義に `labelRegion` を
+  宣言し、core はそれで置き場所と見た目の範囲を決める。その図形の掴み領域は自分の
+  `labelRegion` から出す（`BelowLabelHitArea` は既定の置き方専用）
 - `centeredPolygonOutline` / `OUTLINE_CURVE_SEGMENTS`（`/doc` からも import できる。
   doc 定義の `outline` はこちらで組む。点列を `points` 属性へ書くのは canvas の
   unstable 面が持つ `formatPolygonPoints`。この sdk からも import できる）

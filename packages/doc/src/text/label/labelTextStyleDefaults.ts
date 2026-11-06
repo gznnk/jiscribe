@@ -4,7 +4,7 @@ import { DEFAULT_FONT_FAMILY } from "../style/fontFamilies";
 import { TEXT_STYLE_FALLBACK } from "../style/textStyleFallback";
 
 /**
- * Creation typography of a caption hung below the box (`features.text:
+ * Creation typography of a caption sized from its own text (`features.text:
  * "label"`): what a `"label"` type spreads into its `*_DOC_DEFAULTS`, so a shape
  * created from the toolbar writes these into its doc. Centred, in the theme's
  * ink, at the size and weight an unstyled text is drawn with; no
