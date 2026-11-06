@@ -54,50 +54,78 @@ export type ErEntityLayout = {
 };
 
 /**
+ * What of an entity's layout its stated slot widths do not move: its texts with
+ * their fonts resolved (readErEntityTextSlotsLayoutSource), and the floors they
+ * measure to. Only `text` decides it, so it can be kept across a drag that
+ * changes the widths alone (readCachedErEntityLayout).
+ */
+export type ErEntityTextMeasurement = Pick<
+	ErEntityLayoutSource,
+	"name" | "nameFont" | "columns" | "emptyRowFontSize"
+> & {
+	/** The narrowest each slot fits its texts at (calcErEntitySlotFloors). */
+	slotFloors: ErEntitySlotFloors;
+};
+
+/**
  * Height of the title band: its text wrapped in the box width plus the band's
  * padding, so a long name or a larger type size grows the band (28 for one line
  * at the default size).
  */
 const calcHeaderHeight = (
-	source: ErEntityLayoutSource,
+	measurement: ErEntityTextMeasurement,
 	width: number,
 ): number =>
 	calcVisualTextHeight(
-		source.name,
-		source.nameFont,
+		measurement.name,
+		measurement.nameFont,
 		Math.max(width - TEXT_BOX_PADDING_X * 2, 0),
 	) + ER_ENTITY_HEADER_PADDING_Y_TOTAL;
 
 /**
- * Lays the entity out (see {@link ErEntityLayout}). Every slot is drawn at its
- * stated width widened to its floor (fitErEntityStatedSlotWidths), and the box is
- * their sum; the height is the title band — its text wrapped in that width — and
- * one row per column at the row's own pitch, one row's height for an entity of
- * no columns. The keys never move the height.
+ * Reads and measures every text of an entity (see {@link ErEntityTextMeasurement}).
  *
- * Measures every text; the canvas side reads it through readCachedErEntityLayout
- * rather than calling it per reader.
- *
- * @param input - The entity's stated slot widths and slots; its box is not read
- * @returns The layout, centered on the origin; 28 + 125 = 153 tall for five columns at the defaults
+ * @param input - The entity's slots; its stated slot widths are not read
+ * @returns A fresh measurement
  */
-export const calcErEntityLayout = (
+export const measureErEntityTexts = (
 	input: ErEntityLayoutInput,
-): ErEntityLayout => {
+): ErEntityTextMeasurement => {
 	const source = readErEntityTextSlotsLayoutSource(input);
-	const slotFloors = calcErEntitySlotFloors(source);
+	return {
+		name: source.name,
+		nameFont: source.nameFont,
+		columns: source.columns,
+		emptyRowFontSize: source.emptyRowFontSize,
+		slotFloors: calcErEntitySlotFloors(source),
+	};
+};
+
+/**
+ * Lays the entity out as calcErEntityLayout does, its texts already measured, so
+ * only the title band's wrapping is measured again.
+ *
+ * @param input - The entity's stated slot widths
+ * @param measurement - The same entity's texts (measureErEntityTexts); the rows and the title are read from it alone
+ * @returns A fresh layout, centered on the origin
+ */
+export const calcErEntityLayoutOfMeasurement = (
+	input: Pick<ErEntityLayoutInput, "keyWidth" | "nameWidth" | "typeWidth">,
+	measurement: ErEntityTextMeasurement,
+): ErEntityLayout => {
+	const { slotFloors } = measurement;
 	const { keyWidth, nameWidth, typeWidth } = fitErEntityStatedSlotWidths(
-		source,
+		input,
 		slotFloors,
 	);
 	const width = sumErEntitySlotWidths({ keyWidth, nameWidth, typeWidth });
-	const headerHeight = calcHeaderHeight(source, width);
-	const rowHeights = source.columns.map((column) =>
+	const headerHeight = calcHeaderHeight(measurement, width);
+	const rowHeights = measurement.columns.map((column) =>
 		calcErEntityRowHeight(column.fontSize),
 	);
 	const rowsHeight =
 		rowHeights.length === 0
-			? calcErEntityRowHeight(source.emptyRowFontSize)
+			? calcErEntityRowHeight(measurement.emptyRowFontSize)
 			: rowHeights.reduce((total, rowHeight) => total + rowHeight, 0);
 	const height = headerHeight + rowsHeight;
 	const left = -width / 2;
@@ -124,3 +152,21 @@ export const calcErEntityLayout = (
 		rows,
 	};
 };
+
+/**
+ * Lays the entity out (see {@link ErEntityLayout}). Every slot is drawn at its
+ * stated width widened to its floor (fitErEntityStatedSlotWidths), and the box is
+ * their sum; the height is the title band — its text wrapped in that width — and
+ * one row per column at the row's own pitch, one row's height for an entity of
+ * no columns. The keys never move the height.
+ *
+ * Measures every text; the canvas side reads it through readCachedErEntityLayout
+ * rather than calling it per reader.
+ *
+ * @param input - The entity's stated slot widths and slots; its box is not read
+ * @returns The layout, centered on the origin; 28 + 125 = 153 tall for five columns at the defaults
+ */
+export const calcErEntityLayout = (
+	input: ErEntityLayoutInput,
+): ErEntityLayout =>
+	calcErEntityLayoutOfMeasurement(input, measureErEntityTexts(input));

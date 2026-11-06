@@ -1,5 +1,9 @@
-import { advanceTextMeasurementGeneration } from "@jiscribe/canvas-sdk/doc";
-import { describe, expect, it } from "vitest";
+import {
+	advanceTextMeasurementGeneration,
+	measureTextWidth,
+} from "@jiscribe/canvas-sdk/doc";
+import type * as canvasSdkDoc from "@jiscribe/canvas-sdk/doc";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ErEntityDoc } from "../../schema/ErEntityDoc";
 import { erEntityToState } from "../../state/ErEntityMapper";
@@ -7,6 +11,12 @@ import type { ErEntityState } from "../../state/ErEntityState";
 import { reconcileErEntityBox } from "../../state/reconcileErEntityBox";
 import { calcErEntityLayout } from "../calcErEntityLayout";
 import { readCachedErEntityLayout } from "../readCachedErEntityLayout";
+
+// Measures as the real one does, counted: the slot floors are the only measuring that goes through it.
+vi.mock("@jiscribe/canvas-sdk/doc", async (importOriginal) => {
+	const actual = await importOriginal<typeof canvasSdkDoc>();
+	return { ...actual, measureTextWidth: vi.fn(actual.measureTextWidth) };
+});
 
 const makeState = (): ErEntityState =>
 	erEntityToState({
@@ -21,6 +31,10 @@ const makeState = (): ErEntityState =>
 	} as ErEntityDoc);
 
 describe("readCachedErEntityLayout", () => {
+	beforeEach(() => {
+		vi.mocked(measureTextWidth).mockClear();
+	});
+
 	it("lays an entity out as calcErEntityLayout does", () => {
 		const state = makeState();
 		expect(readCachedErEntityLayout(state)).toEqual(calcErEntityLayout(state));
@@ -76,6 +90,35 @@ describe("readCachedErEntityLayout", () => {
 		);
 		expect(readCachedErEntityLayout(widened).nameWidth).toBe(140);
 		expect(readCachedErEntityLayout(state)).toEqual(layout);
+	});
+
+	it("lays out a change of the widths alone without measuring the slots again", () => {
+		const state = makeState();
+		readCachedErEntityLayout(state);
+		expect(measureTextWidth).toHaveBeenCalled();
+		vi.mocked(measureTextWidth).mockClear();
+		const dragged = [
+			{ ...state, nameWidth: 120 },
+			{ ...state, nameWidth: 140, typeWidth: 110 },
+			{ ...state, keyWidth: 60 },
+		];
+		const layouts = dragged.map(readCachedErEntityLayout);
+		expect(measureTextWidth).not.toHaveBeenCalled();
+		layouts.forEach((layout, index) => {
+			expect(layout).toEqual(calcErEntityLayout(dragged[index]));
+		});
+	});
+
+	it("measures the slots again once the measurement generation moves on, the widths changed", () => {
+		const state = makeState();
+		readCachedErEntityLayout(state);
+		advanceTextMeasurementGeneration();
+		vi.mocked(measureTextWidth).mockClear();
+		readCachedErEntityLayout({ ...state, nameWidth: 120 });
+		expect(measureTextWidth).toHaveBeenCalled();
+		vi.mocked(measureTextWidth).mockClear();
+		readCachedErEntityLayout({ ...state, nameWidth: 140 });
+		expect(measureTextWidth).not.toHaveBeenCalled();
 	});
 
 	it("lays out afresh when a slot's typography changes", () => {

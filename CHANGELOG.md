@@ -424,6 +424,10 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 - **Typing in a markdown card no longer renders its Markdown on every
   keystroke.** The card draws nothing over the editor, so it renders the body
   once, when editing closes.
+- **Widening an ER entity no longer measures its texts on every frame.** A
+  drag on a slot boundary or the right edge, and a resize of the box, lay the
+  entity out from the texts as last measured; only the title band is wrapped
+  again at the new width.
 
 ### Removed
 
