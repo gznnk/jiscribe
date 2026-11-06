@@ -31,9 +31,9 @@ const checkTextVerticalBasisFeature = (
 
 /**
  * Refuses a type whose single body is laid out inside its box (`features.text`
- * `"body"` / `"source"`) declaring no `textRegion`: the canvas places the body
- * there and the headless checks measure against it, so a missing one would leave
- * both guessing.
+ * `"body"` / `"source"`) declaring no `textRegion`: the headless checks and the
+ * auto-height measurement read the body's place from it, so a missing one would
+ * leave both guessing.
  *
  * Compared against undefined rather than tested for presence:
  * `createFrameObjectDoc` writes the key whether or not the type gave one.

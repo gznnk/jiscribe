@@ -24,7 +24,7 @@ describe("the standard set's body text types", () => {
 				: [],
 		);
 
-	it("are all of the shipped ones holding a single laid-out body", () => {
+	it("include the shipped body types", () => {
 		expect(bodyTypes.map(({ type }) => type)).toEqual(
 			expect.arrayContaining(["diamond", "cloud", "container", "callout"]),
 		);

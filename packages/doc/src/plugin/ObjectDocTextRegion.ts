@@ -13,9 +13,11 @@ import type { Dimensions, Rect } from "@jiscribe/geometry";
  * Implementations declare what they read through `TDoc` and take only the
  * parameters they use: a single-body shape's calculator is a one-argument
  * function of its box, and stays assignable to this type. The canvas calls the
- * same declaration with an object's state to place the slot (the `"textSlot"`
- * part kind's `region` it builds from it), so read only the width/height and
- * the type's own fields (`extraKeys`), which a state carries too.
+ * same declaration with an object's state only to measure an auto-height body
+ * (resizeAutoHeightStateToContent), so read only the width/height and the type's
+ * own fields (`extraKeys`), which a state carries too. Where the canvas draws
+ * the text is the UI definition's `"textSlot"` part kind; the shipped shapes pass
+ * the same function to both sides.
  */
 export type ObjectDocTextRegionCalculator<
 	TDoc extends Dimensions = Dimensions,

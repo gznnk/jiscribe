@@ -43,7 +43,7 @@ const slots = (slot: TextSlots[string]): TextSlots => ({
 describe("calcLabelBoxSize", () => {
 	// The shapes placing such a label themselves size it from here, so the
 	// defaults they spread into their docs (LABEL_TEXT_STYLE_DEFAULTS) have to be
-	// the ones measured with
+	// the ones measured with.
 	it("sizes an absent slot as one empty line at the default font size", () => {
 		expect(calcLabelBoxSize(undefined, BODY_TEXT_SLOT_ID)).toEqual({
 			width: MIN_WIDTH,

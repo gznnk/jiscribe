@@ -115,9 +115,10 @@ const appendTextSlotPartKind = <TState extends ObjectState & TransformedFrame>(
  * Builds the whole {@link ObjectTypeDefinition} of a Frame-family shape
  * (`geometry: "rect"` + `transform`) from its doc definition and its renderer:
  * mapper / state validator / behavior are derived from `doc.features`, the doc
- * definition is spread whole (its `textRegion` and `autoHeight` included, which
- * is what the auto-height verdict reads, and its `outline` / `anchorRegion`, which
- * the canvas has no field of its own for), `textRegion` becomes the `"textSlot"`
+ * definition is spread whole (its `autoHeight` included, which is what the
+ * auto-height verdict reads, its `textRegion`, which is what the auto-height
+ * measurement reads, and its `outline` / `anchorRegion`, which the canvas has no
+ * field of its own for), `textRegion` becomes the `"textSlot"`
  * part kind, and every other UI-side field (`visualBounds` / `stencils` / `menu`
  * …) is passed through untouched. Replaces the per-shape
  * `*Mapper.ts` / `validate*State.ts` pair.

@@ -113,9 +113,9 @@ export type ObjectDocDefinition = {
 	 * type, a cell or a band of a `"slots"` type. Every `"body"` / `"source"` type
 	 * must declare one ({@link import("./ObjectDocTextRegion").calcFullBoxTextRegion}
 	 * for a plain box), and the parser refuses the definition otherwise
-	 * (resolveDocDefinitions). A `"slots"` type may leave it out until a reader asks
-	 * for its slots. A `features.text: "label"` type must not declare one: its
-	 * caption is placed on the canvas side.
+	 * (resolveDocDefinitions). A `"slots"` type may leave it out, placing its slots
+	 * on its `"textSlot"` part kind. A `features.text: "label"` type must not
+	 * declare one: its caption is placed on the canvas side.
 	 */
 	textRegion?: ObjectDocTextRegionCalculator;
 
