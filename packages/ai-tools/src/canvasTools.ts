@@ -208,10 +208,7 @@ const styleSchema = {
 		.string()
 		.optional()
 		.describe(
-			[
-				"Background painted behind the label of a shape that draws its text below its box (actor, server, the icon sets, …); no other type takes it, and a connector's label background is fill.",
-				'Any CSS color; omitted or "auto" (the default) paints the page\'s color, so a connector running under the label is hidden there, and "transparent" lets it show through.',
-			].join(" "),
+			'Color behind the label of a shape whose text sits below its box (actor, server, the icon sets, …); no other type takes it (a connector\'s label uses fill). Default "auto" paints the page\'s color, hiding connectors under the label; "transparent" shows them.',
 		),
 	...textSlotStyleSchema,
 };
