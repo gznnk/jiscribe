@@ -21,15 +21,19 @@ export const calcDistanceToSegment = (
 	const dx = segmentEnd.x - segmentStart.x;
 	const dy = segmentEnd.y - segmentStart.y;
 	const lengthSq = dx * dx + dy * dy;
+	let offsetX: number;
+	let offsetY: number;
 	if (lengthSq < EPSILON) {
-		return Math.hypot(point.x - segmentStart.x, point.y - segmentStart.y);
+		offsetX = point.x - segmentStart.x;
+		offsetY = point.y - segmentStart.y;
+	} else {
+		const projected =
+			((point.x - segmentStart.x) * dx + (point.y - segmentStart.y) * dy) /
+			lengthSq;
+		const clamped = Math.min(1, Math.max(0, projected));
+		offsetX = point.x - (segmentStart.x + clamped * dx);
+		offsetY = point.y - (segmentStart.y + clamped * dy);
 	}
-	const projected =
-		((point.x - segmentStart.x) * dx + (point.y - segmentStart.y) * dy) /
-		lengthSq;
-	const clamped = Math.min(1, Math.max(0, projected));
-	return Math.hypot(
-		point.x - (segmentStart.x + clamped * dx),
-		point.y - (segmentStart.y + clamped * dy),
-	);
+	// Not Math.hypot: its overflow guard is slow and canvas coordinates never need it.
+	return Math.sqrt(offsetX * offsetX + offsetY * offsetY);
 };

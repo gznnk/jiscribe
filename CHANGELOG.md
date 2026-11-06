@@ -415,6 +415,12 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   canonical name wins over an alias or a shorthand. `microsoft-entra-id` is an
   alias of `entra-id`. A library search for a term that normalizes to nothing
   (`&`, a term in Japanese) now matches nothing instead of laying out the palette.
+- **Hit testing and snapping to a polygon outline are faster, with the same
+  results.** `calcDistanceToSegment` (and so `isPointInPolygon`) takes a plain
+  square root in place of `Math.hypot`, `calcOutlinePointTowardForPolygon`
+  casts its ray in the shape's local space and transforms only the hit instead
+  of the whole polygon, and `calcBoundingBox` derives a rotated frame's extents
+  without turning its four corners.
 
 ### Removed
 

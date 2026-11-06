@@ -139,4 +139,105 @@ describe("calcOutlinePointTowardForPolygon", () => {
 		expect(result!.x).toBeCloseTo(10);
 		expect(result!.y).toBeCloseTo(0);
 	});
+	describe("under rotation and flips, with an off-origin center", () => {
+		// Width 100 / height 60, apex at local (50, 0): flips are visible on it.
+		const rightArrow: Point[] = [
+			{ x: -50, y: -30 },
+			{ x: 50, y: 0 },
+			{ x: -50, y: 30 },
+		];
+		// Same box, apex at local (0, -30).
+		const upArrow: Point[] = [
+			{ x: -50, y: 30 },
+			{ x: 0, y: -30 },
+			{ x: 50, y: 30 },
+		];
+		const square: Point[] = [
+			{ x: -50, y: -50 },
+			{ x: 50, y: -50 },
+			{ x: 50, y: 50 },
+			{ x: -50, y: 50 },
+		];
+		const center = { cx: 300, cy: -200 };
+
+		it("lands on a corner of a square rotated 45 degrees", () => {
+			const result = calcOutlinePointTowardForPolygon(
+				square,
+				{ ...baseFrame, ...center, width: 100, height: 100, rotation: 45 },
+				{ x: center.cx + 500, y: center.cy },
+			);
+			expect(result!.x).toBeCloseTo(center.cx + 50 * Math.SQRT2);
+			expect(result!.y).toBeCloseTo(center.cy);
+		});
+
+		it("follows scaleX = -1: the apex points left", () => {
+			const frame = { ...baseFrame, ...center, scaleX: -1 as const };
+			const apex = calcOutlinePointTowardForPolygon(rightArrow, frame, {
+				x: center.cx - 500,
+				y: center.cy,
+			});
+			expect(apex!.x).toBeCloseTo(center.cx - 50);
+			expect(apex!.y).toBeCloseTo(center.cy);
+			const back = calcOutlinePointTowardForPolygon(rightArrow, frame, {
+				x: center.cx + 500,
+				y: center.cy,
+			});
+			expect(back!.x).toBeCloseTo(center.cx + 50);
+			expect(back!.y).toBeCloseTo(center.cy);
+		});
+
+		it("follows scaleY = -1: the apex points down", () => {
+			const frame = { ...baseFrame, ...center, scaleY: -1 as const };
+			const apex = calcOutlinePointTowardForPolygon(upArrow, frame, {
+				x: center.cx,
+				y: center.cy + 500,
+			});
+			expect(apex!.x).toBeCloseTo(center.cx);
+			expect(apex!.y).toBeCloseTo(center.cy + 30);
+			const base = calcOutlinePointTowardForPolygon(upArrow, frame, {
+				x: center.cx,
+				y: center.cy - 500,
+			});
+			expect(base!.x).toBeCloseTo(center.cx);
+			expect(base!.y).toBeCloseTo(center.cy - 30);
+		});
+
+		it("flips before rotating: scaleX = -1 then 90 degrees points the apex up", () => {
+			// Local (50, 0) flips to (-50, 0), which a 90 degree turn takes to (0, -50).
+			const frame = {
+				...baseFrame,
+				...center,
+				rotation: 90,
+				scaleX: -1 as const,
+			};
+			const apex = calcOutlinePointTowardForPolygon(rightArrow, frame, {
+				x: center.cx,
+				y: center.cy - 500,
+			});
+			expect(apex!.x).toBeCloseTo(center.cx);
+			expect(apex!.y).toBeCloseTo(center.cy - 50);
+			const back = calcOutlinePointTowardForPolygon(rightArrow, frame, {
+				x: center.cx,
+				y: center.cy + 500,
+			});
+			expect(back!.x).toBeCloseTo(center.cx);
+			expect(back!.y).toBeCloseTo(center.cy + 50);
+		});
+
+		it("combines a 30 degree rotation with scaleY = -1", () => {
+			// Local apex (0, -30) flips to (0, 30); turning that 30 degrees gives
+			// (-30·sin 30°, 30·cos 30°) = (-15, 15√3).
+			const apexOffset = { x: -15, y: 15 * Math.sqrt(3) };
+			const result = calcOutlinePointTowardForPolygon(
+				upArrow,
+				{ ...baseFrame, ...center, rotation: 30, scaleY: -1 },
+				{
+					x: center.cx + 4 * apexOffset.x,
+					y: center.cy + 4 * apexOffset.y,
+				},
+			);
+			expect(result!.x).toBeCloseTo(center.cx + apexOffset.x);
+			expect(result!.y).toBeCloseTo(center.cy + apexOffset.y);
+		});
+	});
 });

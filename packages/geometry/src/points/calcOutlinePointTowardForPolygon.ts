@@ -1,15 +1,17 @@
 import { castRayOnPolygon } from "./castRayOnPolygon";
 import { degreesToRadians } from "../common/degreesToRadians";
-import { calcAffineTransformedPoint } from "../transform/calcAffineTransformedPoint";
+import { applyAffineWithTrig } from "../transform/applyAffineWithTrig";
+import { applyInverseAffineWithTrig } from "../transform/applyInverseAffineWithTrig";
 import type { Point } from "../types/Point";
 import type { TransformedFrame } from "../types/TransformedFrame";
 
 /**
  * Return the intersection point on a polygon outline along the ray from the
  * shape center toward `toward` (world coord). The polygon is given in local,
- * centered coordinates (width/height units, pre-transform) and transformed to
- * world space with the same affine as the renderer / calcFrameKeyPoint, so the
- * result follows the shape's rotation and flip.
+ * centered coordinates (width/height units, pre-transform); the ray is cast in
+ * that local space and only the hit is carried to world space, with the same
+ * affine as the renderer / calcFrameKeyPoint, so the result follows the shape's
+ * rotation and flip.
  *
  * @param localPolygon - Closed outline in local, centered coordinates; the last
  *   vertex is joined back to the first. Fewer than 2 vertices yields null
@@ -28,20 +30,40 @@ export function calcOutlinePointTowardForPolygon(
 	}
 	const { cx, cy, rotation, scaleX, scaleY } = frame;
 	const angleRad = degreesToRadians(rotation);
+	const cosAngle = Math.cos(angleRad);
+	const sinAngle = Math.sin(angleRad);
 
-	const worldPolygon: Point[] = new Array(localPolygon.length);
-	for (let i = 0; i < localPolygon.length; i++) {
-		const p = localPolygon[i];
-		worldPolygon[i] = calcAffineTransformedPoint(
-			p.x,
-			p.y,
-			scaleX,
-			scaleY,
-			angleRad,
-			cx,
-			cy,
-		);
+	// Rotation and ±1 flips preserve lengths, so castRayOnPolygon's EPSILON
+	// tests mean the same in local space as they would in world space.
+	const localDirection = applyInverseAffineWithTrig(
+		toward.x,
+		toward.y,
+		scaleX,
+		scaleY,
+		cosAngle,
+		sinAngle,
+		cx,
+		cy,
+	);
+	const localHit = castRayOnPolygon(
+		localPolygon,
+		0,
+		0,
+		localDirection.x,
+		localDirection.y,
+	);
+	if (!localHit) {
+		return null;
 	}
 
-	return castRayOnPolygon(worldPolygon, cx, cy, toward.x - cx, toward.y - cy);
+	return applyAffineWithTrig(
+		localHit.x,
+		localHit.y,
+		scaleX,
+		scaleY,
+		cosAngle,
+		sinAngle,
+		cx,
+		cy,
+	);
 }
