@@ -10,8 +10,10 @@ import {
 	emptyDoc,
 	expectValid,
 	readObject,
+	rootIds,
 } from "./support/docFixtures";
 import {
+	captionedDefinition,
 	columnCardDefinition,
 	cutTopDefinition,
 	ovalRegionDefinition,
@@ -19,6 +21,7 @@ import {
 	slantedDefinition,
 	tippedDefinition,
 } from "./support/pluginFixtures";
+import { calcLabelTextRegion } from "../../text/label/calcLabelTextRegion";
 
 describe("layoutObjects", () => {
 	/** Three boxes scattered out of order, joined a → b → c with ends on arbitrary points. */
@@ -47,6 +50,7 @@ describe("layoutObjects", () => {
 			nodeIds: ["rect-1", "rect-2", "rect-3"],
 			containerIds: [],
 			connectorIds: ["connector-1", "connector-2"],
+			restackedConnectorIds: [],
 		});
 		expect(readObject(doc, "rect-1")).toMatchObject({ x: 40, y: 20 });
 		expect(readObject(doc, "rect-2")).toMatchObject({ x: 40, y: 160 });
@@ -374,9 +378,10 @@ describe("layoutObjects with container shapes and declared connect points", () =
 			rankSpacing: 60,
 		});
 
+		// The edges in the order the layout read them (by their ends), then the redrawn one.
 		expect(result.connectorIds).toEqual([
-			"connector-1",
 			"connector-2",
+			"connector-1",
 			"connector-3",
 		]);
 		const redrawn = readObject(doc, "connector-3") as {
@@ -823,5 +828,252 @@ describe("layoutObjects on shapes whose outline is not their box", () => {
 		expect(chainEnd.anchor).toMatchObject({ side: "left", t: 0.5 });
 		expect(redrawnEnd.anchor.side).toBe("left");
 		expect(redrawnEnd.anchor.t).toBeCloseTo(0.25, 9);
+	});
+});
+
+describe("layoutObjects on shapes hanging a caption below their box", () => {
+	const captionDocOps = createDocOps({
+		plugins: [
+			{
+				id: "caption-plugin",
+				objects: {
+					captioned: captionedDefinition,
+					region: regionDefinition,
+					"column-card": columnCardDefinition,
+				},
+			},
+		],
+	});
+	const boxOf = (doc: CanvasDoc, id: string): Rect => {
+		const { x, y, width, height } = readObject(doc, id) as Rect;
+		return { x, y, width, height };
+	};
+	/** The box and the caption hung below it, as one rectangle in the doc's frame. */
+	const drawnOf = (doc: CanvasDoc, id: string): Rect => {
+		const box = boxOf(doc, id);
+		const caption = calcLabelTextRegion(
+			box,
+			{ text: (readObject(doc, id) as { text: string }).text },
+			undefined,
+		);
+		const left = Math.min(box.x, box.x + box.width / 2 + caption.x);
+		const right = Math.max(
+			box.x + box.width,
+			box.x + box.width / 2 + caption.x + caption.width,
+		);
+		const bottom = box.y + box.height / 2 + caption.y + caption.height;
+		return { x: left, y: box.y, width: right - left, height: bottom - box.y };
+	};
+	const overlaps = (a: Rect, b: Rect): boolean =>
+		a.x < b.x + b.width &&
+		b.x < a.x + a.width &&
+		a.y < b.y + b.height &&
+		b.y < a.y + a.height;
+	const isInside = (outer: Rect, inner: Rect): boolean =>
+		inner.x > outer.x &&
+		inner.y > outer.y &&
+		inner.x + inner.width < outer.x + outer.width &&
+		inner.y + inner.height < outer.y + outer.height;
+	const addCaptioned = (doc: CanvasDoc, text: string, x = 0, y = 0): void => {
+		captionDocOps.addObject(doc, "captioned", { x, y, text });
+	};
+
+	it("keeps every caption inside its container and clear of the other shapes", () => {
+		const doc = emptyDoc();
+		captionDocOps.addObject(doc, "region", {
+			x: 0,
+			y: 0,
+			width: 600,
+			height: 400,
+		});
+		addCaptioned(doc, "Application Load Balancer", 40, 60);
+		addCaptioned(doc, "Web server (primary)", 200, 60);
+		addCaptioned(doc, "Web server (standby)", 400, 60);
+		captionDocOps.connect(doc, {
+			sourceId: "captioned-1",
+			targetId: "captioned-2",
+		});
+		captionDocOps.connect(doc, {
+			sourceId: "captioned-1",
+			targetId: "captioned-3",
+		});
+
+		captionDocOps.layoutObjects(doc, undefined);
+
+		const region = boxOf(doc, "region-1");
+		const drawn = ["captioned-1", "captioned-2", "captioned-3"].map((id) =>
+			drawnOf(doc, id),
+		);
+		for (const [index, rect] of drawn.entries()) {
+			expect(isInside(region, rect)).toBe(true);
+			for (const other of drawn.slice(index + 1)) {
+				expect(overlaps(rect, other)).toBe(false);
+			}
+		}
+		expectValid(doc);
+	});
+
+	it("moves a connector leaving through its source's caption to just beneath that shape, once", () => {
+		const doc = emptyDoc();
+		addCaptioned(doc, "Load balancer");
+		addCaptioned(doc, "Server");
+		captionDocOps.connect(doc, {
+			sourceId: "captioned-1",
+			targetId: "captioned-2",
+		});
+
+		const result = captionDocOps.layoutObjects(doc, undefined);
+
+		expect(result.restackedConnectorIds).toEqual(["connector-1"]);
+		expect(rootIds(doc)).toEqual(["connector-1", "captioned-1", "captioned-2"]);
+		// A second run finds everything where it put it.
+		const laidOut = structuredClone(doc);
+		const again = captionDocOps.layoutObjects(doc, undefined);
+		expect(again.restackedConnectorIds).toEqual([]);
+		expect(doc).toEqual(laidOut);
+	});
+
+	it("reads the edges in the shapes' order, so restacking leaves a second run nothing to change", () => {
+		// Restacking puts every connector just beneath its source, which takes
+		// connector-1, from the fifth shape, behind the other six; read in the
+		// connectors' own order, a second run would read another and move the shapes.
+		const doc = emptyDoc();
+		for (let index = 1; index <= 6; index += 1) {
+			addCaptioned(doc, `Node number ${index}`);
+		}
+		for (const [source, target] of [
+			[5, 6],
+			[1, 2],
+			[2, 3],
+			[2, 4],
+			[1, 5],
+			[1, 4],
+			[1, 2],
+		]) {
+			captionDocOps.connect(doc, {
+				sourceId: `captioned-${source}`,
+				targetId: `captioned-${target}`,
+			});
+		}
+
+		captionDocOps.layoutObjects(doc, undefined);
+		const laidOut = structuredClone(doc);
+		captionDocOps.layoutObjects(doc, undefined);
+
+		expect(doc).toEqual(laidOut);
+	});
+
+	it("brings a connector beneath the group holding the shape, not into it", () => {
+		const doc = emptyDoc();
+		addCaptioned(doc, "Load balancer");
+		addCaptioned(doc, "Server");
+		const groupId = captionDocOps.groupObjects(doc, [
+			"captioned-1",
+			"captioned-2",
+		]);
+		captionDocOps.connect(doc, {
+			sourceId: "captioned-1",
+			targetId: "captioned-2",
+		});
+
+		const result = captionDocOps.layoutObjects(doc, [groupId]);
+
+		expect(result.restackedConnectorIds).toEqual(["connector-1"]);
+		expect(rootIds(doc)).toEqual(["connector-1", groupId]);
+		expect(
+			(readObject(doc, groupId) as { children: ObjectDoc[] }).children.map(
+				({ id }) => id,
+			),
+		).toEqual(["captioned-1", "captioned-2"]);
+	});
+
+	it("leaves the order alone where no end runs under a caption", () => {
+		// Left to right, the ends sit on the sides a wide caption reaches past.
+		const sideways = emptyDoc();
+		addCaptioned(sideways, "Application Load Balancer");
+		addCaptioned(sideways, "Application server");
+		captionDocOps.connect(sideways, {
+			sourceId: "captioned-1",
+			targetId: "captioned-2",
+		});
+		expect(
+			captionDocOps.layoutObjects(sideways, undefined, { direction: "LR" })
+				.restackedConnectorIds,
+		).toEqual([]);
+		expect(rootIds(sideways)).toEqual([
+			"captioned-1",
+			"captioned-2",
+			"connector-1",
+		]);
+
+		// A turned shape is laid out by its box alone.
+		const turned = emptyDoc();
+		addCaptioned(turned, "Load balancer");
+		addCaptioned(turned, "Server");
+		captionDocOps.connect(turned, {
+			sourceId: "captioned-1",
+			targetId: "captioned-2",
+		});
+		captionDocOps.setRotation(turned, ["captioned-1"], 90);
+		expect(
+			captionDocOps.layoutObjects(turned, undefined).restackedConnectorIds,
+		).toEqual([]);
+
+		// A connector already beneath its shape stays where it is.
+		const below = emptyDoc();
+		addCaptioned(below, "Load balancer");
+		addCaptioned(below, "Server");
+		captionDocOps.connect(below, {
+			sourceId: "captioned-1",
+			targetId: "captioned-2",
+		});
+		captionDocOps.reorderObjects(below, ["connector-1"], "back");
+		expect(
+			captionDocOps.layoutObjects(below, undefined).restackedConnectorIds,
+		).toEqual([]);
+		expect(rootIds(below)).toEqual([
+			"connector-1",
+			"captioned-1",
+			"captioned-2",
+		]);
+	});
+
+	it("leaves a connector whose route the layout does not write where it stands", () => {
+		const doc = emptyDoc();
+		addCaptioned(doc, "Load balancer");
+		captionDocOps.addObject(doc, "column-card", { x: 400, y: 400 });
+		addCaptioned(doc, "Server");
+		// A self loop, and a line kept on a declared connect point at its far end.
+		captionDocOps.connect(doc, {
+			sourceId: "captioned-1",
+			targetId: "captioned-1",
+			sourceAnchor: "bottomCenter",
+			targetAnchor: "rightCenter",
+		});
+		captionDocOps.connect(doc, {
+			sourceId: "captioned-1",
+			targetId: "column-card-1",
+			targetAnchor: "col:1:left",
+		});
+		captionDocOps.connect(doc, {
+			sourceId: "captioned-1",
+			targetId: "captioned-2",
+		});
+
+		const result = captionDocOps.layoutObjects(doc, undefined);
+
+		expect(
+			(readObject(doc, "connector-2") as { source: { anchor: unknown } }).source
+				.anchor,
+		).toMatchObject({ kind: "edge", side: "bottom" });
+		expect(result.restackedConnectorIds).toEqual(["connector-3"]);
+		expect(rootIds(doc)).toEqual([
+			"connector-3",
+			"captioned-1",
+			"column-card-1",
+			"captioned-2",
+			"connector-1",
+			"connector-2",
+		]);
 	});
 });

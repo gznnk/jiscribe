@@ -3,6 +3,9 @@ import type { ObjectDoc } from "@jiscribe/doc/model/objects/base/ObjectDoc";
 import { describe, expect, it } from "vitest";
 
 import {
+	buildCaptionedDoc,
+	buildCaptionedFanDoc,
+	buildCaptionedKeptEndDoc,
 	buildChainDoc,
 	buildKeptEndsDoc,
 	buildMixedDoc,
@@ -49,6 +52,22 @@ const indexWithoutPoints = (doc: CanvasDoc): Map<string, unknown> => {
 	return objectsById;
 };
 
+/** The stacking order of a doc: each parent's children in drawing order, the root's under "". */
+const stackingOf = (doc: CanvasDoc): Record<string, string[]> => {
+	const childIdsByParentId: Record<string, string[]> = {};
+	const visit = (parentId: string, objects: readonly ObjectDoc[]): void => {
+		childIdsByParentId[parentId] = objects.map(({ id }) => id);
+		for (const object of objects) {
+			const { children } = object as { children?: ObjectDoc[] };
+			if (children !== undefined) {
+				visit(object.id, children);
+			}
+		}
+	};
+	visit("", doc.root);
+	return childIdsByParentId;
+};
+
 /** Every connector's stored corners, after the vertex pass the reducer runs on a commit. */
 const reconciledPointsOf = (
 	state: CanvasControllerState,
@@ -91,11 +110,10 @@ const expectSameAsDocOps = (
 	const docOpsState = createInitialControllerState(viaDocOps, layoutRegistries);
 
 	expect(viaCommand.commitVersion).toBe(state.commitVersion + 1);
-	expect(
-		indexWithoutPoints(canvasToDoc(viaCommand, layoutRegistries.objectMapper)),
-	).toEqual(
-		indexWithoutPoints(canvasToDoc(docOpsState, layoutRegistries.objectMapper)),
-	);
+	const commandDoc = canvasToDoc(viaCommand, layoutRegistries.objectMapper);
+	const docOpsDoc = canvasToDoc(docOpsState, layoutRegistries.objectMapper);
+	expect(indexWithoutPoints(commandDoc)).toEqual(indexWithoutPoints(docOpsDoc));
+	expect(stackingOf(commandDoc)).toEqual(stackingOf(docOpsDoc));
 	// The reducer moves a route's two outer corners onto the drawn ends, so the doc
 	// op's corners are compared after the same pass.
 	expect(reconciledPointsOf(viaCommand)).toEqual(
@@ -179,6 +197,81 @@ describe("the layout commands write what the doc op writes", () => {
 		expectSameAsDocOps(
 			buildRotatedOutlinedDoc(),
 			["slanted-1", "rect-1", "rect-2"],
+			LayoutTopToBottomCommand.id,
+			"TB",
+		);
+	});
+
+	it("for shapes hanging a caption below their box, restacking the lines under them", () => {
+		const captionedIds = [
+			"region-1",
+			"captioned-1",
+			"captioned-2",
+			"captioned-3",
+			"rect-1",
+			"group-1",
+		];
+		const viaCommand = expectSameAsDocOps(
+			buildCaptionedDoc(),
+			captionedIds,
+			LayoutTopToBottomCommand.id,
+			"TB",
+		);
+		// Each line leaving a caption downward is just beneath its shape, the one in the
+		// group just beneath the group.
+		expect(viaCommand.rootIds).toEqual([
+			"region-1",
+			"connector-1",
+			"connector-2",
+			"captioned-1",
+			"captioned-2",
+			"connector-3",
+			"captioned-3",
+			"rect-1",
+			"connector-5",
+			"group-1",
+			"connector-4",
+		]);
+		expectSameAsDocOps(
+			buildCaptionedDoc(),
+			captionedIds,
+			LayoutLeftToRightCommand.id,
+			"LR",
+		);
+		// A turned shape is laid out by its box alone, and nothing runs under its caption.
+		const turned = buildCaptionedDoc();
+		layoutDocOps.setRotation(turned, ["captioned-1"], 90);
+		const viaTurned = expectSameAsDocOps(
+			turned,
+			captionedIds,
+			LayoutTopToBottomCommand.id,
+			"TB",
+		);
+		expect(viaTurned.rootIds.indexOf("connector-1")).toBeGreaterThan(
+			viaTurned.rootIds.indexOf("captioned-1"),
+		);
+	});
+
+	it("for a line under a caption whose route is left to the engine", () => {
+		const viaCommand = expectSameAsDocOps(
+			buildCaptionedKeptEndDoc(),
+			["captioned-1", "captioned-2", "ported-1"],
+			LayoutTopToBottomCommand.id,
+			"TB",
+		);
+		expect(viaCommand.rootIds).toEqual([
+			"connector-2",
+			"captioned-1",
+			"captioned-2",
+			"ported-1",
+			"connector-1",
+		]);
+	});
+
+	it("for connectors restacking reorders, read in the shapes' order", () => {
+		expectSameAsDocOps(
+			buildCaptionedFanDoc(),
+			Array.from({ length: 6 }, (_, index) => `captioned-${index + 1}`),
 			LayoutTopToBottomCommand.id,
 			"TB",
 		);

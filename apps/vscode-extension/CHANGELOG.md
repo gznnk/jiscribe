@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Auto layout makes room for the label below an icon or a pictogram.** The
+  shapes that draw their text below the box (actor, server, package, envelope,
+  queue, gear, lock, extract, cross, and the AWS, Azure and Google Cloud icons)
+  are arranged with that label as part of them, so it stays inside the boundary
+  around it and clear of its neighbours and of other lines. A line leaving or
+  entering through its own shape's label is moved just behind that shape, in the
+  same undo step, so the label reads over it.
+
 - **A label background color for the pictograms, the icons and the flowchart
   markers.** The shapes that draw their text below the box (actor, server,
   package, envelope, queue, gear, lock, extract, cross, and the AWS, Azure and

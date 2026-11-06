@@ -64,3 +64,14 @@ export const applyRotation = (
 	}
 	return true;
 };
+
+/**
+ * Whether the doc turns the object off its box: a `rotation` that is not a whole turn,
+ * or `flipX` / `flipY` set.
+ *
+ * @param object - Any doc object; a field of another type, or one left out, counts as no turn
+ */
+export const isTransformed = (object: ObjectRecord): boolean =>
+	(typeof object.rotation === "number" && object.rotation % 360 !== 0) ||
+	object.flipX === true ||
+	object.flipY === true;

@@ -12,6 +12,7 @@ import {
 	type LayoutGraphEdge,
 	type LayoutGraphNode,
 	type LayoutSide,
+	type LayoutVisualMargin,
 	type TakenEnd,
 } from "@jiscribe/layout";
 
@@ -32,16 +33,20 @@ import { requireFiniteNumber } from "./utils/numberArgs";
 import {
 	type ObjectRecord,
 	locateObjects,
+	readChildren,
 	requireObjects,
 	visitObjects,
 } from "./utils/objectAccess";
 import {
 	type DocDefinitions,
 	isConnectorObject,
+	readBodyTextStyleDefaults,
 	requireObjectBounds,
 	translateObject,
 } from "./utils/objectGeometry";
+import { isTransformed } from "./utils/transformFields";
 import type { CanvasDoc } from "../model/canvas/CanvasDoc";
+import type { ObjectDoc } from "../model/objects/base/ObjectDoc";
 import type { EdgeAnchorOutlineShape } from "../model/objects/connector/calcEdgeAnchorOutlineRange";
 import {
 	CONNECTOR_LABEL_DEFAULTS,
@@ -55,7 +60,19 @@ import {
 	isOnDeclaredConnectPoint,
 	listEdgeAnchoredEnds,
 } from "../model/objects/types/EndpointRef";
+import { isRichText } from "../model/objects/types/text/RichText";
+import type { TextSlot } from "../model/objects/types/text/TextSlot";
+import {
+	type RestackBeneathRequest,
+	restackBeneath,
+} from "../model/objects/utils/restackBeneath";
+import { sortEdgesByEndOrder } from "../model/objects/utils/sortEdgesByEndOrder";
 import { calcTextBlockSize } from "../text/block/calcTextBlockSize";
+import {
+	type ConnectorUnderLabelText,
+	calcLabelTextLayoutMargin,
+	listConnectorsUnderLabelText,
+} from "../text/label/calcLabelTextLayoutMargin";
 
 export type { LayoutDirection } from "@jiscribe/layout";
 
@@ -75,6 +92,12 @@ export type LayoutObjectsResult = {
 	containerIds: string[];
 	/** Ids of the connectors whose ends were re-anchored or whose routes were rewritten. */
 	connectorIds: string[];
+	/**
+	 * Ids of the connectors moved back in the stacking order, each to just beneath a
+	 * shape whose caption it runs under (see planLabelTextRestack), each parent's in the
+	 * order they stood before.
+	 */
+	restackedConnectorIds: string[];
 };
 
 /** Check the parameters before anything is read, so a bad one changes nothing. */
@@ -147,9 +170,32 @@ const collectConnectors = (
 };
 
 /**
+ * What the object draws past its box, which the layout keeps room for: a `"label"`
+ * type's caption (calcLabelTextLayoutMargin), measured in the font it is drawn with.
+ *
+ * @param bounds - The object's box as the layout is given it
+ */
+const readLayoutVisualMargin = (
+	object: ObjectRecord,
+	bounds: Rect,
+	definitions: DocDefinitions,
+): LayoutVisualMargin | undefined => {
+	const definition = definitions.get(object.type);
+	return definition === undefined
+		? undefined
+		: calcLabelTextLayoutMargin(
+				definition.features.text,
+				bounds,
+				isRichText(object.text) ? (object as Partial<TextSlot>) : undefined,
+				readBodyTextStyleDefaults(definition),
+				isTransformed(object),
+			);
+};
+
+/**
  * The graph as the layout takes it, built from the placements and the connectors
  * between them; each node carries the stretch of its sides its outline reaches along,
- * and the stretch its anchor region covers.
+ * the stretch its anchor region covers, and what it draws past its box.
  */
 const buildGraph = (
 	nodes: readonly PlacedNode[],
@@ -165,6 +211,7 @@ const buildGraph = (
 		const shape = resolveLayoutAnchorShape(object, bounds, definitions);
 		const anchorRanges = readLayoutAnchorRanges(object, shape);
 		const anchorBodyRanges = readLayoutAnchorBodyRanges(shape);
+		const visualMargin = readLayoutVisualMargin(object, bounds, definitions);
 		return {
 			id: object.id,
 			width: bounds.width,
@@ -172,6 +219,7 @@ const buildGraph = (
 			...(parentId !== undefined ? { parentId } : {}),
 			...(anchorRanges !== undefined ? { anchorRanges } : {}),
 			...(anchorBodyRanges !== undefined ? { anchorBodyRanges } : {}),
+			...(visualMargin !== undefined ? { visualMargin } : {}),
 		};
 	}),
 	containers: containers.map(({ object, parentId, titleHeight }) => ({
@@ -240,16 +288,24 @@ const writePlacements = (
 	}
 };
 
+/**
+ * Whether the layout writes the connector's route: not when an end stays on a declared
+ * connect point, since the corners the layout made were for the end it chose, so the
+ * route is then left to the engine.
+ */
+const isLayoutRouteWritten = (connector: ConnectorDoc): boolean =>
+	!(
+		isOnDeclaredConnectPoint(connector.source) ||
+		isOnDeclaredConnectPoint(connector.target)
+	);
+
 /** A connector's new ends, resolved before anything is written, and whether its route is the layout's to write. */
 type ConnectorWrite = {
 	connector: ConnectorDoc;
 	laidOutEdge: LaidOutEdge;
 	source: ConnectorDoc["source"];
 	target: ConnectorDoc["target"];
-	/**
-	 * False when an end stays on a declared connect point: the corners the layout made
-	 * were for the end it chose, so the route is then left to the engine.
-	 */
+	/** See isLayoutRouteWritten. */
 	keepsRoute: boolean;
 };
 
@@ -294,7 +350,7 @@ const writeRoutes = (
 		return {
 			connector,
 			laidOutEdge,
-			keepsRoute: !(sourceKept || targetKept),
+			keepsRoute: isLayoutRouteWritten(connector),
 			source: sourceKept
 				? connector.source
 				: buildEndpoint(
@@ -343,6 +399,108 @@ const writeRoutes = (
 		delete connector.routing;
 	}
 	return writes.map(({ connector }) => connector);
+};
+
+/**
+ * Where restacking takes the connectors the layout routed under a caption: each to
+ * just beneath that shape, within its own parent, beneath the shape or the group
+ * holding it there (restackBeneath), so the caption, knocking out what lies behind it,
+ * reads over the line. Nothing is moved yet (see applyLabelTextRestack).
+ */
+type LabelTextRestack = {
+	/** Each parent's children in their new order, for the parents whose order changes. */
+	orderedIdsBySiblings: Map<ObjectDoc[], string[]>;
+	/** The connectors moved, parent by parent, each parent's in the order they stood. */
+	movedIds: string[];
+};
+
+/** Where restacking takes the connectors given, with the owners each runs under the caption of. */
+const planLabelTextRestack = (
+	doc: CanvasDoc,
+	connectors: readonly ConnectorUnderLabelText[],
+): LabelTextRestack => {
+	const restack: LabelTextRestack = {
+		orderedIdsBySiblings: new Map(),
+		movedIds: [],
+	};
+	if (connectors.length === 0) {
+		return restack;
+	}
+	const parentIdById = new Map<string, string>();
+	const siblingsById = new Map<string, ObjectDoc[]>();
+	const walk = (siblings: ObjectDoc[], parentId: string | undefined): void => {
+		for (const object of siblings) {
+			if (siblingsById.has(object.id)) {
+				continue;
+			}
+			siblingsById.set(object.id, siblings);
+			if (parentId !== undefined) {
+				parentIdById.set(object.id, parentId);
+			}
+			walk(readChildren(object), object.id);
+		}
+	};
+	walk(doc.root, undefined);
+	const pathFrom = (id: string): string[] => {
+		const path = [id];
+		for (
+			let parentId = parentIdById.get(id);
+			parentId !== undefined;
+			parentId = parentIdById.get(parentId)
+		) {
+			path.push(parentId);
+		}
+		return path;
+	};
+	const requestsBySiblings = new Map<ObjectDoc[], RestackBeneathRequest[]>();
+	for (const { connectorId, ownerIds } of connectors) {
+		const siblings = siblingsById.get(connectorId);
+		if (siblings === undefined) {
+			continue;
+		}
+		const request = { id: connectorId, beneathPaths: ownerIds.map(pathFrom) };
+		const parentRequests = requestsBySiblings.get(siblings);
+		if (parentRequests === undefined) {
+			requestsBySiblings.set(siblings, [request]);
+		} else {
+			parentRequests.push(request);
+		}
+	}
+	for (const [siblings, parentRequests] of requestsBySiblings) {
+		const { orderedIds, movedIds } = restackBeneath(
+			siblings.map(({ id }) => id),
+			parentRequests,
+		);
+		if (movedIds.length > 0) {
+			restack.orderedIdsBySiblings.set(siblings, orderedIds);
+			restack.movedIds.push(...movedIds);
+		}
+	}
+	return restack;
+};
+
+/** One parent's children in the order `restack` leaves them, as a new array. */
+const readRestackedSiblings = (
+	siblings: ObjectDoc[],
+	restack: LabelTextRestack,
+): ObjectDoc[] => {
+	const orderedIds = restack.orderedIdsBySiblings.get(siblings);
+	if (orderedIds === undefined) {
+		return [...siblings];
+	}
+	const objectById = new Map(siblings.map((object) => [object.id, object]));
+	return orderedIds.map((id) => objectById.get(id) as ObjectDoc);
+};
+
+/** Move the connectors where `restack` takes them, mutating the doc's parent arrays in place. */
+const applyLabelTextRestack = (restack: LabelTextRestack): void => {
+	for (const siblings of restack.orderedIdsBySiblings.keys()) {
+		siblings.splice(
+			0,
+			siblings.length,
+			...readRestackedSiblings(siblings, restack),
+		);
+	}
 };
 
 /**
@@ -461,9 +619,12 @@ const redrawContainerConnectors = (
  * the connector goes so several on one side fan out, and kept where the owner's outline
  * reaches along the side), with a right-angled route around the
  * objects in between written as its corners (none when it runs straight). A labelled
- * connector gets room for its label, which is moved onto the line at that spot. The
- * arrangement keeps the top-left corner the objects occupied together, so the drawing
- * stays where it was.
+ * connector gets room for its label, which is moved onto the line at that spot. A shape
+ * hanging a caption below its box (`features.text: "label"`) takes the caption's room
+ * as well; a connector whose route runs through its own end's caption is moved to just
+ * beneath that shape in the stacking order, so the caption reads over the line. The
+ * arrangement keeps the top-left corner the objects' boxes occupied together, so the
+ * drawing stays where it was.
  *
  * @param doc - Mutated in place
  * @param ids - Objects to place; omitted means every top-level object the build can
@@ -482,8 +643,8 @@ const redrawContainerConnectors = (
  * @param definitions - Type table `features.geometry`, `container` (and the title band
  *   it answers for each object), the offered connect points and the `outline` /
  *   `anchorRegion` an end is kept on are read from
- * @returns Which objects moved, which containers were sized around them, and which
- *   connectors were re-anchored or rerouted
+ * @returns Which objects moved, which containers were sized around them, which
+ *   connectors were re-anchored or rerouted, and which were moved in the stacking order
  * @throws {@link DocOperationError} for a spacing that is not a finite number of 0 or
  *   more, a direction outside `LayoutDirections`, fewer than 2 placeable objects, an id
  *   that is missing, or a named object with no position of its own — before anything is
@@ -514,9 +675,21 @@ export const layoutObjects = (
 	const { edges, selfLoops } = collectConnectors(doc, nodeIds);
 
 	const graph = buildGraph(nodes, containers, edges, definitions);
+	const marginById = new Map(
+		graph.nodes.flatMap(({ id, visualMargin }) =>
+			visualMargin === undefined ? [] : [[id, visualMargin] as const],
+		),
+	);
+	const connectorById = new Map(
+		edges.map((connector) => [connector.id, connector] as const),
+	);
+	const treeOrderIds: string[] = [];
+	visitObjects(doc.root, ({ id }) => {
+		treeOrderIds.push(id);
+	});
 	const laidOut = computeLayeredLayout(
 		graph.nodes,
-		graph.edges,
+		sortEdgesByEndOrder(graph.edges, treeOrderIds),
 		params,
 		graph.containers,
 	);
@@ -550,6 +723,17 @@ export const layoutObjects = (
 		written,
 		definitions,
 	);
+	const restack = planLabelTextRestack(
+		doc,
+		listConnectorsUnderLabelText(
+			laidOut.edges,
+			graph.edges,
+			marginById,
+			(connectorId) =>
+				isLayoutRouteWritten(connectorById.get(connectorId) as ConnectorDoc),
+		),
+	);
+	applyLabelTextRestack(restack);
 
 	return {
 		nodeIds: nodes.map(({ object }) => object.id),
@@ -559,5 +743,6 @@ export const layoutObjects = (
 			...selfLoops.map(({ id }) => id),
 			...redrawnIds,
 		],
+		restackedConnectorIds: restack.movedIds,
 	};
 };

@@ -1,9 +1,11 @@
 import type { Point, Rect } from "@jiscribe/geometry";
 
 import { isSameCoordinate } from "./isSameCoordinate";
-import { createLayoutAxis } from "./LayoutAxis";
+import { type LayoutAxis, createLayoutAxis } from "./LayoutAxis";
 import type { LayoutDirection } from "./LayoutDirection";
 import { toRowKey } from "./RowIndex";
+import type { LayoutVisualMargin } from "./types";
+import { growByVisualMargin, readVisualMargin } from "./visualMargin";
 
 /** Preferred distance in px between two routes running side by side through one gap. */
 export const GAP_LANE_SPACING = 16;
@@ -12,9 +14,10 @@ export const GAP_LANE_SPACING = 16;
 const LABEL_LANE_MARGIN = 4;
 
 /**
- * Least length in px of the stub between a box and the first bend of a route leaving
- * or entering it, or {@link LANE_STUB_RATIO} of the rank spacing when that is more; a
- * gap too narrow for its lanes and these stubs is widened.
+ * Least length in px of the stub between a box, or the visual margin it is drawn with,
+ * and the first bend of a route leaving or entering it, or {@link LANE_STUB_RATIO} of
+ * the rank spacing when that is more; a gap too narrow for its lanes and these stubs
+ * is widened.
  */
 export const LANE_STUB_LENGTH = 24;
 
@@ -26,6 +29,13 @@ export type GapLaneLabel = {
 	point: Point;
 	/** The label box's size along the rank axis (its height in a top-to-bottom flow). */
 	alongExtent: number;
+};
+
+/** A node's box with the visual margin it is drawn with past its sides; see {@link spreadGapLanes}. */
+export type GapLaneMarginBox = {
+	/** The box itself, as the routes join it; moved in place with the boxes. */
+	box: Rect;
+	margin: LayoutVisualMargin;
 };
 
 /** One horizontal run of a route through a gap between two ranks, in rank-axis terms. */
@@ -126,6 +136,147 @@ const collectGapRuns = (
 	return runs;
 };
 
+/** A visual margin reaching past one side of a box along the rank axis, where a gap may face it. */
+type FacingMargin = {
+	/** Rank-axis coordinate of the box's side the margin reaches past. */
+	side: number;
+	/** How far the margin reaches past that side, more than 0. */
+	reach: number;
+	/** Where the box grown by its whole margin starts across the rank axis. */
+	acrossFrom: number;
+	/** Where the box grown by its whole margin ends across the rank axis. */
+	acrossTo: number;
+};
+
+/**
+ * The visual margins along the rank axis, the ones reaching past a box's ahead side
+ * and the ones reaching past its behind side, each sorted by the side's coordinate,
+ * with the farthest reach of each kind: what lets a gap find the margins facing it
+ * without going through every box (see calcNearestMarginDistance).
+ */
+type FacingMarginIndex = {
+	ahead: FacingMargin[];
+	behind: FacingMargin[];
+	maxAheadReach: number;
+	maxBehindReach: number;
+};
+
+const indexFacingMargins = (
+	marginBoxes: readonly GapLaneMarginBox[],
+	axis: LayoutAxis,
+): FacingMarginIndex => {
+	const index: FacingMarginIndex = {
+		ahead: [],
+		behind: [],
+		maxAheadReach: 0,
+		maxBehindReach: 0,
+	};
+	for (const { box, margin } of marginBoxes) {
+		const grown = growByVisualMargin(box, margin);
+		const acrossFrom = axis.acrossStart(grown);
+		const acrossTo = acrossFrom + axis.acrossExtent(grown);
+		const boxStart = axis.alongStart(box);
+		const aheadReach = readVisualMargin(margin, axis.aheadSide);
+		const behindReach = readVisualMargin(margin, axis.behindSide);
+		if (aheadReach > 0) {
+			index.ahead.push({
+				side: boxStart + axis.alongExtent(box),
+				reach: aheadReach,
+				acrossFrom,
+				acrossTo,
+			});
+			index.maxAheadReach = Math.max(index.maxAheadReach, aheadReach);
+		}
+		if (behindReach > 0) {
+			index.behind.push({
+				side: boxStart,
+				reach: behindReach,
+				acrossFrom,
+				acrossTo,
+			});
+			index.maxBehindReach = Math.max(index.maxBehindReach, behindReach);
+		}
+	}
+	index.ahead.sort((left, right) => left.side - right.side);
+	index.behind.sort((left, right) => left.side - right.side);
+	return index;
+};
+
+/**
+ * Index into `margins` (sorted by side) of the first whose side lies past `along`, or
+ * at it as well when `includesAlong`; `margins.length` when there is none.
+ */
+const findFirstMarginIndexPast = (
+	margins: readonly FacingMargin[],
+	along: number,
+	includesAlong: boolean,
+): number => {
+	let low = 0;
+	let high = margins.length;
+	while (low < high) {
+		const middle = (low + high) >> 1;
+		const side = margins[middle].side;
+		if (side < along || (!includesAlong && side === along)) {
+			low = middle + 1;
+		} else {
+			high = middle;
+		}
+	}
+	return low;
+};
+
+/**
+ * How near a gap's midline the nearest visual margin facing it over one of its runs
+ * ends, along the rank axis, or `limit` when none is nearer: a margin is kept clear of
+ * as a box is, from wherever it reaches past the side toward the gap. A side with no
+ * margin adds nothing, the box itself being measured from the runs' own ends. The
+ * margins are visited nearest side first, and the visit stops once no farther side's
+ * margin could come within `limit`.
+ */
+const calcNearestMarginDistance = (
+	along: number,
+	runs: readonly GapRun[],
+	limit: number,
+	index: FacingMarginIndex,
+): number => {
+	const isOverRun = ({ acrossFrom, acrossTo }: FacingMargin): boolean =>
+		runs.some(
+			(run) =>
+				Math.min(run.from, run.to) < acrossTo &&
+				acrossFrom < Math.max(run.from, run.to),
+		);
+	let nearest = limit;
+	// Boxes ending at or before the midline, the margins past their ahead side.
+	for (
+		let position = findFirstMarginIndexPast(index.ahead, along, false) - 1;
+		position >= 0;
+		position -= 1
+	) {
+		const margin = index.ahead[position];
+		if (along - margin.side - index.maxAheadReach >= nearest) {
+			break;
+		}
+		if (isOverRun(margin)) {
+			nearest = Math.min(nearest, along - (margin.side + margin.reach));
+		}
+	}
+	// Boxes starting at or after the midline, the margins past their behind side.
+	for (
+		let position = findFirstMarginIndexPast(index.behind, along, true);
+		position < index.behind.length;
+		position += 1
+	) {
+		const margin = index.behind[position];
+		if (margin.side - index.maxBehindReach - along >= nearest) {
+			break;
+		}
+		if (isOverRun(margin)) {
+			nearest = Math.min(nearest, margin.side - margin.reach - along);
+		}
+	}
+	return nearest;
+};
+
 /**
  * Spread the routes that cross one gap sideways over lanes, so two of them never share
  * a line where they overlap: runs clear of each other sideways keep the gap's midline,
@@ -144,6 +295,10 @@ const collectGapRuns = (
  * @param boxes - The boxes the routes join, mutated: a gap too narrow for its lanes
  *   with {@link LANE_STUB_LENGTH} on either side is widened, and every box and point
  *   beyond it moves along the rank axis by the same amount
+ * @param marginBoxes - The boxes drawn past their sides, each one of `boxes` itself
+ *   with its margin: the lanes and their stubs keep clear of a margin facing the gap
+ *   over one of its runs as they do of the runs' own boxes, so a route leaving through
+ *   its own node's margin bends only beyond it
  */
 export const spreadGapLanes = (
 	paths: readonly Point[][],
@@ -151,8 +306,13 @@ export const spreadGapLanes = (
 	rankSpacing: number,
 	labels: readonly (GapLaneLabel | undefined)[] = [],
 	boxes: Rect[] = [],
+	marginBoxes: readonly GapLaneMarginBox[] = [],
 ): void => {
 	const axis = createLayoutAxis(direction);
+	const marginIndex =
+		marginBoxes.length === 0
+			? undefined
+			: indexFacingMargins(marginBoxes, axis);
 	const runsByGap = new Map<number, GapRun[]>();
 	for (const run of collectGapRuns(paths, direction, rankSpacing, labels)) {
 		const key = toRowKey(run.along);
@@ -217,9 +377,10 @@ export const spreadGapLanes = (
 		}
 		const span = offsets[offsets.length - 1];
 		// The gap is as wide as the nearest rank boundary on either side of the midline
-		// says (a label dagre reserved room for widens it beyond rankSpacing); the stack
-		// has to leave a stub's length clear of both boundaries, or the gap grows.
-		const halfGap = Math.min(
+		// says (a label dagre reserved room for widens it beyond rankSpacing), a visual
+		// margin reaching into it included; the stack has to leave a stub's length clear
+		// of both boundaries, or the gap grows.
+		const halfGapToEnds = Math.min(
 			...ordered.map((run) =>
 				Math.min(
 					Math.abs(run.before - run.along),
@@ -227,6 +388,15 @@ export const spreadGapLanes = (
 				),
 			),
 		);
+		const halfGap =
+			marginIndex === undefined
+				? halfGapToEnds
+				: calcNearestMarginDistance(
+						runs[0].along,
+						runs,
+						halfGapToEnds,
+						marginIndex,
+					);
 		const stub = Math.max(LANE_STUB_LENGTH, rankSpacing * LANE_STUB_RATIO);
 		const room = 2 * halfGap - 2 * stub;
 		plans.push({

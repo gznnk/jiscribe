@@ -12,12 +12,19 @@ import {
 	isOnDeclaredConnectPoint,
 	listEdgeAnchoredEnds,
 } from "@jiscribe/doc/model/objects/types/EndpointRef";
+import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/model/objects/types/text/TextSlot";
+import {
+	type ConnectorUnderLabelText,
+	calcLabelTextLayoutMargin,
+	listConnectorsUnderLabelText,
+} from "@jiscribe/doc/text/label/calcLabelTextLayoutMargin";
 import { isFrame, isTransformedFrame } from "@jiscribe/geometry";
-import type { Frame, Point, Rect } from "@jiscribe/geometry";
+import type { Frame, Point, Rect, TransformedFrame } from "@jiscribe/geometry";
 import {
 	type LayoutDirection,
 	type LayoutEdgeAnchor,
 	type LayoutGraphNode,
+	type LayoutVisualMargin,
 	type TakenEnd,
 	calcFacingSides,
 	computeLayeredLayout,
@@ -29,8 +36,10 @@ import {
 	type LayoutScopeGraph,
 	collectConnectorsInTreeOrder,
 } from "./resolveLayoutScope";
+import { restackUnderLabelTexts } from "./restackUnderLabelTexts";
 import { readCachedObjectOutline } from "../../../../rendering/objects/connector/geometry/endpoints/readCachedObjectOutline";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
+import { isTextStyleState } from "../../../../states/objects/base/TextStyleState";
 import {
 	type ConnectorState,
 	isConnectorState,
@@ -69,6 +78,14 @@ const resolveAnchorShape = (
 };
 
 /**
+ * Whether the object is turned off its box (rotation, a flip): the layout places it by
+ * the untransformed box, so where its outline falls along a side, or what it draws past
+ * it, is no concern of it.
+ */
+const isTransformed = (object: TransformedFrame): boolean =>
+	object.rotation % 360 !== 0 || object.scaleX < 0 || object.scaleY < 0;
+
+/**
  * The stretch of each side the layout may end an edge on (see
  * calcEdgeAnchorOutlineRange), or undefined for an object whose outline and anchor
  * region take nothing off its box, or which is rotated or flipped: the layout places
@@ -82,14 +99,32 @@ const readAnchorRanges = (
 		shape === undefined ||
 		(shape.outline === undefined && shape.anchorRegion === undefined) ||
 		!isTransformedFrame(object) ||
-		object.rotation % 360 !== 0 ||
-		object.scaleX < 0 ||
-		object.scaleY < 0
+		isTransformed(object)
 	) {
 		return undefined;
 	}
 	return calcEdgeAnchorOutlineRanges(shape);
 };
+
+/**
+ * What the object draws past its box, which the layout keeps room for: a `"label"`
+ * type's caption (calcLabelTextLayoutMargin), measured in the font its overlay draws it
+ * in, as the doc layer's layout measures it from the doc.
+ *
+ * @param bounds - The object's box as the layout is given it
+ */
+const readVisualMargin = (
+	object: ObjectState,
+	bounds: Rect,
+	registries: ICanvasRegistries,
+): LayoutVisualMargin | undefined =>
+	calcLabelTextLayoutMargin(
+		registries.objectMapper.getFeatures(object.type)?.text,
+		bounds,
+		isTextStyleState(object) ? object.text?.[BODY_TEXT_SLOT_ID] : undefined,
+		registries.objectTextStyleDefaults.get(object.type, BODY_TEXT_SLOT_ID),
+		isTransformedFrame(object) && isTransformed(object),
+	);
 
 /**
  * The stretch of each side the object's anchor region covers (see
@@ -125,7 +160,7 @@ const clearRoute = (connector: ConnectorState): ConnectorState => {
  * @param srcObjects - The objects as they were before the layout, which every write starts from
  * @param objects - Written in place
  * @param takenEnds - Gains the ends of every connector written as an edge
- * @returns Ids of the objects written
+ * @returns Ids of the objects written, and the connectors whose route runs under the caption of an end's owner
  */
 const layOutGraph = (
 	graph: LayoutScopeGraph,
@@ -134,18 +169,23 @@ const layOutGraph = (
 	objects: Record<string, ObjectState>,
 	takenEnds: TakenEnd[],
 	registries: ICanvasRegistries,
-): string[] => {
+): { writtenIds: string[]; underLabelTexts: ConnectorUnderLabelText[] } => {
 	const shapeById = new Map(
 		graph.nodes.map(({ id }) => [
 			id,
 			resolveAnchorShape(srcObjects[id], registries),
 		]),
 	);
+	const marginById = new Map<string, LayoutVisualMargin>();
 	const laidOut = computeLayeredLayout(
 		graph.nodes.map(({ id, bounds, parentId }) => {
 			const shape = shapeById.get(id);
 			const anchorRanges = readAnchorRanges(srcObjects[id], shape);
 			const anchorBodyRanges = readAnchorBodyRanges(shape);
+			const visualMargin = readVisualMargin(srcObjects[id], bounds, registries);
+			if (visualMargin !== undefined) {
+				marginById.set(id, visualMargin);
+			}
 			return {
 				id,
 				width: bounds.width,
@@ -153,6 +193,7 @@ const layOutGraph = (
 				...(parentId !== undefined ? { parentId } : {}),
 				...(anchorRanges !== undefined ? { anchorRanges } : {}),
 				...(anchorBodyRanges !== undefined ? { anchorBodyRanges } : {}),
+				...(visualMargin !== undefined ? { visualMargin } : {}),
 			};
 		}),
 		graph.edges,
@@ -175,6 +216,7 @@ const layOutGraph = (
 	});
 	const boundsById = new Map(boxes.map(({ id, bounds }) => [id, bounds]));
 	const writtenIds: string[] = [];
+	const routeWrittenIds = new Set<string>();
 	const moveTo = (id: string, before: Rect, after: Rect): void => {
 		const topLeft = toCanvasPoint(after);
 		moveObjectTree(
@@ -225,6 +267,9 @@ const layOutGraph = (
 				: {}),
 		};
 		objects[connector.id] = rerouted;
+		if (keepsRoute) {
+			routeWrittenIds.add(connector.id);
+		}
 		// Kept as ratios of the box, which is what a line added later is placed on.
 		takenEnds.push(
 			...listEdgeAnchoredEnds([rerouted]).map((end) => {
@@ -279,7 +324,15 @@ const layOutGraph = (
 			writtenIds.push(connectorId);
 		}
 	}
-	return writtenIds;
+	return {
+		writtenIds,
+		underLabelTexts: listConnectorsUnderLabelText(
+			laidOut.edges,
+			graph.edges,
+			marginById,
+			(connectorId) => routeWrittenIds.has(connectorId),
+		),
+	};
 };
 
 /**
@@ -379,21 +432,28 @@ const redrawContainerConnectors = (
  * places, container shapes moved (and resized when their geometry is a rect's) around
  * their members, every connector between arranged objects re-anchored on the facing
  * sides with a right-angled route, and self loops left to the engine. Each graph
- * keeps the top-left its nodes and container shapes occupied together. Group frames
- * are not touched; the caller settles them.
+ * keeps the top-left its nodes and container shapes occupied together. A connector
+ * routed through the caption of an end's owner is moved to just beneath that owner in
+ * the stacking order (restackUnderLabelTexts). Group frames are not touched; the
+ * caller settles them.
  *
  * @param graphs - From resolveLayoutScope; their nodes must not overlap
- * @returns The new object map, and the ids of every object written
+ * @returns The new object map and root ids (`state.rootIds` itself when nothing at the root was restacked), the ids of every object written, and the ids of the groups whose children were restacked
  */
 export const applyLayoutResult = (
 	state: CanvasControllerState,
 	graphs: readonly LayoutScopeGraph[],
 	direction: LayoutDirection,
 	registries: ICanvasRegistries,
-): { objects: Record<string, ObjectState>; writtenIds: string[] } => {
+): {
+	objects: Record<string, ObjectState>;
+	rootIds: string[];
+	writtenIds: string[];
+	restackedGroupIds: string[];
+} => {
 	const objects = { ...state.objects };
 	const takenEnds: TakenEnd[] = [];
-	const writtenIds = graphs.flatMap((graph) =>
+	const laidOutGraphs = graphs.map((graph) =>
 		layOutGraph(
 			graph,
 			direction,
@@ -403,8 +463,14 @@ export const applyLayoutResult = (
 			registries,
 		),
 	);
+	const writtenIds = laidOutGraphs.flatMap((laidOut) => laidOut.writtenIds);
 	writtenIds.push(
 		...redrawContainerConnectors(state, graphs, objects, takenEnds, registries),
 	);
-	return { objects, writtenIds };
+	const { rootIds, restackedGroupIds } = restackUnderLabelTexts(
+		state.rootIds,
+		objects,
+		laidOutGraphs.flatMap(({ underLabelTexts }) => underLabelTexts),
+	);
+	return { objects, rootIds, writtenIds, restackedGroupIds };
 };

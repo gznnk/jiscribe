@@ -17,6 +17,15 @@ covers that.
 
 ### Added
 
+- **`layout_objects` makes room for the label below an icon or a pictogram.**
+  The AWS / Azure / Google Cloud icons, the pictograms and the flowchart markers
+  that draw their text below the box are laid out with that label as part of
+  them, so a label no longer crosses its container's border, touches its
+  neighbour's or has a line run across it. A line leaving or entering through
+  its own shape's label is moved to just beneath that shape in the stacking
+  order, so the label reads over it, and the reply names the lines it moved
+  ("sent … back to just beneath the shape whose caption each runs under").
+
 - **`set_style` and `add_objects` take `labelFill`**, the background painted
   behind the label of a shape that draws its text below its box (actor, server,
   the AWS / Azure / Google Cloud icons, …). Omitted or `"auto"`, the label knocks

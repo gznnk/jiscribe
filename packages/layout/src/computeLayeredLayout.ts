@@ -1,13 +1,17 @@
 import type { Point, Rect } from "@jiscribe/geometry";
 
-import { type LabelPlacement, calcLabelPosition } from "./calcLabelPosition";
+import {
+	type LabelPlacement,
+	type OwnMarginLengths,
+	calcLabelPosition,
+} from "./calcLabelPosition";
 import { calcAnchorPoint, calcOrthogonalPath } from "./calcOrthogonalPath";
 import { chooseEdgeAnchors } from "./chooseEdgeAnchors";
 import { createLayoutAxis } from "./LayoutAxis";
 import { reserveTitleBands } from "./reserveTitleBands";
 import { createRowIndex, dropBorderPoints } from "./RowIndex";
 import { runDagre } from "./runDagre";
-import { spreadGapLanes } from "./spreadGapLanes";
+import { type GapLaneMarginBox, spreadGapLanes } from "./spreadGapLanes";
 import {
 	LAYERED_LAYOUT_DEFAULTS,
 	type LaidOutEdge,
@@ -17,12 +21,47 @@ import {
 	type LayoutGraphEdge,
 	type LayoutGraphNode,
 } from "./types";
+import { hasVisualMargin, readVisualMargin } from "./visualMargin";
+
+/** Length of a right-angled route in px. */
+const calcPathLength = (path: readonly Point[]): number =>
+	path
+		.slice(1)
+		.reduce(
+			(sum, end, index) =>
+				sum + Math.abs(end.x - path[index].x) + Math.abs(end.y - path[index].y),
+			0,
+		);
+
+/** Neither end of a route runs through a visual margin. */
+const NO_OWN_MARGIN_LENGTHS: OwnMarginLengths = { start: 0, end: 0 };
+
+/**
+ * A position along a route measured on the route with its own-margin stretches cut
+ * off (see OwnMarginLengths), as a position along the whole route; as given when
+ * nothing is cut off or nothing would be left.
+ */
+const toPositionAlongWholePath = (
+	position: number,
+	path: readonly Point[],
+	ownMarginLengths: OwnMarginLengths,
+): number => {
+	const { start, end } = ownMarginLengths;
+	if (start === 0 && end === 0) {
+		return position;
+	}
+	const pathLength = calcPathLength(path);
+	if (start + end >= pathLength) {
+		return position;
+	}
+	return (start + position * (pathLength - start - end)) / pathLength;
+};
 
 /**
  * Arrange a directed graph in layers (the Sugiyama scheme dagre implements): nodes are
  * ranked so edges point one way, ordered within each rank to reduce crossings, then
- * placed. The result is translated so the drawing's top-left is (0, 0); the caller
- * decides where it goes.
+ * placed. The result is translated so the top-left of the boxes and containers is
+ * (0, 0); the caller decides where it goes.
  *
  * The stages, in order: dagre places the boxes and routes each edge as a polyline
  * (runDagre); each edge's ends are chosen on the facing sides (chooseEdgeAnchors); the
@@ -33,7 +72,10 @@ import {
  *
  * @param nodes - The boxes to place, each with the size it keeps; ids must be distinct.
  *   A node's `anchorRanges` keeps every edge end on it inside the stretch it gives,
- *   and its `anchorBodyRanges` is what the ends are centred and fanned out on
+ *   and its `anchorBodyRanges` is what the ends are centred and fanned out on. Its
+ *   `visualMargin` is room kept around the box as part of the node, which an edge
+ *   ending on the side it grows crosses straight and carries no label in (see
+ *   {@link LayoutGraphNode.visualMargin})
  * @param edges - Directed edges between those ids. Several edges between the same pair are
  *   kept apart; an edge naming an id not in `nodes` is an error. An edge with a `label`
  *   gets room for it, in the gap it crosses or beside a rank it passes
@@ -89,6 +131,16 @@ export const computeLayeredLayout = (
 	const everyBox = [...placed.nodes, ...placed.containers].map(
 		({ bounds }) => bounds,
 	);
+	// Nothing below reads a margin unless some node has one.
+	const hasAnyMargin = nodes.some(({ visualMargin }) =>
+		hasVisualMargin(visualMargin),
+	);
+	const marginBoxes: GapLaneMarginBox[] = hasAnyMargin
+		? placed.nodes.flatMap(({ id, bounds }) => {
+				const margin = nodeById.get(id)?.visualMargin;
+				return hasVisualMargin(margin) ? [{ box: bounds, margin }] : [];
+			})
+		: [];
 	spreadGapLanes(
 		paths,
 		resolvedOptions.direction,
@@ -99,6 +151,7 @@ export const computeLayeredLayout = (
 				: undefined,
 		),
 		everyBox,
+		marginBoxes,
 	);
 
 	const titleHeightById = new Map(
@@ -126,19 +179,28 @@ export const computeLayeredLayout = (
 		everyBox,
 	);
 
-	// A bundle decided where its labels go; any other label is placed from its route.
+	// A bundle decided where its labels go, on the route as if its own-margin
+	// stretches were not there; any other label is placed from its route.
 	const placeLabel = (
 		path: readonly Point[],
 		labelPoint: Point | undefined,
 		label: LayoutGraphEdge["label"],
 		bundlePosition: number | undefined,
 		obstacles: readonly Rect[],
+		ownMarginLengths: OwnMarginLengths,
 	): LabelPlacement | undefined => {
 		if (labelPoint === undefined || label === undefined) {
 			return undefined;
 		}
 		if (bundlePosition !== undefined) {
-			return { position: bundlePosition, offset: 0 };
+			return {
+				position: toPositionAlongWholePath(
+					bundlePosition,
+					path,
+					ownMarginLengths,
+				),
+				offset: 0,
+			};
 		}
 		return calcLabelPosition(
 			path,
@@ -147,6 +209,7 @@ export const computeLayeredLayout = (
 			resolvedOptions.direction,
 			resolvedOptions.rankSpacing,
 			obstacles,
+			ownMarginLengths,
 		);
 	};
 	const laidOutEdges: LaidOutEdge[] = routes.map((route, index) => {
@@ -158,6 +221,18 @@ export const computeLayeredLayout = (
 			route.edge.label,
 			anchor.labelPosition,
 			[route.sourceBounds, route.targetBounds],
+			hasAnyMargin
+				? {
+						start: readVisualMargin(
+							nodeById.get(route.edge.sourceId)?.visualMargin,
+							anchor.source.side,
+						),
+						end: readVisualMargin(
+							nodeById.get(route.edge.targetId)?.visualMargin,
+							anchor.target.side,
+						),
+					}
+				: NO_OWN_MARGIN_LENGTHS,
 		);
 		return {
 			id: route.edge.id,

@@ -1,7 +1,9 @@
 import type { Rect } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
+import { calcAnchorPoint } from "../calcOrthogonalPath";
 import { computeLayeredLayout } from "../computeLayeredLayout";
+import type { LaidOutEdge } from "../types";
 
 const box = (id: string) => ({ id, width: 160, height: 80 });
 
@@ -566,5 +568,244 @@ describe("computeLayeredLayout", () => {
 				[{ id: "e", sourceId: "a", targetId: "ghost" }],
 			),
 		).toThrow("unknown node: ghost");
+	});
+});
+
+describe("computeLayeredLayout with visual margins", () => {
+	/** A 64px icon with a caption hung below it, 40px tall and 184px wide. */
+	const captioned = (id: string, parentId?: string) => ({
+		id,
+		width: 64,
+		height: 64,
+		visualMargin: { bottom: 40, left: 60, right: 60 },
+		...(parentId !== undefined ? { parentId } : {}),
+	});
+	const grown = (
+		bounds: Rect,
+		margin = { bottom: 40, left: 60, right: 60 },
+	) => ({
+		x: bounds.x - margin.left,
+		y: bounds.y,
+		width: bounds.width + margin.left + margin.right,
+		height: bounds.height + margin.bottom,
+	});
+	const boundsOf = (result: ReturnType<typeof computeLayeredLayout>) =>
+		new Map(result.nodes.map(({ id, bounds }) => [id, bounds]));
+	/** The whole route of an edge, both ends included. */
+	const pathOf = (
+		result: ReturnType<typeof computeLayeredLayout>,
+		edgeId: string,
+		sourceId: string,
+		targetId: string,
+	) => {
+		const edge = result.edges.find(({ id }) => id === edgeId) as LaidOutEdge;
+		const bounds = boundsOf(result);
+		return [
+			calcAnchorPoint(bounds.get(sourceId) as Rect, edge.source),
+			...edge.points,
+			calcAnchorPoint(bounds.get(targetId) as Rect, edge.target),
+		];
+	};
+	const fan = [
+		{ id: "ab", sourceId: "a", targetId: "b" },
+		{ id: "ac", sourceId: "a", targetId: "c" },
+		{ id: "ad", sourceId: "a", targetId: "d" },
+	];
+
+	it("keeps each node's margin a node gap from its neighbours and a rank gap from the next rank", () => {
+		const result = computeLayeredLayout(
+			[captioned("a"), captioned("b"), box("c"), captioned("d")],
+			fan,
+			{ nodeSpacing: 80, rankSpacing: 80 },
+		);
+
+		const bounds = boundsOf(result);
+		const rank = ["b", "c", "d"]
+			.map((id) =>
+				id === "c" ? (bounds.get(id) as Rect) : grown(bounds.get(id) as Rect),
+			)
+			.sort((left, right) => left.x - right.x);
+		for (let index = 1; index < rank.length; index += 1) {
+			const previous = rank[index - 1];
+			expect(rank[index].x - (previous.x + previous.width)).toBe(80);
+		}
+		const a = grown(bounds.get("a") as Rect);
+		expect(
+			Math.min(...rank.map(({ y }) => y)) - (a.y + a.height),
+		).toBeGreaterThanOrEqual(80);
+	});
+
+	it("lines a rank's boxes up on their centres, whatever margins they carry", () => {
+		const result = computeLayeredLayout(
+			[box("a"), captioned("b"), box("c")],
+			[
+				{ id: "ab", sourceId: "a", targetId: "b" },
+				{ id: "ac", sourceId: "a", targetId: "c" },
+			],
+		);
+
+		const bounds = boundsOf(result);
+		const b = bounds.get("b") as Rect;
+		const c = bounds.get("c") as Rect;
+		expect(b.y + b.height / 2).toBe(c.y + c.height / 2);
+	});
+
+	it("stacks the nodes of a rank by their margins across it, left to right", () => {
+		const result = computeLayeredLayout(
+			[captioned("a"), captioned("b"), box("c"), captioned("d")],
+			fan,
+			{ direction: "LR", nodeSpacing: 80 },
+		);
+
+		const bounds = boundsOf(result);
+		const rank = ["b", "c", "d"]
+			.map((id) =>
+				id === "c" ? (bounds.get(id) as Rect) : grown(bounds.get(id) as Rect),
+			)
+			.sort((upper, lower) => upper.y - lower.y);
+		for (let index = 1; index < rank.length; index += 1) {
+			const previous = rank[index - 1];
+			expect(rank[index].y - (previous.y + previous.height)).toBe(80);
+		}
+		// The boxes and containers start at the origin; a margin may reach past it.
+		expect(Math.min(...result.nodes.map(({ bounds: { x } }) => x))).toBe(0);
+		expect(Math.min(...result.nodes.map(({ bounds: { y } }) => y))).toBe(0);
+	});
+
+	it("sizes a container around its members' margins", () => {
+		const result = computeLayeredLayout(
+			[captioned("a", "vpc"), captioned("b", "vpc"), captioned("c", "vpc")],
+			[
+				{ id: "ab", sourceId: "a", targetId: "b" },
+				{ id: "ac", sourceId: "a", targetId: "c" },
+			],
+			{},
+			[{ id: "vpc", titleHeight: 24 }],
+		);
+
+		const container = result.containers[0].bounds;
+		for (const { bounds } of result.nodes) {
+			const drawn = grown(bounds);
+			expect(drawn.x).toBeGreaterThan(container.x);
+			expect(drawn.y).toBeGreaterThan(container.y);
+			expect(drawn.x + drawn.width).toBeLessThan(container.x + container.width);
+			expect(drawn.y + drawn.height).toBeLessThan(
+				container.y + container.height,
+			);
+		}
+	});
+
+	it("ends the edges on the box and bends them only past the margin of the side they leave", () => {
+		const result = computeLayeredLayout(
+			["a", "b", "c", "d"].map((id) => captioned(id)),
+			fan,
+		);
+
+		const a = boundsOf(result).get("a") as Rect;
+		for (const { id, targetId } of fan) {
+			const edge = result.edges.find((laidOut) => laidOut.id === id);
+			expect(edge?.source.side).toBe("bottom");
+			const path = pathOf(result, id, "a", targetId);
+			expect(path[0].y).toBe(a.y + a.height);
+			for (const corner of edge?.points ?? []) {
+				expect(corner.y).toBeGreaterThan(a.y + a.height + 40);
+			}
+		}
+	});
+
+	it("keeps the lanes through a gap a stub's length past a margin facing it", () => {
+		// The edges from a overlap sideways in the gap below it and take two lanes. The
+		// tall node beside b and c leaves their tops far below the gap's midline, so only
+		// a's margin holds the lanes back.
+		const result = computeLayeredLayout(
+			[
+				captioned("a"),
+				box("b"),
+				box("c"),
+				box("z"),
+				{ id: "tall", width: 160, height: 240 },
+			],
+			[
+				{ id: "ab", sourceId: "a", targetId: "b" },
+				{ id: "ac", sourceId: "a", targetId: "c" },
+				{ id: "ab2", sourceId: "a", targetId: "b" },
+				{ id: "zt", sourceId: "z", targetId: "tall" },
+			],
+			{ rankSpacing: 40 },
+		);
+
+		const a = boundsOf(result).get("a") as Rect;
+		const corners = result.edges
+			.filter(({ id }) => id !== "zt")
+			.flatMap(({ points }) => points);
+		expect(new Set(corners.map(({ y }) => y)).size).toBeGreaterThan(1);
+		for (const corner of corners) {
+			expect(corner.y - (a.y + a.height + 40)).toBeGreaterThanOrEqual(24);
+		}
+	});
+
+	it("keeps a label off the stretch an end runs through its own node's margin", () => {
+		const label = { width: 30, height: 18 };
+		const result = computeLayeredLayout(
+			[captioned("a"), box("b")],
+			[
+				{ id: "one", sourceId: "a", targetId: "b", label },
+				{ id: "two", sourceId: "a", targetId: "b", label },
+			],
+		);
+
+		// A bundle staggers its labels about the middle of what is left past the margin.
+		const positionsPastMargin = result.edges.map(({ id, labelPosition }) => {
+			const path = pathOf(result, id, "a", "b");
+			const length = path
+				.slice(1)
+				.reduce(
+					(sum, end, index) =>
+						sum +
+						Math.abs(end.x - path[index].x) +
+						Math.abs(end.y - path[index].y),
+					0,
+				);
+			return ((labelPosition ?? 0) * length - 40) / (length - 40);
+		});
+		expect(positionsPastMargin[0]).toBeCloseTo(0.425, 9);
+		expect(positionsPastMargin[1]).toBeCloseTo(0.575, 9);
+	});
+
+	it("lays out a node whose margin is 0 on every side as one given none", () => {
+		const zero = { top: 0, right: 0, bottom: 0, left: 0 };
+		const nodes = [box("a"), box("b"), box("c")];
+		const edges = [
+			{
+				id: "ab",
+				sourceId: "a",
+				targetId: "b",
+				label: { width: 40, height: 20 },
+			},
+			{ id: "ac", sourceId: "a", targetId: "c" },
+			{ id: "bc", sourceId: "b", targetId: "c" },
+		];
+
+		expect(
+			computeLayeredLayout(
+				nodes.map((node) => ({ ...node, visualMargin: zero })),
+				edges,
+			),
+		).toEqual(computeLayeredLayout(nodes, edges));
+	});
+
+	it("refuses a margin that is negative or not a finite number", () => {
+		expect(() =>
+			computeLayeredLayout(
+				[{ ...box("a"), visualMargin: { bottom: -1 } }, box("b")],
+				[],
+			),
+		).toThrow("node a has a visualMargin.bottom");
+		expect(() =>
+			computeLayeredLayout(
+				[{ ...box("a"), visualMargin: { left: Number.NaN } }, box("b")],
+				[],
+			),
+		).toThrow("node a has a visualMargin.left");
 	});
 });

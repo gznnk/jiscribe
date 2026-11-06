@@ -1136,7 +1136,7 @@ export const createCanvasToolDescriptors = (
 	const layoutObjectsTool = defineCanvasTool(
 		"layout_objects",
 		[
-			"Arrange objects automatically as a layered graph: connectors decide the layers (a source before its targets), each layer is ordered to cut crossings, and every connector between placed objects is re-attached to the sides that now face each other with a right-angled route around what lies between, a label given room on its line.",
+			"Arrange objects automatically as a layered graph: connectors decide the layers (a source before its targets), each layer is ordered to cut crossings, and every connector between placed objects is re-attached to the sides that now face each other with a right-angled route around what lies between, a label given room on its line. A shape's caption below its box gets room too, and a connector running through it is moved just beneath the shape.",
 			"Omit ids for the whole canvas; connectors among ids are skipped. A group or a container shape (a titled region shapes sit inside, such as a VPC boundary) keeps its members and is resized around them, and a container holds what lies inside it at the call, so name the contents with it.",
 			"The top-left corner the objects occupied together is kept. An object with no connector goes in the first layer.",
 		].join(" "),

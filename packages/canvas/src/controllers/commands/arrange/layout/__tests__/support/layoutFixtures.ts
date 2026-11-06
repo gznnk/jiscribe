@@ -185,13 +185,52 @@ export const outlinedPlugin: CanvasPlugin = {
 	},
 };
 
+const captionedFeatures = {
+	type: "captioned",
+	geometry: "rect",
+	transform: true,
+	connectable: true,
+	text: "label",
+} as const;
+
+/**
+ * A `text: "label"` type, its caption hung below a 64px box the way the icon sets and
+ * pictograms hang theirs, drawn 14px by default so the type's own defaults are what
+ * the caption is measured in on both sides.
+ */
+export const captionedPlugin: CanvasPlugin = {
+	id: "captioned-plugin",
+	objects: {
+		captioned: defineObject({
+			features: captionedFeatures,
+			validateDoc: () => [],
+			defaults: { type: "captioned", fontSize: 14 },
+			factory: createFrameObjectFactory({
+				type: "captioned",
+				width: 64,
+				height: 64,
+				text: "",
+			}),
+			mapper: createFrameMapper<ObjectDoc, RegionState>(captionedFeatures),
+			stateValidator: () => true,
+			component: () => null,
+			behavior: createFrameBehavior<RegionState>(),
+		}),
+	},
+};
+
+const layoutPlugins = [
+	regionPlugin,
+	portedPlugin,
+	outlinedPlugin,
+	captionedPlugin,
+];
+
 export const layoutRegistries = createCanvasRegistries({
-	plugins: [regionPlugin, portedPlugin, outlinedPlugin],
+	plugins: layoutPlugins,
 });
 
-export const layoutDocOps = createDocOps({
-	plugins: [regionPlugin, portedPlugin, outlinedPlugin],
-});
+export const layoutDocOps = createDocOps({ plugins: layoutPlugins });
 
 const emptyDoc = (): CanvasDoc => ({ version: 1, root: [] });
 
@@ -444,5 +483,119 @@ export const buildRotatedCutTopDoc = (): CanvasDoc => {
 export const buildRotatedOutlinedDoc = (): CanvasDoc => {
 	const doc = buildOutlinedDoc();
 	layoutDocOps.setRotation(doc, ["slanted-1"], 180);
+	return doc;
+};
+
+/**
+ * A region holding three captioned shapes, a load balancer feeding two servers, the
+ * second server feeding rect-1 outside the region, which feeds a captioned shape in a
+ * group with a rect. Every line leaving a captioned shape downward runs under its
+ * caption, so in TB the layout restacks them, the one into the group beneath the group.
+ */
+export const buildCaptionedDoc = (): CanvasDoc => {
+	const doc = emptyDoc();
+	layoutDocOps.addObject(doc, "region", {
+		x: 0,
+		y: 0,
+		width: 700,
+		height: 400,
+	});
+	layoutDocOps.addObject(doc, "captioned", {
+		x: 40,
+		y: 60,
+		text: "Application Load Balancer",
+	});
+	layoutDocOps.addObject(doc, "captioned", {
+		x: 250,
+		y: 60,
+		text: "Web server",
+	});
+	layoutDocOps.addObject(doc, "captioned", {
+		x: 450,
+		y: 60,
+		text: "Web server (standby)",
+	});
+	layoutDocOps.addObject(doc, "rect", {
+		x: 900,
+		y: 100,
+		width: 120,
+		height: 60,
+	});
+	layoutDocOps.addObject(doc, "captioned", {
+		x: 900,
+		y: 500,
+		text: "Database",
+	});
+	layoutDocOps.addObject(doc, "rect", {
+		x: 1100,
+		y: 500,
+		width: 120,
+		height: 60,
+	});
+	layoutDocOps.groupObjects(doc, ["captioned-4", "rect-2"]);
+	layoutDocOps.connect(doc, {
+		sourceId: "captioned-1",
+		targetId: "captioned-2",
+	});
+	layoutDocOps.connect(doc, {
+		sourceId: "captioned-1",
+		targetId: "captioned-3",
+	});
+	layoutDocOps.connect(doc, { sourceId: "captioned-3", targetId: "rect-1" });
+	layoutDocOps.connect(doc, { sourceId: "rect-1", targetId: "captioned-4" });
+	layoutDocOps.connect(doc, { sourceId: "captioned-4", targetId: "rect-2" });
+	return doc;
+};
+
+/**
+ * Six captioned shapes joined in an order restacking changes: every connector goes
+ * just beneath its source, which takes connector-1, from the fifth shape, behind the
+ * other six. Read in the connectors' own order, a second run would read another.
+ */
+export const buildCaptionedFanDoc = (): CanvasDoc => {
+	const doc = emptyDoc();
+	for (let index = 1; index <= 6; index += 1) {
+		layoutDocOps.addObject(doc, "captioned", {
+			x: 0,
+			y: 0,
+			text: `Node number ${index}`,
+		});
+	}
+	for (const [source, target] of [
+		[5, 6],
+		[1, 2],
+		[2, 3],
+		[2, 4],
+		[1, 5],
+		[1, 4],
+		[1, 2],
+	]) {
+		layoutDocOps.connect(doc, {
+			sourceId: `captioned-${source}`,
+			targetId: `captioned-${target}`,
+		});
+	}
+	return doc;
+};
+
+/**
+ * A captioned shape feeding a second one and, through its caption as well, the `east`
+ * point of a `ported` shape: the line kept on the connect point has its route left to
+ * the engine, so only the other is restacked.
+ */
+export const buildCaptionedKeptEndDoc = (): CanvasDoc => {
+	const doc = emptyDoc();
+	layoutDocOps.addObject(doc, "captioned", { x: 0, y: 0, text: "Queue" });
+	layoutDocOps.addObject(doc, "captioned", { x: 300, y: 0, text: "Worker" });
+	layoutDocOps.addObject(doc, "ported", { x: 600, y: 300 });
+	layoutDocOps.connect(doc, {
+		sourceId: "captioned-1",
+		targetId: "ported-1",
+		targetAnchor: "east",
+	});
+	layoutDocOps.connect(doc, {
+		sourceId: "captioned-1",
+		targetId: "captioned-2",
+	});
 	return doc;
 };

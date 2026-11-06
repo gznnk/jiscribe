@@ -1,3 +1,4 @@
+import { sortEdgesByEndOrder } from "@jiscribe/doc/model/objects/utils/sortEdgesByEndOrder";
 import {
 	type LayoutGraphEdge,
 	type PlacementCandidate,
@@ -24,6 +25,7 @@ import { sortObjectIdsByZOrder } from "../../../utils/sortObjectIdsByZOrder";
 export type LayoutScopeGraph = {
 	nodes: ResolvedNode[];
 	containers: ResolvedContainer[];
+	/** In the order the layout reads them (sortEdgesByEndOrder), as the doc layer's layout sorts them. */
 	edges: LayoutGraphEdge[];
 	/** Connectors with both ends on one node of this graph: no edge, but rerouted. */
 	selfLoopIds: string[];
@@ -54,6 +56,22 @@ export const collectConnectorsInTreeOrder = (
 	};
 	visit(state.rootIds);
 	return connectors;
+};
+
+/** Every object's id in tree order: the root's back to front, a group before what it holds. */
+const listIdsInTreeOrder = (state: CanvasControllerState): string[] => {
+	const ids: string[] = [];
+	const visit = (siblingIds: readonly string[]): void => {
+		for (const id of siblingIds) {
+			ids.push(id);
+			const object = state.objects[id];
+			if (isGroupState(object)) {
+				visit(object.childIds);
+			}
+		}
+	};
+	visit(state.rootIds);
+	return ids;
 };
 
 /**
@@ -240,7 +258,11 @@ export const resolveLayoutScope = (
 		collectConnectorsInTreeOrder(state),
 		nodes,
 	);
-	const graph = { nodes, containers, edges };
+	const graph = {
+		nodes,
+		containers,
+		edges: sortEdgesByEndOrder(edges, listIdsInTreeOrder(state)),
+	};
 	const parts = hasSelection
 		? [graph]
 		: splitLayoutGraph(graph).filter(

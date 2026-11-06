@@ -37,4 +37,5 @@ export {
 	type LayoutGraphEdge,
 	type LayoutGraphNode,
 	type LayoutSide,
+	type LayoutVisualMargin,
 } from "./types";

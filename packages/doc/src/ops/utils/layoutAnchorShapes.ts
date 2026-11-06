@@ -3,20 +3,12 @@ import type { LayoutGraphNode } from "@jiscribe/layout";
 
 import type { ObjectRecord } from "./objectAccess";
 import type { DocDefinitions } from "./objectGeometry";
+import { isTransformed } from "./transformFields";
 import {
 	type EdgeAnchorOutlineShape,
 	calcEdgeAnchorOutlineRanges,
 } from "../../model/objects/connector/calcEdgeAnchorOutlineRange";
 import { calcAnchorRegionBodyRanges } from "../../model/objects/connector/convertEdgeAnchorRatio";
-
-/**
- * Whether the doc turns the shape off its box (rotation, a flip): the layout places it
- * by the untransformed box, so where its outline falls along a side is no concern of it.
- */
-const isTransformed = (object: ObjectRecord): boolean =>
-	(typeof object.rotation === "number" && object.rotation % 360 !== 0) ||
-	object.flipX === true ||
-	object.flipY === true;
 
 /**
  * The object's outline and anchor region as its type declares them, called on the box
@@ -44,7 +36,8 @@ export const resolveLayoutAnchorShape = (
 /**
  * The stretch of each side the layout may end an edge on, or undefined for an object
  * whose outline and anchor region take nothing off its box, or which the doc rotates or
- * flips.
+ * flips (isTransformed): the layout places that by its untransformed box, so where its
+ * outline falls along a side is no concern of it.
  */
 export const readLayoutAnchorRanges = (
 	object: ObjectRecord,

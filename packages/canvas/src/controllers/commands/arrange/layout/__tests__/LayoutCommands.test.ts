@@ -2,6 +2,8 @@ import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import { describe, expect, it } from "vitest";
 
 import {
+	buildCaptionedDoc,
+	buildCaptionedFanDoc,
 	buildChainDoc,
 	buildKeptEndsDoc,
 	buildMixedDoc,
@@ -277,7 +279,13 @@ describe("layout commands", () => {
 	});
 
 	it("changes nothing on a second run: no history entry, no save", () => {
-		for (const doc of [buildChainDoc(), buildMixedDoc(), buildRegionDoc()]) {
+		for (const doc of [
+			buildChainDoc(),
+			buildMixedDoc(),
+			buildRegionDoc(),
+			buildCaptionedDoc(),
+			buildCaptionedFanDoc(),
+		]) {
 			const once = runLayout(createState(doc));
 
 			expect(LayoutTopToBottomCommand.execute(once, layoutRegistries)).toBe(
@@ -355,5 +363,88 @@ describe("layout commands", () => {
 			anchor: { kind: "edge", side: "top", t: 0.5 },
 		});
 		expect(connector.routing).toBeUndefined();
+	});
+
+	describe("on shapes hanging a caption below their box", () => {
+		it("arranges and restacks in one commit, which one undo takes back", () => {
+			const state = createState(buildCaptionedDoc());
+
+			const result = runLayout(state);
+
+			expect(result.commitVersion).toBe(state.commitVersion + 1);
+			expect(result.history.past).toHaveLength(state.history.past.length + 1);
+			const rootIndexOf = (id: string) => result.rootIds.indexOf(id);
+			expect(rootIndexOf("connector-1")).toBe(rootIndexOf("captioned-1") - 2);
+			expect(rootIndexOf("connector-2")).toBe(rootIndexOf("captioned-1") - 1);
+			expect(rootIndexOf("connector-5")).toBe(rootIndexOf("group-1") - 1);
+			expect(topLeftOf(result, "captioned-2")).not.toEqual(
+				topLeftOf(state, "captioned-2"),
+			);
+
+			const undone = reducer(result, { type: "COMMAND", commandId: "undo" });
+			expect(undone.rootIds).toEqual(state.rootIds);
+			expect(topLeftOf(undone, "captioned-2")).toEqual(
+				topLeftOf(state, "captioned-2"),
+			);
+		});
+
+		it("restacks a drawing arranged before, its lines still on top, in a commit of its own", () => {
+			const once = runLayout(createState(buildCaptionedDoc()));
+			// Where it was arranged, but with every line on top in the order drawn.
+			const isConnector = (id: string) => id.startsWith("connector-");
+			const arrangedBefore = {
+				...once,
+				rootIds: [
+					...once.rootIds.filter((id) => !isConnector(id)),
+					...once.rootIds.filter(isConnector).sort(),
+				],
+			};
+
+			const result = runLayout(arrangedBefore);
+
+			expect(result.commitVersion).toBe(arrangedBefore.commitVersion + 1);
+			expect(result.rootIds).toEqual(once.rootIds);
+			expect(topLeftOf(result, "captioned-2")).toEqual(
+				topLeftOf(once, "captioned-2"),
+			);
+		});
+
+		it("restacks a line inside a group among the group's children", () => {
+			const doc = buildCaptionedDoc();
+			// connector-5 joins the group's two members; written into the group by hand.
+			const connector = doc.root.find(({ id }) => id === "connector-5");
+			doc.root = doc.root.filter(({ id }) => id !== "connector-5");
+			const group = doc.root.find(({ id }) => id === "group-1") as unknown as {
+				children: unknown[];
+			};
+			group.children.push(connector);
+
+			const result = runLayout(createState(doc));
+
+			const childIdsOf = (target: CanvasControllerState) =>
+				(target.objects["group-1"] as unknown as { childIds: string[] })
+					.childIds;
+			expect(childIdsOf(result)).toEqual([
+				"connector-5",
+				"captioned-4",
+				"rect-2",
+			]);
+			expect(result.rootIds).not.toContain("connector-5");
+
+			// Brought back to the front of the group, it is restacked in a commit of its own.
+			const raised = {
+				...result,
+				objects: {
+					...result.objects,
+					"group-1": {
+						...result.objects["group-1"],
+						childIds: ["captioned-4", "rect-2", "connector-5"],
+					} as ObjectState,
+				},
+			};
+			const again = runLayout(raised);
+			expect(again.commitVersion).toBe(raised.commitVersion + 1);
+			expect(childIdsOf(again)).toEqual(childIdsOf(result));
+		});
 	});
 });

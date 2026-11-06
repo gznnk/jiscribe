@@ -34,6 +34,10 @@ export type LayoutAxis = {
 	aheadSide: LayoutSide;
 	/** The side of a box that faces the previous rank. */
 	behindSide: LayoutSide;
+	/** The side of a box where it starts across the rank axis (`left` in a top-to-bottom flow). */
+	acrossStartSide: LayoutSide;
+	/** The side of a box where it ends across the rank axis. */
+	acrossEndSide: LayoutSide;
 	/** Put a point on the given rank coordinate, in place. */
 	setAlong: (point: Point, along: number) => void;
 	/** Move a point along the rank axis, in place. */
@@ -63,6 +67,8 @@ export const createLayoutAxis = (direction: LayoutDirection): LayoutAxis => {
 		acrossSize: (size) => (vertical ? size.width : size.height),
 		aheadSide: vertical ? "bottom" : "right",
 		behindSide: vertical ? "top" : "left",
+		acrossStartSide: vertical ? "left" : "top",
+		acrossEndSide: vertical ? "right" : "bottom",
 		setAlong: (point, along) => {
 			if (vertical) {
 				point.y = along;

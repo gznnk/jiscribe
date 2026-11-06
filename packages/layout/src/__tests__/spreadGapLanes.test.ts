@@ -71,6 +71,75 @@ describe("spreadGapLanes", () => {
 		expect(container).toEqual({ x: -10, y: 20, width: 120, height: 200 });
 	});
 
+	it("keeps the lanes a stub's length past a visual margin facing the gap over a run", () => {
+		const threeOverlapping = () =>
+			[
+				routeThroughGap(0, 100),
+				routeThroughGap(20, 120),
+				routeThroughGap(40, 140),
+			].map((path) => {
+				path[0].y = 60;
+				path[3].y = 140;
+				return path;
+			});
+		const laneYs = (paths: ReturnType<typeof threeOverlapping>) =>
+			paths.map((path) => path[1].y).sort((a, b) => a - b);
+
+		// A box ending at y = 60 with 10 drawn below it leaves 2 * 30 - 2 * 24 = 12 of
+		// the 32 the stack needs: the gap grows by 20 and the lanes start 24 past it.
+		const facing = threeOverlapping();
+		const captioned = { x: -10, y: 20, width: 30, height: 40 };
+		spreadGapLanes(
+			facing,
+			"TB",
+			80,
+			[],
+			[captioned],
+			[{ box: captioned, margin: { bottom: 10 } }],
+		);
+		expect(laneYs(facing)).toEqual([94, 110, 126]);
+		expect(facing[0][3].y).toBe(160);
+
+		// A margin clear of every run sideways, or on the side away from the gap, is no
+		// concern of the lanes.
+		const aside = threeOverlapping();
+		const asideBox = { x: 300, y: 20, width: 30, height: 40 };
+		const awayBox = { x: -10, y: 20, width: 30, height: 40 };
+		spreadGapLanes(
+			aside,
+			"TB",
+			80,
+			[],
+			[asideBox, awayBox],
+			[
+				{ box: asideBox, margin: { bottom: 10 } },
+				{ box: awayBox, margin: { top: 10 } },
+			],
+		);
+		expect(laneYs(aside)).toEqual([84, 100, 116]);
+
+		// A box farther from the gap whose margin reaches nearer still is found too,
+		// past one between them whose margin reaches no nearer.
+		const reaching = threeOverlapping();
+		const nearBox = { x: -10, y: 20, width: 30, height: 40 };
+		const middleBox = { x: 30, y: 10, width: 20, height: 40 };
+		const farBox = { x: 60, y: 0, width: 30, height: 30 };
+		spreadGapLanes(
+			reaching,
+			"TB",
+			80,
+			[],
+			[nearBox, middleBox, farBox],
+			[
+				{ box: nearBox, margin: { bottom: 5 } },
+				{ box: middleBox, margin: { bottom: 1 } },
+				{ box: farBox, margin: { bottom: 40 } },
+			],
+		);
+		// 70 is 30 short of the midline: 2 * 30 - 2 * 24 = 12 of the 32 needed.
+		expect(laneYs(reaching)).toEqual([94, 110, 126]);
+	});
+
 	it("keeps runs that do not overlap sideways on the midline together", () => {
 		const leftward = routeThroughGap(200, 0);
 		const rightward = routeThroughGap(260, 500);

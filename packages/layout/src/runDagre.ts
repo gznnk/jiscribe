@@ -1,6 +1,7 @@
 import { Graph, layout } from "@dagrejs/dagre";
 import type { Point } from "@jiscribe/geometry";
 
+import { type LayoutAxis, createLayoutAxis } from "./LayoutAxis";
 import type {
 	LaidOutContainer,
 	LaidOutNode,
@@ -9,6 +10,7 @@ import type {
 	LayoutGraphEdge,
 	LayoutGraphNode,
 } from "./types";
+import { readVisualMargin, requireVisualMargin } from "./visualMargin";
 
 /** What dagre routed for one edge, in the drawing's own coordinates. */
 export type DagreEdge = {
@@ -27,10 +29,38 @@ export type DagreResult = {
 };
 
 /**
+ * The size dagre places a node by: its box grown by its visual margin, along the rank
+ * axis by the larger of the two margins there on both sides, so that dagre's centre is
+ * the box's centre on that axis and a rank's boxes stay lined up on their centres
+ * (every later stage tells rows apart by them, see RowIndex).
+ */
+const calcDagreNodeSize = (
+	node: LayoutGraphNode,
+	axis: LayoutAxis,
+): { width: number; height: number } => {
+	const margin = node.visualMargin;
+	const along =
+		axis.alongSize(node) +
+		2 *
+			Math.max(
+				readVisualMargin(margin, axis.behindSide),
+				readVisualMargin(margin, axis.aheadSide),
+			);
+	const across =
+		axis.acrossSize(node) +
+		readVisualMargin(margin, axis.acrossStartSide) +
+		readVisualMargin(margin, axis.acrossEndSide);
+	const { x: width, y: height } = axis.make(across, along);
+	return { width, height };
+};
+
+/**
  * Run dagre's layered layout over the graph, checking the input first, and hand the
- * result back translated so the drawing's top-left is (0, 0).
+ * result back translated so the top-left of the boxes and containers is (0, 0).
  *
- * @param nodes - The boxes to place; ids must be distinct
+ * @param nodes - The boxes to place; ids must be distinct. A node's visual margin is
+ *   placed as part of it (see calcDagreNodeSize), the box set at the margin's distance
+ *   from where dagre's box starts across the rank axis
  * @param edges - Directed edges between the nodes; one naming an unknown node or a
  *   container is an error, a self loop is left out
  * @param options - Direction and gaps, every field present
@@ -52,6 +82,7 @@ export const runDagre = (
 		marginy: 0,
 	});
 	graph.setDefaultEdgeLabel(() => ({}));
+	const axis = createLayoutAxis(options.direction);
 	const containerIds = new Set<string>();
 	for (const container of containers) {
 		if (containerIds.has(container.id)) {
@@ -76,8 +107,9 @@ export const runDagre = (
 		if (nodeIds.has(node.id) || containerIds.has(node.id)) {
 			throw new Error(`duplicate node id: ${node.id}`);
 		}
+		requireVisualMargin(node);
 		nodeIds.add(node.id);
-		graph.setNode(node.id, { width: node.width, height: node.height });
+		graph.setNode(node.id, calcDagreNodeSize(node, axis));
 		if (node.parentId !== undefined) {
 			requireContainer(node.id, node.parentId);
 			graph.setParent(node.id, node.parentId);
@@ -116,17 +148,24 @@ export const runDagre = (
 	layout(graph);
 
 	// dagre hands back centres, offset by whatever margin its ranking left; pin the
-	// drawing's top-left to the origin so the caller works in one known coordinate frame.
+	// top-left of the boxes and containers to the origin so the caller works in one
+	// known coordinate frame (a visual margin may reach past it).
 	const centredNodes = nodes.map((node) => {
-		const placed = graph.node(node.id) as { x: number; y: number };
+		const placed = graph.node(node.id) as {
+			x: number;
+			y: number;
+			width: number;
+			height: number;
+		};
+		const topLeft = axis.make(
+			axis.across(placed) -
+				axis.acrossSize(placed) / 2 +
+				readVisualMargin(node.visualMargin, axis.acrossStartSide),
+			axis.along(placed) - axis.alongSize(node) / 2,
+		);
 		return {
 			id: node.id,
-			bounds: {
-				x: placed.x - node.width / 2,
-				y: placed.y - node.height / 2,
-				width: node.width,
-				height: node.height,
-			},
+			bounds: { ...topLeft, width: node.width, height: node.height },
 		};
 	});
 	const centredContainers = containers.map((container) => {

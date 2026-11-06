@@ -514,14 +514,15 @@ const applyDocChange = (
 		}
 		case "layoutObjects": {
 			const { kind: _kind, ids, ...params } = op;
-			const { nodeIds, connectorIds } = docOps.layoutObjects(
-				draftDoc,
-				ids,
-				params,
-			);
-			return connectorIds.length === 0
-				? `laid out ${quoteIds(nodeIds)} (no connectors between them)`
-				: `laid out ${quoteIds(nodeIds)}, re-anchoring ${quoteIds(connectorIds)}`;
+			const { nodeIds, connectorIds, restackedConnectorIds } =
+				docOps.layoutObjects(draftDoc, ids, params);
+			const laidOut =
+				connectorIds.length === 0
+					? `laid out ${quoteIds(nodeIds)} (no connectors between them)`
+					: `laid out ${quoteIds(nodeIds)}, re-anchoring ${quoteIds(connectorIds)}`;
+			return restackedConnectorIds.length === 0
+				? laidOut
+				: `${laidOut}; sent ${quoteIds(restackedConnectorIds)} back to just beneath the shape whose caption each runs under`;
 		}
 		case "dissolveGroups": {
 			const releasedIds = docOps.dissolveGroups(draftDoc, op.ids);

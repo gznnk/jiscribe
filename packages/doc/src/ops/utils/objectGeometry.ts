@@ -10,7 +10,10 @@ import { applyRotation } from "./transformFields";
 import { ConnectorFeatures } from "../../model/objects/connector/ConnectorDoc";
 import type { GeometryType } from "../../model/objects/types/GeometryType";
 import { isRichText } from "../../model/objects/types/text/RichText";
-import { BODY_TEXT_SLOT_ID } from "../../model/objects/types/text/TextSlot";
+import {
+	BODY_TEXT_SLOT_ID,
+	type TextSlotStyle,
+} from "../../model/objects/types/text/TextSlot";
 import { isTextVerticalBasis } from "../../model/objects/types/text/TextVerticalBasis";
 import { calcPointDocDrawnTopLeft } from "../../model/objects/utils/pointDocDrawnTopLeft";
 import { roundDocCoordinate } from "../../model/objects/utils/roundDocNumbers";
@@ -50,6 +53,19 @@ const readPoints = (value: unknown): Point[] =>
 	Array.isArray(value) ? (value as Point[]) : [];
 
 /**
+ * The type's own defaults for its body slot, read off its definition in the order the
+ * canvas's ObjectTextStyleDefaultsRegistry reads a registered one; undefined for a
+ * type that declares none.
+ */
+export const readBodyTextStyleDefaults = (
+	definition: ObjectDocDefinition,
+): TextSlotStyle | undefined =>
+	readTextSlotStyleDefaults(
+		extractTextSlotStyleDefaults(definition.features, definition.defaults),
+		BODY_TEXT_SLOT_ID,
+	);
+
+/**
  * Font the body of `object` is measured with: the type's own body defaults resolved
  * into whatever the object states itself ({@link resolveDocBodyFont}), the defaults
  * being the one part of it this layer has to look up.
@@ -58,13 +74,7 @@ const resolveBodyFont = (
 	object: ObjectRecord,
 	definition: ObjectDocDefinition,
 ): TextMeasureFont =>
-	resolveDocBodyFont(
-		object,
-		readTextSlotStyleDefaults(
-			extractTextSlotStyleDefaults(definition.features, definition.defaults),
-			BODY_TEXT_SLOT_ID,
-		),
-	);
+	resolveDocBodyFont(object, readBodyTextStyleDefaults(definition));
 
 /**
  * Fields of an object that cannot move its derived height, so that changing one

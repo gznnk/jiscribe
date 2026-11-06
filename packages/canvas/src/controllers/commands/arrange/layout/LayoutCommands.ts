@@ -27,8 +27,9 @@ const LAYOUT_COMMAND_LABELS: Record<
 };
 
 /**
- * Arrange what resolveLayoutScope picks, or return `state` itself when that would
- * change nothing, so running it twice leaves no empty history entry and asks for no save.
+ * Arrange what resolveLayoutScope picks, placement and stacking order in one commit, or
+ * return `state` itself when that would change neither, so running it twice leaves no
+ * empty history entry and asks for no save.
  */
 const executeLayout = (
 	state: CanvasControllerState,
@@ -39,7 +40,7 @@ const executeLayout = (
 	if (graphs.length === 0) {
 		return state;
 	}
-	const { objects, writtenIds } = applyLayoutResult(
+	const { objects, rootIds, writtenIds, restackedGroupIds } = applyLayoutResult(
 		state,
 		graphs,
 		direction,
@@ -49,11 +50,12 @@ const executeLayout = (
 	// (reconcileConnectorVerticesIfCommitted): the corners stored last time are the
 	// drawn ones, not the layout's.
 	const laidOut = reconcileConnectorVertices(
-		updateAffectedGroupBounds({ ...state, objects }, writtenIds),
+		updateAffectedGroupBounds({ ...state, objects, rootIds }, writtenIds),
 		registries,
 	);
 	if (
-		writtenIds.every((id) =>
+		isSameJsonValue(laidOut.rootIds, state.rootIds) &&
+		[...writtenIds, ...restackedGroupIds].every((id) =>
 			isSameJsonValue(laidOut.objects[id], state.objects[id]),
 		)
 	) {

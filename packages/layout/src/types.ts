@@ -8,12 +8,28 @@ export type LayoutSide = "top" | "right" | "bottom" | "left";
 /** A stretch of one side, as ratios of the side measured as in {@link LayoutEdgeAnchor}; `min <= max`. */
 export type LayoutAnchorRange = { min: number; max: number };
 
+/**
+ * How far in px a node is drawn past each side of its box (a caption hung below it).
+ * A side left out is 0.
+ */
+export type LayoutVisualMargin = Partial<Record<LayoutSide, number>>;
+
 export type LayoutGraphNode = {
 	id: string;
 	/** Width of the box the node occupies, in px; the layout never resizes it. */
 	width: number;
 	/** Height of the box, in px. */
 	height: number;
+	/**
+	 * What the node draws outside its box, which the layout keeps room for as part of
+	 * the node: neighbouring nodes, the border of the container around it and other
+	 * edges' routes stay out of the box grown by it. An edge ending on a side it grows
+	 * runs straight through that much before its first bend, and its label is not put
+	 * there. The box is still what is placed and what edges end on, and the box's centre
+	 * is what a rank is lined up on. Each side must be a finite number of 0 or more; left
+	 * out, the node is its box.
+	 */
+	visualMargin?: LayoutVisualMargin;
 	/** Id of the container the node sits inside, when it does; must be among the containers. */
 	parentId?: string;
 	/**
@@ -77,7 +93,10 @@ export const LAYERED_LAYOUT_DEFAULTS: Required<LayeredLayoutOptions> = {
 
 export type LaidOutNode = {
 	id: string;
-	/** Top-left of the node's box; the whole drawing starts at (0, 0). */
+	/**
+	 * The node's box. The boxes and containers together start at (0, 0); a node's
+	 * {@link LayoutGraphNode.visualMargin} may reach past that into negative coordinates.
+	 */
 	bounds: Rect;
 };
 
@@ -105,15 +124,17 @@ export type LaidOutEdge = {
 	target: LayoutEdgeAnchor;
 	/**
 	 * Corners of a right-angled route from the source side to the target side that
-	 * stays clear of the boxes in between and of the other routes crossing the same gaps
-	 * (see spreadGapLanes), excluding the two ends themselves; empty when the edge runs
-	 * straight.
+	 * stays clear of the boxes in between, of their visual margins and of the other
+	 * routes crossing the same gaps (see spreadGapLanes), excluding the two ends
+	 * themselves; empty when the edge runs straight. It crosses the visual margin of
+	 * the side it ends on straight, its first and last corners lying past it.
 	 */
 	points: Point[];
 	/**
 	 * Where along the route the label sits, 0 at the source and 1 at the target: the spot
 	 * the layout kept free for it, or the nearest stretch that holds it clear of every
-	 * corner (see calcLabelPosition). Only for an edge given a `label`.
+	 * corner (see calcLabelPosition), never on the stretch an end runs through its own
+	 * node's visual margin. Only for an edge given a `label`.
 	 */
 	labelPosition?: number;
 	/**

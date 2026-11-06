@@ -61,6 +61,38 @@ describe("calcLabelPosition", () => {
 		expect(placement).toEqual({ position: 0.125, offset: 0 });
 	});
 
+	it("puts no label on the stretch an end runs through its own node's visual margin", () => {
+		const straight = [
+			{ x: 0, y: 0 },
+			{ x: 0, y: 200 },
+		];
+		expect(
+			calcLabelPosition(straight, { x: 0, y: 100 }, size, "TB", 80),
+		).toEqual({ position: 0.5, offset: 0 });
+		// The first 100px run through the source's margin: the middle of the rest.
+		expect(
+			calcLabelPosition(straight, { x: 0, y: 100 }, size, "TB", 80, [], {
+				start: 100,
+				end: 0,
+			}),
+		).toEqual({ position: 0.75, offset: 0 });
+		// What is left past both margins is too short to hold it: beside the middle of
+		// the rest, not of the whole.
+		expect(
+			calcLabelPosition(straight, { x: 0, y: 100 }, size, "TB", 80, [], {
+				start: 150,
+				end: 30,
+			}),
+		).toEqual({ position: 0.8, offset: 26 });
+		// Margins that take the whole route leave it to the whole route.
+		expect(
+			calcLabelPosition(straight, { x: 0, y: 100 }, size, "TB", 80, [], {
+				start: 120,
+				end: 80,
+			}),
+		).toEqual({ position: 0.5, offset: 0 });
+	});
+
 	it("ignores a run in another gap", () => {
 		// The label belongs to a gap at y = 200: no run there, so the longest holding
 		// segment (the run, 100 long) takes it.

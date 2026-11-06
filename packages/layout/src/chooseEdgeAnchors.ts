@@ -47,7 +47,11 @@ const BUNDLE_SIDE_SHARE = 0.8;
 /** How far along the lines the labels of a bundle are staggered from each other. */
 const BUNDLE_LABEL_STAGGER = 0.15;
 
-/** Where along a line a bundle's label may sit, so the stagger keeps clear of the ends. */
+/**
+ * Where along a line a bundle's label may sit, so the stagger keeps clear of the ends;
+ * measured on the line less the stretch an end runs through its own node's visual
+ * margin, which computeLayeredLayout maps back onto the whole line.
+ */
 const BUNDLE_LABEL_RANGE = { min: 0.2, max: 0.8 } as const;
 
 type Range = Readonly<LayoutAnchorRange>;

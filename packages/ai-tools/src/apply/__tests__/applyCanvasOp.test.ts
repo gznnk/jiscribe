@@ -5,11 +5,15 @@ import {
 	type CanvasDocPlugin,
 	type ObjectDoc,
 } from "@jiscribe/doc";
+import {
+	createEstimateTextMeasurement,
+	offerTextMeasurement,
+} from "@jiscribe/doc/unstable";
 import { containerDocPlugin } from "@jiscribe/plugin-container-shapes/doc";
 import { flowchartDocPlugin } from "@jiscribe/plugin-flowchart-shapes/doc";
 import { markdownDocPlugin } from "@jiscribe/plugin-markdown-shape/doc";
 import { umlDocPlugin } from "@jiscribe/plugin-uml-shapes/doc";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
 import type { AiDocOp } from "../../canvasOps";
 import { createCanvasToolSet } from "../../canvasToolSet";
@@ -26,6 +30,12 @@ const docPlugins: readonly CanvasDocPlugin[] = [
 ];
 
 const docOps = createDocOps({ plugins: docPlugins });
+
+// layoutObjects measures a caption hung below a box to keep room for it; a
+// proportional answer is enough here.
+beforeAll(() => {
+	offerTextMeasurement(createEstimateTextMeasurement());
+});
 
 /** The built-in tools alone; the plugin tools have a suite of their own (applyCanvasOpObjectTool) */
 const builtinToolSet = createCanvasToolSet(null, []);
@@ -452,6 +462,33 @@ describe("applyCanvasOp", () => {
 		expect(rootObject(currentDoc(), "connector-1")).not.toHaveProperty(
 			"labelFill",
 		);
+	});
+
+	it("says in the result sentence which connectors layoutObjects sent back beneath a caption", () => {
+		const { apply, currentDoc } = createFakeDocBridge();
+		apply({
+			kind: "addObjects",
+			objects: [
+				{ type: "cross", x: 0, y: 0, text: "join" },
+				{ type: "rect", x: 300, y: 300 },
+			],
+		});
+		apply({
+			kind: "connectMany",
+			entries: [{ sourceId: "cross-1", targetId: "rect-1" }],
+		});
+
+		const result = apply({ kind: "layoutObjects", direction: "TB" });
+
+		expect(result).toMatchObject({
+			ok: true,
+			text: 'laid out "cross-1", "rect-1", re-anchoring "connector-1"; sent "connector-1" back to just beneath the shape whose caption each runs under',
+		});
+		expect(currentDoc().root.map(({ id }) => id)).toEqual([
+			"connector-1",
+			"cross-1",
+			"rect-1",
+		]);
 	});
 
 	it("writes the paint opacities onto the object", () => {
