@@ -6,7 +6,6 @@
 // presentation / state / stencil.
 import { createFrameObjectDoc } from "@jiscribe/canvas-sdk/doc";
 import type { CanvasDocPlugin, ObjectDocDefinition } from "@jiscribe/doc";
-import { calcOutsideBoxTextRegion } from "@jiscribe/doc";
 
 import { ACTOR_DOC_DEFAULTS, ActorFeatures } from "./schema/actor/ActorDoc";
 import {
@@ -76,7 +75,6 @@ const BELOW_LABEL_NOTE =
 
 export const actorDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: ActorFeatures,
-	textRegion: calcOutsideBoxTextRegion,
 	defaults: ACTOR_DOC_DEFAULTS,
 	description: `Actor (stick figure) shape, typically used for users/roles in use-case diagrams or stakeholders in business diagrams. ${RECT_GEOMETRY_NOTE} The stick figure fills the whole box. "fill" paints the head circle only — the limbs are strokes and take no fill. ${BELOW_LABEL_NOTE} A portrait aspect ratio (e.g. 80x100) looks best.`,
 	summary: "user, role, stakeholder",
@@ -99,7 +97,6 @@ export const cloudDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 /** `outline` rounds the rack's corners. */
 export const serverDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: ServerFeatures,
-	textRegion: calcOutsideBoxTextRegion,
 	outline: serverOutline,
 	defaults: SERVER_DOC_DEFAULTS,
 	description: `Server rack shape (a box divided into stacked units, each with a status light), typically used for hosts, nodes and long-running processes in architecture diagrams. ${RECT_GEOMETRY_NOTE} ${BELOW_LABEL_NOTE} A portrait aspect ratio (e.g. 90x110) looks best. Prefer "package" for something that is deployed rather than something that runs.`,
@@ -152,7 +149,6 @@ export const fileDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
  */
 export const packageDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: PackageFeatures,
-	textRegion: calcOutsideBoxTextRegion,
 	outline: packageOutline,
 	defaults: PACKAGE_DOC_DEFAULTS,
 	description: `Isometric box shape, typically used for libraries, build artifacts and deployment units. ${RECT_GEOMETRY_NOTE} ${BELOW_LABEL_NOTE} The hexagon is a cube in isometric projection, so it reads as a cube only when the box is slightly taller than wide (e.g. 95x110); a square box widens it. Prefer "server" for something that runs rather than something that is deployed.`,
@@ -161,7 +157,6 @@ export const packageDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 
 export const envelopeDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: EnvelopeFeatures,
-	textRegion: calcOutsideBoxTextRegion,
 	outline: envelopeOutline,
 	defaults: ENVELOPE_DOC_DEFAULTS,
 	description: `Closed envelope shape, typically used for a single message or event. ${RECT_GEOMETRY_NOTE} ${BELOW_LABEL_NOTE} A landscape aspect ratio (e.g. 120x84) looks best. Prefer "queue" for the buffer messages sit in rather than for one message.`,
@@ -170,7 +165,6 @@ export const envelopeDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 
 export const queueDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: QueueFeatures,
-	textRegion: calcOutsideBoxTextRegion,
 	outline: queueOutline,
 	defaults: QUEUE_DOC_DEFAULTS,
 	description: `Queue shape (a row of cells), typically used for job queues, message queues and topics. ${RECT_GEOMETRY_NOTE} ${BELOW_LABEL_NOTE} It carries no direction mark, so which end is the head is whatever the connectors say. A wide, short aspect ratio (e.g. 160x70) looks best.`,
@@ -183,7 +177,6 @@ export const queueDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
  */
 export const gearDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: GearFeatures,
-	textRegion: calcOutsideBoxTextRegion,
 	outline: gearOutline,
 	defaults: GEAR_DOC_DEFAULTS,
 	description: `Gear shape, typically used for services, batch jobs and daemons — work that runs on its own rather than being called through a UI. ${RECT_GEOMETRY_NOTE} ${BELOW_LABEL_NOTE} A square aspect ratio (e.g. 100x100) looks best; a stretched box gives a stretched gear.`,
@@ -197,7 +190,6 @@ export const gearDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
  */
 export const lockDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: LockFeatures,
-	textRegion: calcOutsideBoxTextRegion,
 	outline: lockOutline,
 	defaults: LOCK_DOC_DEFAULTS,
 	description: `Padlock shape, typically used for authentication steps and protected resources. ${RECT_GEOMETRY_NOTE} ${BELOW_LABEL_NOTE} A portrait aspect ratio (e.g. 80x100) looks best. Prefer "shield" for a boundary that other things sit behind.`,

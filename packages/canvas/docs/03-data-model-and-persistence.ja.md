@@ -92,6 +92,11 @@ URL と、同じバイト列の `data:` URI の 2 つで、後者が書き出し
   装飾のタイポグラフィ（`fontWeight` / `fontStyle` / `textDecoration`）を持たない——それを決めるのは
   図形自身の構文だから。どのフィールドを受け付けるかの正本は `textStyleKeysOf`、root 形式の単一本文か
   の判定は `isSingleBodyText`。
+- **箱の下にラベルを吊る図形（server / actor / awsIcon など）** … `features.text: "label"` を宣言し、
+  `"body"` の図形と同じフラットな群から `verticalAlign` と `textVerticalBasis` を除き（ラベルの箱は
+  文字から大きさが決まり、ブロックを動かす余白が無い）、ラベルの後ろに塗る色 `labelFill` を足して持つ
+  （`LabelTextStyleDoc`。省略・`"auto"` は文書の面の色で抜く）。ラベルの位置は型ではなく core が
+  決める（`calcLabelTextRegion`）ので、この型はテキスト領域を宣言しない。
 - **複数スロットの図形（uml-shapes の record など）** … `features.text: "slots"` を宣言し、`text` を
   **スロット ID キーのオブジェクト**で持つ（`text: { name: {…}, rows: {…} }`。各スロットは
   `TextSlot` = 内容＋タイポグラフィで、スロット集合は型ごとにクローズド）。

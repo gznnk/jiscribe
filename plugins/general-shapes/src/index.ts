@@ -10,7 +10,7 @@
 // ObjectFactory / validate*Doc / Mapper / validate*State. The outline parts
 // (OUTLINE_CURVE_SEGMENTS / centeredPolygonOutline / calcRoundedRectOutline) come
 // from `@jiscribe/canvas-sdk/doc`, the presentation parts (createFrameObject /
-// calcBelowLabelTextRegion / readTextSlot) through `@jiscribe/canvas-sdk`.
+// BelowLabelHitArea / readTextSlot) through `@jiscribe/canvas-sdk`.
 // The headless parse entry point is ./doc (generalDocPlugin).
 // Shapes get one folder each (schema/<id>/, state/<id>/, presentation/<Pascal>/), and
 // parts shared by several shapes live in each layer's shared/.

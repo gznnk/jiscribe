@@ -136,6 +136,23 @@ describe("text set in a font the canvas does not ship", () => {
 		);
 	});
 
+	it("finds the family of a label hung below its box", () => {
+		const warnings = findFontWarnings(
+			docOf({
+				id: "web",
+				type: "server",
+				x: 0,
+				y: 0,
+				width: 90,
+				height: 110,
+				text: "Web",
+				fontFamily: UNSHIPPED,
+			}),
+		);
+		expect(warnings).toHaveLength(1);
+		expect(warnings[0].message).toMatch(/: web; /);
+	});
+
 	it("passes over objects with no text to measure, and a markdown body", () => {
 		expect(
 			findFontWarnings(

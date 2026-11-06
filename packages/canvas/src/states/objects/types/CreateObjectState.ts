@@ -5,6 +5,7 @@ import type { Brand, Prettify } from "@jiscribe/utility-types";
 
 import type { ArrowStyleState } from "../base/ArrowStyleState";
 import type { FillStyleState } from "../base/FillStyleState";
+import type { LabelTextStyleState } from "../base/LabelTextStyleState";
 import type { ObjectState } from "../base/ObjectState";
 import type { RadiusStyleState } from "../base/RadiusStyleState";
 import type { StrokeStyleState } from "../base/StrokeStyleState";
@@ -44,8 +45,10 @@ type GeometryState<T extends ObjectFeatures> =
  * - Uses Frame instead of Rect/Ellipse (runtime representation)
  * - Uses TransformState instead of TransformDoc (pre-computed transform with UI properties)
  * - Includes Brand to prevent direct assignment from/to Doc types
- * - Mixes in the same TextStyleState for both text shapes ("body" / "slots"),
- *   the state having one normal form regardless of how the doc spells its text
+ * - Mixes in the same TextStyleState for the text shapes ("body" / "label" /
+ *   "slots"), the state having one normal form regardless of how the doc spells
+ *   its text; a "label" type carries its caption's own fields beside it
+ *   (LabelTextStyleState)
  *
  * @template T - ObjectFeatures configuration (shared with Doc)
  * @template S - Unique symbol for branding (prevents direct assignment between types)
@@ -77,7 +80,8 @@ export type CreateObjectState<
 		(T["transform"] extends true ? TransformState : object) &
 		(T["stroke"] extends true ? StrokeStyleState : object) &
 		(T["fill"] extends true ? FillStyleState : object) &
-		(T["text"] extends "body" | "slots" ? TextStyleState : object) &
+		(T["text"] extends "body" | "label" | "slots" ? TextStyleState : object) &
+		(T["text"] extends "label" ? LabelTextStyleState : object) &
 		(T["radius"] extends true ? RadiusStyleState : object) &
 		(T["arrow"] extends true ? ArrowStyleState : object) &
 		Brand<S> &

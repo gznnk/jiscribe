@@ -27,10 +27,10 @@ export {
 } from "./schema/outlineHelpers";
 export { calcRoundedRectOutline } from "./schema/calcRoundedRectOutline";
 
-// Typography defaults for a shape whose drawing fills its box and so hangs its
-// label underneath (calcBelowLabelTextRegion in `.`). Spread into that shape's
-// doc defaults: the layout measures the label with these, so a shape that draws
-// with different ones gets a box that does not fit its text.
+// Typography defaults for a `features.text: "body"` shape placing a label sized
+// from its own text itself (calcLabelBoxSize in `.`). Spread into that shape's doc
+// defaults. A `features.text: "label"` type spreads `@jiscribe/doc`'s
+// LABEL_TEXT_STYLE_DEFAULTS instead.
 export { BELOW_LABEL_STYLE_DEFAULTS } from "./schema/belowLabelStyleDefaults";
 
 // Icon sets shipped as generated data (AWS Architecture Icons and the like): the

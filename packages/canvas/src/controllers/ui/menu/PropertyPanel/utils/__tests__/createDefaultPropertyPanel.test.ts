@@ -1,6 +1,7 @@
 import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
 import { describe, expect, it } from "vitest";
 
+import { hasSelectedLabelText } from "../../../../../utils/hasSelectedLabelText";
 import { createDefaultPropertyPanel } from "../createDefaultPropertyPanel";
 
 const features = (extra: Partial<ObjectFeatures>): ObjectFeatures => ({
@@ -133,6 +134,37 @@ describe("createDefaultPropertyPanel", () => {
 			"textAlign",
 			"verticalAlign",
 		]);
+	});
+
+	it("offers a caption's background under label-style, offered while there is caption text, and no vertical alignment", () => {
+		const sections = createDefaultPropertyPanel(
+			features({
+				type: "server",
+				transform: true,
+				stroke: true,
+				fill: true,
+				text: "label",
+			}),
+		);
+
+		expect(sectionIds(sections)).toEqual([
+			"layout",
+			"fill",
+			"stroke",
+			"label-style",
+			"text",
+		]);
+		expect(itemsOf(sections, "label-style")).toEqual(["labelBackgroundColor"]);
+		expect(itemsOf(sections, "text")).toEqual([
+			"fontFamily",
+			"fontSize",
+			"fontColor",
+			"textFormat",
+			"textAlign",
+		]);
+		expect(
+			sections.find((section) => section.id === "label-style")?.isShown,
+		).toBe(hasSelectedLabelText);
 	});
 
 	it("derives nothing from a type that declares no feature at all", () => {

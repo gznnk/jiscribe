@@ -16,8 +16,9 @@ export const GROUP_MARKER_DIRECTION_DEFAULT: GroupMarkerDirection = "left";
 export const GROUP_MARKER_TIP_POSITION_DEFAULT = 0.5;
 
 /**
- * Empty band between the tip and the label box. Wider than the below-label gap
- * of the pictograms (BELOW_LABEL_GAP = 4), because the tip is a point rather
+ * Empty band between the tip and the label box. Wider than the gap a
+ * `features.text: "label"` caption hangs under its box by (LABEL_TEXT_GAP in
+ * `@jiscribe/doc`), because the tip is a point rather
  * than a full edge and a label pressed against it reads as touching the marker.
  */
 export const GROUP_MARKER_LABEL_GAP = 8;

@@ -31,5 +31,5 @@ where its text actually goes.
 - For `cloud`, text is placed in a reduced central region inside the bumps, so give the shape generous width/height.
 - For `document` and `callout`, text sits above the bottom wave/tail band.
 - For `multiDocument`, text is confined to the front (bottom-left) sheet, so give the shape generous size.
-- For `actor`, `server`, `package`, `envelope`, `queue`, `gear`, `lock`, `extract` and `cross`, the drawing fills the whole box and the text is drawn as a label below it, auto-sized to the text itself — so the box does not need to be widened for a long name, and omitting the text leaves a bare figure.
+- For `actor`, `server`, `package`, `envelope`, `queue`, `gear`, `lock`, `extract`, `cross`, `awsIcon`, `azureIcon` and `gcpIcon`, the drawing fills the whole box and the text is drawn as a label below it, auto-sized to the text itself — so the box does not need to be widened for a long name, and omitting the text leaves a bare figure. The label is painted on `labelFill` (default `"auto"`, the page's color), so a connector running under it is hidden there; set `"transparent"` to let it show through.
 - **`record` is the exception**: its text is a set of named slots, and the typography lives inside each slot rather than on the shape (see "`record` — a titled box with compartments").

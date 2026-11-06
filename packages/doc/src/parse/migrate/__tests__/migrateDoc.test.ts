@@ -4,8 +4,9 @@ import type { ObjectDocDefinition } from "../../../plugin/ObjectDocDefinition";
 import { createDocValidatorRegistry } from "../../../registries/ObjectDocValidatorRegistry";
 import { migrateDoc } from "../migrateDoc";
 
-// The two text kinds the migrations care about beyond the built-in "body": no
-// built-in type holds a source body or named slots, so both come from a plugin.
+// The text kinds the migrations care about beyond the built-in "body": no
+// built-in type holds a source body, a caption or named slots, so they come from
+// a plugin.
 const markdownDefinition: ObjectDocDefinition = {
 	features: {
 		type: "markdown",
@@ -26,11 +27,25 @@ const slottedDefinition: ObjectDocDefinition = {
 	validateDoc: () => [],
 };
 
+const captionedDefinition: ObjectDocDefinition = {
+	features: {
+		type: "captioned",
+		geometry: "rect",
+		transform: true,
+		text: "label",
+	},
+	validateDoc: () => [],
+};
+
 const registry = createDocValidatorRegistry({
 	plugins: [
 		{
 			id: "text-kinds-plugin",
-			objects: { markdown: markdownDefinition, slotted: slottedDefinition },
+			objects: {
+				markdown: markdownDefinition,
+				slotted: slottedDefinition,
+				captioned: captionedDefinition,
+			},
 		},
 	],
 });
@@ -77,6 +92,18 @@ describe("migrateDoc", () => {
 		).toEqual([
 			["root[0].text", "o1"],
 			["root[1].text", "o2"],
+		]);
+	});
+
+	it("drops the vertical placement off a caption type", () => {
+		const data = doc([
+			{ ...shape({ text: "a", verticalAlign: "top" }), type: "captioned" },
+		]);
+		const result = migrateDoc(data, registry);
+		const root = (result.data as { root: Record<string, unknown>[] }).root;
+		expect("verticalAlign" in root[0]).toBe(false);
+		expect(result.warnings.map((warning) => warning.path)).toEqual([
+			"root[0].verticalAlign",
 		]);
 	});
 

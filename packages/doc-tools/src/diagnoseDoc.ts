@@ -455,9 +455,10 @@ const diagnoseMeasuredSourceText = (
 
 /**
  * {@link diagnoseObjectTextLineStarts} for a body nothing wraps — a `text` in its
- * label layout, a label its type hangs outside the box — laid out as authored,
- * so the lines it looks at open after the author's own newlines (canvas-sdk
- * `calcLabelBoxSize` sizes such a label the same way, with no width to wrap at).
+ * label layout, a `features.text: "label"` caption, a label its type hangs
+ * outside the box — laid out as authored, so the lines it looks at open after the
+ * author's own newlines (`calcLabelTextBoxSize` sizes a caption the same way,
+ * with no width to wrap at).
  */
 const diagnoseUnwrappedTextLineStarts = (
 	object: ObjectDoc,
@@ -503,13 +504,19 @@ const diagnoseUncheckedSourceText = (
 
 /**
  * Every finding about one object's text, empty when it fits and breaks well.
- * Only a `"body"` type is measured: a `"source"` body is drawn by the shape's own
- * renderer rather than by the shared typesetting these metrics come from, and a
- * `"slots"` type holds no single body to place against the shape.
+ * Only a `"body"` and a `"label"` type are measured: a `"source"` body is drawn by
+ * the shape's own renderer rather than by the shared typesetting these metrics
+ * come from, and a `"slots"` type holds no single body to place against the
+ * shape. A `"label"` caption is sized from its own text, so it cannot overflow
+ * and is only looked at for where its lines start.
  */
 const diagnoseObjectText = (object: ObjectDoc): Diagnostic[] => {
 	const definition = standardObjectDocDefinitions.get(object.type);
-	if (definition?.features.text !== "body") {
+	const textType = definition?.features.text;
+	if (
+		definition === undefined ||
+		(textType !== "body" && textType !== "label")
+	) {
 		return [];
 	}
 	const body = object as TextBodyDoc;
@@ -519,6 +526,9 @@ const diagnoseObjectText = (object: ObjectDoc): Diagnostic[] => {
 	}
 	const typeDefaults = resolveBodyStyleDefaults(definition);
 	const font = resolveBodyFont(body, typeDefaults);
+	if (textType === "label") {
+		return diagnoseUnwrappedTextLineStarts(object, text, font);
+	}
 	const boxWidth = resolveWrapBoxWidth(body, definition);
 	if (boxWidth === null) {
 		// A `text` in its label layout is drawn at whatever width it comes to. The
@@ -818,9 +828,9 @@ const readFinding = (
  * label drawn outside the outline — whose line heads are still looked at — a
  * `record`'s text-sized bands, a shape with no text), objects with no text, a
  * shape storing no width to wrap at (an `ellipse`), and types outside the
- * shipped set. Text nothing wraps (a `text` in its label layout, whose box is
- * measured from the text itself) cannot overflow, and only its line heads are
- * looked at. The overflow check additionally passes over an object with no stored `height`,
+ * shipped set. Text nothing wraps (a `text` in its label layout and a
+ * `features.text: "label"` caption, whose boxes are measured from the text
+ * itself) cannot overflow, and only its line heads are looked at. The overflow check additionally passes over an object with no stored `height`,
  * which is sized from its text on every read — but where its lines fall is still
  * looked at, the width being the author's. A shipped type that holds text but
  * declares no region is reported as a warning rather than passed over silently —

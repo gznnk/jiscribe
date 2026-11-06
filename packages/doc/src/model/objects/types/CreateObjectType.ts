@@ -8,7 +8,11 @@ import type { FillStyleDoc } from "../base/FillStyleDoc";
 import type { ObjectDoc } from "../base/ObjectDoc";
 import type { RadiusStyleDoc } from "../base/RadiusStyleDoc";
 import type { StrokeStyleDoc } from "../base/StrokeStyleDoc";
-import type { SourceTextStyleDoc, TextStyleDoc } from "../base/TextStyleDoc";
+import type {
+	LabelTextStyleDoc,
+	SourceTextStyleDoc,
+	TextStyleDoc,
+} from "../base/TextStyleDoc";
 import type { TransformDoc } from "../base/TransformDoc";
 
 /**
@@ -40,6 +44,7 @@ type TextDocByType = {
 	none: object;
 	body: TextStyleDoc;
 	source: SourceTextStyleDoc;
+	label: LabelTextStyleDoc;
 	slots: object;
 };
 

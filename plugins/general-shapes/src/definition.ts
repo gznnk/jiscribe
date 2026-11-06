@@ -1,7 +1,5 @@
 import type { ObjectTypeDefinition } from "@jiscribe/canvas";
 import {
-	calcBelowLabelTextRegion,
-	calcBelowLabelVisualBounds,
 	createFrameObjectDefinition,
 	createTypeStencils,
 } from "@jiscribe/canvas-sdk";
@@ -94,16 +92,14 @@ import { SmartphoneIcon } from "./stencil/SmartphoneIcon";
 import { TerminalWindowIcon } from "./stencil/TerminalWindowIcon";
 
 /**
- * The label hangs below the geometry box, so `visualBounds` is what keeps
- * zoom-to-fit and the export viewBox from cropping it (calcBelowLabelVisualBounds).
- * `menu` stays undeclared, so it is derived from the features as before the move.
+ * The label hangs below the box (`features.text: "label"`, which the core
+ * places). `menu` stays undeclared, so it is derived from the features as before
+ * the move.
  */
 export const actorDefinition: ObjectTypeDefinition<ActorDoc, ActorState> =
 	createFrameObjectDefinition<ActorDoc, ActorState>({
 		doc: actorDocDefinition,
 		component: Actor,
-		textRegion: calcBelowLabelTextRegion,
-		visualBounds: calcBelowLabelVisualBounds,
 		stencils: createTypeStencils({
 			objectType: "actor",
 			label: { en: "Actor", ja: "アクター" },
@@ -129,8 +125,6 @@ export const serverDefinition: ObjectTypeDefinition<ServerDoc, ServerState> =
 	createFrameObjectDefinition<ServerDoc, ServerState>({
 		doc: serverDocDefinition,
 		component: Server,
-		textRegion: calcBelowLabelTextRegion,
-		visualBounds: calcBelowLabelVisualBounds,
 		stencils: createTypeStencils({
 			objectType: "server",
 			label: { en: "Server", ja: "サーバー" },
@@ -200,8 +194,6 @@ export const packageDefinition: ObjectTypeDefinition<PackageDoc, PackageState> =
 	createFrameObjectDefinition<PackageDoc, PackageState>({
 		doc: packageDocDefinition,
 		component: Package,
-		textRegion: calcBelowLabelTextRegion,
-		visualBounds: calcBelowLabelVisualBounds,
 		stencils: createTypeStencils({
 			objectType: "package",
 			label: { en: "Package", ja: "パッケージ" },
@@ -216,8 +208,6 @@ export const envelopeDefinition: ObjectTypeDefinition<
 > = createFrameObjectDefinition<EnvelopeDoc, EnvelopeState>({
 	doc: envelopeDocDefinition,
 	component: Envelope,
-	textRegion: calcBelowLabelTextRegion,
-	visualBounds: calcBelowLabelVisualBounds,
 	stencils: createTypeStencils({
 		objectType: "envelope",
 		label: { en: "Envelope", ja: "封筒" },
@@ -230,8 +220,6 @@ export const queueDefinition: ObjectTypeDefinition<QueueDoc, QueueState> =
 	createFrameObjectDefinition<QueueDoc, QueueState>({
 		doc: queueDocDefinition,
 		component: Queue,
-		textRegion: calcBelowLabelTextRegion,
-		visualBounds: calcBelowLabelVisualBounds,
 		stencils: createTypeStencils({
 			objectType: "queue",
 			label: { en: "Queue", ja: "キュー" },
@@ -243,8 +231,6 @@ export const gearDefinition: ObjectTypeDefinition<GearDoc, GearState> =
 	createFrameObjectDefinition<GearDoc, GearState>({
 		doc: gearDocDefinition,
 		component: Gear,
-		textRegion: calcBelowLabelTextRegion,
-		visualBounds: calcBelowLabelVisualBounds,
 		stencils: createTypeStencils({
 			objectType: "gear",
 			label: { en: "Gear", ja: "歯車" },
@@ -256,8 +242,6 @@ export const lockDefinition: ObjectTypeDefinition<LockDoc, LockState> =
 	createFrameObjectDefinition<LockDoc, LockState>({
 		doc: lockDocDefinition,
 		component: Lock,
-		textRegion: calcBelowLabelTextRegion,
-		visualBounds: calcBelowLabelVisualBounds,
 		stencils: createTypeStencils({
 			objectType: "lock",
 			label: { en: "Lock", ja: "錠" },

@@ -110,8 +110,8 @@ describe("createFrameObjectDefinition", () => {
 			component: DemoComponent,
 			textRegion: calcFullBoxTextRegion,
 		});
-		// The shape labelled below its outline: its doc says the box holds no text,
-		// while its canvas region is the caption box it draws that label in. Only
+		// A shape placing its label outside its outline itself: its doc says the box
+		// holds no text, while its canvas region is the box it draws that label in. Only
 		// the doc's answer decides, so the canvas one must not talk the canvas into
 		// offering a height the parser then refuses.
 		const belowTheBox = createFrameObjectDefinition<DemoDoc, DemoState>({
@@ -205,6 +205,25 @@ describe("createFrameObjectDefinition", () => {
 			}),
 		).toThrow(
 			'createFrameObjectDefinition "sdkDemo": declares textRegion and a "textSlot" part kind',
+		);
+	});
+
+	it("refuses textRegion on a label text type, naming the type and the parameter", () => {
+		const labelFeatures = {
+			...DemoFeatures,
+			text: "label",
+		} as const satisfies ObjectFeatures;
+		expect(() =>
+			createFrameObjectDefinition<DemoDoc, DemoState>({
+				doc: createFrameObjectDoc({
+					features: labelFeatures,
+					defaults: DEMO_DOC_DEFAULTS,
+				}),
+				component: DemoComponent,
+				textRegion: calcFullBoxTextRegion,
+			}),
+		).toThrow(
+			'createFrameObjectDefinition "sdkDemo": features.text "label" has its caption placed under the box by the core (calcLabelTextRegion); pass no textRegion',
 		);
 	});
 

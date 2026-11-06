@@ -11,9 +11,11 @@ import { memo, useMemo, useRef } from "react";
 import type React from "react";
 import type { ReactNode } from "react";
 
+import { LabelTextFill } from "./LabelTextFill";
 import { TextOverlay } from "./TextOverlay";
 import type { TextEditable } from "./TextOverlay";
 import type { FillStyleState } from "../../../states/objects/base/FillStyleState";
+import type { LabelTextStyleState } from "../../../states/objects/base/LabelTextStyleState";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { StrokeStyleState } from "../../../states/objects/base/StrokeStyleState";
 import type { TextStyleState } from "../../../states/objects/base/TextStyleState";
@@ -53,7 +55,8 @@ type FrameRenderState = ObjectState &
 	TransformedFrame &
 	StrokeStyleState &
 	FillStyleState &
-	Partial<TextStyleState>;
+	Partial<TextStyleState> &
+	LabelTextStyleState;
 
 /**
  * The placed, style-resolved text box handed to a custom overlay renderer:
@@ -177,8 +180,9 @@ const useTextPlacementSource = <TProps extends object>(
  * `"auto"` therefore draws the theme surface, matching what the editor's factory
  * would have written.
  *
- * Text follows `features.text`: a root-form type ("body" / "source") draws its
- * single body slot, a "slots" type draws one overlay per key of `state.text` (the
+ * Text follows `features.text`: a root-form type ("body" / "source" / "label")
+ * draws its single body slot — a "label" one over the box painted behind it in
+ * its `labelFill` (LabelTextFill) — a "slots" type draws one overlay per key of `state.text` (the
  * authority on which slots the shape has). Each overlay is placed by the type's
  * registered `"textSlot"` part kind (unregistered = full bbox): the body via
  * `calcTextRegion`, the slots via `calcTextSlotRegions` once per render, so a
@@ -195,7 +199,7 @@ const useTextPlacementSource = <TProps extends object>(
  * group of its own (the sticky in `@jiscribe/plugin-sticky-shape`), and svg
  * wrapped by DOMPurify. Those hand-write the component and reach for
  * `calcTextRegion` / `createSvgTransform` / `resolveAutoColor` directly — every
- * derivation below is theirs to repeat.
+ * derivation below is theirs to repeat, a "label" type's LabelTextFill included.
  */
 export const createFrameObject = <TState extends FrameRenderState>(
 	draw: (state: TState, shape: FrameShapeProps) => ReactNode,
@@ -322,6 +326,7 @@ export const createFrameObject = <TState extends FrameRenderState>(
 			const {
 				text: sourceText,
 				type,
+				labelFill,
 				isEditing = false,
 				editingTextSlotId,
 			} = textSource;
@@ -342,16 +347,26 @@ export const createFrameObject = <TState extends FrameRenderState>(
 					textSlotKind,
 				);
 				return (
-					<TextSlotOverlay
-						objectType={type}
-						textSlotId={BODY_TEXT_SLOT_ID}
-						textSlot={bodySlot}
-						regionX={bodyRegion.x}
-						regionY={bodyRegion.y}
-						regionWidth={bodyRegion.width}
-						regionHeight={bodyRegion.height}
-						isEditing={isEditingSlot(BODY_TEXT_SLOT_ID)}
-					/>
+					<>
+						{textType === "label" && (
+							<LabelTextFill
+								objectType={type}
+								textSlot={bodySlot}
+								labelFill={labelFill}
+								region={bodyRegion}
+							/>
+						)}
+						<TextSlotOverlay
+							objectType={type}
+							textSlotId={BODY_TEXT_SLOT_ID}
+							textSlot={bodySlot}
+							regionX={bodyRegion.x}
+							regionY={bodyRegion.y}
+							regionWidth={bodyRegion.width}
+							regionHeight={bodyRegion.height}
+							isEditing={isEditingSlot(BODY_TEXT_SLOT_ID)}
+						/>
+					</>
 				);
 			}
 			if (textSlotRegions === undefined || sourceText === undefined) {

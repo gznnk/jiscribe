@@ -13,6 +13,7 @@ const BUILTIN_ITEM_STYLE_INTENT_KINDS = {
 	lineColor: ["stroke"],
 	lineStyle: ["strokeWidth", "strokeDashType"],
 	backgroundColor: ["fill"],
+	labelBackgroundColor: ["labelFill"],
 	borderColor: ["stroke"],
 	borderStyle: ["strokeWidth", "strokeDashType", "cornerRadius"],
 	font: "text",

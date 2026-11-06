@@ -229,7 +229,9 @@ export const validateDocKeys = (
 			.filter((key) => !declaration.knownKeys.has(key))
 			.map((key) => [key]),
 		...(features.geometry === "poly" ? collectPolyPointKeyPaths(o.points) : []),
-		...(features.text === "body" ? collectRunKeyPaths(o.text, ["text"]) : []),
+		...(features.text === "body" || features.text === "label"
+			? collectRunKeyPaths(o.text, ["text"])
+			: []),
 		...slots.keyPaths,
 		...(features.type === "connector" ? collectConnectorKeyPaths(o) : []),
 	];

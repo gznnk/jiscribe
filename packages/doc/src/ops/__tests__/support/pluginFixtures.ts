@@ -102,8 +102,8 @@ export const cappedDefinition: ObjectDocDefinition = {
 };
 
 /**
- * A body-text shape whose label hangs below its outline, the way a pictogram's
- * does: its declared region lies outside the box, so it declares no
+ * A body-text shape whose label it places below its outline itself, the way an
+ * AWS group places its band: its declared region lies outside the box, so it declares no
  * `textVerticalBasis` and a body placement has nothing to move on it.
  */
 export const belowLabelDefinition: ObjectDocDefinition = {
@@ -195,6 +195,29 @@ export const sourceBodyDefinition: ObjectDocDefinition = {
 		type: "source-card",
 		width: 200,
 		height: 100,
+		text: "",
+	}),
+};
+
+/**
+ * A `text: "label"` shape, its caption hung below the box: what the pictograms and
+ * the icon sets declare, none of which a doc test can import.
+ */
+export const captionedDefinition: ObjectDocDefinition = {
+	features: {
+		type: "captioned",
+		geometry: "rect",
+		transform: true,
+		stroke: true,
+		text: "label",
+		connectable: true,
+	},
+	validateDoc: () => [],
+	factory: createFrameObjectFactory({
+		type: "captioned",
+		width: 64,
+		height: 64,
+		stroke: "auto",
 		text: "",
 	}),
 };

@@ -17,6 +17,11 @@ covers that.
 
 ### Added
 
+- **`set_style` and `add_objects` take `labelFill`**, the background painted
+  behind the label of a shape that draws its text below its box (actor, server,
+  the AWS / Azure / Google Cloud icons, …). Omitted or `"auto"`, the label knocks
+  out what runs under it in the page's color; on any other type, a connector
+  included, `set_style` names it as not supported by the type.
 - **`diagnose_canvas` reports images a reader cannot see, and more.** An image whose
   file is missing, or whose `src` no host accepts, is an error; an image
   reached through a link out of the diagram's directory is a warning, since

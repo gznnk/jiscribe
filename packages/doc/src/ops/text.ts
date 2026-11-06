@@ -122,7 +122,7 @@ const planTextWrite = (
 			kind: "body",
 			object,
 			text,
-			keepsRunStyle: textType === "body",
+			keepsRunStyle: textType !== "source",
 		};
 	}
 	if (textType !== "slots") {

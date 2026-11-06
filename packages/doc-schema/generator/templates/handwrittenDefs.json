@@ -1,4 +1,98 @@
 {
+	"LabelBoxShapeDoc": {
+		"description": "Shared structure of the box shapes that hang their text below the box as a label sized from the text itself (the pictograms, the icon sets, the flowchart markers): rect geometry plus the Stroke / Fill / Text / Transform styles, with no `verticalAlign` (the label's box is sized from its text, leaving nothing to align it within) and with `labelFill`, the color painted behind the label. Each concrete shape def pins `type` with a const.",
+		"type": "object",
+		"required": ["id", "type", "x", "y", "width", "height"],
+		"additionalProperties": false,
+		"properties": {
+			"id": {
+				"description": "Unique identifier.",
+				"type": "string"
+			},
+			"type": {
+				"type": "string"
+			},
+			"meta": {
+				"$ref": "#/$defs/MetaDoc"
+			},
+			"x": {
+				"description": "Left-edge X coordinate of the bounding box.",
+				"type": "number"
+			},
+			"y": {
+				"description": "Top-edge Y coordinate of the bounding box.",
+				"type": "number"
+			},
+			"width": {
+				"description": "Bounding-box width in pixels.",
+				"type": "number",
+				"minimum": 0
+			},
+			"height": {
+				"description": "Bounding-box height in pixels.",
+				"type": "number",
+				"minimum": 0
+			},
+			"stroke": {
+				"$ref": "#/$defs/StrokeStyle/properties/stroke"
+			},
+			"strokeWidth": {
+				"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
+			},
+			"strokeDashType": {
+				"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
+			},
+			"strokeOpacity": {
+				"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+			},
+			"fill": {
+				"$ref": "#/$defs/FillStyle/properties/fill"
+			},
+			"fillOpacity": {
+				"$ref": "#/$defs/FillStyle/properties/fillOpacity"
+			},
+			"text": {
+				"$ref": "#/$defs/TextStyle/properties/text"
+			},
+			"textAlign": {
+				"$ref": "#/$defs/TextStyle/properties/textAlign"
+			},
+			"fontColor": {
+				"$ref": "#/$defs/TextStyle/properties/fontColor"
+			},
+			"fontSize": {
+				"$ref": "#/$defs/TextStyle/properties/fontSize"
+			},
+			"fontFamily": {
+				"$ref": "#/$defs/TextStyle/properties/fontFamily"
+			},
+			"fontWeight": {
+				"$ref": "#/$defs/TextStyle/properties/fontWeight"
+			},
+			"fontStyle": {
+				"$ref": "#/$defs/TextStyle/properties/fontStyle"
+			},
+			"textDecoration": {
+				"$ref": "#/$defs/TextStyle/properties/textDecoration"
+			},
+			"rotation": {
+				"$ref": "#/$defs/TransformStyle/properties/rotation"
+			},
+			"flipX": {
+				"$ref": "#/$defs/TransformStyle/properties/flipX"
+			},
+			"flipY": {
+				"$ref": "#/$defs/TransformStyle/properties/flipY"
+			},
+			"lockAspectRatio": {
+				"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+			},
+			"labelFill": {
+				"description": "Background painted behind the label hung below the box, as a CSS color string, or \"auto\" to knock out what lies behind the label (connectors running under it) in the page's color: the document's opaque `background`, else the theme's canvas color. Set \"transparent\" to let what lies behind show through.",
+				"type": "string"
+			}
+		}
+	},
 	"MarkdownDoc": {
 		"description": "A card whose text is Markdown source, rendered as HTML on the canvas. Use it for notes, specs, summaries, and any block of prose that needs headings, lists, tables, code fences, or math ($...$ inline, $$...$$ block) — a rect CANNOT do this, its text is always plain. Same rect-based geometry (x/y/width/height) as RectDoc. Write the body as ordinary Markdown in `text` (a plain string, never runs), using \"\\n\" for line breaks; emphasis is the Markdown's own (`**bold**`), so the card has NO fontWeight / fontStyle / textDecoration and its typography sets the whole document's ground. Defaults suit a document: 300x200, left/top aligned, and a theme-following fill so the card reads as a page. A PNG export draws it rendered, but an SVG export flattens it to plain text, so do not rely on it for diagrams exported as SVG.",
 		"type": "object",

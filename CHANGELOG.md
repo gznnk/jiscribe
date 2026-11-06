@@ -15,6 +15,31 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Added
 
+- **`features.text: "label"`: a body hung below the box as a caption.** A type
+  whose drawing fills its box declares it, and its text is placed the same way
+  for every such type — centred under the box, 4px below it, sized from the text
+  itself — by `calcLabelTextRegion` / `calcLabelTextVisualBounds` /
+  `calcLabelTextBoxSize` (`@jiscribe/doc`, with `LABEL_TEXT_GAP`), measured with
+  the type's own text defaults, so a headless reader and the canvas place it
+  alike. The type declares no `textRegion`, `visualBounds` or `"textSlot"` part
+  kind: `resolveDocDefinitions` and `applyObjectDefinition` refuse any of them on
+  a `"label"` type, along with `textVerticalBasis` and a geometry other than
+  `"rect"`, and `createFrameObjectDefinition` refuses its `textRegion`. Its doc
+  takes the `"body"` typography less `verticalAlign` (`LabelTextStyleDoc`,
+  `textStyleKeysOf("label")`); `LABEL_TEXT_STYLE_DEFAULTS` is the creation
+  typography to spread into its defaults. The twelve shapes that hung their
+  label below the box are `"label"` types now: actor, server, package, envelope,
+  queue, gear and lock (general), extract and cross (flowchart), and awsIcon,
+  azureIcon and gcpIcon.
+- **`labelFill`: the background of a `"label"` caption.** The caption is drawn
+  over a box painted in `labelFill`, which `set_style` / `add_objects`, the
+  ObjectMenu and the properties sidebar (a `label-style` section, built-in item
+  `labelBackgroundColor`) set; omitted or `"auto"` knocks out what lies behind
+  in the page's color, the way a connector's label does. The field is
+  `LABEL_TEXT_KEYS` (`@jiscribe/doc`), held by a `"label"` type alone; on any
+  other type, a connector included, `setStyle` reports it as not taken. A
+  component written without `createFrameObject` draws the box itself with
+  `LabelTextFill` (`@jiscribe/canvas/unstable`, and so `@jiscribe/canvas-sdk`).
 - **A type can measure the text body it draws itself.** `ObjectTypeDefinition`
   takes `textMeasurer` (`ObjectTextMeasurer`, returning an
   `ObjectTextMeasurement`), which `CanvasHandle.measure.textSlot` calls in place
@@ -244,6 +269,22 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Changed
 
+- **The label below a pictogram, an icon or a flowchart marker is painted on
+  the page's color.** The twelve `"label"` shapes draw a box in `labelFill`
+  behind their label, so a connector or a shape lying under it is hidden where
+  the label is, in images exported too. Set `labelFill` to `"transparent"` for
+  the old look, or reorder the objects.
+- **A `verticalAlign` on a `"label"` shape is dropped on open.** It never
+  moved the label, whose box is sized from its text; the parser's migration
+  removes it with a warning, and the next save writes the object without it.
+- **`BELOW_LABEL_STYLE_DEFAULTS` and `calcLabelBoxSize` (`@jiscribe/canvas-sdk`)
+  are for a `"body"` shape that places a label sized from its own text itself**
+  (the group markers, awsGroup). The defaults are `LABEL_TEXT_STYLE_DEFAULTS`
+  plus `verticalAlign`, and `calcLabelBoxSize` measures through
+  `calcLabelTextBoxSize`; `BelowLabelHitArea` places its grab area with
+  `calcLabelTextRegion` from the shape's `type`, which its `state` now has to
+  carry. `resolveLabelFill` resolves a caption's `labelFill` as well as a
+  connector label's `fill`.
 - **Breaking: a type declares its `outline` and `anchorRegion` on its doc
   definition.** Both move from `ObjectTypeDefinition` to `ObjectDocDefinition`
   (typed `ObjectDocOutlineCalculator` / `ObjectDocAnchorRegionCalculator`, new
@@ -431,6 +472,14 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Removed
 
+- **Breaking: `calcBelowLabelTextRegion`, `calcBelowLabelVisualBounds` and
+  `BELOW_LABEL_GAP` are gone from `@jiscribe/canvas-sdk`.** A shape hanging its
+  text below the box declares `features.text: "label"` and passes neither a
+  `textRegion` nor a `visualBounds`: the core places the caption
+  (`calcLabelTextRegion`, `LABEL_TEXT_GAP` in `@jiscribe/doc`). Its doc
+  definition drops `textRegion: calcOutsideBoxTextRegion` with it, and spreads
+  `LABEL_TEXT_STYLE_DEFAULTS` (`@jiscribe/doc`) in place of
+  `BELOW_LABEL_STYLE_DEFAULTS`.
 - **Breaking: the single-object AI tools are gone.** `@jiscribe/ai-tools` no
   longer declares them, nor the op kinds behind them (`AiDocOp`'s
   `addObject`, `connect`, `setPosition`, `resizeObject`, `setPoints`,

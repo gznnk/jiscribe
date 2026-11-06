@@ -287,3 +287,51 @@ describe("createFrameDocValidator source text group", () => {
 		).toEqual([]);
 	});
 });
+
+describe("createFrameDocValidator label text group", () => {
+	const geometry = { x: 0, y: 0, width: 10, height: 10 };
+	const validate = createFrameDocValidator(features({ text: "label" }));
+
+	it("accepts runs, the typography a caption takes and its background", () => {
+		expect(
+			validate(
+				{
+					...geometry,
+					text: [{ text: "Lam" }, { text: "bda", fontWeight: "bold" }],
+					textAlign: "left",
+					fontWeight: "bold",
+					labelFill: "auto",
+				},
+				"root",
+			),
+		).toEqual([]);
+	});
+
+	it("holds the background to the rule a shape's fill is held to", () => {
+		expect(
+			validate({ ...geometry, labelFill: "url(javascript:alert(1))" }, "root"),
+		).toEqual([
+			{
+				path: "root.labelFill",
+				message: "must be a safe CSS color value",
+				severity: "error",
+				beyondSchema: true,
+			},
+		]);
+	});
+
+	it("passes over the vertical placement, as it does every field the features exclude", () => {
+		expect(
+			validate(
+				{ ...geometry, verticalAlign: "sideways", textVerticalBasis: "middle" },
+				"root",
+			),
+		).toEqual([]);
+	});
+
+	it("checks the run list and the typography it does take", () => {
+		expect(
+			paths(validate({ ...geometry, text: [], fontSize: 0 }, "root")),
+		).toEqual(["root.text", "root.fontSize"]);
+	});
+});

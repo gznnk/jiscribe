@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **A label background color for the pictograms, the icons and the flowchart
+  markers.** The shapes that draw their text below the box (actor, server,
+  package, envelope, queue, gear, lock, extract, cross, and the AWS, Azure and
+  Google Cloud icons) offer **Label background color** in the floating menu and
+  a **Label** section in the properties sidebar, while their label has text. A
+  selection of several of them shows every color it holds.
 - **Azure Architecture Icons.** The shape library gains an **Azure** section:
   54 of the icons an Azure diagram reaches for, each labelled with the
   product's official name when placed, and **Show all ›** for all 637 in one
@@ -29,6 +35,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **The label below those shapes hides what lies under it.** It is painted on
+  the page's color by default, so a connector running under an icon's label no
+  longer shows through it, in exported images too. Pick a transparent label
+  background color to see through it again. A vertical text alignment saved on
+  one of them is dropped when the file opens, having never moved the label.
 - **The Icon and AWS sections of the shape library can show every icon.**
   **Show all ›** under either section opens all of it: the AWS icons in one
   section per AWS category, Compute first, and the Lucide icons in one section

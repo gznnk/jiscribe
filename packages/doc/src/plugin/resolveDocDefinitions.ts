@@ -30,6 +30,42 @@ const checkTextVerticalBasisFeature = (
 };
 
 /**
+ * Refuses a `features.text: "label"` type declaring what the label already
+ * settles or cannot work with. The caption is placed the same way for every
+ * such type (calcLabelTextRegion), so a `textRegion` of its own would leave two
+ * answers for where the text is; it takes no `verticalAlign`, so a
+ * `textVerticalBasis` would have nothing to measure; and the placement reads a
+ * stored width and height, which only a `geometry: "rect"` type has.
+ *
+ * `textRegion` is compared against undefined rather than tested for presence:
+ * `createFrameObjectDoc` writes the key whether or not the type gave one.
+ */
+const checkLabelTextFeature = (
+	type: string,
+	definition: ObjectDocDefinition,
+): void => {
+	const { features } = definition;
+	if (features.text !== "label") {
+		return;
+	}
+	if (features.geometry !== "rect") {
+		throw new Error(
+			`ObjectDocDefinition "${type}": features.text "label" needs geometry "rect", the caption being placed under a stored width and height (declares "${features.geometry}")`,
+		);
+	}
+	if (features.textVerticalBasis === true) {
+		throw new Error(
+			`ObjectDocDefinition "${type}": features.text "label" takes no verticalAlign, so textVerticalBasis has nothing to measure`,
+		);
+	}
+	if (definition.textRegion !== undefined) {
+		throw new Error(
+			`ObjectDocDefinition "${type}": features.text "label" is placed under the box by the core (calcLabelTextRegion); declare no textRegion`,
+		);
+	}
+};
+
+/**
  * Merges `presetDefinitions` and `plugins` into one type → definition map, shared
  * by `createCanvasParser` (parse-time validation) and `createDocOps` (programmatic
  * building).
@@ -45,7 +81,8 @@ const checkTextVerticalBasisFeature = (
  * @param config - The preset / plugin sources to merge; omit for the built-in set as-is
  * @returns One definition per type, keyed by the `type` each was registered under
  * @throws When two sources claim one type, or when a definition's own declarations
- *   contradict each other ({@link checkTextVerticalBasisFeature})
+ *   contradict each other ({@link checkTextVerticalBasisFeature},
+ *   {@link checkLabelTextFeature})
  */
 export const resolveDocDefinitions = (
 	config: DocDefinitionsConfig | undefined,
@@ -72,6 +109,7 @@ export const resolveDocDefinitions = (
 	const duplicateMessages: string[] = [];
 	sourcedDefinitions.forEach(({ type, definition, origin }) => {
 		checkTextVerticalBasisFeature(type, definition);
+		checkLabelTextFeature(type, definition);
 		const firstOrigin = originByType.get(type);
 		if (firstOrigin !== undefined) {
 			duplicateMessages.push(

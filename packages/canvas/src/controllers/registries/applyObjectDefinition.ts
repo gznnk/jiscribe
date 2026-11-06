@@ -1,10 +1,16 @@
 import { supportsAutoHeight } from "@jiscribe/doc";
 import { calcEllipseTextRegion } from "@jiscribe/doc/model/objects/primitives/ellipse/calcEllipseTextRegion";
 import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
+import type { TextSlotStyle } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 import { collectStyleKeys } from "@jiscribe/doc/model/objects/utils/collectStyleKeys";
 import { builtinObjectDocDefinitions } from "@jiscribe/doc/plugin/builtinObjectDocDefinitions";
 import { resolveAutoHeightPaddingEm } from "@jiscribe/doc/text/block/autoHeightComfortPadding";
+import {
+	calcLabelTextRegion,
+	calcLabelTextVisualBounds,
+} from "@jiscribe/doc/text/label/calcLabelTextRegion";
+import type { Dimensions } from "@jiscribe/geometry";
 
 import type { CanvasRegistries } from "./CanvasRegistries";
 import { defineObject } from "../../plugin/ObjectTypeDefinition";
@@ -20,6 +26,10 @@ import { Polyline } from "../../rendering/objects/primitives/Polyline";
 import { Rect } from "../../rendering/objects/primitives/Rect";
 import { Svg } from "../../rendering/objects/primitives/Svg";
 import { Text } from "../../rendering/objects/primitives/Text";
+import type { ObjectPartKindDefinition } from "../../rendering/objects/registry/ObjectPartKindRegistry";
+import type { ObjectVisualBoundsCalculator } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
+import type { ObjectState } from "../../states/objects/base/ObjectState";
+import type { TextStyleState } from "../../states/objects/base/TextStyleState";
 import {
 	connectorToDoc,
 	connectorToState,
@@ -98,7 +108,7 @@ import { CONNECTOR_STYLE_TABLE } from "../style/tables/connectorStyleTable";
 import { coreStyleTable } from "../style/tables/coreStyleTable";
 import type { ObjectTransformHandles } from "../ui/controls/ObjectTransformHandlesRegistry";
 import {
-	LabelBackgroundColorMenu,
+	ConnectorLabelBackgroundColorMenu,
 	LabelBoldMenu,
 	LabelBorderColorMenu,
 	LabelBorderStyleMenu,
@@ -109,7 +119,6 @@ import {
 import { RoutingMenu } from "../ui/menu/ObjectMenu/items/RoutingMenu";
 import { createDefaultMenu } from "../ui/menu/ObjectMenu/utils/createDefaultMenu";
 import {
-	ConnectorLabelBackgroundItem,
 	ConnectorLabelBorderColorItem,
 	ConnectorLabelBorderTypeItem,
 	ConnectorLabelBorderWidthItem,
@@ -120,6 +129,7 @@ import {
 } from "../ui/menu/PropertyPanel/items/ConnectorLabelItems";
 import { ConnectorResetRouteItem } from "../ui/menu/PropertyPanel/items/ConnectorResetRouteItem";
 import { ConnectorRoutingItem } from "../ui/menu/PropertyPanel/items/ConnectorRoutingItem";
+import { ConnectorLabelBackgroundItem } from "../ui/menu/PropertyPanel/items/LabelBackgroundItems";
 import { PROPERTY_PANEL_SECTIONS } from "../ui/menu/PropertyPanel/propertyPanelSections";
 import { appendPropertyPanelItems } from "../ui/menu/PropertyPanel/utils/appendPropertyPanelItems";
 import { createDefaultPropertyPanel } from "../ui/menu/PropertyPanel/utils/createDefaultPropertyPanel";
@@ -288,7 +298,7 @@ export const BUILTIN_OBJECT_DEFINITIONS: Record<
 					{
 						type: "custom",
 						id: "label-bg-color",
-						component: LabelBackgroundColorMenu,
+						component: ConnectorLabelBackgroundColorMenu,
 					},
 					{
 						type: "custom",
@@ -476,6 +486,74 @@ const checkDeclaredStyleFields = (
 };
 
 /**
+ * Refuses a `features.text: "label"` type declaring a placement of its own: the
+ * core places the caption ({@link createLabelTextSlotPartKind},
+ * {@link createLabelTextVisualBounds}), so a
+ * `visualBounds`, a `"textSlot"` part kind or a doc `textRegion` would be a
+ * second answer for where it is. The doc's `textRegion` is compared against
+ * undefined rather than tested for presence: `createFrameObjectDoc` writes the
+ * key whether or not the type gave one, and the UI definition inherits it.
+ *
+ * @param type - The type being registered; named in the error
+ * @param definition - Its whole definition
+ * @throws When a `"label"` type declares any of the three, naming the type and each one it declares
+ */
+const checkLabelTextDefinition = (
+	type: ObjectType,
+	definition: AnyObjectTypeDefinition,
+): void => {
+	if (definition.features.text !== "label") {
+		return;
+	}
+	const declared = [
+		...(definition.visualBounds === undefined ? [] : ["visualBounds"]),
+		...(definition.partKinds?.some((part) => part.kind === TEXT_SLOT_PART_KIND)
+			? [`a "${TEXT_SLOT_PART_KIND}" part kind`]
+			: []),
+		...(definition.textRegion === undefined ? [] : ["textRegion"]),
+	];
+	if (declared.length > 0) {
+		throw new Error(
+			`ObjectTypeDefinition "${type}": features.text "label" has its caption placed under the box by the core (calcLabelTextRegion); remove its ${declared.join(", ")}`,
+		);
+	}
+};
+
+/** What the caption placement reads off a `"label"` type's state: its box and its body slot. */
+type LabelTextState = ObjectState & Dimensions & Pick<TextStyleState, "text">;
+
+/**
+ * The `"textSlot"` part kind of a `features.text: "label"` type, which no such
+ * type declares: the caption placed by the doc layer (calcLabelTextRegion).
+ *
+ * @param typeDefaults - The type's own body defaults, the ones its overlay is drawn with (ObjectTextStyleDefaultsRegistry), so the caption is measured in the font it is drawn in
+ */
+const createLabelTextSlotPartKind = (
+	typeDefaults: TextSlotStyle | undefined,
+): ObjectPartKindDefinition<LabelTextState> =>
+	createTextSlotPartKindDefinition<LabelTextState>({
+		region: (state, slotId) =>
+			calcLabelTextRegion(state, state.text?.[slotId], typeDefaults),
+	});
+
+/**
+ * The visual bounds of a `features.text: "label"` type, which no such type
+ * declares: its box widened by the caption (calcLabelTextVisualBounds).
+ *
+ * @param typeDefaults - As {@link createLabelTextSlotPartKind} takes them
+ */
+const createLabelTextVisualBounds =
+	(
+		typeDefaults: TextSlotStyle | undefined,
+	): ObjectVisualBoundsCalculator<LabelTextState> =>
+	(state) =>
+		calcLabelTextVisualBounds(
+			state,
+			state.text?.[BODY_TEXT_SLOT_ID],
+			typeDefaults,
+		);
+
+/**
  * Registers a single object type described by `definition` across all registries
  * in the given bundle (mapper, component, part kinds, behavior, state validator,
  * menu, property panel), and optionally its factory / stencils.
@@ -494,6 +572,13 @@ export const applyObjectDefinition = (
 	registries.objectTextStyleDefaults.registerDefinition(type, definition);
 	registries.objectShapeStyleDefaults.registerDefinition(type, definition);
 	checkDeclaredStyleFields(type, definition);
+	checkLabelTextDefinition(type, definition);
+	// What the type's single body is drawn with where the slot sets nothing: read
+	// by the content resizer and a caption's placement, both measuring that body.
+	const bodyTextStyleDefaults = registries.objectTextStyleDefaults.get(
+		type,
+		BODY_TEXT_SLOT_ID,
+	);
 	// The type's own table comes last on purpose: a kind it declares replaces the
 	// one derived from its features, which is how a type whose storage differs
 	// from the core guess says where the edit lands.
@@ -530,16 +615,15 @@ export const applyObjectDefinition = (
 		// reaching for a registry the states layer cannot see. Only the body slot's
 		// are passed: a content-resized type sizes its box to one text. A type with
 		// no defaults to add is registered as it is, so nothing is wrapped for nothing.
-		const textStyleDefaults = registries.objectTextStyleDefaults.get(
-			type,
-			BODY_TEXT_SLOT_ID,
-		);
 		registries.objectContentResizer.register(
 			type,
-			textStyleDefaults === undefined
+			bodyTextStyleDefaults === undefined
 				? resizeToContent
 				: (state, context) =>
-						resizeToContent(state, { ...context, textStyleDefaults }),
+						resizeToContent(state, {
+							...context,
+							textStyleDefaults: bodyTextStyleDefaults,
+						}),
 		);
 	}
 	if (definition.svgDefs) {
@@ -583,6 +667,11 @@ export const applyObjectDefinition = (
 	}
 	if (definition.visualBounds) {
 		registries.objectVisualBounds.register(type, definition.visualBounds);
+	} else if (definition.features.text === "label") {
+		registries.objectVisualBounds.register(
+			type,
+			createLabelTextVisualBounds(bodyTextStyleDefaults),
+		);
 	}
 	if (definition.transformHandles) {
 		registries.objectTransformHandles.register(
@@ -604,8 +693,10 @@ export const applyObjectDefinition = (
 	// anything, one body or several: the ids are the keys of its `text`, so there
 	// is nothing per type to say. Declaring `"textSlot"` itself replaces that
 	// default rather than colliding with it (the rule `menu` and `propertyPanel`
-	// already follow). Whichever is registered is placed here, so every reader of
-	// a slot's box gets the fallback and the vertical basis from one spot.
+	// already follow); a `"label"` type, which may not declare one, gets the
+	// caption's placement instead. Whichever is registered is placed here, so
+	// every reader of a slot's box gets the fallback and the vertical basis from
+	// one spot.
 	const declaredPartKinds = (definition.partKinds ?? []).map((part) =>
 		part.kind === TEXT_SLOT_PART_KIND ? placeTextSlotRegions(type, part) : part,
 	);
@@ -614,7 +705,12 @@ export const applyObjectDefinition = (
 		!declaredPartKinds.some((part) => part.kind === TEXT_SLOT_PART_KIND)
 			? [
 					...declaredPartKinds,
-					placeTextSlotRegions(type, createTextSlotPartKindDefinition()),
+					definition.features.text === "label"
+						? placeTextSlotRegions(
+								type,
+								createLabelTextSlotPartKind(bodyTextStyleDefaults),
+							)
+						: placeTextSlotRegions(type, createTextSlotPartKindDefinition()),
 				]
 			: declaredPartKinds;
 	if (partKinds.length > 0) {

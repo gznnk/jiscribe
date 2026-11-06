@@ -44,8 +44,10 @@ export const calcFullBoxTextRegion = ({ width, height }: Dimensions): Rect => ({
 
 /**
  * No region at all: what a shape declares when its box does not hold its text —
- * a label drawn outside the outline (the pictograms, the group markers), bands
- * each sized from their own text (`record`), or a type carrying no text.
+ * a label it places outside the outline itself (the group markers, an AWS
+ * group's band), bands each sized from their own text (`record`), or a type
+ * carrying no text. A caption hung below the box is a `features.text: "label"`
+ * type instead, which declares no region (calcLabelTextRegion).
  *
  * @param doc - The shape's untransformed box; unread, the answer being the same at every size
  * @returns Always null

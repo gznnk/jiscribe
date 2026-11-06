@@ -37,8 +37,10 @@ export type FrameObjectDefinitionParams<
 	 * `"textSlot"` part kind's `region` (createTextSlotPartKindDefinition) and
 	 * appended to `partKinds`, so declaring that kind there as well is refused.
 	 * Usually the very calculator `doc.textRegion` declares; a shape whose region
-	 * is sized from its own text (a below-label caption) passes it here while its
-	 * doc answers null. Omitted = the whole box.
+	 * is sized from its own text and placed outside the box (an AWS group's
+	 * band) passes it here while its doc answers null. Omitted = the whole box.
+	 * A `features.text: "label"` type passes none: the core places its caption
+	 * under the box, so giving one is refused.
 	 */
 	textRegion?: ObjectTextRegionCalculator<TState>;
 
@@ -48,6 +50,24 @@ export type FrameObjectDefinitionParams<
 	 * passed the id / type / frame checks.
 	 */
 	isExtraStateValid?: (state: StateRecord) => boolean;
+};
+
+/**
+ * Refuses a `textRegion` on a `features.text: "label"` type, whose caption the
+ * core places (applyObjectDefinition): it would become a `"textSlot"` part kind
+ * the core then refuses, under a name the author never wrote, so the refusal is
+ * made here instead, naming the parameter as it was given.
+ */
+const checkLabelTextRegion = <TState extends ObjectState & TransformedFrame>(
+	type: string,
+	features: ObjectFeatures,
+	textRegion: ObjectTextRegionCalculator<TState> | undefined,
+): void => {
+	if (features.text === "label" && textRegion !== undefined) {
+		throw new Error(
+			`createFrameObjectDefinition "${type}": features.text "label" has its caption placed under the box by the core (calcLabelTextRegion); pass no textRegion`,
+		);
+	}
 };
 
 /**
@@ -92,7 +112,7 @@ const appendTextSlotPartKind = <TState extends ObjectState & TransformedFrame>(
  * @param params - `doc` and `component` are required; the rest is the optional
  *   part of `ObjectTypeDefinition` plus `textRegion` and the derivation hook (see
  *   {@link FrameObjectDefinitionParams})
- * @throws When `textRegion` is given and `partKinds` already holds a `"textSlot"` kind, naming the type
+ * @throws When `textRegion` is given and `partKinds` already holds a `"textSlot"` kind, or when it is given to a `features.text: "label"` type, naming the type
  */
 export const createFrameObjectDefinition = <
 	TDoc extends ObjectDoc,
@@ -112,6 +132,8 @@ export const createFrameObjectDefinition = <
 		type: TDoc["type"];
 		geometry: "rect" | "ellipse";
 	};
+
+	checkLabelTextRegion(features.type, features, textRegion);
 
 	return {
 		...doc,

@@ -114,12 +114,14 @@ index signature に入る（値型はエンジンが知らないので `unknown`
 | `features.arrow`             | `startArrow`, `endArrow`, `arrowScale`                     |
 | `features.transform`         | `lockAspectRatio`                                          |
 | `features.text`              | `textStyleTable(features.text)`                            |
+| `features.text: "label"`     | `labelFill`（`labelFillEntry`。object 自身に格納）         |
 | `features.textVerticalBasis` | `textVerticalBasis`                                        |
 
 `textStyleTable(textType)` は、型がテキストについて宣言する唯一のこと —
 そのテキストがどのフィールドを持ちうるか（`textStyleKeysOf`）— からテキスト半分を
-導出する。ソース言語で書かれた本文は自身の構文で強調を表すので、誰も text type で
-分岐し直すことなくそれらの intent から外れる:
+導出する。ソース言語で書かれた本文は自身の構文で強調を表し、箱の下に吊るラベル
+（`"label"`）は文字のブロックを動かす余白を持たないので、誰も text type で分岐し直す
+ことなくそれぞれの intent（強調・`verticalAlign`）から外れる:
 
 | 受け付けるフィールド | 入るエントリ                                   |
 | -------------------- | ---------------------------------------------- |

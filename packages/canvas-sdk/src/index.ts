@@ -11,26 +11,22 @@ export { createFrameObjectDefinition } from "./definition/createFrameObjectDefin
 export type { FrameObjectDefinitionParams } from "./definition/createFrameObjectDefinition";
 
 // ---------------------------------------------------------------------------
-// Below-label shapes: the box is fully taken by the drawing, so the text hangs
-// under it as a caption sized from itself (server / actor / cross …).
+// Caption shapes (`features.text: "label"`): the box is fully taken by the
+// drawing, so the text hangs under it as a caption sized from itself (server /
+// actor / cross …). The core places the caption, its background and its visual
+// extent; what is left to the shape is the grab area, placed inside its own
+// `data-kind="object"` group so the caption can be grabbed.
 // ---------------------------------------------------------------------------
-// The three pieces go together: pass the region as createFrameObjectDefinition's
-// `textRegion` and the bounds as its `visualBounds` (without the latter,
-// zoom-to-fit and the export viewBox crop the label away), and place the hit
-// area inside the shape's own `data-kind="object"` group so the label can be
-// grabbed. The typography
-// they measure with lives in `./doc` as BELOW_LABEL_STYLE_DEFAULTS, the family
-// included, so the region and the overlay size the label the same way.
-export {
-	BELOW_LABEL_GAP,
-	calcBelowLabelTextRegion,
-} from "./presentation/calcBelowLabelTextRegion";
-export { calcBelowLabelVisualBounds } from "./presentation/calcBelowLabelVisualBounds";
 export { BelowLabelHitArea } from "./presentation/BelowLabelHitArea";
+// The box the caption's background is painted on is LabelTextFill, in the
+// unstable surface re-exported above: createFrameObject draws it, and a caption
+// shape whose component is written without createFrameObject draws it itself.
 
-// The measurement under those regions, for a shape that hangs its label somewhere
-// else than under the box (a group marker's, set beyond its tip) and so places the
-// box itself. Everything but where the box goes is already decided here.
+// The measurement under a caption, for a `features.text: "body"` shape that
+// places a label sized from its own text somewhere of its own (a group marker's,
+// set beyond its tip) and so places the box itself. Everything but where the box
+// goes is already decided here. The typography it measures with lives in `./doc`
+// as BELOW_LABEL_STYLE_DEFAULTS, the family included.
 export { calcLabelBoxSize } from "./presentation/calcLabelBoxSize";
 
 // For a frame shape that passes its interior through (container, awsGroup): the
@@ -49,7 +45,7 @@ export {
 export { calcRoundedRectOutline } from "./schema/calcRoundedRectOutline";
 
 // For shapes whose text region is nothing but a fixed ratio inset of the box
-// (most non-below-label shapes): pass the ratios in place of a hand-written
+// (most shapes holding their text inside the box): pass the ratios in place of a hand-written
 // calc*TextRegion.ts. A shape whose inset depends on width/height keeps its own.
 // Headless, and re-exported from `./doc` as well, so the shape's doc definition
 // and its UI definition can register the very same calculator.

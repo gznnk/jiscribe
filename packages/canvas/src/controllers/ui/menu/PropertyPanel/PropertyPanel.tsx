@@ -14,6 +14,7 @@ import {
 	ViewScrollItem,
 } from "./items/CanvasItems";
 import { GroupingItem } from "./items/GroupingItem";
+import { LabelFillItem } from "./items/LabelBackgroundItems";
 import {
 	AutoHeightItem,
 	LockAspectRatioItem,
@@ -160,6 +161,7 @@ const ITEM_COMPONENTS: Record<
 	verticalAlign: VerticalAlignItem,
 	textVerticalBasis: TextVerticalBasisItem,
 	textLayout: TextLayoutItem,
+	labelBackgroundColor: LabelFillItem,
 };
 
 type PropertyPanelAccordionProps = {

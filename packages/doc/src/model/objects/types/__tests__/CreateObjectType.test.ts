@@ -63,3 +63,48 @@ describe("CreateObjectType with text: source", () => {
 		expect([weighted, slanted, decorated]).toHaveLength(3);
 	});
 });
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+declare const LabelIconDocBrand: unique symbol;
+
+type LabelIconDoc = CreateObjectType<
+	{ type: "label-icon"; geometry: "rect"; text: "label" },
+	typeof LabelIconDocBrand
+>;
+
+const labelIcon = {
+	id: "label-icon-1",
+	type: "label-icon",
+	x: 0,
+	y: 0,
+	width: 64,
+	height: 64,
+	text: "Lambda",
+} as const as LabelIconDoc;
+
+/** Pins down what `text: "label"` takes from and adds to the single-body doc form. */
+describe("CreateObjectType with text: label", () => {
+	it("takes runs and the whole typography but the vertical placement", () => {
+		const styled: LabelIconDoc = {
+			...labelIcon,
+			text: [{ text: "Lam" }, { text: "bda", fontWeight: "bold" }],
+			textAlign: "left",
+			fontStyle: "italic",
+		};
+		expect(styled.textAlign).toBe("left");
+
+		// @ts-expect-error a caption sized from its text has no slack to place it in
+		const aligned: LabelIconDoc = { ...labelIcon, verticalAlign: "top" };
+		const based: LabelIconDoc = {
+			...labelIcon,
+			// @ts-expect-error nor a basis to measure that placement against
+			textVerticalBasis: "frame",
+		};
+		expect([aligned, based]).toHaveLength(2);
+	});
+
+	it("carries the color painted behind the caption", () => {
+		const filled: LabelIconDoc = { ...labelIcon, labelFill: "#ffffff" };
+		expect(filled.labelFill).toBe("#ffffff");
+	});
+});

@@ -135,23 +135,32 @@ need to reach past it. On top of that it adds, among others, the following (the
 exports of `index.ts` / `doc.ts` / `testing.ts` under `packages/canvas-sdk/src/` are
 the full list):
 
-| Export                                                                                                                  | Replaces                                                                   |
-| ----------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| `createFrameObjectDoc` (`/doc`)                                                                                         | the per-shape factory and doc-validator files                              |
-| `createFrameObjectDefinition`                                                                                           | the per-shape mapper and state-validator files                             |
-| `createTypeStencils` / `createStencilIcon`                                                                              | the stencil array and the `<svg>` wrapper every palette icon repeats       |
-| `createInsetTextRegion`                                                                                                 | a hand-written `calc*TextRegion` when the region is a fixed ratio inset    |
-| `ShapeBodyPath` / `ShapeBodyPolygon`                                                                                    | the styled silhouette every frame shape draws (stroked, filled, grabbable) |
-| `calcRoundedRectOutline` / `centeredPolygonOutline` (also `/doc`) / `formatPolygonPoints`                               | hand-rolled outline maths                                                  |
-| `calcBelowLabelTextRegion` / `calcBelowLabelVisualBounds` / `BelowLabelHitArea` / `BELOW_LABEL_STYLE_DEFAULTS` (`/doc`) | the "drawing fills the box, so the caption hangs underneath" trio          |
-| `createParseCheckSuite` (`/testing`)                                                                                    | the parse-check test every shape package writes                            |
-| `createIconSetCatalog` (`/doc`) / `createIconSetObject` / `createIconSetStencilCategory` / `./icon-set-generator`       | the name lookup, the shape, the presets and the generator of an icon set   |
+| Export                                                                                                            | Replaces                                                                                                        |
+| ----------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `createFrameObjectDoc` (`/doc`)                                                                                   | the per-shape factory and doc-validator files                                                                   |
+| `createFrameObjectDefinition`                                                                                     | the per-shape mapper and state-validator files                                                                  |
+| `createTypeStencils` / `createStencilIcon`                                                                        | the stencil array and the `<svg>` wrapper every palette icon repeats                                            |
+| `createInsetTextRegion`                                                                                           | a hand-written `calc*TextRegion` when the region is a fixed ratio inset                                         |
+| `ShapeBodyPath` / `ShapeBodyPolygon`                                                                              | the styled silhouette every frame shape draws (stroked, filled, grabbable)                                      |
+| `calcRoundedRectOutline` / `centeredPolygonOutline` (also `/doc`) / `formatPolygonPoints`                         | hand-rolled outline maths                                                                                       |
+| `BelowLabelHitArea` / `BELOW_LABEL_STYLE_DEFAULTS` (`/doc`) / `calcLabelBoxSize`                                  | the grab area of a `features.text: "label"` caption, and a label a `"body"` shape places outside its box itself |
+| `createParseCheckSuite` (`/testing`)                                                                              | the parse-check test every shape package writes                                                                 |
+| `createIconSetCatalog` (`/doc`) / `createIconSetObject` / `createIconSetStencilCategory` / `./icon-set-generator` | the name lookup, the shape, the presets and the generator of an icon set                                        |
 
-The below-label parts go together: pass the region as `createFrameObjectDefinition`'s
-`textRegion` (which builds the text slot part kind placing the label) and the bounds
-as its `visualBounds` — without the latter, zoom-to-fit and the
-export viewBox crop the label away — and place the hit area inside the shape's own
-`data-kind="object"` group so the label can be grabbed.
+A shape whose drawing fills its box declares `features.text: "label"`, and its
+text hangs under the box as a caption sized from the text itself. The core places it
+— its text slot region, its visual bounds and the box painted behind it in the
+shape's `labelFill` all come from `calcLabelTextRegion` (`@jiscribe/doc`), measured
+with the type's own text defaults — so such a type declares no `textRegion` (on
+either definition), no `visualBounds` and no `"textSlot"` part kind; any of them is
+refused at registration. Spread `LABEL_TEXT_STYLE_DEFAULTS` (`@jiscribe/doc`) into
+its doc defaults, and place `BelowLabelHitArea` inside the shape's own
+`data-kind="object"` group so the caption can be grabbed. A component written
+without `createFrameObject` draws `LabelTextFill` (part of the unstable surface the kit re-exports) itself, ahead of the caption's
+text, as it draws the text. The default menus offer the caption's background under
+the `label-style` section; a type stating its own `menu` puts
+`{ type: "labelBackgroundColor" }` there too, so the item survives a selection
+mixing it with another label type.
 
 A type whose slots are laid out against each other (a table's cells, a record's
 compartments) declares the `"textSlot"` part kind itself, with

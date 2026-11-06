@@ -7,6 +7,7 @@ import {
 	isValidAutoHeightState,
 	isValidFillStyleState,
 	isValidFrameState,
+	isValidLabelTextStyleState,
 	isValidRadiusStyleState,
 	isValidStrokeStyleState,
 	isValidTextStyleState,
@@ -18,7 +19,7 @@ import type { ObjectStateValidator } from "../../registry/ObjectStateValidatorRe
 /**
  * Builds a state validator for Frame-type objects (geometry: "rect" | "ellipse")
  * from its features. Validates id/type, Frame, transform, and stroke/fill/text/radius/arrow
- * according to the features. Shape-specific extra validation (e.g. svg's svgText)
+ * (and a `"label"` caption's own fields) according to the features. Shape-specific extra validation (e.g. svg's svgText)
  * is passed via `isExtraValid` (a boolean-returning predicate).
  *
  * Since it is a boolean type-guard approach, each check short-circuits with &&.
@@ -41,6 +42,7 @@ export const createFrameStateValidator = (
 			(!features.fill || isValidFillStyleState(o)) &&
 			(features.text === undefined ||
 				isValidTextStyleState(o, features.text)) &&
+			(features.text !== "label" || isValidLabelTextStyleState(o)) &&
 			(!features.radius || isValidRadiusStyleState(o)) &&
 			// The mapper passes the arrow group through for any type declaring it
 			// (collectStyleKeys); this is the clipboard boundary, so an unchecked

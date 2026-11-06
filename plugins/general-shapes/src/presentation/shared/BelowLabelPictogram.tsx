@@ -11,13 +11,13 @@ type BelowLabelPictogramProps = {
 	figure: PictogramFigure;
 	/** Shared frame attributes from createFrameObject (ids, transform, resolved colors). */
 	shape: FrameShapeProps;
-	/** The box the figure fills, plus the slots the label is sized from. */
-	state: Dimensions & { text?: Record<string, TextSlot> };
+	/** The shape's type and the box the figure fills, plus the slots the label is sized from. */
+	state: Dimensions & { type: string; text?: Record<string, TextSlot> };
 };
 
 /**
  * A pictogram whose drawing takes the whole box, so its label hangs underneath
- * (calcBelowLabelTextRegion). The label sits outside the box and its own
+ * (`features.text: "label"`). The label sits outside the box and its own
  * foreignObject is `pointer-events: none`, so it gets a hit area of its own.
  */
 export const BelowLabelPictogram: React.FC<BelowLabelPictogramProps> = ({

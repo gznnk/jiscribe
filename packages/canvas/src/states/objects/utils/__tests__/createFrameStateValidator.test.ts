@@ -147,6 +147,30 @@ describe("createFrameStateValidator feature gating", () => {
 	});
 });
 
+describe("createFrameStateValidator label text", () => {
+	const isValid = createFrameStateValidator(features({ text: "label" }));
+	const captioned = { ...validFrame, text: { body: { text: "Lambda" } } };
+
+	it("accepts a caption's background in the form a shape's fill takes", () => {
+		expect(isValid({ ...captioned, labelFill: "auto" })).toBe(true);
+		expect(isValid(captioned)).toBe(true);
+	});
+
+	it("rejects a background a shape's fill would be refused", () => {
+		expect(
+			isValid({ ...captioned, labelFill: "url(javascript:alert(1))" }),
+		).toBe(false);
+		expect(isValid({ ...captioned, labelFill: 3 })).toBe(false);
+	});
+
+	it("leaves the field alone on a type that holds no caption", () => {
+		const isBodyValid = createFrameStateValidator(features({ text: "body" }));
+		expect(
+			isBodyValid({ ...captioned, labelFill: "url(javascript:alert(1))" }),
+		).toBe(true);
+	});
+});
+
 describe("createFrameStateValidator extra predicate", () => {
 	const hasTail = (o: StateRecord) => "tail" in o;
 

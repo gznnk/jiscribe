@@ -13,6 +13,10 @@ describe("toStyleIntent (the one translation)", () => {
 				kind: "stroke",
 				color: "auto",
 			});
+			expect(toStyleIntent("labelFill", "#ffffff")).toEqual({
+				kind: "labelFill",
+				color: "#ffffff",
+			});
 		});
 
 		it("a number property is read as one", () => {

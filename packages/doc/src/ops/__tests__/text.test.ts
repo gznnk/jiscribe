@@ -9,6 +9,7 @@ import {
 	twoRects,
 } from "./support/docFixtures";
 import {
+	captionedDefinition,
 	cardDefinition,
 	cellGridDefinition,
 	sourceBodyDefinition,
@@ -144,6 +145,27 @@ describe("setText", () => {
 			{ text: " (2FA off)", fontWeight: "bold" },
 		]);
 		expectValid(doc);
+	});
+
+	it("keeps the styling of a caption's characters a rewrite leaves in place", () => {
+		const captionOps = createDocOps({
+			plugins: [
+				{ id: "caption-plugin", objects: { captioned: captionedDefinition } },
+			],
+		});
+		const doc = emptyDoc();
+		captionOps.addObject(doc, "captioned", { x: 0, y: 0 });
+		readObject(doc, "captioned-1").text = [
+			{ text: "Web" },
+			{ text: " (old)", fontWeight: "bold" },
+		];
+
+		captionOps.setText(doc, "captioned-1", "Web (new)");
+
+		expect(readObject(doc, "captioned-1").text).toEqual([
+			{ text: "Web" },
+			{ text: " (new)", fontWeight: "bold" },
+		]);
 	});
 });
 

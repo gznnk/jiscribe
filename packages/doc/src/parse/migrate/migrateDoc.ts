@@ -1,6 +1,7 @@
 import { isArray, isObject, isString } from "@jiscribe/basic-validators";
 
 import { migrateEmptyRunList } from "./migrateEmptyRunList";
+import { migrateLabelVerticalAlign } from "./migrateLabelVerticalAlign";
 import { migrateSourceRuns } from "./migrateSourceRuns";
 import type { ObjectMigration } from "./ObjectMigration";
 import type { SemanticDiagnostic } from "../../model/types/SemanticDiagnostic";
@@ -27,6 +28,7 @@ export type MigrateDocResult = {
 const objectMigrations: readonly ObjectMigration[] = [
 	migrateSourceRuns,
 	migrateEmptyRunList,
+	migrateLabelVerticalAlign,
 ];
 
 /**

@@ -11,23 +11,28 @@ import { TEXT_SLOT_STYLE_KEYS } from "./TextSlot";
  * - 'source': The same single body, written in a language the shape renders
  *   itself (SourceTextStyleDoc). A plain string only, and no emphasis
  *   typography, both being what the language's own syntax carries.
+ * - 'label': The same single body as 'body', hung below the box as a caption
+ *   sized from its own text (LabelTextStyleDoc) rather than laid out inside the
+ *   box. Every such type places it the same way (calcLabelTextRegion), so a type
+ *   declares no region of its own, and the body takes no `verticalAlign`, having
+ *   no room in its box to move through.
  * - 'slots': Named slots (keyed-form doc), each a TextSlot styled on its own;
  *   the slot set is closed and spelled out by the type.
  */
-export type TextType = "body" | "source" | "slots";
+export type TextType = "body" | "source" | "label" | "slots";
 
 /**
  * Whether the type holds its text as one body on the object itself rather than in
- * named slots — the two root-form docs, `"body"` and `"source"` alike. Every side
+ * named slots — the root-form docs, `"body"`, `"source"` and `"label"` alike. Every side
  * asking "is there a single text here to read, write or place" asks it through
  * this, so the two cannot drift apart on the question.
  *
  * @param textType - The type's `ObjectFeatures.text`; `undefined`, which is a
  *   type holding no text at all, is false
- * @returns True for `"body"` and `"source"`, false for `"slots"` and `undefined`
+ * @returns True for `"body"`, `"source"` and `"label"`, false for `"slots"` and `undefined`
  */
 export const isSingleBodyText = (textType: TextType | undefined): boolean =>
-	textType === "body" || textType === "source";
+	textType === "body" || textType === "source" || textType === "label";
 
 /**
  * The style fields a text of this type accepts, in the order
@@ -38,7 +43,9 @@ export const isSingleBodyText = (textType: TextType | undefined): boolean =>
  * A `"source"` text takes the whole set less the emphasis half
  * (`TEXT_EMPHASIS_STYLE_KEYS`): its body is written in a language whose own
  * syntax sets those, and a value set on both sides would leave the document
- * saying one thing and the drawing showing another.
+ * saying one thing and the drawing showing another. A `"label"` text takes the
+ * whole set less `verticalAlign`: its box is sized from the text, so there is no
+ * slack for the block to be placed in.
  *
  * @param textType - The type's `ObjectFeatures.text`; `undefined`, which is a
  *   type holding no text at all, yields an empty array
@@ -49,6 +56,9 @@ export const textStyleKeysOf = (
 ): (keyof TextSlotStyle)[] => {
 	if (textType === undefined) {
 		return [];
+	}
+	if (textType === "label") {
+		return TEXT_SLOT_STYLE_KEYS.filter((key) => key !== "verticalAlign");
 	}
 	if (textType !== "source") {
 		return [...TEXT_SLOT_STYLE_KEYS];
@@ -66,7 +76,7 @@ export const textStyleKeysOf = (
  *
  * @param textType - The type's `ObjectFeatures.text`; `undefined`, which is a
  *   type holding no text at all, is false
- * @returns True for `"body"` and `"slots"`, false for `"source"` and `undefined`
+ * @returns True for `"body"`, `"label"` and `"slots"`, false for `"source"` and `undefined`
  */
 export const acceptsTextEmphasisStyle = (
 	textType: TextType | undefined,

@@ -132,23 +132,30 @@ canvas に残して SDK が再エクスポートする。物理的に移すと c
 そのうえで足している主なものが次である（全体は `packages/canvas-sdk/src/` の
 `index.ts` / `doc.ts` / `testing.ts` の export が正本）。
 
-| export                                                                                                                   | 置き換わるもの                                                  |
-| ------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------- |
-| `createFrameObjectDoc`（`/doc`）                                                                                         | 図形ごとの factory / doc バリデータのファイル                   |
-| `createFrameObjectDefinition`                                                                                            | 図形ごとの mapper / state バリデータのファイル                  |
-| `createTypeStencils` / `createStencilIcon`                                                                               | ステンシル配列と、全アイコンが繰り返す `<svg>` ラッパー         |
-| `createInsetTextRegion`                                                                                                  | 領域が固定比率の inset でしかない場合の手書き `calc*TextRegion` |
-| `ShapeBodyPath` / `ShapeBodyPolygon`                                                                                     | frame 系図形が描くシルエット（線・塗り・掴める本体）            |
-| `calcRoundedRectOutline` / `centeredPolygonOutline`（`/doc` にもある）/ `formatPolygonPoints`                            | 手書きの輪郭計算                                                |
-| `calcBelowLabelTextRegion` / `calcBelowLabelVisualBounds` / `BelowLabelHitArea` / `BELOW_LABEL_STYLE_DEFAULTS`（`/doc`） | 「箱いっぱいに描くので文字を下へ吊る」機構一式                  |
-| `createParseCheckSuite`（`/testing`）                                                                                    | 図形パッケージが毎回書く parse-check テスト                     |
-| `createIconSetCatalog`（`/doc`）/ `createIconSetObject` / `createIconSetStencilCategory` / `./icon-set-generator`        | アイコンセットの名前引き・図形・プリセット・生成スクリプト      |
+| export                                                                                                            | 置き換わるもの                                                                           |
+| ----------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `createFrameObjectDoc`（`/doc`）                                                                                  | 図形ごとの factory / doc バリデータのファイル                                            |
+| `createFrameObjectDefinition`                                                                                     | 図形ごとの mapper / state バリデータのファイル                                           |
+| `createTypeStencils` / `createStencilIcon`                                                                        | ステンシル配列と、全アイコンが繰り返す `<svg>` ラッパー                                  |
+| `createInsetTextRegion`                                                                                           | 領域が固定比率の inset でしかない場合の手書き `calc*TextRegion`                          |
+| `ShapeBodyPath` / `ShapeBodyPolygon`                                                                              | frame 系図形が描くシルエット（線・塗り・掴める本体）                                     |
+| `calcRoundedRectOutline` / `centeredPolygonOutline`（`/doc` にもある）/ `formatPolygonPoints`                     | 手書きの輪郭計算                                                                         |
+| `BelowLabelHitArea` / `BELOW_LABEL_STYLE_DEFAULTS`（`/doc`）/ `calcLabelBoxSize`                                  | `features.text: "label"` の下ラベルの掴み領域、`"body"` の図形が箱の外へ自分で置くラベル |
+| `createParseCheckSuite`（`/testing`）                                                                             | 図形パッケージが毎回書く parse-check テスト                                              |
+| `createIconSetCatalog`（`/doc`）/ `createIconSetObject` / `createIconSetStencilCategory` / `./icon-set-generator` | アイコンセットの名前引き・図形・プリセット・生成スクリプト                               |
 
-下ラベルの部材は 3 つで 1 組である。領域を `createFrameObjectDefinition` の
-`textRegion`（ラベルを置くテキストスロットの部分種別になる）に、bounds を
-`visualBounds` に渡す。後者が無いと zoom-to-fit とエクスポートの viewBox が
-ラベルを切り落とす。ヒットエリアは図形自身の `data-kind="object"` グループの中に
-置き、ラベルを掴めるようにする。
+箱いっぱいに描く図形は `features.text: "label"` を宣言し、文字はテキスト自身から
+大きさを決めるラベルとして箱の下に吊る。置き場所は core が決める。テキストスロットの
+領域・見た目の範囲・図形の `labelFill` で塗る背景の四角は、どれも型の文字の既定で測った
+`calcLabelTextRegion`（`@jiscribe/doc`）から出る。そのためこの型は `textRegion`
+（doc / UI どちらの定義にも）・`visualBounds`・`"textSlot"` の部分種別を宣言せず、
+宣言すれば登録時に拒否される。doc の既定には `LABEL_TEXT_STYLE_DEFAULTS`
+（`@jiscribe/doc`）を spread し、`BelowLabelHitArea` を図形自身の `data-kind="object"`
+グループの中に置いてラベルを掴めるようにする。`createFrameObject` を使わずに書いた
+component は、文字と同じく `LabelTextFill`（キットが再エクスポートする unstable 面にある）も自分で文字より前に描く。既定のメニューは
+ラベルの背景色を `label-style` セクションに出す。`menu` を自分で書く型もそこに
+`{ type: "labelBackgroundColor" }` を置く。別のラベル型と一緒に選んでも項目が残るように
+するためである。
 
 スロット同士を並べてレイアウトする型（表のセル、record の区画）は、`"textSlot"` の
 部分種別を自分で宣言し、`createTextSlotPartKindDefinition({ regions })` を

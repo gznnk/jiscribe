@@ -111,9 +111,15 @@ export {
 // where the one body is placed against the shape. The schema generator lists
 // these beside the slot's own keys.
 export { TEXT_BODY_KEYS } from "./model/objects/base/TextStyleDoc";
-// The narrower of the two single-body doc forms, for a type that renders its text
-// from a source language of its own (features.text: "source").
-export type { SourceTextStyleDoc } from "./model/objects/base/TextStyleDoc";
+// The narrower single-body doc forms: one for a type that renders its text from a
+// source language of its own (features.text: "source"), one for a type hanging
+// its text below the box as a caption (features.text: "label"), with the fields
+// that caption carries beyond its slot's styling.
+export type {
+	LabelTextStyleDoc,
+	SourceTextStyleDoc,
+} from "./model/objects/base/TextStyleDoc";
+export { LABEL_TEXT_KEYS } from "./model/objects/base/TextStyleDoc";
 export type { TextVerticalBasis } from "./model/objects/types/text/TextVerticalBasis";
 export {
 	isTextVerticalBasis,
@@ -160,6 +166,16 @@ export type { ObjectDocDefinition } from "./plugin/ObjectDocDefinition";
 // The box declaration a doc definition carries, for the types whose geometry does
 // not settle their box: a plugin author annotating one needs the shape of it.
 export type { ObjectDocBoundsCalculator } from "./plugin/ObjectDocBounds";
+// Where a `features.text: "label"` type hangs its caption, which no such type
+// declares: the core places every one of them this way, the canvas and a headless
+// reader alike. The creation typography the types spread into their defaults.
+export {
+	calcLabelTextRegion,
+	calcLabelTextVisualBounds,
+	LABEL_TEXT_GAP,
+} from "./text/label/calcLabelTextRegion";
+export { calcLabelTextBoxSize } from "./text/label/calcLabelTextBoxSize";
+export { LABEL_TEXT_STYLE_DEFAULTS } from "./text/label/labelTextStyleDefaults";
 // The text-region declaration a doc definition carries, and the two answers most
 // types give: the whole box, and "the box does not hold the text at all".
 export type { ObjectDocTextRegionCalculator } from "./plugin/ObjectDocTextRegion";

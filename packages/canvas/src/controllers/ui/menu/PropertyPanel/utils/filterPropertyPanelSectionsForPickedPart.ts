@@ -33,6 +33,7 @@ const BUILTIN_ROW_STYLE_INTENT_KINDS = {
 	verticalAlign: "text",
 	textVerticalBasis: "text",
 	textLayout: "text",
+	labelBackgroundColor: ["labelFill"],
 } as const satisfies Record<
 	PropertyPanelBuiltinItemKey,
 	BuiltinControlStyleIntentKinds

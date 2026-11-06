@@ -6,7 +6,7 @@
 //
 // The pictograms (actor / server / package / envelope / queue / gear / lock) are
 // absent: their drawing fills the box and the label hangs below it, sized from
-// its own text, so they declare `calcOutsideBoxTextRegion` instead.
+// its own text, which is `features.text: "label"` — the core places it.
 import { createInsetTextRegion } from "@jiscribe/canvas-sdk/doc";
 import type { Dimensions, Rect } from "@jiscribe/geometry";
 import { calcInsetRect } from "@jiscribe/geometry";

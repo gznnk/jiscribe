@@ -9,7 +9,7 @@ export type ActorFigure = {
 /**
  * Lays out the stick figure over the whole bounding box whose top-left corner is
  * at (x, y): the head sits on the top edge and the feet reach the bottom one. The
- * label is not part of the box (it hangs below it — calcBelowLabelTextRegion), so
+ * label is not part of the box (it hangs below it — calcLabelTextRegion), so
  * nothing here has to be left free for it. Shared by the object renderer
  * (centered origin) and the draw-drag preview, which reuses that renderer.
  */

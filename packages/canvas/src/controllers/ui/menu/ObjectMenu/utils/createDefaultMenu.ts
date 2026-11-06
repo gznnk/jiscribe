@@ -11,6 +11,11 @@ import type { ObjectMenuItem, ObjectMenuSection } from "../ObjectMenuTypes";
  * offered only to a text type that accepts them
  * ({@link acceptsTextEmphasisStyle}); `font` stays either way, carrying fields
  * every text type takes.
+ *
+ * A `text: "label"` type gets its caption's background under `label-style`, the
+ * section id a connector's label background sits under too, so the merge across
+ * selected types keeps it for every type offering it there. Its alignment row
+ * offers no vertical values, the caption having no slack to move through.
  */
 export const createDefaultMenu = (
 	features: ObjectFeatures,
@@ -36,12 +41,18 @@ export const createDefaultMenu = (
 		}
 		sections.push({ id: "style", items });
 	}
+	if (features.text === "label") {
+		sections.push({
+			id: "label-style",
+			items: [{ type: "labelBackgroundColor" }],
+		});
+	}
 	if (features.text) {
-		// A point's height is measured from its own text, so no vertical value
-		// has slack to move through; the horizontal row stays because a short
-		// line still shifts inside the box its longest line widened.
+		// A point's height and a caption's box are measured from their own text,
+		// so no vertical value has slack to move through; the horizontal row stays
+		// because a short line still shifts inside the box its longest line widened.
 		const textAlignment: ObjectMenuItem =
-			features.geometry === "point"
+			features.geometry === "point" || features.text === "label"
 				? { type: "textAlignment", vertical: false }
 				: { type: "textAlignment" };
 		const items: ObjectMenuItem[] = [{ type: "font" }];

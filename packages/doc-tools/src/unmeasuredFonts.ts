@@ -90,8 +90,8 @@ const holdsSlotText = (value: unknown): boolean => {
 };
 
 /**
- * Whether the object has text the diagnosis measures: a single body, any slot,
- * or a connector's label holding a character. False for a type outside the
+ * Whether the object has text the diagnosis measures: a single body (a caption
+ * hung below the box included), any slot, or a connector's label holding a character. False for a type outside the
  * shipped set and for one whose body its own renderer lays out (`"source"`),
  * neither being measured at all.
  */
@@ -100,7 +100,7 @@ const holdsMeasuredText = (object: ObjectDoc): boolean => {
 		return resolveConnectorLabel(object) !== null;
 	}
 	const textType = standardObjectDocDefinitions.get(object.type)?.features.text;
-	if (textType === "body") {
+	if (textType === "body" || textType === "label") {
 		const text = (object as { text?: unknown }).text;
 		return isRichText(text) && richTextToPlain(text) !== "";
 	}

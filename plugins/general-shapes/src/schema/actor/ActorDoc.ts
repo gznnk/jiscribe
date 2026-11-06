@@ -1,8 +1,9 @@
+import { AUTO_COLOR } from "@jiscribe/canvas-sdk/doc";
 import {
-	AUTO_COLOR,
-	BELOW_LABEL_STYLE_DEFAULTS,
-} from "@jiscribe/canvas-sdk/doc";
-import { DEFAULT_FILL, DEFAULT_STROKE_WIDTH } from "@jiscribe/doc";
+	DEFAULT_FILL,
+	DEFAULT_STROKE_WIDTH,
+	LABEL_TEXT_STYLE_DEFAULTS,
+} from "@jiscribe/doc";
 import type { CreateObjectType, ObjectFeatures } from "@jiscribe/doc";
 
 /**
@@ -14,7 +15,7 @@ import type { CreateObjectType, ObjectFeatures } from "@jiscribe/doc";
  * hard to grab). This lets it reuse Frame-based transforms and connector
  * outline connections with the same mechanism as Rect. The figure fills the
  * whole box; the label is sized from its own text and hung below the box
- * (calcBelowLabelTextRegion), so it stays legible however small the box gets.
+ * (calcLabelTextRegion), so it stays legible however small the box gets.
  */
 export const ActorFeatures = {
 	type: "actor",
@@ -22,7 +23,7 @@ export const ActorFeatures = {
 	transform: true,
 	stroke: true,
 	fill: true,
-	text: "body",
+	text: "label",
 	connectable: true,
 } as const satisfies ObjectFeatures;
 
@@ -44,5 +45,5 @@ export const ACTOR_DOC_DEFAULTS: Omit<ActorDoc, "id"> = {
 	stroke: AUTO_COLOR,
 	strokeWidth: DEFAULT_STROKE_WIDTH,
 	text: "",
-	...BELOW_LABEL_STYLE_DEFAULTS,
+	...LABEL_TEXT_STYLE_DEFAULTS,
 } as const as ActorDoc;

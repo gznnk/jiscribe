@@ -14,6 +14,7 @@ import type { RadiusStyleDoc } from "@jiscribe/doc/model/objects/base/RadiusStyl
 import { CORNER_RADIUS_MIN } from "@jiscribe/doc/model/objects/base/RadiusStyleDoc";
 import type { StrokeStyleDoc } from "@jiscribe/doc/model/objects/base/StrokeStyleDoc";
 import { STROKE_WIDTH_MIN } from "@jiscribe/doc/model/objects/base/StrokeStyleDoc";
+import type { LABEL_TEXT_KEYS } from "@jiscribe/doc/model/objects/base/TextStyleDoc";
 import { isArrowType } from "@jiscribe/doc/model/objects/types/ArrowType";
 import { isOwnedEndpointRef } from "@jiscribe/doc/model/objects/types/EndpointRef";
 import type { GeometryType } from "@jiscribe/doc/model/objects/types/GeometryType";
@@ -207,6 +208,14 @@ const fillStyleValidators = {
 	fillOpacity: numberRangeValidator(OPACITY_MIN, OPACITY_MAX),
 } as const satisfies Record<keyof FillStyleDoc, StateFieldValidator>;
 
+/** A caption's own fields; its background is held to the rule a shape's `fill` is. */
+const labelTextStyleValidators = {
+	labelFill: fillStyleValidators.fill,
+} as const satisfies Record<
+	(typeof LABEL_TEXT_KEYS)[number],
+	StateFieldValidator
+>;
+
 /** The corner-radius group's fields. */
 const radiusStyleValidators = {
 	rx: numberValidator(CORNER_RADIUS_MIN),
@@ -246,6 +255,10 @@ export const isValidStrokeStyleState = (o: StateRecord): boolean =>
 /** Validates FillStyleState's fill as a color when present. */
 export const isValidFillStyleState = (o: StateRecord): boolean =>
 	hasValidFields(o, fillStyleValidators);
+
+/** Validates a `text: "label"` caption's own fields (LabelTextStyleState), `labelFill` as a color, when present. */
+export const isValidLabelTextStyleState = (o: StateRecord): boolean =>
+	hasValidFields(o, labelTextStyleValidators);
 
 /**
  * Validates one styling group beyond its declared types: CSS-injection safety for

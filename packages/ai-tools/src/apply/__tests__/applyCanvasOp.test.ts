@@ -421,6 +421,39 @@ describe("applyCanvasOp", () => {
 		});
 	});
 
+	it("writes a label's background onto a type drawing its text below its box, and names it on every other type", () => {
+		const { apply, currentDoc } = createFakeDocBridge();
+		apply({
+			kind: "addObjects",
+			objects: [
+				{ type: "cross", x: 0, y: 0, text: "join" },
+				{ type: "rect", x: 300, y: 0 },
+			],
+		});
+		apply({
+			kind: "connectMany",
+			entries: [{ sourceId: "cross-1", targetId: "rect-1" }],
+		});
+
+		const result = apply({
+			kind: "setStyle",
+			ids: ["cross-1", "rect-1", "connector-1"],
+			style: { labelFill: "#ffffff" },
+		});
+
+		expect(result).toMatchObject({
+			ok: true,
+			text: 'styled "cross-1" (not supported by their type: "rect-1" labelFill; "connector-1" labelFill)',
+		});
+		expect(rootObject(currentDoc(), "cross-1")).toMatchObject({
+			labelFill: "#ffffff",
+		});
+		expect(rootObject(currentDoc(), "rect-1")).not.toHaveProperty("labelFill");
+		expect(rootObject(currentDoc(), "connector-1")).not.toHaveProperty(
+			"labelFill",
+		);
+	});
+
 	it("writes the paint opacities onto the object", () => {
 		const { apply, currentDoc } = createFakeDocBridge();
 		apply({ kind: "addObjects", objects: [{ type: "rect", x: 0, y: 0 }] });

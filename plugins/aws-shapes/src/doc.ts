@@ -25,8 +25,6 @@ export const awsIconDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: AwsIconFeatures,
 	defaults: AWS_ICON_DOC_DEFAULTS,
 	extraKeys: AwsIconExtraKeys,
-	// The drawing fills the box and the label hangs outside it, below.
-	textRegion: calcOutsideBoxTextRegion,
 	description:
 		'One icon from the official AWS Architecture Icons set, drawn as a node: it holds text and can be a connector endpoint, so arrows attach to it directly. `icon` names the picture, as a layer-prefixed kebab-case name — "service/aws-lambda" (an AWS service), "resource/amazon-ec2/instance" (a resource of a service), "general/user" (a generic figure). Common short names resolve too ("lambda", "s3", "ec2", "alb", "igw"), as does a name with the "amazon-"/"aws-" prefix or the layer prefix dropped where that is unambiguous; a name that resolves to nothing is a validation error carrying suggestions. `text` is drawn as a label below the box, auto-sized to itself, so keep it to the short service name ("Lambda", "S3"). There is no stroke or fill: AWS forbids recolouring its icons. Keep the box square (the 64x64 default) — the drawing is scaled uniformly and centred, so a non-square box only adds margin. Put these inside an awsGroup frame to show which VPC or subnet they live in.',
 	summary: "AWS service / resource icon (a labelled, connectable node)",

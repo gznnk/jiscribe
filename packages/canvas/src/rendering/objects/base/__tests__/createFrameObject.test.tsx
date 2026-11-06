@@ -23,6 +23,7 @@ import {
 } from "../../../../controllers/selection/partKinds/textSlotPartKind";
 import { theme } from "../../../../foundation/theme/themeTokens";
 import type { FillStyleState } from "../../../../states/objects/base/FillStyleState";
+import type { LabelTextStyleState } from "../../../../states/objects/base/LabelTextStyleState";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { StrokeStyleState } from "../../../../states/objects/base/StrokeStyleState";
 import type { TextStyleState } from "../../../../states/objects/base/TextStyleState";
@@ -74,7 +75,8 @@ type ProbeState = ObjectState &
 	TransformedFrame &
 	StrokeStyleState &
 	FillStyleState &
-	Partial<TextStyleState>;
+	Partial<TextStyleState> &
+	LabelTextStyleState;
 
 const probeState: ProbeState = {
 	id: "frame-1",
@@ -128,6 +130,7 @@ const renderFrameShape = (options?: {
 	return {
 		drawCount,
 		drawnShape,
+		container,
 		render: (nonce: number): void => {
 			act(() =>
 				root.render(
@@ -315,5 +318,84 @@ describe("createFrameObject", () => {
 		shape.render(1);
 		expect(regions).toHaveBeenCalledTimes(2);
 		shape.unmount();
+	});
+
+	describe("a label text type", () => {
+		const captionRegion = { x: -20, y: 29, width: 40, height: 28 };
+		const captionKinds = (): ObjectPartKindRegistry => {
+			const partKinds = createObjectPartKindRegistry();
+			partKinds.register("captioned", [
+				placeTextSlotRegions(
+					"captioned",
+					createTextSlotPartKindDefinition({ region: () => captionRegion }),
+				),
+			]);
+			return partKinds;
+		};
+		const captioned = (over: Partial<ProbeState> = {}): ProbeState => ({
+			...probeState,
+			type: "captioned",
+			features: { type: "captioned", geometry: "rect", text: "label" },
+			...over,
+		});
+		/** The painted box: the one rect in the overlays' group, ahead of the text. */
+		const readFill = (container: HTMLElement): SVGRectElement | null =>
+			container.querySelector('g[data-canvas-export="flatten"] > rect');
+
+		it("paints the caption's box in its labelFill, under no data-kind and taking no pointer", () => {
+			const shape = renderFrameShape({
+				state: captioned({ labelFill: "#ff0000" }),
+				partKinds: captionKinds(),
+			});
+			shape.render(0);
+
+			const fill = readFill(shape.container);
+			expect(fill?.getAttribute("x")).toBe("-20");
+			expect(fill?.getAttribute("y")).toBe("29");
+			expect(fill?.getAttribute("width")).toBe("40");
+			expect(fill?.getAttribute("height")).toBe("28");
+			expect(fill?.style.fill).toBe("rgb(255, 0, 0)");
+			expect(fill?.getAttribute("pointer-events")).toBe("none");
+			expect(fill?.hasAttribute("data-kind")).toBe(false);
+			expect(overlayPropsBySlotId.get(BODY_TEXT_SLOT_ID)).toMatchObject(
+				captionRegion,
+			);
+			shape.unmount();
+		});
+
+		it("knocks out in the page's color where labelFill is omitted or auto", () => {
+			for (const labelFill of [undefined, AUTO_COLOR]) {
+				const shape = renderFrameShape({
+					state: captioned({ labelFill }),
+					partKinds: captionKinds(),
+				});
+				shape.render(0);
+
+				// No DocumentSurfaceContext provider: the theme's canvas color.
+				expect(readFill(shape.container)?.style.fill).toBe(theme.canvasBg);
+				shape.unmount();
+			}
+		});
+
+		it("paints nothing behind an empty caption", () => {
+			const shape = renderFrameShape({
+				state: captioned({ text: { [BODY_TEXT_SLOT_ID]: { text: "" } } }),
+				partKinds: captionKinds(),
+			});
+			shape.render(0);
+
+			expect(readFill(shape.container)).toBeNull();
+			shape.unmount();
+		});
+
+		it("paints no box for a body type, whatever it states", () => {
+			const shape = renderFrameShape({
+				state: { ...probeState, labelFill: "#ff0000" },
+			});
+			shape.render(0);
+
+			expect(readFill(shape.container)).toBeNull();
+			shape.unmount();
+		});
 	});
 });

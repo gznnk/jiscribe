@@ -1,6 +1,7 @@
 import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
 import { acceptsTextEmphasisStyle } from "@jiscribe/doc/model/objects/types/text/TextType";
 
+import { hasSelectedLabelText } from "../../../../utils/hasSelectedLabelText";
 import { PROPERTY_PANEL_SECTIONS } from "../propertyPanelSections";
 import type {
 	PropertyPanelItem,
@@ -20,7 +21,9 @@ import type {
  * @param features - The type's declaration; `transform`, `geometry`, `fill`, `stroke`, `radius`, `arrow` and `text` are read
  * @returns The sections in display order, each labelled with the English wording
  *   its message key carries; the text section leaves the format row out for a
- *   type accepting no emphasis field ({@link acceptsTextEmphasisStyle})
+ *   type accepting no emphasis field ({@link acceptsTextEmphasisStyle}), and a
+ *   `text: "label"` type gets its caption's background under `label-style`
+ *   ahead of the text section
  */
 export const createDefaultPropertyPanel = (
 	features: ObjectFeatures,
@@ -70,6 +73,15 @@ export const createDefaultPropertyPanel = (
 			items: [{ type: "arrowHeads" }],
 		});
 	}
+	if (features.text === "label") {
+		// The section is offered only while there is a caption to paint, so its
+		// heading does not stand over a row that draws nothing.
+		sections.push({
+			...PROPERTY_PANEL_SECTIONS.labelStyle,
+			isShown: hasSelectedLabelText,
+			items: [{ type: "labelBackgroundColor" }],
+		});
+	}
 	if (features.text) {
 		const items: PropertyPanelItem[] = [
 			{ type: "fontFamily" },
@@ -82,10 +94,10 @@ export const createDefaultPropertyPanel = (
 				: []),
 			{ type: "textAlign" },
 		];
-		// A point's height is measured from its own text, so no vertical value has
-		// slack to move through; the horizontal row stays because a short line
-		// still shifts inside the box its longest line widened.
-		if (features.geometry !== "point") {
+		// A point's height and a caption's box are measured from their own text,
+		// so no vertical value has slack to move through; the horizontal row stays
+		// because a short line still shifts inside the box its longest line widened.
+		if (features.geometry !== "point" && features.text !== "label") {
 			items.push({ type: "verticalAlign" });
 		}
 		sections.push({ ...PROPERTY_PANEL_SECTIONS.text, items });

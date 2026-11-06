@@ -23,6 +23,8 @@ import type { StyleIntentUpdater } from "../ObjectMenu/ObjectMenuTypes";
  * - `arrowHeads` — the two ends of an arrow, and the size they share
  * - `fontFamily` / `fontSize` / `fontColor` / `textFormat` / `textAlign` /
  *   `verticalAlign` / `textLayout` — the text style of the selected slot
+ * - `labelBackgroundColor` — the background a `text: "label"` caption is
+ *   painted on (`labelFill`)
  */
 export type PropertyPanelBuiltinItemKey =
 	| "position"
@@ -45,7 +47,8 @@ export type PropertyPanelBuiltinItemKey =
 	| "textAlign"
 	| "verticalAlign"
 	| "textVerticalBasis"
-	| "textLayout";
+	| "textLayout"
+	| "labelBackgroundColor";
 
 /** One of the controls the panel itself draws, named by its kind. */
 export type PropertyPanelBuiltinItem = { type: PropertyPanelBuiltinItemKey };

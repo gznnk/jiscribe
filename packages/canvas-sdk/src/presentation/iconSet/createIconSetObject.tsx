@@ -47,7 +47,7 @@ export type IconSetObjectParams = {
  * Builds the component of a shape drawing one icon of a set: the asset's
  * viewBox scaled uniformly onto the box's shorter side and centred, over a
  * transparent hit area filling the box, with a hit area of its own for the
- * label hung below (calcBelowLabelTextRegion).
+ * caption hung below (a `features.text: "label"` type's, BelowLabelHitArea).
  *
  * Two cases draw a dashed frame instead of the icon: a name that resolves to
  * nothing (the parser rejects those, so only a state assembled in memory gets

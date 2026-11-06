@@ -16,8 +16,10 @@ import {
 	STROKE_WIDTH_MIN,
 	supportsAutoHeight,
 	TEXT_BODY_KEYS,
+	LABEL_TEXT_KEYS,
 	TEXT_EMPHASIS_STYLE_KEYS,
 	TEXT_SLOT_STYLE_KEYS,
+	textStyleKeysOf,
 	TRANSFORM_STYLE_KEYS,
 	type ObjectDocDefinition,
 } from "@jiscribe/doc";
@@ -37,6 +39,13 @@ type JsonSchemaNode = Record<string, unknown>;
 const handwrittenDefs = JSON.parse(
 	readFileSync(templatePath("handwrittenDefs.json"), "utf8"),
 ) as Record<string, JsonSchemaNode>;
+
+/**
+ * The handwritten $def a `features.text: "label"` type extends when the rest of it
+ * reduces to the shared structure (see isBoxShapeCompatible), and whose
+ * `labelFill` node every `"label"` type's $def refers to.
+ */
+const LABEL_BOX_SHAPE_DEF_NAME = "LabelBoxShapeDoc";
 
 /** The bound and default facts of one shared style property, read off `@jiscribe/doc`. */
 type SharedStyleFacts = {
@@ -60,7 +69,11 @@ const ARROW_SCALE_FACTS: SharedStyleFacts = {
  * drift from what the validators and renderers hold.
  */
 const SHARED_STYLE_FACTS: Record<
-	"StrokeStyle" | "FillStyle" | "PolylineDoc" | "ConnectorDoc",
+	| "StrokeStyle"
+	| "FillStyle"
+	| "PolylineDoc"
+	| "ConnectorDoc"
+	| typeof LABEL_BOX_SHAPE_DEF_NAME,
 	Record<string, SharedStyleFacts>
 > = {
 	StrokeStyle: {
@@ -82,6 +95,8 @@ const SHARED_STYLE_FACTS: Record<
 	},
 	PolylineDoc: { arrowScale: ARROW_SCALE_FACTS },
 	ConnectorDoc: { arrowScale: ARROW_SCALE_FACTS },
+	// Omitted, a caption's background is the knockout an "auto" one is drawn with.
+	[LABEL_BOX_SHAPE_DEF_NAME]: { labelFill: { default: AUTO_COLOR } },
 };
 
 /**
@@ -204,23 +219,50 @@ const rootTemplate = JSON.parse(
 const STYLE_PROP_SOURCES: ReadonlyArray<{
 	feature: "stroke" | "fill" | "text" | "transform";
 	styleDef: "StrokeStyle" | "FillStyle" | "TextStyle" | "TransformStyle";
-	props: readonly string[];
+	/** The group's properties for a type of these features. */
+	props: (features: ObjectDocDefinition["features"]) => readonly string[];
 }> = [
-	{ feature: "stroke", styleDef: "StrokeStyle", props: STROKE_STYLE_KEYS },
-	{ feature: "fill", styleDef: "FillStyle", props: FILL_STYLE_KEYS },
+	{
+		feature: "stroke",
+		styleDef: "StrokeStyle",
+		props: () => STROKE_STYLE_KEYS,
+	},
+	{ feature: "fill", styleDef: "FillStyle", props: () => FILL_STYLE_KEYS },
 	{
 		// The content first, then the styling of it: "text" is the body, which the slot
-		// keys deliberately leave out (they are `Omit<TextSlot, "text">`).
+		// keys deliberately leave out (they are `Omit<TextSlot, "text">`). Which of the
+		// styling the type takes is its text type's answer (a `"label"` caption takes
+		// no `verticalAlign`).
 		feature: "text",
 		styleDef: "TextStyle",
-		props: ["text", ...TEXT_SLOT_STYLE_KEYS],
+		props: (features) => ["text", ...textStyleKeysOf(features.text)],
 	},
 	{
 		feature: "transform",
 		styleDef: "TransformStyle",
-		props: TRANSFORM_STYLE_KEYS,
+		props: () => TRANSFORM_STYLE_KEYS,
 	},
 ];
+
+/**
+ * What the BoxShapeDoc variants are assembled for: a `"body"` text, whose styling
+ * is the whole slot set (TEXT_SLOT_STYLE_KEYS).
+ */
+const BOX_SHAPE_FEATURES: ObjectDocDefinition["features"] = {
+	type: "box",
+	geometry: "rect",
+	text: "body",
+};
+
+/**
+ * A caption's own fields (LABEL_TEXT_KEYS), which a `features.text: "label"`
+ * type's $def carries beside the text group, each a $ref into
+ * {@link LABEL_BOX_SHAPE_DEF_NAME} where their prose is written once.
+ */
+const LABEL_TEXT_PROP_SOURCE = {
+	styleDef: LABEL_BOX_SHAPE_DEF_NAME,
+	props: LABEL_TEXT_KEYS as readonly string[],
+} as const;
 
 /**
  * The fields that place the body against the shape rather than style it
@@ -467,7 +509,10 @@ function buildStyleRefProps(
 ): Record<string, JsonSchemaNode> {
 	const properties: Record<string, JsonSchemaNode> = {};
 	const sources = [
-		...STYLE_PROP_SOURCES,
+		...STYLE_PROP_SOURCES.map((source) => ({
+			styleDef: source.styleDef,
+			props: source.props(BOX_SHAPE_FEATURES),
+		})),
 		...(textVerticalBasis ? [TEXT_BODY_PROP_SOURCE] : []),
 	];
 	for (const source of sources) {
@@ -522,10 +567,11 @@ function buildBoxShapeDef(
 }
 
 /**
- * Does this type's $def reduce to BoxShapeDoc plus its own `type` const? True
- * only when the full assembly would reproduce the shared structure exactly:
- * plain rect geometry, all four style groups enabled on their shared defaults,
- * and no handwritten property fragment.
+ * Does this type's $def reduce to a shared box structure plus its own `type`
+ * const — BoxShapeDoc's, or LabelBoxShapeDoc's for a `features.text: "label"`
+ * type? True only when the full assembly would reproduce the shared structure
+ * exactly: plain rect geometry, all four style groups enabled on their shared
+ * defaults, and no handwritten property fragment.
  */
 function isBoxShapeCompatible(
 	type: string,
@@ -546,7 +592,7 @@ function isBoxShapeCompatible(
 			string,
 			JsonSchemaNode
 		>;
-		return source.props.every((prop) => {
+		return source.props(features).every((prop) => {
 			const defaultValue = defaults[prop];
 			return (
 				defaultValue === undefined || defaultValue === sharedProps[prop].default
@@ -569,12 +615,30 @@ function buildBoxShapeRefDef(
 	autoHeight: boolean,
 	textVerticalBasis: boolean,
 ): JsonSchemaNode {
+	return buildThinShapeDef(
+		type,
+		description,
+		boxShapeDefName(autoHeight, textVerticalBasis),
+	);
+}
+
+/**
+ * The thin $def of a type extending a shared structure: its description plus the
+ * `type` const, over the shared $def named.
+ *
+ * @param type - The type name, pinned as the `type` const
+ * @param description - AI-facing prose of the shape, shown as the $def's own description
+ * @param sharedDefName - The $def it extends through allOf
+ */
+function buildThinShapeDef(
+	type: string,
+	description: string,
+	sharedDefName: string,
+): JsonSchemaNode {
 	return {
 		description,
 		type: "object",
-		allOf: [
-			{ $ref: `#/$defs/${boxShapeDefName(autoHeight, textVerticalBasis)}` },
-		],
+		allOf: [{ $ref: `#/$defs/${sharedDefName}` }],
 		properties: {
 			type: {
 				description: `Must be "${type}".`,
@@ -614,12 +678,14 @@ function buildShapeDef(
 	const autoHeight = supportsAutoHeight(definition);
 
 	if (isBoxShapeCompatible(type, features, defaults)) {
-		return buildBoxShapeRefDef(
-			type,
-			description,
-			autoHeight,
-			features.textVerticalBasis === true,
-		);
+		return features.text === "label"
+			? buildThinShapeDef(type, description, LABEL_BOX_SHAPE_DEF_NAME)
+			: buildBoxShapeRefDef(
+					type,
+					description,
+					autoHeight,
+					features.textVerticalBasis === true,
+				);
 	}
 
 	const properties: Record<string, JsonSchemaNode> = {
@@ -663,9 +729,10 @@ function buildShapeDef(
 		...Object.keys(geometryProps),
 		...(features.radius ? ["rx"] : []),
 		...STYLE_PROP_SOURCES.filter((source) => features[source.feature]).flatMap(
-			(source) => source.props,
+			(source) => source.props(features),
 		),
 		...(features.textVerticalBasis ? TEXT_BODY_PROP_SOURCE.props : []),
+		...(features.text === "label" ? LABEL_TEXT_PROP_SOURCE.props : []),
 	]);
 	for (const [name, node] of Object.entries(overrides)) {
 		if (!generatedPropNames.has(name)) {
@@ -691,8 +758,14 @@ function buildShapeDef(
 	}
 
 	const styleSources = [
-		...STYLE_PROP_SOURCES.filter((source) => features[source.feature]),
+		...STYLE_PROP_SOURCES.filter((source) => features[source.feature]).map(
+			(source) => ({
+				styleDef: source.styleDef,
+				props: source.props(features),
+			}),
+		),
 		...(features.textVerticalBasis ? [TEXT_BODY_PROP_SOURCE] : []),
+		...(features.text === "label" ? [LABEL_TEXT_PROP_SOURCE] : []),
 	];
 	for (const source of styleSources) {
 		const sharedDef = handwrittenDefs[source.styleDef];
@@ -783,6 +856,46 @@ function assertTemplateTextShape(
 	if (offeredEmphasisKeys.length > 0) {
 		throw new Error(
 			`The handwritten $def "${defName}" offers ${offeredEmphasisKeys.join(", ")}, but type "${type}" writes its body in a source language whose own syntax carries the emphasis (templates/handwrittenDefs.json, features.text "source")`,
+		);
+	}
+}
+
+/**
+ * Fail generation when the handwritten LabelBoxShapeDoc has drifted from the
+ * structure it stands for: BoxShapeDoc's (the always-a-height variant, a caption
+ * never sizing its box) with the text styling a `"label"` text takes
+ * (textStyleKeysOf) and the caption's own fields (LABEL_TEXT_KEYS) — the same
+ * properties, in the same order, the shared ones as the same nodes.
+ */
+function assertLabelBoxShapeDef(): void {
+	const labelBoxShape = handwrittenDefs[LABEL_BOX_SHAPE_DEF_NAME];
+	const boxShape = buildBoxShapeDef(false, false);
+	const labelTextKeys = new Set<string>(LABEL_TEXT_KEYS);
+	const boxProps = boxShape.properties as Record<string, JsonSchemaNode>;
+	const labelProps = labelBoxShape.properties as Record<string, JsonSchemaNode>;
+	const takenBoxPropNames = Object.keys(boxProps).filter(
+		(name) =>
+			!TEXT_SLOT_STYLE_KEYS.includes(name as never) ||
+			textStyleKeysOf("label").includes(name as never),
+	);
+	const sharedPropNames = Object.keys(labelProps).filter(
+		(name) => !labelTextKeys.has(name),
+	);
+	const sharedPropsMatch =
+		JSON.stringify(sharedPropNames) === JSON.stringify(takenBoxPropNames) &&
+		takenBoxPropNames.every(
+			(name) =>
+				JSON.stringify(labelProps[name]) === JSON.stringify(boxProps[name]),
+		);
+	if (
+		!sharedPropsMatch ||
+		!LABEL_TEXT_KEYS.every((name) => name in labelProps) ||
+		JSON.stringify(labelBoxShape.required) !==
+			JSON.stringify(boxShape.required) ||
+		labelBoxShape.additionalProperties !== false
+	) {
+		throw new Error(
+			`The handwritten $def "${LABEL_BOX_SHAPE_DEF_NAME}" has drifted from BoxShapeDoc less the styling a "label" text does not take, plus ${LABEL_TEXT_KEYS.join(", ")} (templates/handwrittenDefs.json)`,
 		);
 	}
 }
@@ -886,6 +999,10 @@ export function generateSchema(
 			);
 		}
 	}
+	// Published whether or not a type extends it: every `"label"` type's $def
+	// refers to its `labelFill` node.
+	assertLabelBoxShapeDef();
+	defs[LABEL_BOX_SHAPE_DEF_NAME] = handwrittenDefs[LABEL_BOX_SHAPE_DEF_NAME];
 
 	const enumDefNames = [
 		"StrokeDashType",

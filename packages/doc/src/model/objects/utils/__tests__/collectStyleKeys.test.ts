@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { FILL_STYLE_KEYS } from "../../base/FillStyleDoc";
 import { RADIUS_STYLE_KEYS } from "../../base/RadiusStyleDoc";
 import { STROKE_STYLE_KEYS } from "../../base/StrokeStyleDoc";
+import { LABEL_TEXT_KEYS } from "../../base/TextStyleDoc";
 import type { ObjectFeatures } from "../../types/ObjectFeatures";
 import { collectStyleKeys } from "../collectStyleKeys";
 
@@ -25,12 +26,21 @@ describe("collectStyleKeys", () => {
 		).toEqual([...STROKE_STYLE_KEYS, ...FILL_STYLE_KEYS, ...RADIUS_STYLE_KEYS]);
 	});
 
-	it("excludes the whole text group, which the mappers rebuild per slot", () => {
-		for (const textType of ["body", "source", "slots"] as const) {
+	it("excludes the text group's styling, which the mappers rebuild per slot", () => {
+		for (const textType of ["body", "source", "label", "slots"] as const) {
 			const keys = collectStyleKeys(features({ text: textType }));
 			expect(keys).not.toContain("text");
 			expect(keys).not.toContain("textAlign");
 		}
+	});
+
+	it("collects a caption's own fields, which sit on the object in doc and state alike", () => {
+		expect(collectStyleKeys(features({ text: "label" }))).toEqual([
+			...LABEL_TEXT_KEYS,
+		]);
+		expect(collectStyleKeys(features({ text: "body" }))).not.toContain(
+			"labelFill",
+		);
 	});
 
 	it("omits the groups that are off", () => {

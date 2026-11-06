@@ -1,14 +1,15 @@
+import { AUTO_COLOR } from "@jiscribe/canvas-sdk/doc";
 import {
-	AUTO_COLOR,
-	BELOW_LABEL_STYLE_DEFAULTS,
-} from "@jiscribe/canvas-sdk/doc";
-import { DEFAULT_FILL, DEFAULT_STROKE_WIDTH } from "@jiscribe/doc";
+	DEFAULT_FILL,
+	DEFAULT_STROKE_WIDTH,
+	LABEL_TEXT_STYLE_DEFAULTS,
+} from "@jiscribe/doc";
 import type { CreateObjectType, ObjectFeatures } from "@jiscribe/doc";
 
 /**
  * A cross (plus) marker, used to mark junctions and for emphasis. The arms fill
  * the whole box, so its text is drawn as a label below it, auto-sized to the
- * text itself (calcBelowLabelTextRegion) — the marker stays a marker however
+ * text itself (calcLabelTextRegion) — the marker stays a marker however
  * long the note on it gets.
  *
  * It adopts rect geometry (x/y/width/height) and only swaps the rendering. This
@@ -21,7 +22,7 @@ export const CrossFeatures = {
 	transform: true,
 	stroke: true,
 	fill: true,
-	text: "body",
+	text: "label",
 	connectable: true,
 } as const satisfies ObjectFeatures;
 
@@ -43,5 +44,5 @@ export const CROSS_DOC_DEFAULTS: Omit<CrossDoc, "id"> = {
 	stroke: AUTO_COLOR,
 	strokeWidth: DEFAULT_STROKE_WIDTH,
 	text: "",
-	...BELOW_LABEL_STYLE_DEFAULTS,
+	...LABEL_TEXT_STYLE_DEFAULTS,
 } as const as CrossDoc;

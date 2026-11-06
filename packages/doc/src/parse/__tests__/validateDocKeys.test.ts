@@ -165,6 +165,44 @@ describe("validateDocKeys on the object itself", () => {
 		).toEqual([["textVerticalBasis"]]);
 	});
 
+	it("holds a caption's background and the typography it takes only on a label type", () => {
+		const captionFeatures = {
+			type: "captioned",
+			geometry: "rect",
+			transform: true,
+			text: "label",
+		} as const satisfies ObjectFeatures;
+		const captioned = (over: Record<string, unknown>) => ({
+			...rectWith(over),
+			type: "captioned",
+		});
+		expect(
+			validateWith(
+				captionFeatures,
+				captioned({ labelFill: "auto", fontWeight: "bold", textAlign: "left" }),
+			),
+		).toEqual([]);
+		expect(
+			keyPathsOf(
+				validateWith(captionFeatures, captioned({ verticalAlign: "top" })),
+			),
+		).toEqual([["verticalAlign"]]);
+		expect(
+			keyPathsOf(validateWith(RectFeatures, rectWith({ labelFill: "auto" }))),
+		).toEqual([["labelFill"]]);
+	});
+
+	it("reaches the runs of a caption's body", () => {
+		expect(
+			keyPathsOf(
+				validateWith(
+					{ type: "captioned", geometry: "rect", text: "label" },
+					{ ...rectWith({ text: [{ text: "a", zz: 1 }] }), type: "captioned" },
+				),
+			),
+		).toEqual([["text", 0, "zz"]]);
+	});
+
 	it("accepts the names the definition declares for the type, and only those", () => {
 		const doc = { id: "c1", type: "rect", tail: { x: 0, y: 0 } };
 		expect(validateWith(RectFeatures, doc, ["tail"])).toEqual([]);

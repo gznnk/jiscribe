@@ -37,7 +37,8 @@ import type { ObjectStateValidator } from "../states/registry/ObjectStateValidat
  * declaration may answer "the box does not hold the text at all" (`null`), which
  * a renderer has no use for. Most shipped shapes declare the very same function
  * on both sides; the ones that cannot are those whose region is sized from the
- * text itself (a below-label caption, a record's bands).
+ * text itself (an AWS group's title band, a record's bands). A `features.text:
+ * "label"` type declares neither: the core places its caption.
  *
  * The inherited `outline` / `anchorRegion` are the doc's too, and the canvas
  * draws connector ends and connection anchors from them as they are: they read

@@ -250,7 +250,7 @@ export type { ObjectPartKindDefinition } from "./rendering/objects/registry/Obje
 // slot and a double click opens it for editing.
 export { textSlotPart } from "./controllers/gestures/handlers/utils/partAddress";
 export type { Mods } from "./controllers/gestures/recognizer/GestureRecognizerTypes";
-// The slot id every single-body shape (`features.text: "body"` / `"source"`)
+// The slot id every single-body shape (`features.text: "body"` / `"source"` / `"label"`)
 // holds, i.e. the key its `state.text` carries. A shape with several slots names
 // its own instead.
 export { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/model/objects/types/text/TextSlot";

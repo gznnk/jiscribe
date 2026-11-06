@@ -8,7 +8,6 @@
 // the generated JSON schema and AI docs (pnpm generate:schema).
 import { createFrameObjectDoc } from "@jiscribe/canvas-sdk/doc";
 import type { CanvasDocPlugin, ObjectDocDefinition } from "@jiscribe/doc";
-import { calcOutsideBoxTextRegion } from "@jiscribe/doc";
 
 import { CARD_DOC_DEFAULTS, CardFeatures } from "./schema/card/CardDoc";
 import { cardOutline } from "./schema/card/cardOutline";
@@ -120,7 +119,6 @@ export const cardDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 
 export const crossDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: CrossFeatures,
-	textRegion: calcOutsideBoxTextRegion,
 	outline: crossOutline,
 	defaults: CROSS_DOC_DEFAULTS,
 	description:
@@ -180,7 +178,6 @@ export const documentDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 
 export const extractDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: ExtractFeatures,
-	textRegion: calcOutsideBoxTextRegion,
 	outline: extractOutline,
 	defaults: EXTRACT_DOC_DEFAULTS,
 	description:

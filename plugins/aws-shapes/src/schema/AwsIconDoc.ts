@@ -1,4 +1,4 @@
-import { BELOW_LABEL_STYLE_DEFAULTS } from "@jiscribe/canvas-sdk/doc";
+import { LABEL_TEXT_STYLE_DEFAULTS } from "@jiscribe/doc";
 import type { CreateObjectType, ObjectFeatures } from "@jiscribe/doc";
 
 /** The icon drawn when `icon` is omitted: the one an architecture diagram places most. */
@@ -24,7 +24,7 @@ export const AwsIconFeatures = {
 	type: "awsIcon",
 	geometry: "rect",
 	transform: true,
-	text: "body",
+	text: "label",
 	connectable: true,
 } as const satisfies ObjectFeatures;
 
@@ -63,5 +63,5 @@ export const AWS_ICON_DOC_DEFAULTS: Omit<AwsIconDoc, "id"> = {
 	// The drawing scales as a square, so a non-square box only gains margin.
 	// Locking the ratio by default makes a resize do the one thing it can here.
 	lockAspectRatio: true,
-	...BELOW_LABEL_STYLE_DEFAULTS,
+	...LABEL_TEXT_STYLE_DEFAULTS,
 } as const as AwsIconDoc;

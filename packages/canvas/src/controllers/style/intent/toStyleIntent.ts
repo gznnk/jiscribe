@@ -2,6 +2,7 @@ import type { ARROW_STYLE_KEYS } from "@jiscribe/doc/model/objects/base/ArrowSty
 import type { FILL_STYLE_KEYS } from "@jiscribe/doc/model/objects/base/FillStyleDoc";
 import type { RADIUS_STYLE_KEYS } from "@jiscribe/doc/model/objects/base/RadiusStyleDoc";
 import type { STROKE_STYLE_KEYS } from "@jiscribe/doc/model/objects/base/StrokeStyleDoc";
+import type { LABEL_TEXT_KEYS } from "@jiscribe/doc/model/objects/base/TextStyleDoc";
 import type { ArrowType } from "@jiscribe/doc/model/objects/types/ArrowType";
 import type { StrokeDashType } from "@jiscribe/doc/model/objects/types/StrokeDashType";
 import type { TextAlign } from "@jiscribe/doc/model/objects/types/text/TextAlign";
@@ -37,6 +38,7 @@ type SystemStyleName =
 	| (typeof RADIUS_STYLE_KEYS)[number]
 	| (typeof TEXT_SLOT_STYLE_KEYS)[number]
 	| (typeof ARROW_STYLE_KEYS)[number]
+	| (typeof LABEL_TEXT_KEYS)[number]
 	/** The content rather than styling; it lives in the keyed slots, not in one field. */
 	| "text"
 	| "lockAspectRatio"
@@ -83,6 +85,7 @@ const numberIntent =
 const INTENT_BY_PROPERTY = {
 	fill: (value) => ({ kind: "fill", color: value }),
 	fillOpacity: numberIntent((opacity) => ({ kind: "fillOpacity", opacity })),
+	labelFill: (value) => ({ kind: "labelFill", color: value }),
 	stroke: (value) => ({ kind: "stroke", color: value }),
 	strokeWidth: numberIntent((width) => ({ kind: "strokeWidth", width })),
 	strokeDashType: (value) => ({

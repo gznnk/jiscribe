@@ -51,8 +51,13 @@ connector 以外の全型）」のような能力ベースの言い回しを使�
 
 図形 `$def` のうち、rect ジオメトリ＋4 スタイル（stroke / fill / text / transform）を
 共有既定値のまま持ち、断片も corner radius も持たない型は、共有 `$def`
-`BoxShapeDoc` を `allOf` で参照して `type` の const だけを載せた薄い `$def` になる
-（判定は `generateSchema.ts` の `isBoxShapeCompatible`）。既定値の inline 上書きや
+`BoxShapeDoc`（高さの省略可否と `textVerticalBasis` の有無で 4 通り。使う型の無いものは
+出力しない）を `allOf` で参照して `type` の const だけを載せた薄い `$def` になる
+（判定は `generateSchema.ts` の `isBoxShapeCompatible`）。`features.text: "label"` の型は
+`verticalAlign` を持たず `labelFill` を持つので、代わりに手書きの `LabelBoxShapeDoc`
+（`handwrittenDefs.json`）を参照する。これは生成時に `BoxShapeDoc` から `verticalAlign` を
+除いて `labelFill` を足した形と照合され、ずれていれば生成が失敗する。全プロパティを展開する
+`"label"` の型も、`labelFill` はこの `$def` の節を参照する。既定値の inline 上書きや
 `propertyOverrides` のエントリがあれば自動的に対象外となり、従来どおり全プロパティを
 展開した `$def` が生成される。
 
@@ -82,7 +87,8 @@ pnpm check:schema      # ドリフト検知（CI で実行）
 ## 手書きテンプレ
 
 - `generator/templates/handwrittenDefs.json` — 特殊型（markdown / record / polyline /
-  polygon / group / svg / connector）とコネクタ・共有スタイル・enum の `$def`
+  polygon / group / svg / connector）とコネクタ・共有スタイル・enum の `$def`、
+  `"label"` の型が共有する `LabelBoxShapeDoc`
 - `generator/templates/propertyOverrides.json` — 型固有のプロパティ断片（callout の
   `tail`、sticky の `fontColor`）。既存プロパティ名なら差し替え、新規名なら `meta` の
   直後に挿入

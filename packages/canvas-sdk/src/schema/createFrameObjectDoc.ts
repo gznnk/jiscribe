@@ -50,9 +50,11 @@ type FrameObjectDocCommonParams = {
 	/**
 	 * Where the shape lays its text out (see `ObjectDocDefinition.textRegion`).
 	 * Pass the same function the UI definition registers as its `textRegion`, or
-	 * `calcOutsideBoxTextRegion` for a shape that draws its label outside the box.
-	 * It also reaches the derived validator, which is what lets a shape whose box
-	 * holds its text leave `height` out of the document (`supportsAutoHeight`).
+	 * `calcOutsideBoxTextRegion` for a shape that places its label outside the
+	 * box itself. A `features.text: "label"` type passes none, its caption being
+	 * placed by the core. It also reaches the derived validator, which is what
+	 * lets a shape whose box holds its text leave `height` out of the document
+	 * (`supportsAutoHeight`).
 	 */
 	textRegion?: ObjectDocTextRegionCalculator;
 
@@ -118,8 +120,9 @@ type FrameObjectDocCommonParams = {
 	/**
 	 * Draw-time text-style defaults of a `text: "slots"` shape — `byTextSlot` for the
 	 * slots it names, `everyTextSlot` for a shape whose slot set is not fixed (see
-	 * `ObjectDocDefinition.textSlotStyleDefaults`). A `"body"` shape omits it: its
-	 * single slot's defaults are read off {@link defaults}.
+	 * `ObjectDocDefinition.textSlotStyleDefaults`). A root-form shape (`"body"` /
+	 * `"source"` / `"label"`) omits it: its single slot's defaults are read off
+	 * {@link defaults}.
 	 */
 	textSlotStyleDefaults?: ObjectTextSlotStyleDefaults;
 };

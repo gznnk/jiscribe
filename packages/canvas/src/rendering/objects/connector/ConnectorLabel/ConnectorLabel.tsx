@@ -4,11 +4,11 @@ import type React from "react";
 import { memo, useMemo } from "react";
 
 import { LabelBox } from "./ConnectorLabelStyled";
-import { resolveLabelFill } from "./utils/resolveLabelFill";
 import { useDocumentSurface } from "../../DocumentSurfaceContext";
 import { useFontsLoadedNonceContext } from "../../FontsLoadedNonceContext";
 import { useIsTextLegible } from "../../useIsTextLegible";
 import { resolveAutoColor } from "../../utils/resolveAutoColor";
+import { resolveLabelFill } from "../../utils/resolveLabelFill";
 import { resolveConnectorLabelBox } from "../geometry/label/connectorLabelLayout";
 
 type ConnectorLabelProps = {

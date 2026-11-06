@@ -16,6 +16,10 @@ import {
 	STROKE_STYLE_KEYS,
 	type StrokeStyleDoc,
 } from "../../model/objects/base/StrokeStyleDoc";
+import {
+	LABEL_TEXT_KEYS,
+	type LabelTextStyleDoc,
+} from "../../model/objects/base/TextStyleDoc";
 import type { ObjectFeatures } from "../../model/objects/types/ObjectFeatures";
 import type { InlineTextStyle } from "../../model/objects/types/text/InlineTextStyle";
 import { TEXT_INLINE_STYLE_KEYS } from "../../model/objects/types/text/InlineTextStyle";
@@ -38,21 +42,26 @@ import {
 	validateRadiusStyleFields,
 	validateStrokeStyleFields,
 } from "../../model/objects/validators/validateStyleFields";
-import { validateTextSlotStyleFields } from "../../model/objects/validators/validateTextFields";
+import {
+	validateLabelTextFields,
+	validateTextSlotStyleFields,
+} from "../../model/objects/validators/validateTextFields";
 import type { ObjectDocDefinition } from "../../plugin/ObjectDocDefinition";
 import { DocOperationError } from "../errors";
 
 /**
  * Every styling property the doc-ops can set, gathered from the same style groups the
  * per-type docs mix in. Which of them an object actually accepts follows its
- * `features` — `fill` needs `features.fill`, the typography needs `features.text`, and
- * so on — and the rest are reported back as ignored rather than written blindly.
+ * `features` — `fill` needs `features.fill`, the typography needs `features.text`,
+ * `labelFill` needs `features.text: "label"`, and so on — and the rest are reported
+ * back as ignored rather than written blindly.
  */
 export type StyleParams = FillStyleDoc &
 	StrokeStyleDoc &
 	RadiusStyleDoc &
 	ArrowStyleDoc &
-	Omit<TextSlot, "text">;
+	Omit<TextSlot, "text"> &
+	Pick<LabelTextStyleDoc, (typeof LABEL_TEXT_KEYS)[number]>;
 
 /** Label styling a connector accepts: the label's own fields that {@link StyleParams} also names. */
 const CONNECTOR_LABEL_KEYS = [
@@ -72,13 +81,17 @@ export const ALL_STYLE_KEYS = [
 	...RADIUS_STYLE_KEYS,
 	...ARROW_STYLE_KEYS,
 	...TEXT_SLOT_STYLE_KEYS,
+	...LABEL_TEXT_KEYS,
 ] as const satisfies readonly (keyof StyleParams)[];
 
 /** The property names `style` actually asks for, in declaration order. */
 export const requestedStyleKeys = (style: StyleParams): string[] =>
 	ALL_STYLE_KEYS.filter((key) => style[key] !== undefined);
 
-/** The non-typographic style keys `features` admits, in declaration order. */
+/**
+ * The non-typographic style keys `features` admits, in declaration order: the
+ * shape's own groups, and the background a `text: "label"` caption is painted on.
+ */
 const shapeStyleKeys = (
 	features: ObjectFeatures | undefined,
 ): (keyof StyleParams)[] => [
@@ -86,6 +99,7 @@ const shapeStyleKeys = (
 	...(features?.stroke === true ? STROKE_STYLE_KEYS : []),
 	...(features?.radius === true ? RADIUS_STYLE_KEYS : []),
 	...(features?.arrow === true ? ARROW_STYLE_KEYS : []),
+	...(features?.text === "label" ? LABEL_TEXT_KEYS : []),
 ];
 
 /**
@@ -192,6 +206,7 @@ const requireValidStyle = (style: StyleParams): void => {
 		...validateRadiusStyleFields(requested, ""),
 		...validateArrowFields(requested, ""),
 		...validateTextSlotStyleFields(requested, ""),
+		...validateLabelTextFields(requested, ""),
 	];
 	if (diagnostics.length === 0) {
 		return;
@@ -212,7 +227,8 @@ const requireValidStyle = (style: StyleParams): void => {
  * A connector is styled as the line it is: the stroke group draws the line itself, while
  * `fill` and the typography go to its label (and are ignored when it has none, since a
  * label is created by giving it text). Its label border is not reachable from here — the
- * stroke group is already spoken for by the line.
+ * stroke group is already spoken for by the line — and neither is `labelFill`, which
+ * names a `text: "label"` caption's background: the label's own is `fill`.
  *
  * @param object - Mutated in place
  * @param style - Properties to set; an omitted one is left as it is, and there is no way

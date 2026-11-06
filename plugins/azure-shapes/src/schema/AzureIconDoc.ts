@@ -1,4 +1,4 @@
-import { BELOW_LABEL_STYLE_DEFAULTS } from "@jiscribe/canvas-sdk/doc";
+import { LABEL_TEXT_STYLE_DEFAULTS } from "@jiscribe/doc";
 import type { CreateObjectType, ObjectFeatures } from "@jiscribe/doc";
 
 /** The icon drawn when `icon` is omitted: the one an Azure diagram places most. */
@@ -18,7 +18,7 @@ export const AzureIconFeatures = {
 	type: "azureIcon",
 	geometry: "rect",
 	transform: true,
-	text: "body",
+	text: "label",
 	connectable: true,
 } as const satisfies ObjectFeatures;
 
@@ -55,5 +55,5 @@ export const AZURE_ICON_DOC_DEFAULTS: Omit<AzureIconDoc, "id"> = {
 	text: "",
 	// The drawing scales as a square, so a non-square box only gains margin.
 	lockAspectRatio: true,
-	...BELOW_LABEL_STYLE_DEFAULTS,
+	...LABEL_TEXT_STYLE_DEFAULTS,
 } as const as AzureIconDoc;

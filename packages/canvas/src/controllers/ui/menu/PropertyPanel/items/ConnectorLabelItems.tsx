@@ -12,7 +12,9 @@
  * there is nothing to style until a label exists — and the sections' own
  * `isShown` takes their headings away with them (see applyObjectDefinition).
  * The two sections are the sidebar twin of the ObjectMenu's LabelStyleMenu,
- * which splits the same properties across two sections of icons.
+ * which splits the same properties across two sections of icons. The Label
+ * section's background row is LabelBackgroundItems', shared with the
+ * background of a `text: "label"` caption.
  */
 
 import { CONNECTOR_LABEL_DEFAULTS } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
@@ -21,8 +23,6 @@ import { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeSty
 import { memo } from "react";
 
 import { useCanvasMessages } from "../../../../../foundation/i18n/CanvasMessagesContext";
-import { resolveLabelFill } from "../../../../../rendering/objects/connector/ConnectorLabel";
-import { useDocumentSurface } from "../../../../../rendering/objects/DocumentSurfaceContext";
 import { setAction } from "../../../../gestures/handlers/menu/utils/menuActions";
 import { isBoldFontWeight } from "../../../../utils/isBoldFontWeight";
 import { BoldIcon } from "../../../icons/BoldIcon";
@@ -203,46 +203,6 @@ const ConnectorLabelStyleItemComponent: React.FC<PropertyPanelItemProps> = ({
 };
 
 export const ConnectorLabelStyleItem = memo(ConnectorLabelStyleItemComponent);
-
-/**
- * The face of the label's box. Unset it knocks the line out with the page's
- * color rather than with a color of its own, so its swatch is what
- * resolveLabelFill gives rather than the `canvas` role's theme color.
- */
-const ConnectorLabelBackgroundItemComponent: React.FC<
-	PropertyPanelItemProps
-> = ({ objects, selection, onStyleIntent }) => {
-	const messages = useCanvasMessages();
-	const documentSurface = useDocumentSurface();
-	const { value: fill, hasLabelText } = useConnectorLabelStyle(
-		"label.fill",
-		AUTO_COLOR,
-		{ objects, selection },
-	);
-
-	if (!hasLabelText) {
-		return null;
-	}
-
-	return (
-		<PropertyRow label={messages.propertyPanelRowBackground}>
-			<PropertyColorField
-				value={fill}
-				property="label.fill"
-				role="canvas"
-				autoSwatchColor={resolveLabelFill(undefined, documentSurface)}
-				// The label of the one selected connector is the whole target.
-				currentColorIsShared
-				title={messages.menuLabelBackgroundColor}
-				onStyleIntent={onStyleIntent}
-			/>
-		</PropertyRow>
-	);
-};
-
-export const ConnectorLabelBackgroundItem = memo(
-	ConnectorLabelBackgroundItemComponent,
-);
 
 /** The outline of the label's box; drawn only while its width is above 0. */
 const ConnectorLabelBorderColorItemComponent: React.FC<

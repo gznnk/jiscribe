@@ -1,7 +1,5 @@
 import type { ObjectTypeDefinition } from "@jiscribe/canvas";
 import {
-	calcBelowLabelTextRegion,
-	calcBelowLabelVisualBounds,
 	createFrameObjectDefinition,
 	createTypeStencils,
 } from "@jiscribe/canvas-sdk";
@@ -148,16 +146,13 @@ export const cardDefinition: ObjectTypeDefinition<CardDoc, CardState> =
 	});
 
 /**
- * The arms fill the box, so the label hangs below the geometry box and
- * `visualBounds` is what keeps zoom-to-fit and the export viewBox from cropping
- * it (calcBelowLabelVisualBounds).
+ * The arms fill the box, so the label hangs below it (`features.text:
+ * "label"`, which the core places).
  */
 export const crossDefinition: ObjectTypeDefinition<CrossDoc, CrossState> =
 	createFrameObjectDefinition<CrossDoc, CrossState>({
 		doc: crossDocDefinition,
 		component: Cross,
-		textRegion: calcBelowLabelTextRegion,
-		visualBounds: calcBelowLabelVisualBounds,
 		stencils: createTypeStencils({
 			objectType: "cross",
 			label: { en: "Junction", ja: "接合点" },
@@ -230,16 +225,13 @@ export const documentDefinition: ObjectTypeDefinition<
 });
 
 /**
- * The triangle narrows to a point, so the label hangs below the geometry box and
- * `visualBounds` is what keeps zoom-to-fit and the export viewBox from cropping
- * it (calcBelowLabelVisualBounds).
+ * The triangle narrows to a point, so the label hangs below the box
+ * (`features.text: "label"`, which the core places).
  */
 export const extractDefinition: ObjectTypeDefinition<ExtractDoc, ExtractState> =
 	createFrameObjectDefinition<ExtractDoc, ExtractState>({
 		doc: extractDocDefinition,
 		component: Extract,
-		textRegion: calcBelowLabelTextRegion,
-		visualBounds: calcBelowLabelVisualBounds,
 		stencils: createTypeStencils({
 			objectType: "extract",
 			label: { en: "Extract", ja: "抽出" },

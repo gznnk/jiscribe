@@ -19,6 +19,8 @@ import type { VerticalAlign } from "@jiscribe/doc/model/objects/types/text/Verti
 export type CoreStyleIntent =
 	| { kind: "fill"; color: string }
 	| { kind: "fillOpacity"; opacity: number }
+	/** The background painted behind a `text: "label"` caption (`labelFill`); `"auto"` knocks out in the page's color. */
+	| { kind: "labelFill"; color: string }
 	| { kind: "stroke"; color: string }
 	| { kind: "strokeWidth"; width: number }
 	| { kind: "strokeDashType"; dash: StrokeDashType }

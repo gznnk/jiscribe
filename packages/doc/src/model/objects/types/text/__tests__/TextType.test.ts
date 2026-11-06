@@ -8,9 +8,10 @@ import {
 } from "../TextType";
 
 describe("isSingleBodyText", () => {
-	it("is true for the two root-form types and false for the rest", () => {
+	it("is true for the root-form types and false for the rest", () => {
 		expect(isSingleBodyText("body")).toBe(true);
 		expect(isSingleBodyText("source")).toBe(true);
+		expect(isSingleBodyText("label")).toBe(true);
 		expect(isSingleBodyText("slots")).toBe(false);
 		expect(isSingleBodyText(undefined)).toBe(false);
 	});
@@ -36,6 +37,13 @@ describe("textStyleKeysOf", () => {
 		]);
 	});
 
+	it("takes the vertical placement off a label type, keeping the order of the rest", () => {
+		expect(textStyleKeysOf("label")).toEqual(
+			TEXT_SLOT_STYLE_KEYS.filter((key) => key !== "verticalAlign"),
+		);
+		expect(textStyleKeysOf("label")).toContain("fontWeight");
+	});
+
 	it("answers with a fresh array, so a caller may keep what it is handed", () => {
 		expect(textStyleKeysOf("body")).not.toBe(textStyleKeysOf("body"));
 	});
@@ -45,6 +53,7 @@ describe("acceptsTextEmphasisStyle", () => {
 	it("is true for every type but the one whose syntax sets the emphasis itself", () => {
 		expect(acceptsTextEmphasisStyle("body")).toBe(true);
 		expect(acceptsTextEmphasisStyle("slots")).toBe(true);
+		expect(acceptsTextEmphasisStyle("label")).toBe(true);
 		expect(acceptsTextEmphasisStyle("source")).toBe(false);
 		expect(acceptsTextEmphasisStyle(undefined)).toBe(false);
 	});

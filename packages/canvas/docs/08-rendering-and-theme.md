@@ -133,14 +133,15 @@ each resolves to are defined there (`AutoColorRole` and its token table); for ex
 `objectInk` / `objectSurface` are shape-only tokens, separate from the UI chrome's `foreground` / `surface`,
 so a host can set the shape ink (e.g. pure black on a light theme) without changing its menu text color.
 
-A connector label's background (`fill`) is the exception: it bypasses `resolveAutoColor`, and
-`resolveLabelFill` (`rendering/objects/connector/ConnectorLabel/utils/resolveLabelFill.ts`) resolves auto
-and an unspecified value to the document surface color (so the label knocks out the line behind it). That
+A label's background is the exception — a connector label's `fill`, and the `labelFill` a
+`features.text: "label"` shape paints behind its caption: it bypasses `resolveAutoColor`, and
+`resolveLabelFill` (`rendering/objects/utils/resolveLabelFill.ts`) resolves auto and an unspecified value
+to the document surface color (so the label knocks out the line behind it). That
 is the document's `background` when it is opaque, otherwise the theme's canvas colour, `theme.canvasBg`,
 which stays a CSS variable and so still follows the theme. `<Canvas>` works it out from `state.background`
 (`rendering/objects/utils/resolveDocumentSurface.ts`) and hands it down through `DocumentSurfaceContext`
-(`rendering/objects/DocumentSurfaceContext.ts`), which the label, its inline editor and the two label-fill
-swatches read; image export bakes the label's computed style, so it follows too. Opaque means
+(`rendering/objects/DocumentSurfaceContext.ts`), which the labels, the connector label's inline editor and
+the label-fill swatches read; image export bakes the labels' computed style, so it follows too. Opaque means
 the browser resolves it to an `rgb()` color with alpha 1. Anything else keeps the theme value, since that is
 what shows through it: a see-through `background` (`transparent`, alpha below 1 in any spelling), one
 resolved per element (`var()`, `currentColor`), one the browser keeps in another color space (`oklch()`,

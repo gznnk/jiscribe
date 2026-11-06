@@ -122,13 +122,15 @@ is built, and nothing reads them again afterwards:
 | `features.arrow`             | `startArrow`, `endArrow`, `arrowScale`                     |
 | `features.transform`         | `lockAspectRatio`                                          |
 | `features.text`              | `textStyleTable(features.text)`                            |
+| `features.text: "label"`     | `labelFill` (`labelFillEntry`, stored on the object)       |
 | `features.textVerticalBasis` | `textVerticalBasis`                                        |
 
 `textStyleTable(textType)` derives the text half from the one thing a
 type declares about its text — which fields it may carry at all
 (`textStyleKeysOf`). A body written in a source language sets its emphasis through
-its own syntax, so it is left out of those intents without anyone branching on the
-text type again:
+its own syntax, and a caption hung below the box (`"label"`) has no slack to place
+its block in, so each is left out of those intents (the emphasis, `verticalAlign`)
+without anyone branching on the text type again:
 
 | Fields accepted  | Entries                                        |
 | ---------------- | ---------------------------------------------- |

@@ -49,7 +49,8 @@ ESM 専用、など）。1 ファイル 1 エントリで対応させること�
   stateValidator / behavior を doc.features から充填して `ObjectTypeDefinition` を返す。
   図形固有のフィールド名は doc 定義の `extraKeys` から読む（宣言は
   `createFrameObjectDoc` 側 1 箇所）。`isExtraStateValid` と、`textRegion` /
-  `visualBounds` / `stencils` 等の任意フィールドを透過
+  `visualBounds` / `stencils` 等の任意フィールドを透過（`features.text: "label"` の型に
+  `textRegion` を渡すと throw）
 
 どちらも糖衣であり、`ObjectDocDefinition` / `ObjectTypeDefinition` の直書きは引き続き
 第一級（例: uml の record は mapper が派生物のため definition を直書き）。
@@ -59,11 +60,14 @@ ESM 専用、など）。1 ファイル 1 エントリで対応させること�
 - `ShapeBodyPolygon` / `ShapeBodyPath` — 図形本体の styled 基底（stroke / fill props +
   掴めるカーソル + focus 輪郭消し）
 - `calcRoundedRectOutline` — 角丸矩形の輪郭点列サンプリング（`/doc` からも import できる）
-- below-label 機構（`calcBelowLabelTextRegion` / `calcBelowLabelVisualBounds` /
-  `BelowLabelHitArea` / `BELOW_LABEL_STYLE_DEFAULTS`）— 箱いっぱいに描く図形の
-  「文字を箱の下へ吊る」一式
-- `calcLabelBoxSize` — 上記のラベル箱の採寸だけを取り出したもの。箱の下以外へ
-  ラベルを吊る図形（グループマーカー等）が置き場所だけ自前で決めるときに使う
+- `BelowLabelHitArea` — 箱いっぱいに描く図形（`features.text: "label"`）の下ラベルの
+  掴み領域。ラベルの位置・見た目の範囲・背景の四角は core が `calcLabelTextRegion`
+  （`@jiscribe/doc`）から決めるので、図形が宣言するのはこれを自分の `data-kind` グループに
+  置くことと、doc の既定に `LABEL_TEXT_STYLE_DEFAULTS`（`@jiscribe/doc`）を spread する
+  ことだけ（`textRegion` / `visualBounds` は渡さない。渡すと拒否される）
+- `calcLabelBoxSize` / `BELOW_LABEL_STYLE_DEFAULTS`（`/doc`）— 文字から大きさを決める
+  ラベル箱の採寸と、その既定書体。箱の下以外へラベルを吊る `"body"` の図形（グループ
+  マーカー・awsGroup 等）が置き場所だけ自前で決めるときに使う
 - `centeredPolygonOutline` / `OUTLINE_CURVE_SEGMENTS`（`/doc` からも import できる。
   doc 定義の `outline` はこちらで組む。点列を `points` 属性へ書くのは canvas の
   unstable 面が持つ `formatPolygonPoints`。この sdk からも import できる）

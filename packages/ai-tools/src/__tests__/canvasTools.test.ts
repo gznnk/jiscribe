@@ -747,6 +747,17 @@ describe("CanvasToolDescriptor.inputSchema", () => {
 		).toBe(false);
 	});
 
+	it("takes a label's background in set_style and add_objects alike", () => {
+		expect(
+			parseArgs("set_style", { ids: ["server-1"], labelFill: "auto" }).success,
+		).toBe(true);
+		expect(
+			parseArgs("add_objects", {
+				objects: [{ type: "rect", x: 0, y: 0, labelFill: "#ffffff" }],
+			}).success,
+		).toBe(true);
+	});
+
 	it("takes a paint opacity anywhere in 0..1 and refuses one outside it", () => {
 		for (const fillOpacity of [0, 0.5, 1]) {
 			expect(

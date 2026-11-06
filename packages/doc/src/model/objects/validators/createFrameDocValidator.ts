@@ -6,6 +6,7 @@ import {
 	validateStrokeStyleFields,
 } from "./validateStyleFields";
 import {
+	validateLabelTextStyleFields,
 	validateSourceTextStyleFields,
 	validateTextStyleFields,
 } from "./validateTextFields";
@@ -51,6 +52,7 @@ export const createFrameDocValidator = (
 		...(features.text === "source"
 			? validateSourceTextStyleFields(o, path)
 			: []),
+		...(features.text === "label" ? validateLabelTextStyleFields(o, path) : []),
 		...(features.radius ? validateRadiusStyleFields(o, path) : []),
 		// The mappers pass the arrow group through for any type declaring it
 		// (collectStyleKeys), so it must be validated here too — an unchecked

@@ -88,3 +88,11 @@ describe("supportsAutoHeight on a source-text type", () => {
 		).toBe(false);
 	});
 });
+
+describe("supportsAutoHeight on a label-text type", () => {
+	it("is false, the caption hanging below a box it does not size", () => {
+		expect(
+			supportsAutoHeight({ features: { ...boxFeatures, text: "label" } }),
+		).toBe(false);
+	});
+});

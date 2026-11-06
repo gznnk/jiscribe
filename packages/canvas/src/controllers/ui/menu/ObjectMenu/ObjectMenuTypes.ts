@@ -7,6 +7,8 @@ export type BuiltinItemKey =
 	| "lineColor"
 	| "lineStyle"
 	| "backgroundColor"
+	/** The background a `text: "label"` caption is painted on (`labelFill`). */
+	| "labelBackgroundColor"
 	| "borderColor"
 	| "borderStyle"
 	| "font"

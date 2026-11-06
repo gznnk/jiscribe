@@ -1,9 +1,5 @@
 import type { ObjectTypeDefinition } from "@jiscribe/canvas";
-import {
-	calcBelowLabelTextRegion,
-	calcBelowLabelVisualBounds,
-	createFrameObjectDefinition,
-} from "@jiscribe/canvas-sdk";
+import { createFrameObjectDefinition } from "@jiscribe/canvas-sdk";
 
 import { awsGroupDocDefinition, awsIconDocDefinition } from "./doc";
 import { AwsGroup } from "./presentation/AwsGroup";
@@ -23,8 +19,8 @@ import { AwsIconStencils } from "./stencil/AwsIconStencils";
 import { AWS_GROUP_STYLE_ENTRIES } from "./style/awsStyleEntries";
 
 /**
- * The label hangs outside the box (below it), so without a declared
- * `visualBounds` zoom-to-fit and the export viewBox would crop it away.
+ * The label hangs below the box (`features.text: "label"`, which the core
+ * places along with the background painted behind it).
  *
  * The menu offers no stroke and no fill (the features carry neither). AWS
  * forbids altering its icons, so that is a deliberate gap rather than an
@@ -35,8 +31,6 @@ export const awsIconDefinition: ObjectTypeDefinition<AwsIconDoc, AwsIconState> =
 	createFrameObjectDefinition<AwsIconDoc, AwsIconState>({
 		doc: awsIconDocDefinition,
 		component: AwsIcon,
-		textRegion: calcBelowLabelTextRegion,
-		visualBounds: calcBelowLabelVisualBounds,
 		// The same resolution the doc validation runs: a name no document may
 		// carry does not reach the drawing through a state either.
 		isExtraStateValid: (state) =>
@@ -44,7 +38,12 @@ export const awsIconDefinition: ObjectTypeDefinition<AwsIconDoc, AwsIconState> =
 			(typeof state.icon === "string" &&
 				awsIconCatalog.isKnownName(state.icon)),
 		stencils: AwsIconStencils,
-		menu: [{ id: "text", items: [{ type: "font" }, { type: "textFormat" }] }],
+		// The label's background sits under the section id every label type's
+		// does, so selecting this beside another label type keeps it.
+		menu: [
+			{ id: "label-style", items: [{ type: "labelBackgroundColor" }] },
+			{ id: "text", items: [{ type: "font" }, { type: "textFormat" }] },
+		],
 	});
 
 /**

@@ -219,6 +219,15 @@ const styleSchema = {
 		`${arrowScaleSchema.description} Only for polyline and connector.`,
 	),
 	rx: z.number().min(0).optional().describe("Corner radius in px; rect only."),
+	labelFill: z
+		.string()
+		.optional()
+		.describe(
+			[
+				"Background painted behind the label of a shape that draws its text below its box (actor, server, the icon sets, …); no other type takes it, and a connector's label background is fill.",
+				'Any CSS color; omitted or "auto" (the default) paints the page\'s color, so a connector running under the label is hidden there, and "transparent" lets it show through.',
+			].join(" "),
+		),
 	...textSlotStyleSchema,
 };
 

@@ -131,14 +131,15 @@ foreignObject に `display="none"` を付ける。テキストオーバーレイ
 `objectInk` / `objectSurface` は図形専用トークンで、UI クロームの `foreground` / `surface` とは別枠。
 ホストはメニュー文字色を変えずに図形の墨だけを設定できる（ライトテーマで純黒にする等）。
 
-コネクターラベルの背景（`fill`）は例外で、`resolveAutoColor` を通さず
-`resolveLabelFill`（`rendering/objects/connector/ConnectorLabel/utils/resolveLabelFill.ts`）が auto と
+ラベルの背景は例外で（コネクターラベルの `fill` と、`features.text: "label"` の図形が下ラベルの後ろに
+塗る `labelFill`）、`resolveAutoColor` を通さず
+`resolveLabelFill`（`rendering/objects/utils/resolveLabelFill.ts`）が auto と
 未指定を文書の面の色へ解決する（背後の線を抜くため）。これは文書の `background` が不透明ならその色、
 そうでなければテーマのキャンバス色 `theme.canvasBg` で、こちらは CSS 変数のままなのでテーマに追従する。
 `<Canvas>` が `state.background` からこれを求め（`rendering/objects/utils/resolveDocumentSurface.ts`）、
-`DocumentSurfaceContext`（`rendering/objects/DocumentSurfaceContext.ts`）で配る。読むのはラベル・その
-インライン編集・ラベル背景の 2 つのスウォッチで、画像エクスポートはラベルの computed style を焼き込むので
-これにも揃う。
+`DocumentSurfaceContext`（`rendering/objects/DocumentSurfaceContext.ts`）で配る。読むのは両方のラベル・
+コネクターラベルのインライン編集・ラベル背景のスウォッチで、画像エクスポートはラベルの computed style を
+焼き込むのでこれにも揃う。
 不透明とは、ブラウザが alpha 1 の `rgb()` 色へ解決できること。それ以外はテーマの値のままにする。
 透けて見えるのはそちらだから。透ける `background`（`transparent`・どの書き方でも alpha 1 未満）、要素ごとに
 解決されるもの（`var()`・`currentColor`）、ブラウザが別の色空間のまま保つもの（`oklch()`・`color-mix()`）、

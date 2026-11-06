@@ -56,3 +56,33 @@ export type SourceTextStyleDoc = Omit<
 export const TEXT_BODY_KEYS = exhaustiveKeysOf<
 	Omit<TextStyleDoc, keyof TextSlot>
 >()(["textVerticalBasis"] as const);
+
+/**
+ * The doc form of a body hung below the box as a caption (features.text:
+ * "label"): the single-body form less what has no meaning for a box sized from
+ * its own text — `verticalAlign` and the basis it is measured against — plus the
+ * color painted behind the caption. Derived from {@link TextStyleDoc} rather than
+ * copied, like {@link SourceTextStyleDoc}.
+ */
+export type LabelTextStyleDoc = Omit<
+	TextStyleDoc,
+	"verticalAlign" | "textVerticalBasis"
+> & {
+	/**
+	 * Color painted behind the caption, any CSS color. Omitted or `"auto"`
+	 * (AUTO_COLOR) knocks out what lies behind it in the page's color — the
+	 * document's opaque `background`, else the theme's canvas color — the way a
+	 * connector's label does.
+	 */
+	labelFill?: string;
+};
+
+/**
+ * Field names a `text: "label"` doc carries beyond the slot's own styling and
+ * the content: what belongs to the caption as a whole rather than to its slot.
+ * The one list the parser's known names, the doc and state validators, the
+ * mappers, the style tables and `setStyle` read the field off.
+ */
+export const LABEL_TEXT_KEYS = exhaustiveKeysOf<
+	Omit<LabelTextStyleDoc, keyof TextSlot>
+>()(["labelFill"] as const);

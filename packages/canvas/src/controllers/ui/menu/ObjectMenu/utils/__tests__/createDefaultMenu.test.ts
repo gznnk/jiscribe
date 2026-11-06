@@ -94,6 +94,29 @@ describe("createDefaultMenu", () => {
 		]);
 	});
 
+	it("label-like -> the caption's background under label-style, and no vertical row", () => {
+		const sections = createDefaultMenu(
+			features({
+				type: "server",
+				transform: true,
+				stroke: true,
+				fill: true,
+				text: "label",
+			}),
+		);
+		expect(sections.map((section) => section.id)).toEqual([
+			"style",
+			"label-style",
+			"text",
+		]);
+		expect(sections[1].items).toEqual([{ type: "labelBackgroundColor" }]);
+		expect(sections[2].items).toEqual([
+			{ type: "font" },
+			{ type: "textFormat" },
+			{ type: "textAlignment", vertical: false },
+		]);
+	});
+
 	it("no flags -> empty", () => {
 		expect(createDefaultMenu(features({}))).toEqual([]);
 	});

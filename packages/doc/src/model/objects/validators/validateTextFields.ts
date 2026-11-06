@@ -9,6 +9,7 @@ import {
 	validateFields,
 } from "./fieldValidators";
 import type { SemanticDiagnostic } from "../../types/SemanticDiagnostic";
+import type { LABEL_TEXT_KEYS } from "../base/TextStyleDoc";
 import type { InlineTextStyle } from "../types/text/InlineTextStyle";
 import { isTextAlign } from "../types/text/TextAlign";
 import type { TextBaseStyle } from "../types/text/TextBaseStyle";
@@ -72,6 +73,26 @@ const sourceTextStyleValidators = {
 	...textBaseStyleValidators,
 } as const satisfies Record<
 	Exclude<keyof TextSlotStyle, keyof TextEmphasisStyle>,
+	DocFieldValidator
+>;
+
+/**
+ * The styling a caption body accepts: the slot's set less `verticalAlign`
+ * (`textStyleKeysOf`), in the same order.
+ */
+const labelTextStyleValidators = {
+	textAlign: textBlockStyleValidators.textAlign,
+	...inlineTextStyleValidators,
+} as const satisfies Record<
+	Exclude<keyof TextSlotStyle, "verticalAlign">,
+	DocFieldValidator
+>;
+
+/** The caption's own fields (`LABEL_TEXT_KEYS`), its background held to the rule a shape's `fill` is. */
+const labelTextFieldValidators = {
+	labelFill: colorValidator,
+} as const satisfies Record<
+	(typeof LABEL_TEXT_KEYS)[number],
 	DocFieldValidator
 >;
 
@@ -176,7 +197,8 @@ export function validateRichTextContent(
 
 /**
  * Validate the placement a single-body doc carries on the object itself
- * (`TEXT_BODY_KEYS`), which both root-form text types hold alike.
+ * (`TEXT_BODY_KEYS`), which the `"body"` and `"source"` text types hold alike (a
+ * `"label"` caption has no `verticalAlign` for it to place).
  */
 function validateTextBodyFields(
 	o: Record<string, unknown>,
@@ -251,5 +273,42 @@ export function validateSourceTextStyleFields(
 			: []),
 		...validateTextBodyFields(o, path),
 		...validateFields(o, path, sourceTextStyleValidators),
+	];
+}
+
+/**
+ * Validate the fields a caption carries beyond its slot's styling
+ * (`LABEL_TEXT_KEYS`): `labelFill` as a safe CSS color, `"auto"` included.
+ *
+ * @param o - The doc to check, or a style about to be written onto one
+ * @param path - Diagnostic path of `o`, which each field name is appended to
+ * @returns One diagnostic per malformed field; empty when every field is absent or valid
+ */
+export function validateLabelTextFields(
+	o: Record<string, unknown>,
+	path: string,
+): SemanticDiagnostic[] {
+	return validateFields(o, path, labelTextFieldValidators);
+}
+
+/**
+ * Validate the text group of a caption doc (features.text: "label"): the group
+ * {@link validateTextStyleFields} checks less `verticalAlign` and the body's
+ * placement (`textStyleKeysOf`), plus the caption's own fields
+ * ({@link validateLabelTextFields}). A field the type cannot hold goes unreported
+ * here, as every other field the type's features do not imply does.
+ *
+ * @param o - The doc to check; a missing `text` is valid (it reads as empty)
+ * @param path - Diagnostic path of `o`, which each field name is appended to
+ * @returns One diagnostic per malformed field; empty when the whole group is valid
+ */
+export function validateLabelTextStyleFields(
+	o: Record<string, unknown>,
+	path: string,
+): SemanticDiagnostic[] {
+	return [
+		...("text" in o ? validateRichTextContent(o.text, `${path}.text`) : []),
+		...validateFields(o, path, labelTextStyleValidators),
+		...validateLabelTextFields(o, path),
 	];
 }

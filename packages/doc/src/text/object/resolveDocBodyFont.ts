@@ -8,12 +8,14 @@ import { TEXT_STYLE_FALLBACK } from "../style/textStyleFallback";
 
 /**
  * Font the body of a root-form doc is drawn — and so measured — with: the flat
- * `font*` fields such a doc (`text: "body"` / `"source"`) spells its styling out in,
- * over the type's own body defaults, over the shared last resort. A separate
+ * `font*` fields such a doc (`text: "body"` / `"source"` / `"label"`) spells its
+ * styling out in, over the type's own body defaults, over the shared last resort.
+ * A text slot carries the same fields under the same names, so a caption measured
+ * from a state's body slot resolves through here too (calcLabelTextBoxSize). A separate
  * resolution from the canvas's `resolveTextObjectFont`, which reads a state's slot;
  * the two fill in the same fallbacks and must keep doing so.
  *
- * @param doc - Any doc-shaped record; only `fontSize` / `fontFamily` / `fontWeight` / `fontStyle` are read, each ignored unless it has its declared type
+ * @param doc - Any doc-shaped record, or a text slot; only `fontSize` / `fontFamily` / `fontWeight` / `fontStyle` are read, each ignored unless it has its declared type
  * @param slotDefaults - The type's defaults for its body slot (`extractTextSlotStyleDefaults`); omitted leaves `doc` alone against the shared fallback, which is enough for a type whose DOC_DEFAULTS state the fields themselves
  * @returns The font with every fallback filled in, ready to measure with
  */

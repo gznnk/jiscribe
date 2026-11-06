@@ -15,8 +15,10 @@ type ConnectorLabelStyle<TValue> = {
 
 /**
  * One `label.*` property of the selected connector, together with the answer to
- * whether the row stating it should be drawn — the pair every row of both
- * surfaces' label sections needs (LabelStyleMenu, ConnectorLabelItems).
+ * whether the row stating it should be drawn — the pair the rows of both
+ * surfaces' label sections need (LabelStyleMenu, ConnectorLabelItems), all but
+ * the background, which reads `label.fill` alongside a caption's `labelFill`
+ * (LabelBackgroundColorMenu, LabelBackgroundItems).
  *
  * The presence of the label is handed back as a value rather than guarded here,
  * so a row reads before it returns and its hook order holds whichever way the

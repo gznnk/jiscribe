@@ -11,6 +11,7 @@ import { FontColorMenu } from "./items/FontColorMenu";
 import { FontFamilyMenu } from "./items/FontFamilyMenu";
 import { FontSizeMenu } from "./items/FontSizeMenu";
 import { GroupMenu } from "./items/GroupMenu";
+import { LabelFillMenu } from "./items/LabelStyleMenu";
 import { LineColorMenu } from "./items/LineColorMenu";
 import { LineStyleMenu } from "./items/LineStyleMenu";
 import { OpenReferenceMenu } from "./items/OpenReferenceMenu";
@@ -70,6 +71,14 @@ const renderItem = (
 			return (
 				<BackgroundColorMenu
 					key="backgroundColor"
+					canvasState={canvasState}
+					onStyleIntent={onStyleIntent}
+				/>
+			);
+		case "labelBackgroundColor":
+			return (
+				<LabelFillMenu
+					key="labelBackgroundColor"
 					canvasState={canvasState}
 					onStyleIntent={onStyleIntent}
 				/>

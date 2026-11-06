@@ -1,4 +1,7 @@
-export { LabelBackgroundColorMenu } from "./LabelBackgroundColorMenu";
+export {
+	ConnectorLabelBackgroundColorMenu,
+	LabelFillMenu,
+} from "./LabelBackgroundColorMenu";
 export { LabelBorderColorMenu } from "./LabelBorderColorMenu";
 export { LabelBorderStyleMenu } from "./LabelBorderStyleMenu";
 export { LabelFontColorMenu } from "./LabelFontColorMenu";

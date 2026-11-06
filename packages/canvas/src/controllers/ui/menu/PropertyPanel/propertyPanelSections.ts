@@ -8,7 +8,9 @@
  *
  * The three the panel adds itself (Canvas / Arrange / Meta) are not a type's to
  * declare and stay with PropertyPanel; the connector's label sections stay with
- * its hand-written declaration (applyObjectDefinition).
+ * its hand-written declaration (applyObjectDefinition). `labelStyle` holds a
+ * `text: "label"` caption's background, under the id the ObjectMenu puts it
+ * (and a connector's label background) under.
  */
 export const PROPERTY_PANEL_SECTIONS = {
 	layout: { id: "layout", label: "Layout" },
@@ -16,5 +18,6 @@ export const PROPERTY_PANEL_SECTIONS = {
 	stroke: { id: "stroke", label: "Border" },
 	line: { id: "line", label: "Line" },
 	arrow: { id: "arrow", label: "Arrows" },
+	labelStyle: { id: "label-style", label: "Label" },
 	text: { id: "text", label: "Text" },
 } as const satisfies Record<string, { id: string; label: string }>;

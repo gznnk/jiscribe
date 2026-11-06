@@ -125,7 +125,10 @@ export type ObjectDocDefinition = {
 	 * should declare one — {@link import("./ObjectDocTextRegion").calcFullBoxTextRegion}
 	 * for a plain box,
 	 * {@link import("./ObjectDocTextRegion").calcOutsideBoxTextRegion} for a label
-	 * drawn outside the outline.
+	 * the type places outside the outline itself. A `features.text: "label"` type
+	 * must not declare one: its caption is placed by the core
+	 * ({@link import("../text/label/calcLabelTextRegion").calcLabelTextRegion}),
+	 * and the parser refuses the definition otherwise (resolveDocDefinitions).
 	 */
 	textRegion?: ObjectDocTextRegionCalculator;
 

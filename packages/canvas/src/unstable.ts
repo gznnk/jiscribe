@@ -29,6 +29,11 @@ export type { TextEditable } from "./rendering/objects/base/TextOverlay/TextOver
 export { TextOverlayFrame } from "./rendering/objects/base/TextOverlay/TextOverlayFrame";
 export type { TextOverlayFrameProps } from "./rendering/objects/base/TextOverlay/TextOverlayFrame";
 
+// The box a `features.text: "label"` caption is painted on in its `labelFill`,
+// which createFrameObject draws ahead of the caption: for a type that hand-writes
+// its component instead, which draws it itself as it draws the text.
+export { LabelTextFill } from "./rendering/objects/base/LabelTextFill";
+
 // Lays content out in that same box off screen and reports its size, for a
 // type's textMeasurer (ObjectTypeDefinition) to measure the body it draws itself.
 export { measureTextOverlayContent } from "./rendering/objects/base/TextOverlay/measureTextOverlayContent";

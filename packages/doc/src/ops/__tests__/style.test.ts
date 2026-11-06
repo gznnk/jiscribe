@@ -10,6 +10,7 @@ import {
 	twoConnectedRects,
 } from "./support/docFixtures";
 import {
+	captionedDefinition,
 	creatableCardDefinition,
 	sourceBodyDefinition,
 } from "./support/pluginFixtures";
@@ -258,6 +259,63 @@ describe("setStyle on a source-text type", () => {
 		expect(card).not.toHaveProperty("fontWeight");
 		expect(card).not.toHaveProperty("fontStyle");
 		expect(card).not.toHaveProperty("textDecoration");
+	});
+});
+
+describe("setStyle on a label-text type", () => {
+	const captionOps = createDocOps({
+		plugins: [
+			{ id: "caption-plugin", objects: { captioned: captionedDefinition } },
+		],
+	});
+
+	it("writes the caption's background and reports the vertical placement as ignored", () => {
+		const doc = emptyDoc();
+		captionOps.addObject(doc, "captioned", { x: 0, y: 0, text: "Lambda" });
+
+		const result = captionOps.setStyle(doc, ["captioned-1"], {
+			labelFill: "#ffffff",
+			fontWeight: "bold",
+			verticalAlign: "top",
+		});
+
+		expect(result).toEqual({
+			styledIds: ["captioned-1"],
+			ignored: [{ id: "captioned-1", properties: ["verticalAlign"] }],
+		});
+		const captioned = readObject(doc, "captioned-1");
+		expect(captioned).toMatchObject({
+			labelFill: "#ffffff",
+			fontWeight: "bold",
+		});
+		expect(captioned).not.toHaveProperty("verticalAlign");
+	});
+
+	it("refuses a background the document could not hold, writing nothing", () => {
+		const doc = emptyDoc();
+		captionOps.addObject(doc, "captioned", { x: 0, y: 0, text: "Lambda" });
+
+		expect(() =>
+			captionOps.setStyle(doc, ["captioned-1"], {
+				labelFill: "url(javascript:alert(1))",
+			}),
+		).toThrow("labelFill: must be a safe CSS color value");
+		expect(readObject(doc, "captioned-1")).not.toHaveProperty("labelFill");
+	});
+
+	it("reports the caption's background as ignored on every other type, a connector included", () => {
+		const doc = twoConnectedRects();
+
+		const result = captionOps.setStyle(doc, ["rect-1", "connector-1"], {
+			labelFill: "#ffffff",
+		});
+
+		expect(result.ignored).toEqual([
+			{ id: "rect-1", properties: ["labelFill"] },
+			{ id: "connector-1", properties: ["labelFill"] },
+		]);
+		expect(readObject(doc, "rect-1")).not.toHaveProperty("labelFill");
+		expect(readObject(doc, "connector-1")).not.toHaveProperty("labelFill");
 	});
 });
 
