@@ -555,7 +555,7 @@ const checkBodyTextDefinition = (
  * A `"textSlot"` kind a `"body"` / `"source"` type declares for what else it adds
  * (its own `has`, `delete` …), with the body placed where the doc's `textRegion`
  * says: such a kind places nothing itself (checkBodyTextDefinition refuses one
- * that does), and left so it would put the body on the whole box. Any other kind,
+ * that does); left alone, it would put the body on the whole box. Any other kind,
  * and any kind of another type, is returned as it is.
  */
 const fillBodyTextRegion = (
@@ -575,6 +575,8 @@ const fillBodyTextRegion = (
 	}
 	return {
 		...part,
+		// The guard narrows the type: placeTextSlotRegions asks only a transformed
+		// frame, so the null arm is never taken.
 		region: (object, slotId) =>
 			isTransformedFrame(object) ? textRegion(object, slotId) : null,
 	};
@@ -762,9 +764,10 @@ export const applyObjectDefinition = (
 	// is nothing per type to say, and the slots are placed where the doc's
 	// `textRegion` says (the whole box for a `"slots"` type declaring none).
 	// Declaring `"textSlot"` itself replaces that default rather than colliding
-	// with it (the rule `menu` and `propertyPanel` already follow), a one-body
-	// type's still placed by the doc's `textRegion`; a `"label"`
-	// type, which may not declare one, gets the caption's placement instead.
+	// with it (the rule `menu` and `propertyPanel` already follow). A one-body
+	// type's declared kind still has its body placed by the doc's `textRegion`
+	// (fillBodyTextRegion); a `"label"` type, which may not declare one, gets
+	// the caption's placement instead.
 	// Whichever is registered is placed here, so every reader of a slot's box
 	// gets the fallback and the vertical basis from one spot.
 	const declaredPartKinds = (definition.partKinds ?? []).map((part) =>
