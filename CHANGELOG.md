@@ -421,6 +421,9 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   casts its ray in the shape's local space and transforms only the hit instead
   of the whole polygon, and `calcBoundingBox` derives a rotated frame's extents
   without turning its four corners.
+- **Typing in a markdown card no longer renders its Markdown on every
+  keystroke.** The card draws nothing over the editor, so it renders the body
+  once, when editing closes.
 
 ### Removed
 
