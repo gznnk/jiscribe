@@ -53,7 +53,6 @@ export const erEntityReadTool = defineObjectAiTool({
 	name: "er_entity_read",
 	description: [
 		"Read an ER entity: its title, the stated and drawn widths of the key / name / type slots, and every column as key | name | type, a styled text followed by what it sets in {}.",
-		"Call it before editing an entity you did not just build, to know its columns and their indices.",
 		ER_ENTITY_ADDRESSING_NOTE,
 	].join(" "),
 	objectType: "erEntity",

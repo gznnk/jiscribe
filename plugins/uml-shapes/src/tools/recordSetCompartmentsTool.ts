@@ -42,7 +42,7 @@ const createRowsSchema = (rowKind: string) =>
 		.nullable()
 		.optional()
 		.describe(
-			`${rowKind}, one array entry per drawn row, replacing the compartment's rows wholesale; an entry must not contain a newline. [] keeps an empty compartment drawn, null removes the compartment, omit to leave it as it is.`,
+			`${rowKind}, one entry per drawn row (no newline), replacing all of them. [] keeps an empty compartment, null removes it, omit to keep it.`,
 		);
 
 /** Refuses a row that would read as two: the record draws one entry per row. */
@@ -149,9 +149,9 @@ export const recordSetCompartmentsTool = defineObjectAiTool({
 	name: "record_set_compartments",
 	description: [
 		"Set which compartments a record (a UML class / interface box) has and what they hold: the stereotype line above the name, the attribute rows and the operation rows.",
-		"The generic set_texts writes only a compartment the record already has and cannot remove one, so this is how a class gains its operations, an interface its stereotype, or a DTO loses its attributes.",
-		"A compartment that already exists keeps its typography; a new one starts with the record's defaults. Rename the record with set_texts on its name slot.",
-		"The record does not grow with its rows, so afterwards its height is set to exactly what the compartments need, taller or shorter, its top edge staying where it is — no resize_objects is needed. Called with no compartment at all, it only refits the height.",
+		"set_texts writes only a compartment the record already has and removes none; it renames the record on its name slot.",
+		"An existing compartment keeps its typography; a new one takes the record's defaults.",
+		"Afterwards the height is set to exactly what the compartments need, its top edge staying where it is. With no compartment given, it only refits the height.",
 	].join(" "),
 	objectType: "record",
 	inputSchema: {
@@ -160,14 +160,10 @@ export const recordSetCompartmentsTool = defineObjectAiTool({
 			.nullable()
 			.optional()
 			.describe(
-				'Stereotype line above the name, written as drawn ("<<interface>>"). "" keeps an empty band, null removes the band, omit to leave it as it is.',
+				'Stereotype line above the name, written as drawn ("<<interface>>"). "" keeps an empty band, null removes it, omit to keep it.',
 			),
-		attributes: createRowsSchema(
-			'Attribute rows (fields, properties, e.g. "- id: string")',
-		),
-		operations: createRowsSchema(
-			'Operation rows (methods, e.g. "+ save(): void")',
-		),
+		attributes: createRowsSchema('Attribute rows ("- id: string")'),
+		operations: createRowsSchema('Operation rows ("+ save(): void")'),
 	},
 	apply: (record: RecordDoc, args) => {
 		for (const slotId of RECORD_COMPARTMENT_ARG_IDS) {

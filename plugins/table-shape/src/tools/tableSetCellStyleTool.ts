@@ -33,9 +33,9 @@ const TABLE_CELL_STYLE_ARG_NAMES = [
 export const tableSetCellStyleTool = defineObjectAiTool({
 	name: "table_set_cell_style",
 	description: [
-		"Style a rectangle of cells: each one gets the background and typography given, and keeps what is not given.",
-		"This is how a table's text is styled — a table has no shape-wide font settings, so set_style reaches only its own fill and outline, while every cell carries its own typography. A whole row or column is a range one track wide.",
-		"The typography reaches all of a cell's text: a property given here replaces what table_set_text_style set for it on part of that text, as set_style does on a shape's text. Use table_set_text_style to style part of a cell's text.",
+		"Style a rectangle of cells: each gets the background and typography given and keeps the rest.",
+		"A table has no shape-wide typography: set_style reaches only its fill and outline, and every cell carries its own.",
+		"The typography covers a cell's whole text, replacing what table_set_text_style set on part of it.",
 		TABLE_ADDRESSING_NOTE,
 	].join(" "),
 	objectType: "table",
@@ -45,7 +45,7 @@ export const tableSetCellStyleTool = defineObjectAiTool({
 			.string()
 			.optional()
 			.describe(
-				'Cell background, any CSS color ("#e3f2fd"). "auto" follows the theme\'s shape surface, and "transparent" lets the table\'s own fill show through.',
+				'Cell background, any CSS color; "auto" follows the theme\'s shape surface, "transparent" shows the table\'s own fill.',
 			),
 		...textSlotStyleSchema,
 	},

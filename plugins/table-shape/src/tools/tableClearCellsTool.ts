@@ -15,7 +15,7 @@ import type { TableDoc } from "../schema/TableDoc";
 export const tableClearCellsTool = defineObjectAiTool({
 	name: "table_clear_cells",
 	description: [
-		"Empty the text of a rectangle of cells. Their fill and typography stay, and so do the rows and columns; to remove those use table_delete_tracks.",
+		"Empty the text of a rectangle of cells, keeping their fill, typography and tracks; table_delete_tracks removes tracks.",
 		TABLE_ADDRESSING_NOTE,
 	].join(" "),
 	objectType: "table",

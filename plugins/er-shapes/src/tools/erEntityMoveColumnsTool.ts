@@ -7,6 +7,7 @@ import {
 } from "./erEntityToolSchemas";
 import {
 	ER_ENTITY_ADDRESSING_NOTE,
+	ER_ENTITY_LINES_FOLLOW_NOTE,
 	formatErEntityColumnSpan,
 	formatErEntityColumnSummary,
 } from "./erEntityToolText";
@@ -21,8 +22,8 @@ import type { ErEntityDoc } from "../schema/ErEntityDoc";
 export const erEntityMoveColumnsTool = defineObjectAiTool({
 	name: "er_entity_move_columns",
 	description: [
-		"Move a run of consecutive columns of an ER entity to another position, keeping their order; the columns between the old and the new position shift to close the gap. Use it to reorder columns, e.g. to put the primary key first.",
-		"Relationship lines attached to every column that moves — the moved ones and the shifted ones — follow it to its new index on their own, and the result lists the ends that moved. Use this instead of rewriting columns through set_extra_props, which leaves those lines on the old indices.",
+		"Move a run of consecutive columns of an ER entity to another position, keeping their order; the columns between shift to close the gap.",
+		ER_ENTITY_LINES_FOLLOW_NOTE,
 		ER_ENTITY_ADDRESSING_NOTE,
 	].join(" "),
 	objectType: "erEntity",
@@ -34,7 +35,7 @@ export const erEntityMoveColumnsTool = defineObjectAiTool({
 			.int()
 			.min(0)
 			.describe(
-				"Index the first moved column has after the move: 0 puts the run at the top, the column count minus count at the bottom.",
+				"Index the first moved column has after the move: 0 is the top, the column count minus count the bottom.",
 			),
 	},
 	apply: (entity: ErEntityDoc, { column, count, to }) => {

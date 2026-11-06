@@ -40,9 +40,9 @@ const styleText = (
 export const erEntitySetTextStyleTool = defineObjectAiTool({
 	name: "er_entity_set_text_style",
 	description: [
-		"Style texts of an ER entity: the title, and / or the key, name and type texts of a run of columns. Each text gets the typography given and keeps what is not given; a larger fontSize makes its row (or the title band) taller on its own.",
-		`${ER_ENTITY_GENERIC_TOOLS_NOTE} An entity has no shape-wide font settings: set_style reaches only its fill and outline, while every text carries its own typography.`,
-		"A column with no key or no type is left without one; write it first with er_entity_set_texts.",
+		"Style texts of an ER entity: the title, and / or the key, name and type texts of a run of columns. Each gets the typography given and keeps the rest; a larger fontSize grows its row (or the title band).",
+		`${ER_ENTITY_GENERIC_TOOLS_NOTE} set_style reaches only the entity's fill and outline.`,
+		"A column with no key or no type is left without one; er_entity_set_texts writes it.",
 		ER_ENTITY_ADDRESSING_NOTE,
 	].join(" "),
 	objectType: "erEntity",
@@ -51,7 +51,7 @@ export const erEntitySetTextStyleTool = defineObjectAiTool({
 		column: erEntityColumnSchema
 			.optional()
 			.describe(
-				"First column whose texts are styled, 0-based from the top; omit to style no column.",
+				"First column whose texts are styled; omit to style no column.",
 			),
 		count: createErEntityColumnCountSchema("style"),
 		fields: z
@@ -59,7 +59,7 @@ export const erEntitySetTextStyleTool = defineObjectAiTool({
 			.min(1)
 			.optional()
 			.describe(
-				'Which texts of each column to style; omit for all three ("key", "name", "type"). Only with column.',
+				"Which texts of each column to style; omit for all three. Only with column.",
 			),
 		...textSlotStyleSchema,
 	},

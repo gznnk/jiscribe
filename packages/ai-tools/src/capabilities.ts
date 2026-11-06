@@ -1,5 +1,5 @@
 // The shape types an AI tool is allowed to name, derived from a doc plugin set.
-// The enums and the wording in the tool descriptors take this as their source.
+// The add_objects type enum takes this as its source.
 
 import {
 	builtinObjectDocDefinitions,
@@ -14,7 +14,10 @@ import {
 export type AiCanvasCapabilities = {
 	/** Types that can be created programmatically; used as the add_objects type enum */
 	creatableObjectTypes: readonly string[];
-	/** Types either end of a connector may attach to; named in the connect_many description */
+	/**
+	 * Types either end of a connector may attach to. No tool schema or wording reads
+	 * it: connect_many points to list_types, which reports the same per type
+	 */
 	connectableObjectTypes: readonly string[];
 };
 

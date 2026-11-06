@@ -48,9 +48,9 @@ const resolveOptionalText = (
 export const erEntitySetTextsTool = defineObjectAiTool({
 	name: "er_entity_set_texts",
 	description: [
-		"Rewrite the texts of an ER entity: its title and any column's key, name or type, several columns in one call. Each text keeps its typography and takes the new characters (a text held as styled runs becomes one plain run in the text's typography). The box widens to fit a longer text on its own.",
+		"Rewrite the texts of an ER entity: its title and any column's key, name or type, several columns per call. Each keeps its typography (styled runs become one plain run), and the box widens to fit.",
 		ER_ENTITY_GENERIC_TOOLS_NOTE,
-		"It does not add, remove or reorder columns: use er_entity_insert_columns / er_entity_delete_columns / er_entity_move_columns.",
+		"Columns are added, removed and reordered by er_entity_insert_columns / er_entity_delete_columns / er_entity_move_columns.",
 		ER_ENTITY_ADDRESSING_NOTE,
 	].join(" "),
 	objectType: "erEntity",
@@ -58,33 +58,29 @@ export const erEntitySetTextsTool = defineObjectAiTool({
 		name: z
 			.string()
 			.optional()
-			.describe("The entity's title; omit to leave it as it is."),
+			.describe("The entity's title; omit to keep it."),
 		columns: z
 			.array(
 				z
 					.object({
-						column: z
-							.number()
-							.int()
-							.min(0)
-							.describe("The column to rewrite, 0-based from the top."),
+						column: z.number().int().min(0).describe("The column to rewrite."),
 						key: z
 							.string()
 							.nullable()
 							.optional()
 							.describe(
-								'Key gutter text ("PK", "FK", "PK, FK", "UK"); null or "" removes the key, omit to leave it as it is.',
+								'Key gutter text ("PK", "FK"); null or "" removes it, omit to keep it.',
 							),
 						name: z
 							.string()
 							.optional()
-							.describe("Column name; omit to leave it as it is."),
+							.describe("Column name; omit to keep it."),
 						type: z
 							.string()
 							.nullable()
 							.optional()
 							.describe(
-								'Column type ("varchar(80) null"); null or "" removes the type, omit to leave it as it is.',
+								'Column type ("varchar(80) null"); null or "" removes it, omit to keep it.',
 							),
 					})
 					.strict(),
@@ -92,7 +88,7 @@ export const erEntitySetTextsTool = defineObjectAiTool({
 			.min(1)
 			.optional()
 			.describe(
-				"The columns to rewrite, each named once; every text is one line, no newline.",
+				"The columns to rewrite, each named once; every text one line.",
 			),
 	},
 	apply: (entity: ErEntityDoc, { name, columns: columnArgs = [] }) => {

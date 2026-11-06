@@ -30,11 +30,10 @@ const INLINE_TEXT_STYLE_ARG_NAMES = Object.keys(inlineTextStyleSchema);
 export const tableSetTextStyleTool = defineObjectAiTool({
 	name: "table_set_text_style",
 	description: [
-		"Decorate part of the text in a rectangle of cells — a few words in bold, one term in another color, a phrase struck through — leaving the rest of each cell's text as it was.",
-		"For whole cells use table_set_cell_style instead: it sets the background, the alignment and the typography of all of a cell's text. A later table_set_cell_style setting the same property on the cell overrides what you set here.",
-		"The stretch is named by the characters themselves (match), never by an offset; occurrence picks which one when a cell holds several, counted within each cell, and omitting it decorates every occurrence.",
-		"Only typography a run of characters carries on its own is settable: fontColor, fontSize, fontFamily, fontWeight, fontStyle, textDecoration.",
-		"A cell of the range that does not hold match, or holds fewer than occurrence of it, is left as it was; the call fails only when no cell of the range is decorated.",
+		"Decorate part of the text in a rectangle of cells, leaving the rest of each cell's text as it was.",
+		"Whole cells are table_set_cell_style's, and a later one setting the same property overrides this.",
+		"A stretch is named by its characters (match); occurrence picks one, counted within each cell, and omitted every occurrence is decorated.",
+		"A cell without the match, or with fewer occurrences, is left as it was; the call fails only when no cell is decorated.",
 		TABLE_ADDRESSING_NOTE,
 	].join(" "),
 	objectType: "table",

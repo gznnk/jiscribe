@@ -1,7 +1,6 @@
 import type { ObjectOverlap } from "@jiscribe/canvas";
 import { describe, expect, it, vi } from "vitest";
 
-import { MAX_SVG_CHARS } from "../../canvasOps";
 import { applyHandleOp } from "../applyHandleOp";
 import { createFakeHandleControl } from "./fakeHandleControl";
 
@@ -682,47 +681,79 @@ describe("applyHandleOp (hit testing, selection, status)", () => {
 		expect(result.ok).toBe(true);
 		expect(result.text).toContain('typing in "rect-1"');
 		expect(result.text).toContain('a "move" drag is in progress');
-		expect(result.text).toContain("busy");
+		expect(result.text).toContain("Hold off on edits");
 	});
 
-	it("says outright that it is safe to write when nothing is going on", async () => {
+	it("asks to hold off on edits while only a text is open", async () => {
+		const result = await applyHandleOp(
+			{ kind: "getInteractionStatus" },
+			createFakeHandleControl({
+				getInteractionStatus: () => ({
+					drag: null,
+					isInertialScrolling: false,
+					editingTextId: "rect-1",
+					drawingShapeType: null,
+					modal: null,
+					isBusy: true,
+				}),
+			}),
+		);
+
+		expect(result.text).toContain("Hold off on edits");
+	});
+
+	it("asks to hold off on edits while only a drag is under way", async () => {
+		const result = await applyHandleOp(
+			{ kind: "getInteractionStatus" },
+			createFakeHandleControl({
+				getInteractionStatus: () => ({
+					drag: "move",
+					isInertialScrolling: false,
+					editingTextId: null,
+					drawingShapeType: null,
+					modal: null,
+					isBusy: true,
+				}),
+			}),
+		);
+
+		expect(result.text).toContain('a "move" drag is in progress');
+		expect(result.text).toContain("Hold off on edits");
+	});
+
+	it("asks for no hold while the view only coasts from a pan", async () => {
+		const result = await applyHandleOp(
+			{ kind: "getInteractionStatus" },
+			createFakeHandleControl({
+				getInteractionStatus: () => ({
+					drag: null,
+					isInertialScrolling: true,
+					editingTextId: null,
+					drawingShapeType: null,
+					modal: null,
+					isBusy: true,
+				}),
+			}),
+		);
+
+		expect(result.text).toContain("the view is still coasting");
+		expect(result.text).not.toContain("Hold off");
+	});
+
+	it("reports nothing going on without calling it safe to write", async () => {
 		const result = await applyHandleOp(
 			{ kind: "getInteractionStatus" },
 			createFakeHandleControl(),
 		);
 
-		expect(result.ok).toBe(true);
-		expect(result.text).toContain("no text is open in the editor");
-		expect(result.text).toContain("no drag is in progress");
-		expect(result.text).toContain("idle");
+		expect(result).toEqual({
+			ok: true,
+			text: "no text is open in the editor; no drag is in progress.",
+		});
 	});
 });
 
-describe("applyHandleOp (SVG, coordinate conversion)", () => {
-	it("returns SVG within the budget as it is", async () => {
-		const result = await applyHandleOp(
-			{ kind: "toSvg" },
-			createFakeHandleControl({
-				toSvgString: async () => "<svg><rect /></svg>",
-			}),
-		);
-
-		expect(result).toEqual({ ok: true, text: "<svg><rect /></svg>" });
-	});
-
-	it("returns only the start of SVG over the budget, and adds what to read instead", async () => {
-		const svg = "<svg>".padEnd(MAX_SVG_CHARS + 100, "x");
-		const result = await applyHandleOp(
-			{ kind: "toSvg" },
-			createFakeHandleControl({ toSvgString: async () => svg }),
-		);
-
-		expect(result.ok).toBe(true);
-		expect(result.text).toContain("SVG truncated");
-		expect(result.text).toContain("capture_canvas");
-		expect(result.text).not.toContain(svg);
-	});
-
+describe("applyHandleOp (coordinate conversion)", () => {
 	it("converts a client coordinate into a world coordinate", async () => {
 		const result = await applyHandleOp(
 			{ kind: "toWorld", x: 320, y: 240 },

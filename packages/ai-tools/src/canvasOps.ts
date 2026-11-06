@@ -81,7 +81,6 @@ export type AiHandleOp =
 			tolerance?: number;
 	  }
 	| { kind: "getSelection" }
-	| { kind: "toSvg" }
 	| { kind: "getInteractionStatus" }
 	// Client coordinates, the space PointerEvent.clientX/Y is in
 	| { kind: "toWorld"; x: number; y: number }
@@ -138,7 +137,6 @@ const HANDLE_OP_KINDS: Readonly<Record<AiHandleOp["kind"], true>> = {
 	measureVisualBounds: true,
 	hitTest: true,
 	getSelection: true,
-	toSvg: true,
 	getInteractionStatus: true,
 	toWorld: true,
 	toClient: true,
@@ -377,16 +375,6 @@ export const MAX_DESCRIBE_CHARS = 20_000;
  * it stands for, so the same budget carries an order of magnitude more objects.
  */
 export const MAX_SUMMARY_CHARS = 20_000;
-
-/**
- * The same budget again for the markup `to_svg` hands back. Rendered markup runs
- * several times the length of the document it came from — one shape becomes a
- * group of elements with its own transform, paths and text spans — so this cuts
- * in well before the drawings {@link MAX_DESCRIBE_CHARS} still fits whole. That is
- * the intended shape of the tool: the markup is worth reading in the small, and
- * capture_canvas is what a whole drawing is judged by.
- */
-export const MAX_SVG_CHARS = 20_000;
 
 /**
  * The longest edge (px) of the image capture_canvas hands to the AI. It travels

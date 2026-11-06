@@ -51,7 +51,7 @@ describe("tools", () => {
 			.split("\n")
 			.find((line) => line.startsWith("add_objects "));
 		expect(addObjectLine).toMatch(
-			/^add_objects +Add objects to the canvas, one or many in a single call; put every shape of a layout in the same call\.$/,
+			/^add_objects +Add objects to the canvas, one or many per call\.$/,
 		);
 	});
 

@@ -38,6 +38,26 @@ const FONT_WEIGHT_ALIASES: Readonly<Record<string, string>> = {
 export const canonicalizeFontWeight = (fontWeight: string): string =>
 	FONT_WEIGHT_ALIASES[fontWeight] ?? fontWeight;
 
+/** The four font stacks the canvas ships faces for, spelt as the model passes them */
+const SHIPPED_FONT_FAMILIES_TEXT =
+	'\'"Source Sans 3", "Noto Sans JP", sans-serif\' (sans), \'"Source Serif 4", "Noto Serif JP", serif\' (serif), \'"Source Code Pro", "Noto Sans JP", monospace\' (monospace), \'Caveat, "Klee One", cursive\' (handwriting)';
+
+/**
+ * The fontFamily wording, shared by the whole-body and the partial vocabularies.
+ *
+ * @param target - What the family is set on, e.g. "the whole body"
+ */
+export const describeFontFamily = (target: string): string =>
+	`Font family of ${target}, one of the four the canvas ships faces for: ${SHIPPED_FONT_FAMILIES_TEXT}. Any other is drawn by what the viewer has and measured by estimate.`;
+
+/**
+ * The fontWeight wording, shared by the whole-body and the partial vocabularies.
+ *
+ * @param target - What the weight is set on, e.g. "the whole body"
+ */
+export const describeFontWeight = (target: string): string =>
+	`Weight of ${target}: "normal" (400), "500", "600" or "bold" (700); "400" and "700" are stored as "normal" and "bold".`;
+
 /**
  * The typography of one whole body of text, one optional zod schema per field of
  * TextSlotStyle, in the order set_style declares them. Spread it into a tool's
@@ -50,23 +70,19 @@ export const textSlotStyleSchema = {
 	fontFamily: z
 		.string()
 		.optional()
-		.describe(
-			'Font family for the whole body, from the four the canvas ships faces for: \'"Source Sans 3", "Noto Sans JP", sans-serif\' (sans), \'"Source Serif 4", "Noto Serif JP", serif\' (serif), \'"Source Code Pro", "Noto Sans JP", monospace\' (monospace), \'Caveat, "Klee One", cursive\' (handwriting). A family outside those is drawn by whatever the viewer has, and measured by estimate.',
-		),
+		.describe(describeFontFamily("the whole body")),
 	fontWeight: z
 		.enum(AI_FONT_WEIGHTS)
 		.optional()
-		.describe(
-			'Text weight, from the ladder the canvas ships faces for: "normal" (400), "500", "600", "bold" (700). "400" and "700" are the same two rungs written as a design token would spell them, and are stored as "normal" and "bold".',
-		),
+		.describe(describeFontWeight("the whole body")),
 	fontStyle: z
 		.enum(["normal", "italic"])
 		.optional()
-		.describe('Slant of the whole body; "normal" stands it upright again.'),
+		.describe("Slant of the whole body."),
 	textDecoration: z
 		.enum(["none", "underline", "line-through", "underline line-through"])
 		.optional()
-		.describe('Line drawn on the whole body; "none" removes it.'),
+		.describe("Line drawn on the whole body."),
 	textAlign: z
 		.enum(["left", "center", "right"])
 		.optional()

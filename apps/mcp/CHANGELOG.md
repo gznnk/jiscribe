@@ -112,6 +112,22 @@ covers that.
   shape), then partial overlaps, then pairs where one box contains the other.
   The containments are only counted unless the new `includeContained: true`
   asks for them, which lists them last and names which shape holds the other.
+- **The tool descriptions are shorter.** The descriptions of the tools and of
+  their arguments keep what a call depends on and drop reasons, examples and
+  advice, so the tool list a client loads goes from some 33k tokens to some 24k.
+  `connect_many` no longer lists the types an end attaches to and points to
+  `list_types`, which says so per type; the note every screen tool carries is
+  one sentence.
+- **`get_interaction_status` says what work in progress means on this
+  server.** It no longer claims a drag refuses or wipes out an edit, nor that an
+  idle canvas is safe to write to. File edits do not wait for the user: the
+  viewer holds a file arriving mid-edit and merges it object by object once
+  they let go, the file winning where both changed the same object and the
+  user's change to it dropped with a notice. So while a text is open the AI may
+  edit other objects, and during a drag that changes the document it waits. The
+  answer comes from one open viewer window.
+- **`instructions` sends the AI to `get_interaction_status`** before it edits
+  while a person may be at the viewer.
 
 ### Removed
 
@@ -136,6 +152,8 @@ covers that.
   icon a file names can still be changed by editing the file.
 - The floating menu's **…** button. Open the properties sidebar from the top
   bar instead.
+- **Breaking: `to_svg` is gone.** `export_image` with an `.svg` `output` writes
+  the same markup, without the `.jis` source, to a file.
 
 ### Fixed
 

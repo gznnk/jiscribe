@@ -49,7 +49,6 @@ describe("createCanvasToolDescriptors", () => {
 			"get_selection",
 			"get_view",
 			"get_interaction_status",
-			"to_svg",
 			"to_world",
 			"to_client",
 			"add_objects",
@@ -114,7 +113,6 @@ describe("createCanvasToolDescriptors", () => {
 			"get_selection",
 			"get_view",
 			"get_interaction_status",
-			"to_svg",
 			"to_world",
 			"to_client",
 		]);
@@ -164,7 +162,7 @@ describe("createCanvasToolDescriptors", () => {
 		expect(takesObjectType(null, "unknown-shape")).toBe(true);
 	});
 
-	it("names the connectable types in the connect_many description", () => {
+	it("sends connect_many to list_types for which types take an end, naming none itself", () => {
 		const withTypes = findDescriptor(
 			createCanvasToolDescriptors(capabilities),
 			"connect_many",
@@ -174,8 +172,9 @@ describe("createCanvasToolDescriptors", () => {
 			"connect_many",
 		).description;
 
-		expect(withTypes).toContain("Connectable types: rect, ellipse.");
-		expect(withoutTypes).not.toContain("Connectable types");
+		expect(withTypes).toContain("list_types");
+		expect(withTypes).not.toContain("ellipse");
+		expect(withTypes).toBe(withoutTypes);
 	});
 
 	it("takes any non-empty anchor id on every connector tool, leaving the check to docOps", () => {

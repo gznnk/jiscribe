@@ -469,6 +469,15 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   drag on a slot boundary or the right edge, and a resize of the box, lay the
   entity out from the texts as last measured; only the title band is wrapped
   again at the new width.
+- **The AI tool descriptions are shorter.** `@jiscribe/ai-tools`, the style
+  vocabularies of `@jiscribe/ai-tools-sdk` and the table, ER entity and record
+  tools keep what a call depends on and drop reasons, examples and advice, so
+  `jiscribe tools` prints shorter summaries and descriptions. `connect_many`
+  points to `list_types` for the types an end attaches to instead of listing
+  them; `AiCanvasCapabilities.connectableObjectTypes` is still filled in, but no
+  tool wording reads it. `get_interaction_status` asks to hold off on edits
+  while a text is open or a drag that changes the document is under way, and no
+  longer calls an idle canvas safe to write to.
 
 ### Removed
 
@@ -521,6 +530,10 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   the default bar the sidebars are opened by the switch for both; a host
   composing `DEFAULT_TOOLBAR_PROPERTIES_SECTION` keeps a properties toggle on the
   collapsed bar, and a canvas with no top bar has no way into the sidebars.
+- **Breaking: `@jiscribe/ai-tools` no longer declares `to_svg`.** The `toSvg`
+  op kind, `AiHandleControl.toSvgString` and `MAX_SVG_CHARS` go with it;
+  `CanvasHandle.export.toSvgString` stays. `jiscribe op <file> to_svg` now
+  reports an unknown tool rather than one only jiscribe-mcp runs.
 
 ### Fixed
 

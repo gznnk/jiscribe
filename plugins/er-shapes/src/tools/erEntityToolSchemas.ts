@@ -8,7 +8,7 @@ export const erEntityColumnSchema = z
 	.number()
 	.int()
 	.min(0)
-	.describe("First column the call acts on, 0-based from the top.");
+	.describe("First column the call acts on.");
 
 /**
  * How many columns a range spans downwards from `column`.
@@ -23,5 +23,5 @@ export const createErEntityColumnCountSchema = (actionText: string) =>
 		.min(1)
 		.optional()
 		.describe(
-			`How many consecutive columns to ${actionText}, downwards from column; omit for 1. It must stay inside the entity.`,
+			`Consecutive columns to ${actionText} downwards from column, inside the entity; 1 when omitted.`,
 		);

@@ -55,6 +55,7 @@ describe("server instructions", () => {
 		const instructions = client.getInstructions() ?? "";
 		expect(instructions).toContain("single source of truth");
 		expect(instructions).toContain("read_drawing_guide");
+		expect(instructions).toContain("get_interaction_status");
 		// It rides in the context for the whole session, so the prose that belongs
 		// in the guides must not leak into it
 		expect(instructions.length).toBeLessThan(2048);

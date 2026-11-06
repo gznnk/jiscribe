@@ -14,8 +14,8 @@ import type { TableDoc } from "../schema/TableDoc";
 export const tableDeleteTracksTool = defineObjectAiTool({
 	name: "table_delete_tracks",
 	description: [
-		"Delete whole rows or columns of a table, with everything in their cells. The tracks after them move up (rows) or left (columns) and are renumbered.",
-		"A table keeps at least one row and one column, so deleting all of either is refused; to remove the table itself use delete_objects.",
+		"Delete whole rows or columns of a table with their cells; the tracks after them move up or left and are renumbered.",
+		"Deleting every row or every column is refused; delete_objects removes the table.",
 		TABLE_ADDRESSING_NOTE,
 	].join(" "),
 	objectType: "table",
@@ -24,9 +24,7 @@ export const tableDeleteTracksTool = defineObjectAiTool({
 		indices: z
 			.array(z.number().int().min(0))
 			.min(1)
-			.describe(
-				"Indices of the tracks to delete, as they stand before the call; in any order.",
-			),
+			.describe("Indices as they stand before the call, in any order."),
 	},
 	apply: (table: TableDoc, { axis, indices }) => {
 		const grid = readTableDocGrid(table);

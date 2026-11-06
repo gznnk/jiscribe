@@ -24,7 +24,6 @@ export const createFakeHandleControl = (
 	measureConnectorPath: () => null,
 	measureVisualBounds: () => null,
 	hitTest: () => [],
-	toSvgString: async () => "<svg></svg>",
 	getInteractionStatus: () => ({
 		drag: null,
 		isInertialScrolling: false,

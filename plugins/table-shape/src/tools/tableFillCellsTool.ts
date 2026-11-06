@@ -31,9 +31,8 @@ const growTableGrid = (
 export const tableFillCellsTool = defineObjectAiTool({
 	name: "table_fill_cells",
 	description: [
-		"Write the text of a block of cells in one call: values[i][j] goes into cell [row + i, column + j]. Rows of values may differ in length; a cell values does not reach is left as it is.",
-		"Each written cell keeps its fill and typography and has its text replaced (plain text; \\n breaks a line).",
-		"A block reaching past the last row or column is refused unless grow is true, which appends the rows and columns it needs.",
+		"Write the text of a block of cells: values[i][j] goes into cell [row + i, column + j], and a cell values does not reach is left as it is.",
+		"A written cell keeps its fill and typography, its text replaced as plain text (\\n breaks a line). A block past the last row or column is refused unless grow is true.",
 		TABLE_ADDRESSING_NOTE,
 	].join(" "),
 	objectType: "table",
@@ -42,14 +41,12 @@ export const tableFillCellsTool = defineObjectAiTool({
 		values: z
 			.array(z.array(z.string()).min(1))
 			.min(1)
-			.describe(
-				'The texts, one array per row from the top, one string per cell from the left; "" empties a cell.',
-			),
+			.describe('One array per row, one string per cell; "" empties a cell.'),
 		grow: z
 			.boolean()
 			.optional()
 			.describe(
-				"Append the rows and columns the block needs instead of refusing it; omit or false to refuse.",
+				"true appends the rows and columns the block needs instead of refusing it.",
 			),
 	},
 	apply: (table: TableDoc, { row, column, values, grow }) => {

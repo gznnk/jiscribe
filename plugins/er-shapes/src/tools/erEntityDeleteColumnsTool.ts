@@ -6,6 +6,7 @@ import {
 } from "./erEntityToolSchemas";
 import {
 	ER_ENTITY_ADDRESSING_NOTE,
+	ER_ENTITY_LINES_FOLLOW_NOTE,
 	formatErEntityColumnSpan,
 	formatErEntityColumnSummary,
 	readErEntityPlainText,
@@ -21,8 +22,8 @@ import type { ErEntityDoc } from "../schema/ErEntityDoc";
 export const erEntityDeleteColumnsTool = defineObjectAiTool({
 	name: "er_entity_delete_columns",
 	description: [
-		"Delete a run of consecutive columns from an ER entity. The columns after them move up, so their indices shrink by count; the box shrinks at the bottom, its top edge staying where it is. Deleting every column is allowed (an entity of none draws one empty row).",
-		"Relationship lines attached to a column that moves follow it to its new index, and a line on a deleted column stays on the same side of the box at the height the row stood; the result lists the ends that moved. Use this instead of rewriting columns through set_extra_props, which leaves those lines on the old indices.",
+		"Delete a run of consecutive columns from an ER entity; the columns after them move up, and the box shrinks at the bottom. Deleting every column is allowed (one empty row is drawn).",
+		`${ER_ENTITY_LINES_FOLLOW_NOTE} A line on a deleted column stays on its side of the box at the height the row stood.`,
 		ER_ENTITY_ADDRESSING_NOTE,
 	].join(" "),
 	objectType: "erEntity",

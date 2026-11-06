@@ -44,7 +44,7 @@ describe("createJiscribeMcpServer", () => {
 				: descriptor.name,
 		);
 		expect(names).toEqual(expect.arrayContaining(expectedNames));
-		expect(descriptors.filter(isCanvasHandleTool)).toHaveLength(16);
+		expect(descriptors.filter(isCanvasHandleTool)).toHaveLength(15);
 	});
 
 	it("never registers the same tool name twice", async () => {
@@ -85,6 +85,21 @@ describe("createJiscribeMcpServer", () => {
 		);
 		expect(description).toContain("it takes no path");
 		expect(description).toContain("use measure_text instead");
+	});
+
+	it("loosens get_interaction_status's wait for a text being edited, on this server only", async () => {
+		// The viewer merges a file that arrived mid-edit object by object, so only
+		// the object being typed in is at risk here; the declaration itself cannot
+		// say that, since a host writing straight into the canvas loses the typing
+		// whichever object it writes
+		const description = await client.getToolDescription(
+			"get_interaction_status",
+		);
+		const declaration = canvasToolSet.descriptors.find(
+			(descriptor) => descriptor.name === "get_interaction_status",
+		);
+		expect(description).toContain("objects other than the one being typed in");
+		expect(declaration?.description).not.toContain("objects other than");
 	});
 
 	it("exposes the one-shot creation arguments (autoHeight / textLayout) on an add_objects entry", async () => {

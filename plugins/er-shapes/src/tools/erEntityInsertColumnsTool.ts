@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import {
 	ER_ENTITY_ADDRESSING_NOTE,
+	ER_ENTITY_LINES_FOLLOW_NOTE,
 	formatErEntityColumnCount,
 	formatErEntityColumnSpan,
 	formatErEntityColumnSummary,
@@ -43,9 +44,9 @@ const buildInsertedColumn = (
 export const erEntityInsertColumnsTool = defineObjectAiTool({
 	name: "er_entity_insert_columns",
 	description: [
-		"Insert columns into an ER entity at one position, or append them. The columns at and after the position move down, so their indices grow by the number inserted; the box grows at the bottom, its top edge staying where it is.",
-		"Relationship lines attached to a column that moves follow it to its new index on their own, and the result lists the ends that moved. Use this instead of rewriting columns through set_extra_props, which leaves those lines on the old indices.",
-		"New columns take the default typography; style them with er_entity_set_text_style.",
+		"Insert columns into an ER entity at one position, or append them; the columns at and after it move down, and the box grows at the bottom.",
+		ER_ENTITY_LINES_FOLLOW_NOTE,
+		"New columns take the default typography.",
 		ER_ENTITY_ADDRESSING_NOTE,
 	].join(" "),
 	objectType: "erEntity",
@@ -56,7 +57,7 @@ export const erEntityInsertColumnsTool = defineObjectAiTool({
 			.min(0)
 			.optional()
 			.describe(
-				"Index the first new column takes: 0 inserts above every existing one, the current count appends. Omit to append.",
+				"Index the first new column takes: 0 inserts above all; omit, or the current count, to append.",
 			),
 		columns: z
 			.array(
@@ -66,23 +67,21 @@ export const erEntityInsertColumnsTool = defineObjectAiTool({
 							.string()
 							.optional()
 							.describe(
-								'Key gutter text, drawn as written ("PK", "FK", "PK, FK", "UK"); omit or "" for none.',
+								'Key gutter text, drawn as written ("PK", "FK"); omit or "" for none.',
 							),
 						name: z.string().describe("Column name."),
 						type: z
 							.string()
 							.optional()
 							.describe(
-								'Column type, nullability in SQL words ("varchar(80) null"); omit or "" for none.',
+								'Column type ("varchar(80) null"); omit or "" for none.',
 							),
 					})
 					.strict(),
 			)
 			.min(1)
 			.max(MAX_INSERTED_COLUMNS)
-			.describe(
-				"The new columns, top to bottom; each text is one line, no newline.",
-			),
+			.describe("The new columns, top to bottom; each text one line."),
 	},
 	apply: (entity: ErEntityDoc, { at, columns: columnArgs }) => {
 		const columnCount = entity.columns.length;

@@ -11,11 +11,15 @@ import type { ErEntityColumnDoc, ErEntityTextDoc } from "../schema/ErEntityDoc";
 
 /** How columns are numbered, and how a column maps to its connect points. */
 export const ER_ENTITY_ADDRESSING_NOTE =
-	'Columns are 0-based in the order of the entity\'s "columns" array, top to bottom — the same index its connect points "col:<index>:left" / "col:<index>:right" carry.';
+	'Columns are 0-based from the top, the index its connect points "col:<index>:left" / "col:<index>:right" carry.';
 
 /** What the text tools say of the generic text tools, which an entity's texts are out of reach of. */
 export const ER_ENTITY_GENERIC_TOOLS_NOTE =
-	"An entity keeps its texts in name and columns rather than in text slots, so set_texts, set_text_styles and set_style do not reach them: these entity tools are the way.";
+	"An entity's texts are out of reach of set_texts, set_text_styles and set_style; these entity tools edit them.";
+
+/** What the tools that renumber columns say of the relationship lines on them. */
+export const ER_ENTITY_LINES_FOLLOW_NOTE =
+	"Lines attached to a column that moves follow it to its new index, and the result lists the ends that moved; rewriting columns through set_extra_props would leave them on the old indices.";
 
 /**
  * A count of columns in words, singular where it is one.

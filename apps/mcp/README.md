@@ -69,9 +69,9 @@ Four families of tools, 76 in all:
   an SVG and writes it to a file for a person, without handing the picture
   back to the AI; the file has to be under the directory of the `.jis` on
   display, and is never named `.jis.png` / `.jis.svg`
-- 38 from `@jiscribe/ai-tools` that a document alone can answer — add, move,
+- 39 from `@jiscribe/ai-tools` that a document alone can answer — add, move,
   align, group, style, name the document or a shape, read, undo — each given a `path` so it names a file
-- 16 more from the same declarations that only a mounted canvas can answer —
+- 15 more from the same declarations that only a mounted canvas can answer —
   capture, camera, selection, measurement — run over the viewer's WebSocket.
   The one that measures a slot as drawn is registered as `measure_rendered_text`,
   since `measure_text` above answers from dimensions alone
@@ -88,7 +88,8 @@ Four families of tools, 76 in all:
   the `id` of the one object it acts on
 
 The handshake carries `instructions` describing this server alone: that files are
-addressed by absolute path, which tools need a viewer, where validation starts.
+addressed by absolute path, which tools need a viewer, that `get_interaction_status`
+comes before editing while a person may be at the viewer, where validation starts.
 The canvas itself — what it can hold, what each shape is for, how to draw well,
 and how the JSON is laid out — is not in there. It is prose too large to sit in
 the context all session, so `read_drawing_guide` fetches it on demand:
@@ -142,7 +143,7 @@ to resolve; the error bar is kept for what lasts until it is fixed — a broken
 or missing file, a write that failed.
 
 `open_canvas` with `headless: true` opens a window-less Chromium instead, so the
-16 screen-side tools have something to work with while the user's screen stays
+15 screen-side tools have something to work with while the user's screen stays
 as it was. It names a Chromium executable directly and never falls back to a
 tab, since no default browser has a headless mode; with none installed the tool
 says so rather than leaving the AI blind. It runs on a throwaway profile in a

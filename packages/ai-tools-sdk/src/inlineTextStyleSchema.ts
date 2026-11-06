@@ -5,7 +5,11 @@
 import type { InlineTextStyle, RichTextMatch } from "@jiscribe/doc";
 import { z } from "zod";
 
-import { AI_FONT_WEIGHTS } from "./textSlotStyleSchema";
+import {
+	AI_FONT_WEIGHTS,
+	describeFontFamily,
+	describeFontWeight,
+} from "./textSlotStyleSchema";
 
 /**
  * The typography a stretch of characters carries on its own, one optional zod schema
@@ -22,31 +26,23 @@ export const inlineTextStyleSchema = {
 		.number()
 		.min(1)
 		.optional()
-		.describe(
-			"Size of the matched characters in px; the rest of the body keeps the shape's own size.",
-		),
+		.describe("Size of the matched characters in px."),
 	fontFamily: z
 		.string()
 		.optional()
-		.describe(
-			'Font family for the matched characters, from the four the canvas ships faces for: \'"Source Sans 3", "Noto Sans JP", sans-serif\' (sans), \'"Source Serif 4", "Noto Serif JP", serif\' (serif), \'"Source Code Pro", "Noto Sans JP", monospace\' (monospace, e.g. for a code term inside a sentence), \'Caveat, "Klee One", cursive\' (handwriting).',
-		),
+		.describe(describeFontFamily("the matched characters")),
 	fontWeight: z
 		.enum(AI_FONT_WEIGHTS)
 		.optional()
-		.describe(
-			'Weight of the matched characters, from the shipped ladder "normal" (400) / "500" / "600" / "bold" (700); "400" and "700" are those two rungs written as a design token would spell them, and are stored as "normal" and "bold". "normal" takes the emphasis off again.',
-		),
+		.describe(describeFontWeight("the matched characters")),
 	fontStyle: z
 		.enum(["normal", "italic"])
 		.optional()
-		.describe(
-			'Slant of the matched characters; "normal" stands them upright again.',
-		),
+		.describe("Slant of the matched characters."),
 	textDecoration: z
 		.enum(["none", "underline", "line-through", "underline line-through"])
 		.optional()
-		.describe('Line drawn on the matched characters; "none" removes it.'),
+		.describe("Line drawn on the matched characters."),
 } satisfies Record<keyof InlineTextStyle, z.ZodType>;
 
 /**
@@ -61,7 +57,7 @@ export const textMatchSchema = {
 		.string()
 		.min(1)
 		.describe(
-			"The characters to decorate, matched literally against the object's own text. Must occur in it — a stretch that does not is an error, not a silent no-op.",
+			"The characters to decorate, matched literally against the object's own text; an error when they do not occur.",
 		),
 	occurrence: z
 		.number()
@@ -69,6 +65,6 @@ export const textMatchSchema = {
 		.min(1)
 		.optional()
 		.describe(
-			"Which occurrence to decorate when the text holds several, counted from 1. Omit to decorate every occurrence.",
+			"Which occurrence to decorate, counted from 1; omit for every one.",
 		),
 } satisfies Record<keyof RichTextMatch, z.ZodType>;

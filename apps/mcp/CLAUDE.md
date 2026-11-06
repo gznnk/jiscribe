@@ -35,7 +35,7 @@ they hold.
   so a declaration written for "the open document" becomes a file operation);
   ai-tools screen ops (`registerHandleTools`, run as a WS round trip to the
   viewer); and the shape plugins' tools (`standardAiToolPlugins`, registered
-  like doc ops). Do not hardcode counts elsewhere; only the 16 screen tools are
+  like doc ops). Do not hardcode counts elsewhere; only the 15 screen tools are
   pinned by a test (`toolRegistry.test.ts`).
 - **Routing is by the declaration's `drives`**: a tool that names a `handle.*`
   goes to the viewer, everything else to the file.
@@ -51,7 +51,8 @@ they hold.
 - **Every argument schema is `.strict()`** — zod drops unknown keys by default,
   so a mistyped argument would succeed as a default.
 - **`instructions` carries the MCP layer only** (path addressing, which tools
-  need a viewer, where validation starts, undo scope, the pointer to
+  need a viewer, reading `get_interaction_status` before editing while a person
+  may be at the viewer, where validation starts, undo scope, the pointer to
   `read_drawing_guide`). It costs context all session; the canvas model, shape
   usage, drawing craft and JSON format belong in the guides.
 - **`read_drawing_guide` resolves the guides through `@jiscribe/doc-schema`'s

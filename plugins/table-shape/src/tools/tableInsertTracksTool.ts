@@ -21,8 +21,8 @@ const MAX_INSERTED_TRACKS = 100;
 export const tableInsertTracksTool = defineObjectAiTool({
 	name: "table_insert_tracks",
 	description: [
-		"Insert empty rows or columns into a table. The cells at and after the insertion point move down (rows) or right (columns), so their indices grow by count.",
-		"The new tracks copy everything but the text from the track standing at `at` (the last one when appending): a column its width, a row its stored height, each cell its fill and text style. So rows appended to a styled body look like the body; restyle them with table_set_cell_style if they should not.",
+		"Insert empty rows or columns into a table; the tracks at and after `at` move down or right, their indices growing by count.",
+		"The new tracks copy all but the text from the track at `at` (the last one when appending): a column's width, a row's stored height, each cell's fill and text style.",
 		TABLE_ADDRESSING_NOTE,
 	].join(" "),
 	objectType: "table",
@@ -33,7 +33,7 @@ export const tableInsertTracksTool = defineObjectAiTool({
 			.int()
 			.min(0)
 			.describe(
-				"Index the first new track takes: 0 inserts before every existing one, the current count (from table_read) appends after the last.",
+				"Index the first new track takes: 0 inserts before all, the current count (table_read) appends.",
 			),
 		count: z
 			.number()
@@ -41,7 +41,7 @@ export const tableInsertTracksTool = defineObjectAiTool({
 			.min(1)
 			.max(MAX_INSERTED_TRACKS)
 			.optional()
-			.describe("How many tracks to insert side by side; omit for 1."),
+			.describe("Tracks to insert; 1 when omitted."),
 	},
 	apply: (table: TableDoc, { axis, at, count }) => {
 		const grid = readTableDocGrid(table);

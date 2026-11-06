@@ -24,9 +24,6 @@ const createFakeCanvas = () => {
 		measure: {
 			hitTest: vi.fn(() => []),
 		},
-		export: {
-			toSvgString: vi.fn(async () => "<svg/>"),
-		},
 	};
 	return { fake, handle: fake as unknown as CanvasHandle };
 };
@@ -46,14 +43,13 @@ describe("createCanvasHandleControl", () => {
 			});
 		});
 
-		it("answers null or empty instead of throwing", async () => {
+		it("answers null or empty instead of throwing", () => {
 			expect(control.getSelectedIds()).toEqual([]);
 			expect(control.setView(CAMERA)).toBeNull();
 			expect(control.getView()).toBeNull();
 			expect(control.fitView("all")).toBeNull();
 			expect(control.findOverlaps(["a"])).toEqual([]);
 			expect(control.hitTest({ x: 0, y: 0 }, 4)).toEqual([]);
-			expect(await control.toSvgString()).toBeNull();
 		});
 	});
 
@@ -90,16 +86,6 @@ describe("createCanvasHandleControl", () => {
 			{ x: 1, y: 2 },
 			{ tolerance: 6 },
 		);
-	});
-
-	it("exports the SVG without the embedded source", async () => {
-		const { fake, handle } = createFakeCanvas();
-		expect(await createCanvasHandleControl(() => handle).toSvgString()).toBe(
-			"<svg/>",
-		);
-		expect(fake.export.toSvgString).toHaveBeenCalledWith({
-			includeSource: false,
-		});
 	});
 
 	it("reads the handle on every call, following a canvas that comes and goes", () => {

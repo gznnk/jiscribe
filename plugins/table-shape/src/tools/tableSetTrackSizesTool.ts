@@ -110,8 +110,8 @@ const describeTrackSizes = (grid: TableGrid, axis: TableAxis): string =>
 export const tableSetTrackSizesTool = defineObjectAiTool({
 	name: "table_set_track_sizes",
 	description: [
-		"Set the widths of columns or the heights of rows. The table's width is its column widths summed, so widening a column widens the table from its left edge.",
-		`A column is at least ${TABLE_MIN_COLUMN_WIDTH}px wide. A row's height is a floor: the row is drawn taller when its text needs more, never clipped, and "auto" takes the floor away so the row is exactly as tall as its text.`,
+		"Set the widths of columns or the heights of rows. The table is as wide as its columns summed, so widening one widens it rightwards.",
+		`A column is at least ${TABLE_MIN_COLUMN_WIDTH}px wide. A row's height is a floor its text may exceed, never clipped; "auto" takes the floor away.`,
 		TABLE_ADDRESSING_NOTE,
 	].join(" "),
 	objectType: "table",
@@ -121,23 +121,17 @@ export const tableSetTrackSizesTool = defineObjectAiTool({
 			.array(
 				z
 					.object({
-						index: z
-							.number()
-							.int()
-							.min(0)
-							.describe("The column or row, 0-based."),
+						index: z.number().int().min(0).describe("The column or row."),
 						size: z
 							.union([z.number(), z.literal(TABLE_AUTO_ROW_HEIGHT)])
 							.describe(
-								'Width or height in px; "auto" (rows only) makes the row as tall as its text needs.',
+								'Width or height in px; "auto" (rows only) fits the row to its text.',
 							),
 					})
 					.strict(),
 			)
 			.min(1)
-			.describe(
-				"One entry per track to resize; tracks not named keep their size.",
-			),
+			.describe("One entry per track; tracks not named keep their size."),
 	},
 	apply: (table: TableDoc, { axis, sizes }) => {
 		const grid = readTableDocGrid(table);

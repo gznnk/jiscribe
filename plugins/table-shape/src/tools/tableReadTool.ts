@@ -49,7 +49,6 @@ export const tableReadTool = defineObjectAiTool({
 	name: "table_read",
 	description: [
 		"Read a table: its extent, column widths, row heights and every cell's text, row by row with cells separated by |, a styled cell followed by what it sets in {}.",
-		"Call it before editing a table you did not just build, to know its size and what each cell holds.",
 		TABLE_ADDRESSING_NOTE,
 	].join(" "),
 	objectType: "table",

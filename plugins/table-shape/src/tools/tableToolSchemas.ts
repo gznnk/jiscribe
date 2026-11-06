@@ -6,20 +6,12 @@ import { z } from "zod";
 /** Which kind of track a call acts on; the same word the grid operations take (TableAxis). */
 export const tableAxisSchema = z
 	.enum(["row", "column"])
-	.describe('"row" for horizontal bands of cells, "column" for vertical ones.');
+	.describe('"row" for horizontal bands of cells, "column" for vertical.');
 
 /** The top-left cell a call starts at; table_fill_cells takes this alone. */
 export const tableCellOriginSchema = {
-	row: z
-		.number()
-		.int()
-		.min(0)
-		.describe("Row of the top-left cell, 0-based from the top."),
-	column: z
-		.number()
-		.int()
-		.min(0)
-		.describe("Column of the top-left cell, 0-based from the left."),
+	row: z.number().int().min(0).describe("Row of the top-left cell."),
+	column: z.number().int().min(0).describe("Column of the top-left cell."),
 };
 
 /** A rectangle of cells: the origin plus how far it reaches. */
@@ -31,7 +23,7 @@ export const tableCellRangeSchema = {
 		.min(1)
 		.optional()
 		.describe(
-			"How many rows the range spans downwards from row; omit for 1. It must stay inside the table.",
+			"Rows spanned downwards from row, inside the table; 1 when omitted.",
 		),
 	columnCount: z
 		.number()
@@ -39,6 +31,6 @@ export const tableCellRangeSchema = {
 		.min(1)
 		.optional()
 		.describe(
-			"How many columns the range spans rightwards from column; omit for 1. It must stay inside the table.",
+			"Columns spanned rightwards from column, inside the table; 1 when omitted.",
 		),
 };

@@ -1,10 +1,10 @@
 // Applies the operations that arrived from an AI tool and need a mounted canvas
-// (selection, the camera, measuring, turning into SVG, reading the interaction
-// status) to the canvas on screen. They do not change the document, so nothing
-// is pushed onto the undo history and this is a route apart from applyCanvasOp
-// (capturing is held by captureCanvasImage for the same reason, and because it
-// carries an image rather than text). Turning into SVG has to await the image
-// files, so applying is async as a whole even though the rest answers at once.
+// (selection, the camera, measuring, reading the interaction status) to the
+// canvas on screen. They do not change the document, so nothing is pushed onto
+// the undo history and this is a route apart from applyCanvasOp (capturing is
+// held by captureCanvasImage for the same reason, and because it carries an
+// image rather than text). Measuring text may wait for the fonts to settle, so
+// applying is async as a whole even though the rest answers at once.
 //
 // Result text is written in a form the AI can copy straight into its next
 // instruction. For the measurements the numbers themselves are the deliverable,
@@ -20,7 +20,6 @@ import type {
 import type { Point, Rect } from "@jiscribe/geometry";
 
 import type { AiCanvasOpOutcome, AiHandleOp, AiRect } from "../canvasOps";
-import { MAX_SVG_CHARS } from "../canvasOps";
 import { resolveAiRegion } from "./resolveAiRegion";
 import type { AiHandleControl } from "./types";
 import {
@@ -85,22 +84,10 @@ const formatHitTarget = (target: Point | Rect): string =>
 	"width" in target ? formatRect(target) : formatPoint(target);
 
 /**
- * The SVG string. Over the budget it returns only the start and says outright
- * that the rest cannot be had this way, along with what to read instead
- * (written the same way as the describe_canvas truncation)
- */
-const describeSvg = (svg: string): string =>
-	svg.length <= MAX_SVG_CHARS
-		? svg
-		: [
-				`(SVG truncated: ${svg.length} chars total, showing the first ${MAX_SVG_CHARS}. The rest cannot be reached this way: look at the drawing with capture_canvas, or read the objects with list_objects and get_object.)`,
-				svg.slice(0, MAX_SVG_CHARS),
-			].join("\n");
-
-/**
- * The user's interaction status. What the AI cares about is what it must not
- * touch and why a write of its own may be turned away, so the text being edited
- * and the drag come first, and the rest is added only where it is on
+ * The user's interaction status: the text being edited and the drag first, since
+ * those are what an edit written meanwhile can cut off, and the rest only where it
+ * is on. The closing note names no drag kind; the drags that change nothing are
+ * named in get_interaction_status's declaration
  */
 const describeInteractionStatus = ({
 	drag,
@@ -108,15 +95,14 @@ const describeInteractionStatus = ({
 	editingTextId,
 	drawingShapeType,
 	modal,
-	isBusy,
 }: CanvasInteractionStatus): string => {
 	const parts = [
 		editingTextId === null
 			? "no text is open in the editor"
-			: `the user is typing in "${editingTextId}", so leave that object's text alone until they are done`,
+			: `the user is typing in "${editingTextId}"`,
 		drag === null
 			? "no drag is in progress"
-			: `a "${drag}" drag is in progress, which is why an edit of yours may be refused or wiped out; wait for it to end rather than calling again`,
+			: `a "${drag}" drag is in progress`,
 		isInertialScrolling
 			? "the view is still coasting from a released pan"
 			: null,
@@ -125,10 +111,11 @@ const describeInteractionStatus = ({
 			: `the ${drawingShapeType} drawing tool is armed`,
 		modal === null ? null : `the "${modal}" dialog is open`,
 	].filter((part) => part !== null);
-	const busyNote = isBusy
-		? "The canvas is busy: hold off on edits and read this again in a moment."
-		: "The canvas is idle, so it is safe to write to.";
-	return `${parts.join("; ")}. ${busyNote}`;
+	const holdNote =
+		editingTextId === null && drag === null
+			? ""
+			: " Hold off on edits until the text is closed, or a drag that changes the document has ended, then read this again.";
+	return `${parts.join("; ")}.${holdNote}`;
 };
 
 /** The rect form of fit_view. The rect fitted and what actually shows are two different things, so the result says as much */
@@ -477,13 +464,6 @@ export const applyHandleOp = async (
 				ok: true,
 				text: `the user has ${ids.length} object(s) selected: ${quoteIds(ids)}`,
 			};
-		}
-		case "toSvg": {
-			const svg = await handleControl.toSvgString();
-			if (svg === null) {
-				return { ok: false, text: NO_CANVAS_TEXT };
-			}
-			return { ok: true, text: describeSvg(svg) };
 		}
 		case "getInteractionStatus": {
 			const status = handleControl.getInteractionStatus();

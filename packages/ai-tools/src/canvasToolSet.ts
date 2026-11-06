@@ -39,7 +39,7 @@ const toObjectToolDescriptor = (
 		[OBJECT_TOOL_TARGET_ARG]: z
 			.string()
 			.describe(
-				`id of the ${tool.objectType} object to act on; an object of any other type is refused.`,
+				`id of the ${tool.objectType} to act on; any other type is refused.`,
 			),
 		...tool.inputSchema,
 	},

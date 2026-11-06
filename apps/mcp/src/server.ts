@@ -175,7 +175,7 @@ const SERVER_INSTRUCTIONS = [
 	"Jiscribe draws diagrams as .jis files. The file on disk is the single source of truth: no canvas state is kept in the tools, so anything not written to a file does not exist.",
 	`Every document tool takes an absolute \`path\` naming the file it acts on, and the file has to be a canvas file: ${CANVAS_FILE_EXTENSIONS.join(", ")}. There is no concept of a currently open document, and a tool that only reads does not write the file back.`,
 	"An image shape is the one path that is not absolute: its `src` is read relative to the .jis file's own directory and cannot leave it, so the image file has to be somewhere under the diagram's own directory before you point at it.",
-	"`open_canvas` puts a file in a viewer: a window the user watches and can edit by hand, or a window-less one with `headless: true`. The tools for capture, image export, camera, selection and on-screen measurement have nothing to work with until a viewer is connected, so call it first; everything else works without one.",
+	"`open_canvas` puts a file in a viewer: a window the user watches and can edit by hand, or a window-less one with `headless: true`. The tools for capture, image export, camera, selection and on-screen measurement have nothing to work with until a viewer is connected, so call it first; everything else works without one. When the user may be editing in the viewer, read `get_interaction_status` before you edit.",
 	"`diagnose_canvas` is the only validation entry point. Give it a path and it reports what is wrong with the file, from what would stop it opening to what a reader cannot see; run it before telling the user a diagram is finished.",
 	"`undo` steps back through edits you made and keeps its history per file, so it cannot take back what a person changed in the viewer.",
 	"Call `read_drawing_guide` before you start drawing: `drawing` is what the canvas can hold and how to draw on it well, and `json-format` is for when you have decided to edit a .jis file directly instead of through these tools.",
@@ -239,18 +239,17 @@ export function createJiscribeMcpServer(
 		registerName("read_drawing_guide"),
 		{
 			description: [
-				"Read one of the two Jiscribe guides: the background the tool list cannot carry.",
-				'"drawing" is what a canvas can hold, what each shape type is for, and how to draw well with it. Read it once before you start drawing, whichever tools you then use.',
-				'"json-format" is the structure of a .jis file. Read it only once you have decided to read or write such a file directly with your own file tools instead of the tools here.',
-				"Neither changes while this session runs, so read one once and work from what you read rather than calling again.",
-				"Both open with a `<!-- jiscribe guide <version>+<digest> -->` stamp naming the generation they came from. A workspace may also hold a .jiscribe/ai-guide.md placed there by the Jiscribe editor extension, stamped the same way; when the two stamps differ, the higher version is the newer text, and the one you read here is the generation these tools belong to.",
+				"Read one of the two Jiscribe guides, the background the tool list cannot carry.",
+				'"drawing" is what the canvas holds, what each shape type is for and how to draw well: read it before you start drawing. "json-format" is the .jis file structure, only for reading or writing a file with your own file tools.',
+				"Neither changes during a session, so read one once.",
+				"Each opens with a `<!-- jiscribe guide <version>+<digest> -->` stamp. A workspace's .jiscribe/ai-guide.md from the Jiscribe editor extension is stamped the same way: the higher version is the newer text, and the one here is the generation these tools belong to.",
 			].join(" "),
 			inputSchema: z
 				.object({
 					guide: z
 						.enum(["drawing", "json-format"])
 						.describe(
-							'Which guide to read: "drawing" for the canvas, its shapes and how to draw on it; "json-format" for the .jis file format.',
+							'"drawing" for the canvas and its shapes; "json-format" for the .jis file format.',
 						),
 				})
 				.strict(),
@@ -262,11 +261,10 @@ export function createJiscribeMcpServer(
 		registerName("open_canvas"),
 		{
 			description: [
-				"Open a .jis file in a canvas viewer: starts a local web server inside this MCP process and opens the file in a browser window.",
-				"The file stays the single source of truth. The editing tools below write to it and the viewer follows within a moment; when a person moves or retypes shapes in the viewer, it writes the file back, so reading the file again shows what they changed.",
-				"A file that does not exist yet is created as an empty canvas, which is how a new diagram is started.",
-				"Calling it again switches the viewer to another file. Naming a file outside the directory currently being served restarts the server on that file's directory, and the open viewer reconnects on its own.",
-				"Returns the viewer URL, which is worth passing on to the user.",
+				"Open a .jis file in a browser viewer served from a local web server in this process.",
+				"The editing tools write the file and the viewer follows within a moment; a person's edits in the viewer are written back to the file. A missing file is created as an empty canvas.",
+				"Calling it again switches the viewer to another file; one outside the directory being served restarts the server there, and the viewer reconnects on its own.",
+				"Returns the viewer URL, worth passing on to the user.",
 			].join(" "),
 			inputSchema: z
 				.object({
@@ -275,7 +273,7 @@ export function createJiscribeMcpServer(
 						.boolean()
 						.default(false)
 						.describe(
-							"Open a headless viewer instead: nothing appears on the user's screen, and the canvas exists only for the tools that need one on screen (capture, camera, selection, measurement). Use it to check your own work; leave it false when the user is meant to watch or edit the diagram. A viewer already open is used as it is, headless or not.",
+							"Open a window-less viewer, for the screen tools to check your own work; leave false when the user is meant to watch or edit. A viewer already open is used as it is, headless or not.",
 						),
 				})
 				.strict(),
@@ -288,8 +286,7 @@ export function createJiscribeMcpServer(
 		registerName("close_canvas"),
 		{
 			description: [
-				"Close the canvas viewer window and stop the local web server that open_canvas started.",
-				"Use it when the diagram is finished and the window is in the way; the .jis file is untouched and open_canvas brings it back.",
+				"Close the canvas viewer window and stop the server open_canvas started; the .jis file is untouched.",
 				"A window the browser refuses to close is reported as still open, and the server is left running for it.",
 			].join(" "),
 			inputSchema: z.object({}).strict(),
@@ -301,10 +298,8 @@ export function createJiscribeMcpServer(
 		registerName("diagnose_canvas"),
 		{
 			description: [
-				"Check an existing .jis file: validation with the canvas parser plus a diagnosis of whether each shape's text actually fits inside it, and of what a reader cannot see as drawn, such as an image whose file is missing.",
-				"Names the file by path, so a large diagram never has to be sent through the conversation; this is the only validation entry point, and it reports JSON syntax errors too.",
-				"The diagnosis only runs when the file itself validates, since a shape with an invalid size has no meaningful content box.",
-				"A markdown card's body is laid out as HTML, so it is measured as the viewer draws it, and only while this file is open in the viewer drawing the same text as the file (a person's unsaved edits there included); otherwise it is reported as not checked.",
+				"Check an existing .jis file: validation with the canvas parser (JSON syntax included), then, once it validates, whether each shape's text fits and what a reader cannot see, such as an image whose file is missing.",
+				"A markdown card is measured only while this file is open in the viewer drawing the same text as the file (unsaved edits there included); otherwise it is reported as not checked.",
 				"Returns one line per finding, or valid: true when there is nothing to report.",
 			].join(" "),
 			inputSchema: z.object({ path: pathArg }).strict(),
@@ -345,12 +340,9 @@ export function createJiscribeMcpServer(
 		registerName("measure_text"),
 		{
 			description: [
-				"Measure how a single string lays out inside a shape of a given size, without a document to put it in.",
-				"width / height are the shape's own bounding box, the same numbers a document holds; the content box is what the outline and the shared text padding leave of them.",
-				"height may be omitted only for rect, whose content width follows from its width alone, and for types that draw their label outside their box.",
-				"Returns the line count, the box the wrapped lines take, the content box, and whether the text fits.",
-				"A markdown card lays its body out as HTML, so for it the numbers are a plain-text lower bound with no verdict; measure_rendered_text measures it as drawn.",
-				"Use this before sizing a shape, so a label is not written into a box too small for it.",
+				"Measure how a single string lays out inside a shape of a given size, without a document.",
+				"width / height are the shape's bounding box, as a document holds it; the content box is what the outline and the text padding leave. height may be omitted only for rect and for types that draw their label outside their box.",
+				"Returns the line count, the wrapped lines' box, the content box and whether the text fits. For a markdown card the numbers are a plain-text lower bound with no verdict; measure_rendered_text measures it as drawn.",
 			].join(" "),
 			inputSchema: z
 				.object({
@@ -360,14 +352,14 @@ export function createJiscribeMcpServer(
 						.string()
 						.default("rect")
 						.describe(
-							"Object type to measure against (rect, stadium, card, ...). A type that draws its label outside its outline is measured without a fit verdict, since its box does not constrain the text.",
+							"Object type to measure against (rect, stadium, card, …); one drawing its label outside its outline gets no fit verdict.",
 						),
 					width: z.number().positive().describe("Shape width in px."),
 					height: z
 						.number()
 						.positive()
 						.optional()
-						.describe("Shape height in px (required for every type but rect)."),
+						.describe("Shape height in px."),
 					bold: z
 						.boolean()
 						.default(false)
@@ -382,10 +374,9 @@ export function createJiscribeMcpServer(
 		registerName("add_ellipses"),
 		{
 			description: [
-				"Add ellipses to a .jis file by centre and radii, one or many in a single call.",
-				"add_objects places every shape, ellipse included, by the top-left of its bounding box; reach for this one when the centre is the number you have, as for a node placed on a circle or a marker over a point.",
-				"Each entry is converted to the box add_objects would take (x = cx - rx, y = cy - ry, width 2 rx, height 2 ry), and every entry is written in one read and write of the file, which one undo takes back.",
-				"All or nothing: if one entry is rejected nothing is added. Returns the new ids in the order given, each with the centre it was placed at.",
+				"Add ellipses to a .jis file by centre and radii, one or many per call; add_objects takes an ellipse's bounding box instead.",
+				"Each entry becomes x = cx - rx, y = cy - ry, width 2 rx, height 2 ry, all in one write that one undo takes back.",
+				"All or nothing. Returns the new ids in order, each with its centre.",
 			].join(" "),
 			inputSchema: z
 				.object({
@@ -459,17 +450,16 @@ export function createJiscribeMcpServer(
 		{
 			description: [
 				"Write the canvas on display in the viewer to an image file for a person: a PNG at the scale asked for, or an SVG.",
-				"The image is not handed back to you, only its path and size; to look at the drawing yourself, use capture_canvas instead.",
-				"Given no ids it is the whole drawing fitted to its content; ids take the extent of those objects, with the document's margin around them.",
-				"The .jis source is not embedded, so the file does not reopen as an editable diagram.",
-				"Like the screen tools it acts on the canvas open in the viewer rather than on a path, so call open_canvas first (headless: true opens no window).",
+				"Only its path and size come back; capture_canvas is for looking yourself.",
+				"No ids is the whole drawing fitted to its content; ids take those objects' extent with the document's margin. The .jis source is not embedded, so it does not reopen as a diagram.",
+				"It acts on the canvas in the viewer, not on a path: call open_canvas first (headless: true opens no window).",
 			].join(" "),
 			inputSchema: z
 				.object({
 					output: z
 						.string()
 						.describe(
-							"Absolute path of the image to write, ending in .png or .svg (either case), which decides the format. It has to be under the directory of the .jis on display, in a directory that already exists; a file already there is replaced, except a .jis.png / .jis.svg, which is an editable diagram and is refused.",
+							"Absolute path ending in .png or .svg (either case), which decides the format, in an existing directory under the one holding the .jis on display. A file there is replaced, but a .jis.png / .jis.svg is refused.",
 						),
 					scale: z
 						.number()
@@ -477,20 +467,20 @@ export function createJiscribeMcpServer(
 						.max(MAX_EXPORT_SCALE)
 						.optional()
 						.describe(
-							`PNG only (an error with .svg): pixels per world unit, default ${DEFAULT_EXPORT_SCALE}. The long edge is capped at ${MAX_EXPORT_PIXEL_SIZE} px, past which the image is scaled down and the result says so.`,
+							`PNG only (an error with .svg): pixels per world unit, default ${DEFAULT_EXPORT_SCALE}. Past ${MAX_EXPORT_PIXEL_SIZE} px on the long edge the image is scaled down, and the result says so.`,
 						),
 					ids: z
 						.array(z.string())
 						.min(1)
 						.optional()
 						.describe(
-							"ids of the objects to export, as the union of what they draw; omit for the whole drawing.",
+							"Objects to export, as the union of what they draw; omit for the whole drawing.",
 						),
 					isolate: z
 						.boolean()
 						.optional()
 						.describe(
-							"With ids only (an error without). true draws just the objects named, with their descendants and the connectors whose attached ends are all on them; the default false crops, keeping whatever else is drawn in that area.",
+							"With ids only (an error without). true draws just the objects named, their descendants and the connectors whose attached ends are all on them; the default false crops, keeping whatever else is drawn there.",
 						),
 				})
 				.strict(),
@@ -594,12 +584,21 @@ const HANDLE_TOOL_RENAMES: Readonly<Record<string, string>> = {
  * off the tool list
  */
 const HANDLE_TOOL_SCOPE_NOTE =
-	"This acts on the canvas open in the viewer rather than on a file, which is why it takes no path: call open_canvas first, and note that the editing tools write to the path they are given, not to whatever is on screen.";
+	"It acts on the canvas open in the viewer, so it takes no path: call open_canvas first.";
 
-/** Adds a sentence to a renamed tool making clear which of the two to use */
+/**
+ * What this server adds to one screen tool's description: which of the two
+ * measure tools to use, and how the viewer's sync loosens get_interaction_status's
+ * wait (useDocSync.ts, mergeCanvasDocs.ts)
+ */
 const HANDLE_TOOL_DESCRIPTION_NOTES: Readonly<Record<string, string>> = {
 	measure_text:
-		"To size a shape before putting it in the document, use measure_text instead.",
+		"To size a shape before it is in a document, use measure_text instead.",
+	get_interaction_status: [
+		"On this server file edits do not wait for the user: a file arriving mid-edit is held by the viewer and merged object by object once they let go, the file winning where both changed the same object (even different properties of it) and the user's change to it dropped with a notice.",
+		"So while a text is open you may edit objects other than the one being typed in; still wait out a drag that changes the document, as which objects it holds is not reported.",
+		"The answer comes from one open viewer window, not all of them.",
+	].join(" "),
 };
 
 /**

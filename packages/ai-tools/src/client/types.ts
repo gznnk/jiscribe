@@ -168,12 +168,6 @@ export type AiHandleControl = {
 	 */
 	hitTest: (target: Point | Rect, tolerance?: number) => readonly string[];
 	/**
-	 * Turns the current canvas into an SVG string.
-	 *
-	 * @returns The SVG string; null while the canvas is not mounted. It is awaited because the image files an `<image>` draws are read into the document here
-	 */
-	toSvgString: () => Promise<string | null>;
-	/**
 	 * Reads what the user is doing to the canvas at this moment: whether a drag is
 	 * under way, which text is open for editing, whether a modal is open.
 	 *
