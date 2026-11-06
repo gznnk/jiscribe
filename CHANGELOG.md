@@ -478,6 +478,11 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   tool wording reads it. `get_interaction_status` asks to hold off on edits
   while a text is open or a drag that changes the document is under way, and no
   longer calls an idle canvas safe to write to.
+- **A caption sized from its own text is measured once per text, not per
+  frame.** `calcLabelTextBoxSize` caches the size on the body it is given,
+  matched on its text and resolved font, so moving, rotating or resizing a
+  `features.text: "label"` shape, an annotation bracket or an AWS group measures
+  nothing while the caption is unchanged.
 
 ### Removed
 
