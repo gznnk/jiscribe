@@ -78,16 +78,13 @@ headless 半分である。パース層がその型を知り、doc を検証し�
 `textRegion` も含めてそのまま引き継ぐ。だから `CanvasPlugin` は `CanvasDocPlugin` に
 **構造的に代入できる** — 同じ `plugins` 配列が `<Canvas>` にもパーサーにも渡せる。
 
-doc の `textRegion` は `"body"` / `"source"` の型が文字を置く領域で、headless の検査にも
-キャンバスにも同じものが効く。登録時に core がそこから `"textSlot"` 部分種別の
-`region` を作るので、型は置き場所を 1 回だけ宣言する（この型には必須で、スロットを
-置く種別を並べて宣言すると拒否される）。`"label"` の型のラベルは doc の `labelRegion`
-が言う場所に置かれ（言わなければ箱の下）、core はそれをテキストスロットの領域にも
-見た目の範囲にも使う。`"slots"` の型はスロットの置き場所を `"textSlot"` 部分種別の
-`region`（`(state, slotId) => Rect`。1 スロットずつ）か `regions`
-（`(state) => Record<slotId, Rect>`。全スロットを 1 回で）で自分で宣言する。
-`createTextSlotPartKindDefinition({ region })` /
-`createTextSlotPartKindDefinition({ regions })` で作って `partKinds` に置く。枠の描画は
+doc の `textRegion` は headless の答え（はみ出し検査・高さ自動の計測）で、キャンバスが
+文字を描く位置ではない。`"body"` / `"source"` の型は宣言が必須で、`"label"` の型は宣言しない。
+キャンバス上の置き場所は `"textSlot"` 部分種別の `region`（`(state, slotId) => Rect`。
+1 スロットずつ）か `regions`（`(state) => Record<slotId, Rect>`。全スロットを 1 回で）
+で宣言する。`createTextSlotPartKindDefinition({ region })` /
+`createTextSlotPartKindDefinition({ regions })` で作って `partKinds` に置き、
+`createFrameObjectDefinition({ textRegion })` なら前者を代わりに作る。枠の描画は
 種別の `regions` を描画 1 回につき 1 度だけ呼んで全スロットの領域を受け取る（スロット
 ごとには呼ばない）ので、1 つのスロットを置くのに全体のレイアウトが要る型（表のセル、
 record の区画）もレイアウトは 1 回で済む。どちらもローカル座標（原点は図形の中心、

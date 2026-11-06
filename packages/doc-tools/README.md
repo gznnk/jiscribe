@@ -119,9 +119,9 @@ this one, so an offer made in a process that draws is declined.
 text goes on its doc definition (`ObjectDocDefinition.textRegion`), as a function
 of the doc: the box, plus whatever field the outline depends on — the callout's
 `tail`, the container's `headerHeight`. The rendering layer's
-`ObjectTypeDefinition` inherits **that very declaration** and draws the text in
-it, so what a browser draws the text in and what a Node-side diagnosis measures
-against are one declaration, and this package restates nothing.
+`ObjectTypeDefinition` registers **the same function**, so what a browser draws
+the text in and what a Node-side diagnosis measures against are one declaration,
+and this package restates nothing.
 
 Three answers are possible, and `resolveContentBox` keeps them apart — a caller
 that cannot tell "this shape holds no text" from "you misspelled the type" cannot

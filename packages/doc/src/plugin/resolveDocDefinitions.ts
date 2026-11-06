@@ -55,16 +55,15 @@ const checkBodyTextRegion = (
 
 /**
  * Refuses a `features.text: "label"` type declaring what the label already
- * settles or cannot work with, and a `labelRegion` on any other type. The
- * caption's place is `labelRegion`'s, so a `textRegion` of its own would leave
- * two answers for where the text is; it takes no `verticalAlign`, so a
- * `textVerticalBasis` would have nothing to measure; and the placement reads a
- * stored width and height, which only a `geometry: "rect"` type has. A
- * `labelRegion` on a type with no caption would be accepted and never read.
+ * settles or cannot work with. The caption is placed on the canvas side (under
+ * the box by the core, calcLabelTextRegion, unless the UI definition places it),
+ * so a `textRegion` of its own would leave two answers for where the text is; it
+ * takes no `verticalAlign`, so a `textVerticalBasis` would have nothing to
+ * measure; and the placement reads a stored width and height, which only a
+ * `geometry: "rect"` type has.
  *
- * `textRegion` and `labelRegion` are compared against undefined rather than
- * tested for presence: `createFrameObjectDoc` writes the keys whether or not the
- * type gave them.
+ * `textRegion` is compared against undefined rather than tested for presence:
+ * `createFrameObjectDoc` writes the key whether or not the type gave one.
  */
 const checkLabelTextFeature = (
 	type: string,
@@ -72,11 +71,6 @@ const checkLabelTextFeature = (
 ): void => {
 	const { features } = definition;
 	if (features.text !== "label") {
-		if (definition.labelRegion !== undefined) {
-			throw new Error(
-				`ObjectDocDefinition "${type}": labelRegion places a features.text "label" caption, which this type does not hold (declares ${features.text === undefined ? "no text" : `"${features.text}"`})`,
-			);
-		}
 		return;
 	}
 	if (features.geometry !== "rect") {
@@ -91,7 +85,7 @@ const checkLabelTextFeature = (
 	}
 	if (definition.textRegion !== undefined) {
 		throw new Error(
-			`ObjectDocDefinition "${type}": features.text "label" places its caption through labelRegion (below the box when omitted, calcLabelTextRegion); declare no textRegion`,
+			`ObjectDocDefinition "${type}": features.text "label" has its caption placed on the canvas side (under the box by the core, calcLabelTextRegion, unless the UI definition places it); declare no textRegion`,
 		);
 	}
 };

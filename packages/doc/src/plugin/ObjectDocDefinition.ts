@@ -1,6 +1,5 @@
 import type { ObjectDocAnchorRegionCalculator } from "./ObjectDocAnchorRegion";
 import type { ObjectDocBoundsCalculator } from "./ObjectDocBounds";
-import type { ObjectDocLabelRegionCalculator } from "./ObjectDocLabelRegion";
 import type { ObjectDocOutlineCalculator } from "./ObjectDocOutline";
 import type { ObjectDocOverflowDiagnoser } from "./ObjectDocOverflow";
 import type { ObjectDocTextRegionCalculator } from "./ObjectDocTextRegion";
@@ -103,32 +102,22 @@ export type ObjectDocDefinition = {
 
 	/**
 	 * Where the type lays one text slot out, given a doc of it: the rectangle the
-	 * text is placed in, answerable with no rendering layer present. Declared once
-	 * for both sides: a headless check (`@jiscribe/doc-tools`) measures against it,
-	 * and the canvas builds the `"textSlot"` part kind's `region` from it, so the
-	 * two cannot disagree about where the text is.
+	 * text is placed in, answerable with no rendering layer present. The headless
+	 * checks (`diagnoseDoc` / `resolveContentBox` in `@jiscribe/doc-tools`) and the
+	 * auto-height measurement (`resizeAutoHeightStateToContent`) read it; where the
+	 * canvas draws the text is the `"textSlot"` part kind's `region`, and the
+	 * shipped shapes pass the same calculator to both sides so the two cannot
+	 * disagree.
 	 *
 	 * A declaration for any text form — the one `body` of a `"body"` / `"source"`
 	 * type, a cell or a band of a `"slots"` type. Every `"body"` / `"source"` type
 	 * must declare one ({@link import("./ObjectDocTextRegion").calcFullBoxTextRegion}
-	 * for a plain box), and the parser and the canvas refuse the definition
-	 * otherwise (resolveDocDefinitions, applyObjectDefinition). A `"slots"` type may
-	 * leave it out and place its slots on its `"textSlot"` part kind instead, the
-	 * whole box being what an undeclared kind gives. A `features.text: "label"`
-	 * type must not declare one: its caption's place is {@link labelRegion}'s.
+	 * for a plain box), and the parser refuses the definition otherwise
+	 * (resolveDocDefinitions). A `"slots"` type may leave it out until a reader asks
+	 * for its slots. A `features.text: "label"` type must not declare one: its
+	 * caption is placed on the canvas side.
 	 */
 	textRegion?: ObjectDocTextRegionCalculator;
-
-	/**
-	 * Where a `features.text: "label"` type places its caption, sized from the
-	 * caption's own text (see {@link ObjectDocLabelRegionCalculator}). Omitted =
-	 * centred below the box
-	 * ({@link import("../text/label/calcLabelTextRegion").calcLabelTextRegion}).
-	 * The canvas uses it both as the `"textSlot"` part kind's `region` and to
-	 * widen the type's visual bounds by the caption. Only a `"label"` type may
-	 * declare one; the parser refuses it on any other (resolveDocDefinitions).
-	 */
-	labelRegion?: ObjectDocLabelRegionCalculator;
 
 	/**
 	 * Reports content the type places itself that its box is too small for (see

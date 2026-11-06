@@ -96,8 +96,8 @@ URL と、同じバイト列の `data:` URI の 2 つで、後者が書き出し
   `"body"` の図形と同じフラットな群から `verticalAlign` と `textVerticalBasis` を除き（ラベルの箱は
   文字から大きさが決まり、ブロックを動かす余白が無い）、ラベルの後ろに塗る色 `labelFill` を足して持つ
   （`LabelTextStyleDoc`。省略・`"auto"` は文書の面の色で抜く）。ラベルは箱の下に置かれ
-  （`calcLabelTextRegion`）、型が `labelRegion` を宣言すればそこに置かれる（brace の先端の先、AWS
-  グループの角のバッジの横）。この型はテキスト領域を宣言しない。
+  （`calcLabelTextRegion`）、型の UI 定義が自分で置くならそこに置かれる（brace の先端の先、AWS
+  グループの角のバッジの横。`textRegion` と `visualBounds` で）。どちらでも doc はテキスト領域を宣言しない。
 - **複数スロットの図形（uml-shapes の record など）** … `features.text: "slots"` を宣言し、`text` を
   **スロット ID キーのオブジェクト**で持つ（`text: { name: {…}, rows: {…} }`。各スロットは
   `TextSlot` = 内容＋タイポグラフィで、スロット集合は型ごとにクローズド）。

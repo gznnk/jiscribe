@@ -166,11 +166,9 @@ export type { ObjectDocDefinition } from "./plugin/ObjectDocDefinition";
 // The box declaration a doc definition carries, for the types whose geometry does
 // not settle their box: a plugin author annotating one needs the shape of it.
 export type { ObjectDocBoundsCalculator } from "./plugin/ObjectDocBounds";
-// Where a `features.text: "label"` type places its caption: the declaration a
-// type gives to place it itself, and the default below the box the core uses for
-// every one that declares none. The creation typography the types spread into
-// their defaults.
-export type { ObjectDocLabelRegionCalculator } from "./plugin/ObjectDocLabelRegion";
+// Where the core hangs a `features.text: "label"` type's caption when its UI
+// definition does not place it itself, and the drawn extent that gives. The
+// creation typography the types spread into their defaults.
 export {
 	calcLabelTextRegion,
 	calcLabelTextVisualBounds,

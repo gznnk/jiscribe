@@ -17,7 +17,6 @@ import {
 	AwsIconExtraKeys,
 	AwsIconFeatures,
 } from "./schema/AwsIconDoc";
-import { calcAwsGroupLabelRegion } from "./schema/calcAwsGroupLabelRegion";
 import { awsIconCatalog } from "./schema/icon/awsIconCatalog";
 import { validateAwsGroupKind } from "./schema/validateAwsGroupKind";
 
@@ -40,8 +39,7 @@ export const awsGroupDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	defaults: AWS_GROUP_DOC_DEFAULTS,
 	extraKeys: AwsGroupExtraKeys,
 	// The label goes in a band beside the corner badge, sized from the text
-	// rather than bound to the box.
-	labelRegion: calcAwsGroupLabelRegion,
+	// rather than bound to the box (calcAwsGroupLabelTextRegion, on the UI side).
 	container: () => ({ titleHeight: AWS_GROUP_HEADER_HEIGHT }),
 	description: `A boundary frame of an AWS architecture diagram: the VPC, subnet, availability zone or account that the icons inside belong to. \`kind\` picks which one, and the border colour, the line style and the corner badge all follow from it — one of: ${AWS_GROUP_KINDS.join(", ")}. \`text\` is the frame's title, drawn at the top left beside the badge, never in the body. Objects go inside it by geometry alone: give them coordinates within the box and place them after the frame in \`root\` so they paint on top. The body is click-through, so the icons lying over it stay selectable, and the frame does not carry its contents when it moves — wrap them in a GroupDoc when they must move together. Nest them the way AWS does: aws-cloud > region > vpc > public-subnet / private-subnet. Setting \`stroke\` or \`strokeDashType\` overrides what the kind would have chosen.`,
 	summary: "AWS boundary frame (VPC, subnet, region, account)",

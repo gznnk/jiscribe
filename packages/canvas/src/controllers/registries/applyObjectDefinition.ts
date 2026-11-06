@@ -1,17 +1,16 @@
 import { supportsAutoHeight } from "@jiscribe/doc";
+import { calcEllipseTextRegion } from "@jiscribe/doc/model/objects/primitives/ellipse/calcEllipseTextRegion";
 import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
 import type { TextSlotStyle } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 import { collectStyleKeys } from "@jiscribe/doc/model/objects/utils/collectStyleKeys";
 import { builtinObjectDocDefinitions } from "@jiscribe/doc/plugin/builtinObjectDocDefinitions";
-import type { ObjectDocLabelRegionCalculator } from "@jiscribe/doc/plugin/ObjectDocLabelRegion";
 import { resolveAutoHeightPaddingEm } from "@jiscribe/doc/text/block/autoHeightComfortPadding";
 import {
 	calcLabelTextRegion,
 	calcLabelTextVisualBounds,
 } from "@jiscribe/doc/text/label/calcLabelTextRegion";
 import type { Dimensions } from "@jiscribe/geometry";
-import { isTransformedFrame } from "@jiscribe/geometry";
 
 import type { CanvasRegistries } from "./CanvasRegistries";
 import { defineObject } from "../../plugin/ObjectTypeDefinition";
@@ -166,9 +165,10 @@ const TEXT_BLOCK_TRANSFORM_HANDLES: ObjectTransformHandles = {
  * applies a chosen subset of these to a fresh bundle, ahead of the plugins'.
  *
  * Each entry spreads its headless definition, so a built-in's doc `textRegion`
- * comes from `builtinObjectDocDefinitions`, and registration builds the
- * `"textSlot"` part kind from it (the ellipse's inscribed rect, the whole box of
- * rect and text).
+ * comes from `builtinObjectDocDefinitions`. Where the canvas draws the text is
+ * the `"textSlot"` part kind's: the ellipse declares its inscribed rect there
+ * (the same calculator as its doc one), and rect and text take the whole box,
+ * which is what an undeclared kind gives.
  */
 export const BUILTIN_OBJECT_DEFINITIONS: Record<
 	ObjectType,
@@ -189,6 +189,11 @@ export const BUILTIN_OBJECT_DEFINITIONS: Record<
 		stateValidator: isValidEllipseState,
 		component: Ellipse,
 		behavior: createFrameBehavior<EllipseState>(),
+		partKinds: [
+			createTextSlotPartKindDefinition<EllipseState>({
+				region: calcEllipseTextRegion,
+			}),
+		],
 		stencils: EllipseStencils,
 	}),
 
@@ -481,17 +486,20 @@ const checkDeclaredStyleFields = (
 };
 
 /**
- * Refuses a `features.text: "label"` type declaring a placement other than its
- * doc `labelRegion`: the core places the caption from that
- * ({@link createLabelTextSlotPartKind}, {@link createLabelTextVisualBounds}), so
- * a `visualBounds`, a `"textSlot"` part kind or a doc `textRegion` would be a
- * second answer for where it is. The doc's `textRegion` is compared against
- * undefined rather than tested for presence: `createFrameObjectDoc` writes the
- * key whether or not the type gave one, and the UI definition inherits it.
+ * Refuses a `features.text: "label"` type whose own placement would disagree
+ * with what is drawn. The core places the caption under the box
+ * ({@link createLabelTextSlotPartKind}, {@link createLabelTextVisualBounds})
+ * unless the type declares both a `"textSlot"` part kind and `visualBounds`;
+ * one without the other leaves the caption and its extent in different places,
+ * and a kind with no `region` / `regions` would spread the caption over the
+ * whole box. A doc `textRegion` is refused outright, the doc side holding no
+ * place for a caption. It is compared against undefined rather than tested for
+ * presence: `createFrameObjectDoc` writes the key whether or not the type gave
+ * one, and the UI definition inherits it.
  *
  * @param type - The type being registered; named in the error
  * @param definition - Its whole definition
- * @throws When a `"label"` type declares any of the three, naming the type and each one it declares
+ * @throws When a `"label"` type declares a doc `textRegion`, only one of a `"textSlot"` part kind and `visualBounds`, or a `"textSlot"` kind placing nothing, naming the type and what it declares
  */
 const checkLabelTextDefinition = (
 	type: ObjectType,
@@ -500,117 +508,60 @@ const checkLabelTextDefinition = (
 	if (definition.features.text !== "label") {
 		return;
 	}
-	const declared = [
-		...(definition.visualBounds === undefined ? [] : ["visualBounds"]),
-		...(definition.partKinds?.some((part) => part.kind === TEXT_SLOT_PART_KIND)
-			? [`a "${TEXT_SLOT_PART_KIND}" part kind`]
-			: []),
-		...(definition.textRegion === undefined ? [] : ["textRegion"]),
-	];
-	if (declared.length > 0) {
+	if (definition.textRegion !== undefined) {
 		throw new Error(
-			`ObjectTypeDefinition "${type}": features.text "label" has its caption placed by the core from labelRegion (below the box when omitted, calcLabelTextRegion); remove its ${declared.join(", ")}`,
+			`ObjectTypeDefinition "${type}": features.text "label" has its caption placed on the canvas side (under the box by the core, calcLabelTextRegion, or by a declared "${TEXT_SLOT_PART_KIND}" part kind); remove its doc textRegion`,
 		);
 	}
-};
-
-/**
- * Refuses a `features.text: "body"` / `"source"` type that leaves its body's
- * place unsaid or says it twice: the core builds the `"textSlot"` part kind from
- * the doc `textRegion`, so one missing has nothing to build from, and a declared
- * kind placing the slots (`region` / `regions`) next to it would leave two
- * answers for where the body is. A declared kind placing nothing gets the doc's
- * region instead ({@link fillBodyTextRegion}).
- *
- * @param type - The type being registered; named in the error
- * @param definition - Its whole definition
- * @throws When such a type declares no `textRegion`, or declares one and a `"textSlot"` kind with `region` / `regions`, naming the type
- */
-const checkBodyTextDefinition = (
-	type: ObjectType,
-	definition: AnyObjectTypeDefinition,
-): void => {
-	const { text } = definition.features;
-	if (text !== "body" && text !== "source") {
-		return;
-	}
-	if (definition.textRegion === undefined) {
-		throw new Error(
-			`ObjectTypeDefinition "${type}": features.text "${text}" needs a textRegion on its doc definition, the "${TEXT_SLOT_PART_KIND}" part kind being built from it`,
-		);
-	}
-	const placesSlots = definition.partKinds?.some(
-		(part) =>
-			part.kind === TEXT_SLOT_PART_KIND &&
-			(part.region !== undefined || part.regions !== undefined),
+	const textSlotKinds = (definition.partKinds ?? []).filter(
+		(part) => part.kind === TEXT_SLOT_PART_KIND,
 	);
-	if (placesSlots === true) {
+	const declaresTextSlotKind = textSlotKinds.length > 0;
+	const declaresVisualBounds = definition.visualBounds !== undefined;
+	if (declaresTextSlotKind !== declaresVisualBounds) {
+		const [declared, missing] = declaresTextSlotKind
+			? [`a "${TEXT_SLOT_PART_KIND}" part kind`, "visualBounds"]
+			: ["visualBounds", `a "${TEXT_SLOT_PART_KIND}" part kind`];
 		throw new Error(
-			`ObjectTypeDefinition "${type}": declares a textRegion and a "${TEXT_SLOT_PART_KIND}" part kind placing the slots; place the body through textRegion alone`,
+			`ObjectTypeDefinition "${type}": features.text "label" places its caption itself only by declaring both a "${TEXT_SLOT_PART_KIND}" part kind and visualBounds; declares ${declared} but no ${missing}`,
 		);
 	}
-};
-
-/**
- * A `"textSlot"` kind a `"body"` / `"source"` type declares for what else it adds
- * (its own `has`, `delete` …), with the body placed where the doc's `textRegion`
- * says: such a kind places nothing itself (checkBodyTextDefinition refuses one
- * that does); left alone, it would put the body on the whole box. Any other kind,
- * and any kind of another type, is returned as it is.
- */
-const fillBodyTextRegion = (
-	definition: AnyObjectTypeDefinition,
-	part: ObjectPartKindDefinition,
-): ObjectPartKindDefinition => {
-	const { text } = definition.features;
-	const { textRegion } = definition;
 	if (
-		part.kind !== TEXT_SLOT_PART_KIND ||
-		(text !== "body" && text !== "source") ||
-		textRegion === undefined ||
-		part.region !== undefined ||
-		part.regions !== undefined
+		textSlotKinds.some(
+			(part) => part.region === undefined && part.regions === undefined,
+		)
 	) {
-		return part;
+		throw new Error(
+			`ObjectTypeDefinition "${type}": features.text "label" declares a "${TEXT_SLOT_PART_KIND}" part kind with no region or regions, which would place the caption over the whole box`,
+		);
 	}
-	return {
-		...part,
-		// The guard narrows the type: placeTextSlotRegions asks only a transformed
-		// frame, so the null arm is never taken.
-		region: (object, slotId) =>
-			isTransformedFrame(object) ? textRegion(object, slotId) : null,
-	};
 };
 
 /** What the caption placement reads off a `"label"` type's state: its box and its body slot. */
 type LabelTextState = ObjectState & Dimensions & Pick<TextStyleState, "text">;
 
 /**
- * The `"textSlot"` part kind of a `features.text: "label"` type, which no such
- * type declares: the caption placed where its doc `labelRegion` says.
+ * The `"textSlot"` part kind of a `features.text: "label"` type that declares
+ * none: the caption placed by the doc layer (calcLabelTextRegion).
  *
- * @param labelRegion - The type's placement: its own `labelRegion`, else calcLabelTextRegion
  * @param typeDefaults - The type's own body defaults, the ones its overlay is drawn with (ObjectTextStyleDefaultsRegistry), so the caption is measured in the font it is drawn in
  */
 const createLabelTextSlotPartKind = (
-	labelRegion: ObjectDocLabelRegionCalculator,
 	typeDefaults: TextSlotStyle | undefined,
 ): ObjectPartKindDefinition<LabelTextState> =>
 	createTextSlotPartKindDefinition<LabelTextState>({
 		region: (state, slotId) =>
-			labelRegion(state, state.text?.[slotId], typeDefaults),
+			calcLabelTextRegion(state, state.text?.[slotId], typeDefaults),
 	});
 
 /**
- * The visual bounds of a `features.text: "label"` type, which no such type
- * declares: its box widened by the caption (calcLabelTextVisualBounds).
+ * The visual bounds of a `features.text: "label"` type that declares none: its
+ * box widened by the caption (calcLabelTextVisualBounds).
  *
- * @param labelRegion - As {@link createLabelTextSlotPartKind} takes it
  * @param typeDefaults - As {@link createLabelTextSlotPartKind} takes them
  */
 const createLabelTextVisualBounds =
 	(
-		labelRegion: ObjectDocLabelRegionCalculator,
 		typeDefaults: TextSlotStyle | undefined,
 	): ObjectVisualBoundsCalculator<LabelTextState> =>
 	(state) =>
@@ -618,7 +569,6 @@ const createLabelTextVisualBounds =
 			state,
 			state.text?.[BODY_TEXT_SLOT_ID],
 			typeDefaults,
-			labelRegion,
 		);
 
 /**
@@ -641,8 +591,6 @@ export const applyObjectDefinition = (
 	registries.objectShapeStyleDefaults.registerDefinition(type, definition);
 	checkDeclaredStyleFields(type, definition);
 	checkLabelTextDefinition(type, definition);
-	checkBodyTextDefinition(type, definition);
-	const labelRegion = definition.labelRegion ?? calcLabelTextRegion;
 	// What the type's single body is drawn with where the slot sets nothing: read
 	// by the content resizer and a caption's placement, both measuring that body.
 	const bodyTextStyleDefaults = registries.objectTextStyleDefaults.get(
@@ -740,7 +688,7 @@ export const applyObjectDefinition = (
 	} else if (definition.features.text === "label") {
 		registries.objectVisualBounds.register(
 			type,
-			createLabelTextVisualBounds(labelRegion, bodyTextStyleDefaults),
+			createLabelTextVisualBounds(bodyTextStyleDefaults),
 		);
 	}
 	if (definition.transformHandles) {
@@ -761,19 +709,14 @@ export const applyObjectDefinition = (
 	}
 	// A type holding text takes part in slot selection without declaring
 	// anything, one body or several: the ids are the keys of its `text`, so there
-	// is nothing per type to say, and the slots are placed where the doc's
-	// `textRegion` says (the whole box for a `"slots"` type declaring none).
-	// Declaring `"textSlot"` itself replaces that default rather than colliding
-	// with it (the rule `menu` and `propertyPanel` already follow). A one-body
-	// type's declared kind still has its body placed by the doc's `textRegion`
-	// (fillBodyTextRegion); a `"label"` type, which may not declare one, gets
-	// the caption's placement instead.
-	// Whichever is registered is placed here, so every reader of a slot's box
-	// gets the fallback and the vertical basis from one spot.
+	// is nothing per type to say. Declaring `"textSlot"` itself replaces that
+	// default rather than colliding with it (the rule `menu` and `propertyPanel`
+	// already follow); a `"label"` type declaring none gets the caption's
+	// placement under the box instead. Whichever is registered is placed here, so
+	// every reader of a slot's box gets the fallback and the vertical basis from
+	// one spot.
 	const declaredPartKinds = (definition.partKinds ?? []).map((part) =>
-		part.kind === TEXT_SLOT_PART_KIND
-			? placeTextSlotRegions(type, fillBodyTextRegion(definition, part))
-			: part,
+		part.kind === TEXT_SLOT_PART_KIND ? placeTextSlotRegions(type, part) : part,
 	);
 	const partKinds =
 		definition.features.text !== undefined &&
@@ -783,14 +726,9 @@ export const applyObjectDefinition = (
 					definition.features.text === "label"
 						? placeTextSlotRegions(
 								type,
-								createLabelTextSlotPartKind(labelRegion, bodyTextStyleDefaults),
+								createLabelTextSlotPartKind(bodyTextStyleDefaults),
 							)
-						: placeTextSlotRegions(
-								type,
-								createTextSlotPartKindDefinition<ObjectState & Dimensions>({
-									region: definition.textRegion,
-								}),
-							),
+						: placeTextSlotRegions(type, createTextSlotPartKindDefinition()),
 				]
 			: declaredPartKinds;
 	if (partKinds.length > 0) {

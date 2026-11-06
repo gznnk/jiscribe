@@ -83,17 +83,15 @@ every doc field over untouched — `textRegion` included — which is why a full
 `CanvasPlugin` is **structurally assignable** to `CanvasDocPlugin`: one `plugins`
 array feeds both `<Canvas>` and the parser.
 
-The doc's `textRegion` is where a `"body"` / `"source"` type lays its text out,
-for the headless checks and the canvas alike: registration builds the
-`"textSlot"` part kind's `region` from it, so the type declares its place once
-(it is required of such a type, and a declared kind placing the slots beside it
-is refused). A `"label"` type's caption goes where its doc's `labelRegion` says
-(below the box when it says nothing), which the core uses for its text slot
-region and its visual bounds both. A `"slots"` type places its slots through the
-`"textSlot"` part kind itself: `region` (`(state, slotId) => Rect`, one slot at a
+The doc's `textRegion` is the headless answer (the overflow checks, the
+auto-height measurement), not what the canvas draws with; a `"body"` /
+`"source"` type has to declare one, and a `"label"` type none. A type places its
+text on the canvas through
+the `"textSlot"` part kind's `region` (`(state, slotId) => Rect`, one slot at a
 time) or `regions` (`(state) => Record<slotId, Rect>`, every slot in one call),
 built with `createTextSlotPartKindDefinition({ region })` /
-`createTextSlotPartKindDefinition({ regions })` and declared in `partKinds`. The frame
+`createTextSlotPartKindDefinition({ regions })` and declared in `partKinds`;
+`createFrameObjectDefinition({ textRegion })` builds the former for you. The frame
 renderer asks the kind's `regions` once per render for every slot rather than once
 per slot, so a type whose one slot cannot be placed without laying out the rest
 (the table's cells, the record's compartments) lays itself out once. Both answer

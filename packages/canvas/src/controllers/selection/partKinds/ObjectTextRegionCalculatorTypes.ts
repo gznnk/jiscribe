@@ -6,8 +6,9 @@ import type { Dimensions, Rect } from "@jiscribe/geometry";
  * plugin)), in the shape's local coordinate space (origin at the center, top-left
  * based Rect). Implementations declare what they read via `TState`, a reader of
  * extra per-shape fields declaring them optional so it stays assignable where the
- * box alone is promised. A `"body"` / `"source"` type's is built from its doc
- * definition's `textRegion` (applyObjectDefinition) rather than declared here.
+ * box alone is promised. A calculator reading the box alone is also a doc
+ * definition's `ObjectDocTextRegionCalculator`, which is how most shipped shapes
+ * declare one function for both sides.
  *
  * `slotId` is a key of `state.text` (the authority on which slots a shape has).
  * A single-slot shape can simply leave the parameter out of its signature — a

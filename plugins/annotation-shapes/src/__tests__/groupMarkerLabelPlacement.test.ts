@@ -1,6 +1,5 @@
 import { BODY_TEXT_SLOT_ID, createCanvasRegistries } from "@jiscribe/canvas";
 import type { ObjectState } from "@jiscribe/canvas";
-import { calcLabelTextVisualBounds } from "@jiscribe/doc";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -9,14 +8,17 @@ import {
 	bracketWithStemDefinition,
 } from "../definitions";
 import { annotationPlugin } from "../plugin";
+import {
+	calcGroupMarkerTextRegion,
+	calcGroupMarkerVisualBounds,
+} from "../presentation/shared";
 import { BRACE_DOC_DEFAULTS } from "../schema/brace/BraceDoc";
 import { BRACKET_DOC_DEFAULTS } from "../schema/bracket/BracketDoc";
 import { BRACKET_WITH_STEM_DOC_DEFAULTS } from "../schema/bracketWithStem/BracketWithStemDoc";
-import { calcGroupMarkerLabelRegion } from "../schema/shared/calcGroupMarkerLabelRegion";
 
-// The doc definitions declare where the label goes (labelRegion); the core is what
-// places the drawn label and widens the visual bounds from it, so this reads the
-// registered answers rather than the calculator alone.
+// The UI definitions place the label themselves (textRegion + visualBounds), so
+// this reads what registration answers rather than the calculators alone: a
+// "label" type declaring neither would get the core's caption under the box.
 const registries = createCanvasRegistries({ plugins: [annotationPlugin] });
 
 describe.each([
@@ -35,30 +37,18 @@ describe.each([
 			id: `${type}-1`,
 			text: "doc layer",
 		} as never) as ObjectState & { width: number; height: number };
-		const body = (state as { text?: Record<string, object> }).text?.[
-			BODY_TEXT_SLOT_ID
-		];
-		const typeDefaults = registries.objectTextStyleDefaults.get(
-			type,
-			BODY_TEXT_SLOT_ID,
-		);
 
-		it("is the text slot region its labelRegion answers, beyond the tip", () => {
+		it("is the text slot region calcGroupMarkerTextRegion answers, beyond the tip", () => {
 			expect(
 				registries.objectPartKind
 					.get(type, "textSlot")
 					?.region?.(state, BODY_TEXT_SLOT_ID),
-			).toEqual(calcGroupMarkerLabelRegion(state, body, typeDefaults));
+			).toEqual(calcGroupMarkerTextRegion(state as never, BODY_TEXT_SLOT_ID));
 		});
 
 		it("widens the visual bounds by that region", () => {
 			expect(registries.objectVisualBounds.get(type)?.(state)).toEqual(
-				calcLabelTextVisualBounds(
-					state,
-					body,
-					typeDefaults,
-					calcGroupMarkerLabelRegion,
-				),
+				calcGroupMarkerVisualBounds(state as never),
 			);
 			// A left-facing marker's label lies left of its box.
 			expect(registries.objectVisualBounds.get(type)?.(state).x).toBeLessThan(

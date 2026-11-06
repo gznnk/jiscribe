@@ -30,9 +30,9 @@ type BelowLabelHitAreaProps = {
  * shape's one body all the same. An empty caption draws nothing, so it gets no
  * area.
  *
- * For a type on the core's default placement alone, which declares no
- * `labelRegion`: a type placing its caption itself draws its grab area from its
- * own `labelRegion`.
+ * For a type on the core's placement under the box alone: a type placing its
+ * caption itself (a `"textSlot"` part kind declared with `visualBounds`) draws
+ * its grab area where it places the caption.
  *
  * Place it inside the shape's own `data-kind="object"` group — it is a part of
  * that object, not one of its own (the DOM contract allows a single

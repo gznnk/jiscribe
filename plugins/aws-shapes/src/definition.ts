@@ -4,6 +4,10 @@ import { createFrameObjectDefinition } from "@jiscribe/canvas-sdk";
 import { awsGroupDocDefinition, awsIconDocDefinition } from "./doc";
 import { AwsGroup } from "./presentation/AwsGroup";
 import { AwsIcon } from "./presentation/AwsIcon";
+import {
+	calcAwsGroupLabelTextRegion,
+	calcAwsGroupVisualBounds,
+} from "./presentation/calcAwsGroupLabelTextRegion";
 import type { AwsGroupDoc } from "./schema/AwsGroupDoc";
 import { isAwsGroupKind } from "./schema/AwsGroupDoc";
 import type { AwsIconDoc } from "./schema/AwsIconDoc";
@@ -44,8 +48,9 @@ export const awsIconDefinition: ObjectTypeDefinition<AwsIconDoc, AwsIconState> =
 
 /**
  * The label band is sized from the text and a long label runs past the frame's
- * right edge; the core widens the visual bounds by the doc definition's
- * `labelRegion`, so zoom-to-fit and the export do not crop that off.
+ * right edge, so this `"label"` type places it itself: `textRegion` and
+ * `visualBounds` together, without which zoom-to-fit and the export would crop
+ * that off.
  *
  * The stroke menu is offered: the default follows `kind`, but telling two VPCs
  * apart in one diagram is worth an override (resolveAwsGroupStroke). AWS frames
@@ -57,6 +62,8 @@ export const awsGroupDefinition: ObjectTypeDefinition<
 > = createFrameObjectDefinition<AwsGroupDoc, AwsGroupState>({
 	doc: awsGroupDocDefinition,
 	component: AwsGroup,
+	textRegion: calcAwsGroupLabelTextRegion,
+	visualBounds: calcAwsGroupVisualBounds,
 	// The same range the doc validation accepts. The drawing side falls back to
 	// the default kind, so an unknown one is stopped at the state's door.
 	isExtraStateValid: (state) =>

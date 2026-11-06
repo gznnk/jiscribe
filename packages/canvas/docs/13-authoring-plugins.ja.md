@@ -77,11 +77,10 @@ export const stickyDocPlugin: CanvasDocPlugin = {
 };
 ```
 
-`textRegion` は文字を置く領域で、`"body"` / `"source"` の図形は必ず宣言する。headless の
-検査はそれに対して測り、キャンバスはそこに文字を描いて編集させる。外形が箱と一致しない
-図形は、`outline` もここで宣言する（エッジのアンカーを一部に寄せたいなら
-`anchorRegion` も）。コネクターの端はその上に着き、自動レイアウトはエッジのアンカーを
-外形のある範囲に収める。UI 定義は `doc` からこの 3 つを引き継ぎ、自分では持たない。
+外形が箱と一致しない図形は、`outline` もここで宣言する（エッジのアンカーを一部に
+寄せたいなら `anchorRegion` も）。コネクターの端はその上に着き、自動レイアウトは
+エッジのアンカーを外形のある範囲に収める。UI 定義は `doc` からこの 2 つを
+引き継ぎ、自分では持たない。
 
 ```ts
 // src/definition.ts
@@ -133,30 +132,31 @@ canvas に残して SDK が再エクスポートする。物理的に移すと c
 そのうえで足している主なものが次である（全体は `packages/canvas-sdk/src/` の
 `index.ts` / `doc.ts` / `testing.ts` の export が正本）。
 
-| export                                                                                                            | 置き換わるもの                                                  |
-| ----------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| `createFrameObjectDoc`（`/doc`）                                                                                  | 図形ごとの factory / doc バリデータのファイル                   |
-| `createFrameObjectDefinition`                                                                                     | 図形ごとの mapper / state バリデータのファイル                  |
-| `createTypeStencils` / `createStencilIcon`                                                                        | ステンシル配列と、全アイコンが繰り返す `<svg>` ラッパー         |
-| `createInsetTextRegion`                                                                                           | 領域が固定比率の inset でしかない場合の手書き `calc*TextRegion` |
-| `ShapeBodyPath` / `ShapeBodyPolygon`                                                                              | frame 系図形が描くシルエット（線・塗り・掴める本体）            |
-| `calcRoundedRectOutline` / `centeredPolygonOutline`（`/doc` にもある）/ `formatPolygonPoints`                     | 手書きの輪郭計算                                                |
-| `BelowLabelHitArea`                                                                                               | core が箱の下に置く `features.text: "label"` のラベルの掴み領域 |
-| `createParseCheckSuite`（`/testing`）                                                                             | 図形パッケージが毎回書く parse-check テスト                     |
-| `createIconSetCatalog`（`/doc`）/ `createIconSetObject` / `createIconSetStencilCategory` / `./icon-set-generator` | アイコンセットの名前引き・図形・プリセット・生成スクリプト      |
+| export                                                                                                            | 置き換わるもの                                                                            |
+| ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `createFrameObjectDoc`（`/doc`）                                                                                  | 図形ごとの factory / doc バリデータのファイル                                             |
+| `createFrameObjectDefinition`                                                                                     | 図形ごとの mapper / state バリデータのファイル                                            |
+| `createTypeStencils` / `createStencilIcon`                                                                        | ステンシル配列と、全アイコンが繰り返す `<svg>` ラッパー                                   |
+| `createInsetTextRegion`                                                                                           | 領域が固定比率の inset でしかない場合の手書き `calc*TextRegion`                           |
+| `ShapeBodyPath` / `ShapeBodyPolygon`                                                                              | frame 系図形が描くシルエット（線・塗り・掴める本体）                                      |
+| `calcRoundedRectOutline` / `centeredPolygonOutline`（`/doc` にもある）/ `formatPolygonPoints`                     | 手書きの輪郭計算                                                                          |
+| `BelowLabelHitArea` / `calcLabelBoxSize`                                                                          | `features.text: "label"` の下ラベルの掴み領域、`"label"` の図形が自分で置くラベルの大きさ |
+| `createParseCheckSuite`（`/testing`）                                                                             | 図形パッケージが毎回書く parse-check テスト                                               |
+| `createIconSetCatalog`（`/doc`）/ `createIconSetObject` / `createIconSetStencilCategory` / `./icon-set-generator` | アイコンセットの名前引き・図形・プリセット・生成スクリプト                                |
 
 箱いっぱいに描く図形は `features.text: "label"` を宣言し、文字はテキスト自身から
 大きさを決めるラベルとして箱の下に吊る。置き場所は core が決める。テキストスロットの
 領域・見た目の範囲・図形の `labelFill` で塗る背景の四角は、どれも型の文字の既定で測った
-`calcLabelTextRegion`（`@jiscribe/doc`）から出る。そのためこの型は `textRegion`・
-`visualBounds`・`"textSlot"` の部分種別を宣言せず、宣言すれば登録時に拒否される。
-doc の既定には `LABEL_TEXT_STYLE_DEFAULTS`（`@jiscribe/doc`）を spread し、
-`BelowLabelHitArea` を図形自身の `data-kind="object"` グループの中に置いてラベルを
-掴めるようにする。ラベルを箱の下以外（グループマーカーの先端の先、AWS グループの
-角のバッジの横）に置く図形も `"label"` の型で、置き場所を doc 定義の `labelRegion`
-（`ObjectDocLabelRegionCalculator`。大きさは `calcLabelTextBoxSize` で測る）で宣言する。
-core は 3 つとも `calcLabelTextRegion` の代わりにそれを使う。掴み領域はその図形が
-同じ `labelRegion` から自分で置く。`createFrameObject` を使わずに書いた
+`calcLabelTextRegion`（`@jiscribe/doc`）から出る。そのためこの型は doc 定義に
+`textRegion` を宣言せず（パーサーと登録時に拒否される）、UI 定義の `textRegion` と
+`visualBounds` も渡さない。doc の既定には `LABEL_TEXT_STYLE_DEFAULTS`
+（`@jiscribe/doc`）を spread し、`BelowLabelHitArea` を図形自身の `data-kind="object"`
+グループの中に置いてラベルを掴めるようにする。箱の下以外に置くラベル（group marker の
+先端の先、AWS グループの角のバッジの横）も `"label"` の型で、UI 定義に `textRegion` と
+`visualBounds` を揃えて渡す（大きさは `calcLabelBoxSize` で測り、型の文字の既定が
+`LABEL_TEXT_STYLE_DEFAULTS` でなければそれを渡す）。core は自分の置き場所の代わりに
+それを登録する。片方だけ、または何も置かない `"textSlot"` の部分種別は登録時に
+拒否される。そうした図形はラベルの掴み領域を自分で描く。`createFrameObject` を使わずに書いた
 component は、文字と同じく `LabelTextFill`（キットが再エクスポートする unstable 面にある）も自分で文字より前に描く。既定のメニューは
 ラベルの背景色を `label-style` セクションに出す。`menu` を自分で書く型もそこに
 `{ type: "labelBackgroundColor" }` を置く。別のラベル型と一緒に選んでも項目が残るように

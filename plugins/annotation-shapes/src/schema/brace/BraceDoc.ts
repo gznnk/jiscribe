@@ -18,7 +18,7 @@ import {
  * transforms and selection work with the same mechanism as Rect. The box is the
  * bracket alone: its short side is the depth the curve bulges by, its long side
  * the span the arms cover. The label is *not* in the box — it is sized from its
- * own text and hung off the tip (calcGroupMarkerLabelRegion), so naming the group
+ * own text and hung off the tip (calcGroupMarkerTextRegion), so naming the group
  * never competes with the bracket for room.
  *
  * The brace carries no fill: the path is open, so a fill would paint the region

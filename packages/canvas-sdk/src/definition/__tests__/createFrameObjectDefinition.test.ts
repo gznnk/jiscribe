@@ -1,8 +1,12 @@
 import type { CreateObjectState } from "@jiscribe/canvas";
-import { createTextSlotPartKindDefinition } from "@jiscribe/canvas/unstable";
+import {
+	createTextSlotPartKindDefinition,
+	TEXT_SLOT_PART_KIND,
+} from "@jiscribe/canvas/unstable";
 import type { CreateObjectType, ObjectFeatures } from "@jiscribe/doc";
 import { calcFullBoxTextRegion } from "@jiscribe/doc";
 import { AUTO_COLOR } from "@jiscribe/doc/unstable";
+import type { Dimensions } from "@jiscribe/geometry";
 import { describe, it, expect } from "vitest";
 
 import { createFrameObjectDoc } from "../../schema/createFrameObjectDoc";
@@ -58,11 +62,23 @@ type DemoState = CreateObjectState<
 const demoDocDefinition = createFrameObjectDoc({
 	features: DemoFeatures,
 	defaults: DEMO_DOC_DEFAULTS,
-	textRegion: calcFullBoxTextRegion,
 	description: "Demo shape.",
 });
 
 const DemoComponent = () => null;
+
+const labelDocDefinition = createFrameObjectDoc({
+	features: { ...DemoFeatures, text: "label" },
+	defaults: DEMO_DOC_DEFAULTS,
+});
+
+/** A caption placed to the right of the box, the way a label type placing its own does. */
+const captionBeside = ({ width }: Dimensions) => ({
+	x: width / 2 + 8,
+	y: -10,
+	width: 40,
+	height: 20,
+});
 
 const demoDoc = { ...DEMO_DOC_DEFAULTS, id: "demo-1" } as unknown as DemoDoc;
 
@@ -73,7 +89,6 @@ describe("createFrameObjectDefinition", () => {
 		const docDefinition = createFrameObjectDoc({
 			features: DemoFeatures,
 			defaults: DEMO_DOC_DEFAULTS,
-			textRegion: calcFullBoxTextRegion,
 			description: "Demo shape.",
 			outline,
 			anchorRegion,
@@ -94,15 +109,6 @@ describe("createFrameObjectDefinition", () => {
 		expect(definition.stencils).toEqual([]);
 	});
 
-	it("inherits the doc's text region, which the core builds the text slot kind from", () => {
-		const definition = createFrameObjectDefinition<DemoDoc, DemoState>({
-			doc: demoDocDefinition,
-			component: DemoComponent,
-		});
-
-		expect(definition.textRegion).toBe(calcFullBoxTextRegion);
-	});
-
 	it("carries an explicit denial across untouched", () => {
 		const denied = createFrameObjectDefinition<DemoDoc, DemoState>({
 			doc: createFrameObjectDoc({
@@ -112,6 +118,7 @@ describe("createFrameObjectDefinition", () => {
 				autoHeight: false,
 			}),
 			component: DemoComponent,
+			textRegion: calcFullBoxTextRegion,
 		});
 
 		expect(denied.autoHeight).toBe(false);
@@ -126,33 +133,94 @@ describe("createFrameObjectDefinition", () => {
 				autoHeightPaddingEm: 0.25,
 			}),
 			component: DemoComponent,
+			textRegion: calcFullBoxTextRegion,
 		});
 
 		expect(padded.autoHeightPaddingEm).toBe(0.25);
 	});
 
-	it("passes the declared part kinds through untouched", () => {
+	it("builds the text slot part kind from textRegion, after the declared kinds", () => {
+		const captionRegion = ({ width, height }: Dimensions) => ({
+			x: -width / 2,
+			y: height / 2,
+			width,
+			height: 20,
+		});
 		const vertexKind = { kind: "vertex", has: () => false };
-		const textSlotKind = createTextSlotPartKindDefinition<DemoState>();
-		const partKinds = [vertexKind, textSlotKind];
 		const definition = createFrameObjectDefinition<DemoDoc, DemoState>({
 			doc: demoDocDefinition,
 			component: DemoComponent,
-			partKinds,
+			textRegion: captionRegion,
+			partKinds: [vertexKind],
 		});
 
-		// Untouched here: registration is what places this text slot kind's body in
-		// the doc's textRegion (applyObjectDefinition).
-		expect(definition.partKinds).toBe(partKinds);
+		expect(definition.partKinds?.map((part) => part.kind)).toEqual([
+			"vertex",
+			TEXT_SLOT_PART_KIND,
+		]);
+		expect(definition.partKinds?.[1].region).toBe(captionRegion);
 	});
 
-	it("declares no part kind when given none", () => {
+	it("declares no part kind when given no textRegion", () => {
 		const definition = createFrameObjectDefinition<DemoDoc, DemoState>({
 			doc: demoDocDefinition,
 			component: DemoComponent,
 		});
 
 		expect(definition.partKinds).toBeUndefined();
+	});
+
+	it("refuses textRegion next to a declared text slot kind, naming the type", () => {
+		expect(() =>
+			createFrameObjectDefinition<DemoDoc, DemoState>({
+				doc: demoDocDefinition,
+				component: DemoComponent,
+				textRegion: calcFullBoxTextRegion,
+				partKinds: [createTextSlotPartKindDefinition()],
+			}),
+		).toThrow(
+			'createFrameObjectDefinition "sdkDemo": declares textRegion and a "textSlot" part kind',
+		);
+	});
+
+	it("refuses textRegion without visualBounds on a label text type, naming the type and the parameters", () => {
+		expect(() =>
+			createFrameObjectDefinition<DemoDoc, DemoState>({
+				doc: labelDocDefinition,
+				component: DemoComponent,
+				textRegion: captionBeside,
+			}),
+		).toThrow(
+			'createFrameObjectDefinition "sdkDemo": features.text "label" passes textRegion without visualBounds; pass both to place the caption, or neither to have it placed under the box',
+		);
+	});
+
+	it("refuses visualBounds without textRegion on a label text type", () => {
+		expect(() =>
+			createFrameObjectDefinition<DemoDoc, DemoState>({
+				doc: labelDocDefinition,
+				component: DemoComponent,
+				visualBounds: () => ({ x: 0, y: 0, width: 1, height: 1 }),
+			}),
+		).toThrow(
+			'createFrameObjectDefinition "sdkDemo": features.text "label" passes visualBounds without textRegion; pass both to place the caption, or neither to have it placed under the box',
+		);
+	});
+
+	it("builds the text slot kind of a label text type passing textRegion and visualBounds together", () => {
+		const visualBounds = () => ({ x: -60, y: -40, width: 200, height: 80 });
+		const definition = createFrameObjectDefinition<DemoDoc, DemoState>({
+			doc: labelDocDefinition,
+			component: DemoComponent,
+			textRegion: captionBeside,
+			visualBounds,
+		});
+
+		expect(definition.partKinds?.map((part) => part.kind)).toEqual([
+			TEXT_SLOT_PART_KIND,
+		]);
+		expect(definition.partKinds?.[0].region).toBe(captionBeside);
+		expect(definition.visualBounds).toBe(visualBounds);
 	});
 
 	it("derives a mapper that converts geometry both ways", () => {
@@ -175,7 +243,6 @@ describe("createFrameObjectDefinition", () => {
 			doc: createFrameObjectDoc({
 				features: DemoFeatures,
 				defaults: DEMO_DOC_DEFAULTS,
-				textRegion: calcFullBoxTextRegion,
 				description: "Demo shape.",
 				extraKeys: ["variant"],
 			}),

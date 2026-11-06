@@ -59,6 +59,24 @@ import type { ParallelogramDoc } from "./schema/parallelogram/ParallelogramDoc";
 import type { StadiumDoc } from "./schema/stadium/StadiumDoc";
 import type { StoredDataDoc } from "./schema/storedData/StoredDataDoc";
 import type { SubroutineDoc } from "./schema/subroutine/SubroutineDoc";
+import {
+	calcCardTextRegion,
+	calcDbTextRegion,
+	calcDelayTextRegion,
+	calcDiamondTextRegion,
+	calcDisplayTextRegion,
+	calcDocumentTextRegion,
+	calcHexagonTextRegion,
+	calcLoopLimitTextRegion,
+	calcManualInputTextRegion,
+	calcMultiDocumentTextRegion,
+	calcOffPageConnectorTextRegion,
+	calcParallelogramTextRegion,
+	calcStadiumTextRegion,
+	calcStoredDataTextRegion,
+	calcSubroutineTextRegion,
+	calcTrapezoidTextRegion,
+} from "./schema/textRegions";
 import type { TrapezoidDoc } from "./schema/trapezoid/TrapezoidDoc";
 import type { CardState } from "./state/card/CardState";
 import type { CrossState } from "./state/cross/CrossState";
@@ -106,16 +124,20 @@ import { TrapezoidIcon } from "./stencil/TrapezoidIcon";
  * with nothing left out on purpose. No menu is declared, so the default menu is derived
  * from features (packages/canvas/docs/12-plugin-architecture.md).
  *
- * `textRegion` / `outline` / `anchorRegion` are declared on the doc definitions
- * alone and reach these through `doc`, so what a headless overflow check
- * measures against and what the overlay draws in are one function. The two
- * shapes whose label is sized from its own text (cross / extract) declare no
- * region at all: the core places their caption.
+ * `textRegion` is taken from `./schema/textRegions`, the same module the doc
+ * definitions declare theirs from, so what a headless overflow check measures
+ * against and what the overlay draws in are one function. The two shapes whose
+ * label is sized from its own text (cross / extract) are the exception: their doc
+ * side declares no region at all.
+ *
+ * `outline` / `anchorRegion` are declared on the doc definitions alone and reach
+ * these through `doc`.
  */
 export const cardDefinition: ObjectTypeDefinition<CardDoc, CardState> =
 	createFrameObjectDefinition<CardDoc, CardState>({
 		doc: cardDocDefinition,
 		component: Card,
+		textRegion: calcCardTextRegion,
 		stencils: createTypeStencils({
 			objectType: "card",
 			label: { en: "Card", ja: "カード" },
@@ -142,6 +164,7 @@ export const dbDefinition: ObjectTypeDefinition<DbDoc, DbState> =
 	createFrameObjectDefinition<DbDoc, DbState>({
 		doc: dbDocDefinition,
 		component: Db,
+		textRegion: calcDbTextRegion,
 		stencils: createTypeStencils({
 			objectType: "db",
 			label: { en: "Database", ja: "データベース" },
@@ -153,6 +176,7 @@ export const delayDefinition: ObjectTypeDefinition<DelayDoc, DelayState> =
 	createFrameObjectDefinition<DelayDoc, DelayState>({
 		doc: delayDocDefinition,
 		component: Delay,
+		textRegion: calcDelayTextRegion,
 		stencils: createTypeStencils({
 			objectType: "delay",
 			label: { en: "Delay", ja: "遅延" },
@@ -164,6 +188,7 @@ export const diamondDefinition: ObjectTypeDefinition<DiamondDoc, DiamondState> =
 	createFrameObjectDefinition<DiamondDoc, DiamondState>({
 		doc: diamondDocDefinition,
 		component: Diamond,
+		textRegion: calcDiamondTextRegion,
 		stencils: createTypeStencils({
 			objectType: "diamond",
 			// Labelled "Decision" for its flowchart role; the type stays the generic
@@ -177,6 +202,7 @@ export const displayDefinition: ObjectTypeDefinition<DisplayDoc, DisplayState> =
 	createFrameObjectDefinition<DisplayDoc, DisplayState>({
 		doc: displayDocDefinition,
 		component: Display,
+		textRegion: calcDisplayTextRegion,
 		stencils: createTypeStencils({
 			objectType: "display",
 			label: { en: "Display", ja: "表示" },
@@ -190,6 +216,7 @@ export const documentDefinition: ObjectTypeDefinition<
 > = createFrameObjectDefinition<DocumentDoc, DocumentState>({
 	doc: documentDocDefinition,
 	component: Document,
+	textRegion: calcDocumentTextRegion,
 	stencils: createTypeStencils({
 		objectType: "document",
 		label: { en: "Document", ja: "書類" },
@@ -216,6 +243,7 @@ export const hexagonDefinition: ObjectTypeDefinition<HexagonDoc, HexagonState> =
 	createFrameObjectDefinition<HexagonDoc, HexagonState>({
 		doc: hexagonDocDefinition,
 		component: Hexagon,
+		textRegion: calcHexagonTextRegion,
 		stencils: createTypeStencils({
 			objectType: "hexagon",
 			label: { en: "Preparation", ja: "準備" },
@@ -229,6 +257,7 @@ export const loopLimitDefinition: ObjectTypeDefinition<
 > = createFrameObjectDefinition<LoopLimitDoc, LoopLimitState>({
 	doc: loopLimitDocDefinition,
 	component: LoopLimit,
+	textRegion: calcLoopLimitTextRegion,
 	stencils: createTypeStencils({
 		objectType: "loopLimit",
 		label: { en: "Loop Limit", ja: "ループ端" },
@@ -242,6 +271,7 @@ export const manualInputDefinition: ObjectTypeDefinition<
 > = createFrameObjectDefinition<ManualInputDoc, ManualInputState>({
 	doc: manualInputDocDefinition,
 	component: ManualInput,
+	textRegion: calcManualInputTextRegion,
 	stencils: createTypeStencils({
 		objectType: "manualInput",
 		label: { en: "Manual Input", ja: "手動入力" },
@@ -255,6 +285,7 @@ export const multiDocumentDefinition: ObjectTypeDefinition<
 > = createFrameObjectDefinition<MultiDocumentDoc, MultiDocumentState>({
 	doc: multiDocumentDocDefinition,
 	component: MultiDocument,
+	textRegion: calcMultiDocumentTextRegion,
 	stencils: createTypeStencils({
 		objectType: "multiDocument",
 		label: { en: "Multi-document", ja: "複数書類" },
@@ -268,6 +299,7 @@ export const offPageConnectorDefinition: ObjectTypeDefinition<
 > = createFrameObjectDefinition<OffPageConnectorDoc, OffPageConnectorState>({
 	doc: offPageConnectorDocDefinition,
 	component: OffPageConnector,
+	textRegion: calcOffPageConnectorTextRegion,
 	stencils: createTypeStencils({
 		objectType: "offPageConnector",
 		label: { en: "Off-page connector", ja: "他ページ結合子" },
@@ -281,6 +313,7 @@ export const parallelogramDefinition: ObjectTypeDefinition<
 > = createFrameObjectDefinition<ParallelogramDoc, ParallelogramState>({
 	doc: parallelogramDocDefinition,
 	component: Parallelogram,
+	textRegion: calcParallelogramTextRegion,
 	stencils: createTypeStencils({
 		objectType: "parallelogram",
 		label: { en: "Data", ja: "データ" },
@@ -292,6 +325,7 @@ export const stadiumDefinition: ObjectTypeDefinition<StadiumDoc, StadiumState> =
 	createFrameObjectDefinition<StadiumDoc, StadiumState>({
 		doc: stadiumDocDefinition,
 		component: Stadium,
+		textRegion: calcStadiumTextRegion,
 		stencils: createTypeStencils({
 			objectType: "stadium",
 			label: { en: "Terminal", ja: "端子" },
@@ -305,6 +339,7 @@ export const storedDataDefinition: ObjectTypeDefinition<
 > = createFrameObjectDefinition<StoredDataDoc, StoredDataState>({
 	doc: storedDataDocDefinition,
 	component: StoredData,
+	textRegion: calcStoredDataTextRegion,
 	stencils: createTypeStencils({
 		objectType: "storedData",
 		label: { en: "Stored Data", ja: "記憶データ" },
@@ -318,6 +353,7 @@ export const subroutineDefinition: ObjectTypeDefinition<
 > = createFrameObjectDefinition<SubroutineDoc, SubroutineState>({
 	doc: subroutineDocDefinition,
 	component: Subroutine,
+	textRegion: calcSubroutineTextRegion,
 	stencils: createTypeStencils({
 		objectType: "subroutine",
 		label: { en: "Subroutine", ja: "サブルーチン" },
@@ -331,6 +367,7 @@ export const trapezoidDefinition: ObjectTypeDefinition<
 > = createFrameObjectDefinition<TrapezoidDoc, TrapezoidState>({
 	doc: trapezoidDocDefinition,
 	component: Trapezoid,
+	textRegion: calcTrapezoidTextRegion,
 	stencils: createTypeStencils({
 		objectType: "trapezoid",
 		label: { en: "Manual Operation", ja: "手操作" },

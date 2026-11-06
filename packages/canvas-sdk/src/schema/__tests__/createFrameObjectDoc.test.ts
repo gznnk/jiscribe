@@ -75,17 +75,6 @@ describe("createFrameObjectDoc", () => {
 		expect(definition.anchorRegion).toBe(anchorRegion);
 	});
 
-	it("carries a caption's label region into the definition as-is", () => {
-		const labelRegion = () => ({ x: 0, y: 50, width: 40, height: 20 });
-		const definition = createFrameObjectDoc({
-			features: { ...DemoFeatures, text: "label" },
-			defaults: DEMO_DOC_DEFAULTS,
-			labelRegion,
-		});
-
-		expect(definition.labelRegion).toBe(labelRegion);
-	});
-
 	it("derives a doc validator from features", () => {
 		const { validateDoc } = createFrameObjectDoc({
 			features: DemoFeatures,

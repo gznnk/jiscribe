@@ -20,6 +20,7 @@ import { UmlComponentBox } from "./presentation/UmlComponentBox";
 import { UmlPackageBox } from "./presentation/UmlPackageBox";
 import { isRecordListTextSlotId } from "./schema/RecordDoc";
 import type { RecordDoc } from "./schema/RecordDoc";
+import { calcUmlPackageTextRegion } from "./schema/textRegions";
 import type { UmlComponentDoc } from "./schema/UmlComponentDoc";
 import type { UmlPackageDoc } from "./schema/UmlPackageDoc";
 import { recordToDoc, recordToState } from "./state/RecordMapper";
@@ -101,6 +102,7 @@ export const umlPackageDefinition: ObjectTypeDefinition<
 > = createFrameObjectDefinition<UmlPackageDoc, UmlPackageState>({
 	doc: umlPackageDocDefinition,
 	component: UmlPackageBox,
+	textRegion: calcUmlPackageTextRegion,
 	stencils: createTypeStencils({
 		objectType: "umlPackage",
 		label: { en: "Package", ja: "パッケージ" },

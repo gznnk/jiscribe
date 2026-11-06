@@ -2,7 +2,6 @@ import type {
 	ObjectDoc,
 	ObjectDocAnchorRegionCalculator,
 	ObjectDocDefinition,
-	ObjectDocLabelRegionCalculator,
 	ObjectDocOutlineCalculator,
 	ObjectDocOverflowDiagnoser,
 	ObjectDocTextRegionCalculator,
@@ -49,21 +48,14 @@ type FrameObjectDocCommonParams = {
 	extraKeys?: readonly string[];
 
 	/**
-	 * Where the shape lays its text out (see `ObjectDocDefinition.textRegion`),
-	 * `calcFullBoxTextRegion` for the whole box. Required of a `"body"` /
-	 * `"source"` shape and refused on a `"label"` one. The UI definition built by
-	 * `createFrameObjectDefinition` inherits it, and the canvas draws and edits
-	 * the text in it.
+	 * Where the shape lays its text out (see `ObjectDocDefinition.textRegion`):
+	 * the rectangle the headless checks and the auto-height measurement read,
+	 * `calcFullBoxTextRegion` for the whole box. Where the canvas draws the text
+	 * is the UI definition's `textRegion` (the `"textSlot"` part kind), and the
+	 * shipped shapes pass the same function to both sides. Required of a
+	 * `"body"` / `"source"` shape; a `"label"` shape declares none.
 	 */
 	textRegion?: ObjectDocTextRegionCalculator;
-
-	/**
-	 * Where a `features.text: "label"` shape places its caption (see
-	 * `ObjectDocDefinition.labelRegion`). Omitted = centred below the box. Refused
-	 * on any other shape. The UI definition inherits it, and the canvas places
-	 * the caption and widens the shape's visual bounds by it.
-	 */
-	labelRegion?: ObjectDocLabelRegionCalculator;
 
 	/**
 	 * The drawn silhouette, for a shape whose outline is not its box (see
@@ -183,7 +175,6 @@ export const createFrameObjectDoc = ({
 	defaults,
 	extraKeys,
 	textRegion,
-	labelRegion,
 	outline,
 	anchorRegion,
 	container,
@@ -204,7 +195,6 @@ export const createFrameObjectDoc = ({
 	extraKeys,
 	factory: factory ?? createFrameObjectFactory(defaults, { supportsBounds }),
 	textRegion,
-	labelRegion,
 	outline,
 	anchorRegion,
 	container,

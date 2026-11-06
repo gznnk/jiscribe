@@ -10,9 +10,9 @@ import { MarkdownStencils } from "./stencil/MarkdownStencils";
 
 /**
  * The markdown card behaves exactly like a Rect apart from how its body is
- * drawn — and so measured (`textMeasurer`) — so its doc's `textRegion` is the
- * full bbox, and `outline` (bbox rect) and `menu` (derived from features) are
- * left at the defaults.
+ * drawn — and so measured (`textMeasurer`) — so `textRegion` (full bbox),
+ * `outline` (bbox rect), and `menu` (derived from features) are all left at
+ * the defaults.
  */
 export const markdownDefinition: ObjectTypeDefinition<
 	MarkdownDoc,

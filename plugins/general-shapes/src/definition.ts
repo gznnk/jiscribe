@@ -51,6 +51,15 @@ import type { ServerDoc } from "./schema/server/ServerDoc";
 import type { ShieldDoc } from "./schema/shield/ShieldDoc";
 import type { SmartphoneDoc } from "./schema/smartphone/SmartphoneDoc";
 import type { TerminalWindowDoc } from "./schema/terminalWindow/TerminalWindowDoc";
+import {
+	calcCloudTextRegion,
+	calcFileTextRegion,
+	calcFolderTextRegion,
+	calcLaptopTextRegion,
+	calcShieldTextRegion,
+	calcSmartphoneTextRegion,
+	calcWindowTextRegion,
+} from "./schema/textRegions";
 import type { ActorState } from "./state/actor/ActorState";
 import type { BrowserWindowState } from "./state/browserWindow/BrowserWindowState";
 import type { CloudState } from "./state/cloud/CloudState";
@@ -103,6 +112,7 @@ export const cloudDefinition: ObjectTypeDefinition<CloudDoc, CloudState> =
 	createFrameObjectDefinition<CloudDoc, CloudState>({
 		doc: cloudDocDefinition,
 		component: Cloud,
+		textRegion: calcCloudTextRegion,
 		stencils: createTypeStencils({
 			objectType: "cloud",
 			label: { en: "Cloud", ja: "雲" },
@@ -129,6 +139,7 @@ export const browserWindowDefinition: ObjectTypeDefinition<
 > = createFrameObjectDefinition<BrowserWindowDoc, BrowserWindowState>({
 	doc: browserWindowDocDefinition,
 	component: BrowserWindow,
+	textRegion: calcWindowTextRegion,
 	stencils: createTypeStencils({
 		objectType: "browserWindow",
 		label: { en: "Browser window", ja: "ブラウザ画面" },
@@ -143,6 +154,7 @@ export const terminalWindowDefinition: ObjectTypeDefinition<
 > = createFrameObjectDefinition<TerminalWindowDoc, TerminalWindowState>({
 	doc: terminalWindowDocDefinition,
 	component: TerminalWindow,
+	textRegion: calcWindowTextRegion,
 	stencils: createTypeStencils({
 		objectType: "terminalWindow",
 		label: { en: "Terminal", ja: "端末" },
@@ -158,6 +170,7 @@ export const folderDefinition: ObjectTypeDefinition<FolderDoc, FolderState> =
 	createFrameObjectDefinition<FolderDoc, FolderState>({
 		doc: folderDocDefinition,
 		component: Folder,
+		textRegion: calcFolderTextRegion,
 		stencils: createTypeStencils({
 			objectType: "folder",
 			label: { en: "Folder", ja: "フォルダ" },
@@ -169,6 +182,7 @@ export const fileDefinition: ObjectTypeDefinition<FileDoc, FileState> =
 	createFrameObjectDefinition<FileDoc, FileState>({
 		doc: fileDocDefinition,
 		component: File,
+		textRegion: calcFileTextRegion,
 		stencils: createTypeStencils({
 			objectType: "file",
 			label: { en: "File", ja: "ファイル" },
@@ -245,6 +259,7 @@ export const shieldDefinition: ObjectTypeDefinition<ShieldDoc, ShieldState> =
 	createFrameObjectDefinition<ShieldDoc, ShieldState>({
 		doc: shieldDocDefinition,
 		component: Shield,
+		textRegion: calcShieldTextRegion,
 		stencils: createTypeStencils({
 			objectType: "shield",
 			label: { en: "Shield", ja: "盾" },
@@ -261,6 +276,7 @@ export const smartphoneDefinition: ObjectTypeDefinition<
 > = createFrameObjectDefinition<SmartphoneDoc, SmartphoneState>({
 	doc: smartphoneDocDefinition,
 	component: Smartphone,
+	textRegion: calcSmartphoneTextRegion,
 	stencils: createTypeStencils({
 		objectType: "smartphone",
 		label: { en: "Smartphone", ja: "スマートフォン" },
@@ -273,6 +289,7 @@ export const laptopDefinition: ObjectTypeDefinition<LaptopDoc, LaptopState> =
 	createFrameObjectDefinition<LaptopDoc, LaptopState>({
 		doc: laptopDocDefinition,
 		component: Laptop,
+		textRegion: calcLaptopTextRegion,
 		stencils: createTypeStencils({
 			objectType: "laptop",
 			label: { en: "Laptop", ja: "ノート PC" },

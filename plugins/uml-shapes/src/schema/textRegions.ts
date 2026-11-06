@@ -1,6 +1,7 @@
-// Where the UML shapes lay their text out, declared on their doc definitions
-// (./doc.ts): what a headless overflow check measures against, and, inherited by
-// the UI definitions, what the overlay draws and the editor edits in.
+// Where the UML shapes lay their text out, declared once for both halves of their
+// definitions: the doc definitions (./doc.ts, what a headless overflow check
+// measures against) and the UI definitions (../definition.ts, what the overlay
+// draws and the editor edits in).
 //
 // `record` is absent: its box is divided into bands each sized from their own
 // text, so its doc definition declares no region and its UI definition places

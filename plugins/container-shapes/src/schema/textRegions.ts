@@ -1,6 +1,7 @@
-// Where the container lays its title out, declared on its doc definition
-// (./doc.ts): what a headless overflow check measures against, and, inherited by
-// the UI definition, what the overlay draws and the editor edits in.
+// Where the container lays its title out, declared once for both halves of its
+// definition: the doc definition (./doc.ts, what a headless overflow check
+// measures against) and the UI definition (../definition.ts, what the overlay
+// draws and the editor edits in).
 import type { Rect } from "@jiscribe/geometry";
 
 import { calcContainerHeaderHeight } from "./calcContainerHeaderHeight";

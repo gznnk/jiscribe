@@ -28,7 +28,6 @@ import { calloutOutline } from "./schema/callout/calloutOutline";
 import { validateCalloutTail } from "./schema/callout/validateCalloutTail";
 import { NOTE_DOC_DEFAULTS, NoteFeatures } from "./schema/note/NoteDoc";
 import { noteOutline } from "./schema/note/noteOutline";
-import { calcGroupMarkerLabelRegion } from "./schema/shared/calcGroupMarkerLabelRegion";
 import { createGroupMarkerObjectFactory } from "./schema/shared/createGroupMarkerObjectFactory";
 import { GROUP_MARKER_EXTRA_CONNECT_POINT_IDS } from "./schema/shared/groupMarkerConnectPointIds";
 import {
@@ -52,7 +51,6 @@ export const braceDocDefinition: ObjectDocDefinition =
 	withGroupMarkerTipConnectPoint(
 		createFrameObjectDoc({
 			features: BraceFeatures,
-			labelRegion: calcGroupMarkerLabelRegion,
 			defaults: BRACE_DOC_DEFAULTS,
 			extraKeys: [
 				"direction",
@@ -70,7 +68,6 @@ export const bracketDocDefinition: ObjectDocDefinition =
 	withGroupMarkerTipConnectPoint(
 		createFrameObjectDoc({
 			features: BracketFeatures,
-			labelRegion: calcGroupMarkerLabelRegion,
 			defaults: BRACKET_DOC_DEFAULTS,
 			extraKeys: ["direction"] satisfies readonly (keyof BracketDoc)[],
 			description:
@@ -87,7 +84,6 @@ export const bracketWithStemDocDefinition: ObjectDocDefinition =
 	withGroupMarkerTipConnectPoint(
 		createFrameObjectDoc({
 			features: BracketWithStemFeatures,
-			labelRegion: calcGroupMarkerLabelRegion,
 			defaults: BRACKET_WITH_STEM_DOC_DEFAULTS,
 			extraKeys: [
 				"direction",

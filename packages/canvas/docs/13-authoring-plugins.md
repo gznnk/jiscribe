@@ -78,13 +78,11 @@ export const stickyDocPlugin: CanvasDocPlugin = {
 };
 ```
 
-`textRegion` is where the text goes, and a `"body"` / `"source"` shape has to
-declare one: the headless checks measure against it, and the canvas draws and
-edits the text in it. A shape whose silhouette is not its box declares `outline`
-here too (and `anchorRegion` where its edge anchors should center on part of
-it): connector ends land on it, and an automatic layout keeps its edge anchors
-where it reaches. The UI definition inherits all three from `doc` and has no
-field of its own for them.
+A shape whose silhouette is not its box declares `outline` here too (and
+`anchorRegion` where its edge anchors should center on part of it): connector
+ends land on it, and an automatic layout keeps its edge anchors where it
+reaches. The UI definition inherits both from `doc` and has no field of its own
+for them.
 
 ```ts
 // src/definition.ts
@@ -137,32 +135,34 @@ need to reach past it. On top of that it adds, among others, the following (the
 exports of `index.ts` / `doc.ts` / `testing.ts` under `packages/canvas-sdk/src/` are
 the full list):
 
-| Export                                                                                                            | Replaces                                                                          |
-| ----------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| `createFrameObjectDoc` (`/doc`)                                                                                   | the per-shape factory and doc-validator files                                     |
-| `createFrameObjectDefinition`                                                                                     | the per-shape mapper and state-validator files                                    |
-| `createTypeStencils` / `createStencilIcon`                                                                        | the stencil array and the `<svg>` wrapper every palette icon repeats              |
-| `createInsetTextRegion`                                                                                           | a hand-written `calc*TextRegion` when the region is a fixed ratio inset           |
-| `ShapeBodyPath` / `ShapeBodyPolygon`                                                                              | the styled silhouette every frame shape draws (stroked, filled, grabbable)        |
-| `calcRoundedRectOutline` / `centeredPolygonOutline` (also `/doc`) / `formatPolygonPoints`                         | hand-rolled outline maths                                                         |
-| `BelowLabelHitArea`                                                                                               | the grab area of a `features.text: "label"` caption the core places below the box |
-| `createParseCheckSuite` (`/testing`)                                                                              | the parse-check test every shape package writes                                   |
-| `createIconSetCatalog` (`/doc`) / `createIconSetObject` / `createIconSetStencilCategory` / `./icon-set-generator` | the name lookup, the shape, the presets and the generator of an icon set          |
+| Export                                                                                                            | Replaces                                                                                                 |
+| ----------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `createFrameObjectDoc` (`/doc`)                                                                                   | the per-shape factory and doc-validator files                                                            |
+| `createFrameObjectDefinition`                                                                                     | the per-shape mapper and state-validator files                                                           |
+| `createTypeStencils` / `createStencilIcon`                                                                        | the stencil array and the `<svg>` wrapper every palette icon repeats                                     |
+| `createInsetTextRegion`                                                                                           | a hand-written `calc*TextRegion` when the region is a fixed ratio inset                                  |
+| `ShapeBodyPath` / `ShapeBodyPolygon`                                                                              | the styled silhouette every frame shape draws (stroked, filled, grabbable)                               |
+| `calcRoundedRectOutline` / `centeredPolygonOutline` (also `/doc`) / `formatPolygonPoints`                         | hand-rolled outline maths                                                                                |
+| `BelowLabelHitArea` / `calcLabelBoxSize`                                                                          | the grab area of a `features.text: "label"` caption, and the size of one a `"label"` shape places itself |
+| `createParseCheckSuite` (`/testing`)                                                                              | the parse-check test every shape package writes                                                          |
+| `createIconSetCatalog` (`/doc`) / `createIconSetObject` / `createIconSetStencilCategory` / `./icon-set-generator` | the name lookup, the shape, the presets and the generator of an icon set                                 |
 
 A shape whose drawing fills its box declares `features.text: "label"`, and its
 text hangs under the box as a caption sized from the text itself. The core places it
 — its text slot region, its visual bounds and the box painted behind it in the
 shape's `labelFill` all come from `calcLabelTextRegion` (`@jiscribe/doc`), measured
-with the type's own text defaults — so such a type declares no `textRegion`, no
-`visualBounds` and no `"textSlot"` part kind; any of them is refused at
-registration. Spread `LABEL_TEXT_STYLE_DEFAULTS` (`@jiscribe/doc`) into its doc
-defaults, and place `BelowLabelHitArea` inside the shape's own
-`data-kind="object"` group so the caption can be grabbed. A caption placed
-anywhere else — beyond a group marker's tip, beside an AWS group's corner badge —
-is still a `"label"` type: declare where on the doc definition as `labelRegion`
-(`ObjectDocLabelRegionCalculator`, sized with `calcLabelTextBoxSize`), and the
-core uses it in place of `calcLabelTextRegion` for all three; the grab area is
-then the shape's own, placed from that same `labelRegion`. A component written
+with the type's own text defaults — so such a type declares no `textRegion` on its
+doc definition (refused by the parser and at registration), and leaves the UI
+definition's `textRegion` and `visualBounds` out. Spread `LABEL_TEXT_STYLE_DEFAULTS`
+(`@jiscribe/doc`) into its doc defaults, and place `BelowLabelHitArea` inside the
+shape's own `data-kind="object"` group so the caption can be grabbed. A caption
+placed anywhere else — beyond a group marker's tip, beside an AWS group's corner
+badge — is still a `"label"` type: its UI definition passes `textRegion` and
+`visualBounds` together (sized with `calcLabelBoxSize`, handed the type's own text
+defaults where they are not `LABEL_TEXT_STYLE_DEFAULTS`), and the core registers
+them in place of its own; one without the other, or a `"textSlot"` part kind
+placing nothing, is refused at registration. Such a shape draws its own grab area
+over the caption. A component written
 without `createFrameObject` draws `LabelTextFill` (part of the unstable surface the kit re-exports) itself, ahead of the caption's
 text, as it draws the text. The default menus offer the caption's background under
 the `label-style` section; a type stating its own `menu` puts

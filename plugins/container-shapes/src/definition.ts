@@ -10,6 +10,7 @@ import { HeaderColorProperty } from "./propertyPanel/HeaderColorProperty";
 import { HeaderHeightProperty } from "./propertyPanel/HeaderHeightProperty";
 import { isContainerHeaderHeight } from "./schema/calcContainerHeaderHeight";
 import type { ContainerDoc } from "./schema/ContainerDoc";
+import { calcContainerTextRegion } from "./schema/textRegions";
 import type { ContainerState } from "./state/ContainerState";
 import { ContainerStencils } from "./stencil/ContainerStencils";
 import { CONTAINER_STYLE_ENTRIES } from "./style/containerStyleEntries";
@@ -37,6 +38,7 @@ export const containerDefinition: ObjectTypeDefinition<
 > = createFrameObjectDefinition<ContainerDoc, ContainerState>({
 	doc: containerDocDefinition,
 	component: Container,
+	textRegion: calcContainerTextRegion,
 	isExtraStateValid: (state) =>
 		state.headerHeight === undefined ||
 		isContainerHeaderHeight(state.headerHeight),

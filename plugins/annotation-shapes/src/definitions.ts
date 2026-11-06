@@ -25,6 +25,8 @@ import { Callout, calloutGeometryKey } from "./presentation/Callout";
 import { Note } from "./presentation/Note";
 import {
 	calcGroupMarkerConnectPoints,
+	calcGroupMarkerTextRegion,
+	calcGroupMarkerVisualBounds,
 	groupMarkerGeometryKey,
 } from "./presentation/shared";
 import type { BraceDoc } from "./schema/brace/BraceDoc";
@@ -33,6 +35,10 @@ import type { BracketWithStemDoc } from "./schema/bracketWithStem/BracketWithSte
 import type { CalloutDoc } from "./schema/callout/CalloutDoc";
 import { isCalloutTail } from "./schema/callout/CalloutDoc";
 import type { NoteDoc } from "./schema/note/NoteDoc";
+import {
+	calcCalloutTextRegion,
+	calcNoteTextRegion,
+} from "./schema/textRegions";
 import type { BraceState } from "./state/brace/BraceState";
 import type { BracketState } from "./state/bracket/BracketState";
 import type { BracketWithStemState } from "./state/bracketWithStem/BracketWithStemState";
@@ -53,9 +59,9 @@ import {
 } from "./style/groupMarkerStyleEntries";
 
 /**
- * The label hangs off the tip, outside the geometry box, where the doc
- * definition's `labelRegion` places it; the core widens the visual bounds by it,
- * which keeps zoom-to-fit and the export viewBox from cropping it. `outline`
+ * The label hangs off the tip, outside the geometry box, so these `"label"`
+ * types place it themselves: `textRegion` and `visualBounds` together, the
+ * latter being what keeps zoom-to-fit and the export viewBox from cropping it. `outline`
  * stays undeclared on all three group markers: the box is the marker band itself, so the
  * default bounding-box outline is already the shape's extent. The one place a
  * connector should really land is the tip, so all three declare it as an
@@ -69,6 +75,8 @@ export const braceDefinition: ObjectTypeDefinition<BraceDoc, BraceState> =
 	createFrameObjectDefinition<BraceDoc, BraceState>({
 		doc: braceDocDefinition,
 		component: Brace,
+		textRegion: calcGroupMarkerTextRegion,
+		visualBounds: calcGroupMarkerVisualBounds,
 		extraConnectPoints: calcGroupMarkerConnectPoints,
 		geometryKey: groupMarkerGeometryKey,
 		isExtraStateValid: isValidGroupMarkerTipFields,
@@ -103,6 +111,8 @@ export const bracketDefinition: ObjectTypeDefinition<BracketDoc, BracketState> =
 	createFrameObjectDefinition<BracketDoc, BracketState>({
 		doc: bracketDocDefinition,
 		component: Bracket,
+		textRegion: calcGroupMarkerTextRegion,
+		visualBounds: calcGroupMarkerVisualBounds,
 		extraConnectPoints: calcGroupMarkerConnectPoints,
 		geometryKey: groupMarkerGeometryKey,
 		isExtraStateValid: isValidGroupMarkerDirection,
@@ -129,6 +139,8 @@ export const bracketWithStemDefinition: ObjectTypeDefinition<
 > = createFrameObjectDefinition<BracketWithStemDoc, BracketWithStemState>({
 	doc: bracketWithStemDocDefinition,
 	component: BracketWithStem,
+	textRegion: calcGroupMarkerTextRegion,
+	visualBounds: calcGroupMarkerVisualBounds,
 	extraConnectPoints: calcGroupMarkerConnectPoints,
 	geometryKey: groupMarkerGeometryKey,
 	isExtraStateValid: isValidGroupMarkerTipFields,
@@ -152,13 +164,15 @@ export const bracketWithStemDefinition: ObjectTypeDefinition<
  * Its `geometryKey` covers the outline rather than a connect point: the tail tip
  * handle moves the silhouette while every frame field stands still, so without it
  * a connector attached to the callout keeps the endpoints it resolved before the
- * drag. Text goes inside the bubble body as it does in the note, where the doc
- * definition's `textRegion` places it.
+ * drag. Text
+ * goes inside the bubble body as it does in the note, so there is no label
+ * outside the box and no `visualBounds` to widen.
  */
 export const calloutDefinition: ObjectTypeDefinition<CalloutDoc, CalloutState> =
 	createFrameObjectDefinition<CalloutDoc, CalloutState>({
 		doc: calloutDocDefinition,
 		component: Callout,
+		textRegion: calcCalloutTextRegion,
 		geometryKey: calloutGeometryKey,
 		isExtraStateValid: (state) =>
 			state.tail === undefined || isCalloutTail(state.tail),
@@ -178,12 +192,14 @@ export const calloutDefinition: ObjectTypeDefinition<CalloutDoc, CalloutState> =
 
 /**
  * Like the callout, and unlike the group markers, the note takes its text inside
- * the box, where the doc definition's `textRegion` places it.
+ * the box, so there is no label hanging outside it and no `visualBounds` to
+ * widen.
  */
 export const noteDefinition: ObjectTypeDefinition<NoteDoc, NoteState> =
 	createFrameObjectDefinition<NoteDoc, NoteState>({
 		doc: noteDocDefinition,
 		component: Note,
+		textRegion: calcNoteTextRegion,
 		stencils: createTypeStencils({
 			objectType: "note",
 			label: { en: "Note", ja: "ノート" },
