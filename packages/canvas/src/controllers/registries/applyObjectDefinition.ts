@@ -11,6 +11,7 @@ import {
 	calcLabelTextVisualBounds,
 } from "@jiscribe/doc/text/label/calcLabelTextRegion";
 import type { Dimensions } from "@jiscribe/geometry";
+import { isTransformedFrame } from "@jiscribe/geometry";
 
 import type { CanvasRegistries } from "./CanvasRegistries";
 import { defineObject } from "../../plugin/ObjectTypeDefinition";
@@ -518,9 +519,8 @@ const checkLabelTextDefinition = (
  * place unsaid or says it twice: the core builds the `"textSlot"` part kind from
  * the doc `textRegion`, so one missing has nothing to build from, and a declared
  * kind placing the slots (`region` / `regions`) next to it would leave two
- * answers for where the body is. The text is not placed on the whole box as a
- * fallback: the headless checks would then measure against a region the canvas
- * does not draw in.
+ * answers for where the body is. A declared kind placing nothing gets the doc's
+ * region instead ({@link fillBodyTextRegion}).
  *
  * @param type - The type being registered; named in the error
  * @param definition - Its whole definition
@@ -549,6 +549,35 @@ const checkBodyTextDefinition = (
 			`ObjectTypeDefinition "${type}": declares a textRegion and a "${TEXT_SLOT_PART_KIND}" part kind placing the slots; place the body through textRegion alone`,
 		);
 	}
+};
+
+/**
+ * A `"textSlot"` kind a `"body"` / `"source"` type declares for what else it adds
+ * (its own `has`, `delete` …), with the body placed where the doc's `textRegion`
+ * says: such a kind places nothing itself (checkBodyTextDefinition refuses one
+ * that does), and left so it would put the body on the whole box. Any other kind,
+ * and any kind of another type, is returned as it is.
+ */
+const fillBodyTextRegion = (
+	definition: AnyObjectTypeDefinition,
+	part: ObjectPartKindDefinition,
+): ObjectPartKindDefinition => {
+	const { text } = definition.features;
+	const { textRegion } = definition;
+	if (
+		part.kind !== TEXT_SLOT_PART_KIND ||
+		(text !== "body" && text !== "source") ||
+		textRegion === undefined ||
+		part.region !== undefined ||
+		part.regions !== undefined
+	) {
+		return part;
+	}
+	return {
+		...part,
+		region: (object, slotId) =>
+			isTransformedFrame(object) ? textRegion(object, slotId) : null,
+	};
 };
 
 /** What the caption placement reads off a `"label"` type's state: its box and its body slot. */
@@ -733,12 +762,15 @@ export const applyObjectDefinition = (
 	// is nothing per type to say, and the slots are placed where the doc's
 	// `textRegion` says (the whole box for a `"slots"` type declaring none).
 	// Declaring `"textSlot"` itself replaces that default rather than colliding
-	// with it (the rule `menu` and `propertyPanel` already follow); a `"label"`
+	// with it (the rule `menu` and `propertyPanel` already follow), a one-body
+	// type's still placed by the doc's `textRegion`; a `"label"`
 	// type, which may not declare one, gets the caption's placement instead.
 	// Whichever is registered is placed here, so every reader of a slot's box
 	// gets the fallback and the vertical basis from one spot.
 	const declaredPartKinds = (definition.partKinds ?? []).map((part) =>
-		part.kind === TEXT_SLOT_PART_KIND ? placeTextSlotRegions(type, part) : part,
+		part.kind === TEXT_SLOT_PART_KIND
+			? placeTextSlotRegions(type, fillBodyTextRegion(definition, part))
+			: part,
 	);
 	const partKinds =
 		definition.features.text !== undefined &&

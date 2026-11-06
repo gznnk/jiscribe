@@ -298,8 +298,9 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   `partKinds` through untouched. The declaration is required of such a type:
   `resolveDocDefinitions` and `applyObjectDefinition` refuse one without it
   (`calcFullBoxTextRegion` for the whole box), and `applyObjectDefinition`
-  refuses one that also declares a `"textSlot"` kind placing the slots. A
-  `"slots"` type may still leave it out.
+  refuses one that also declares a `"textSlot"` kind placing the slots; a
+  `"textSlot"` kind it declares for anything else has its body placed in the
+  doc's `textRegion`. A `"slots"` type may still leave it out.
 - **Breaking: `ObjectDocTextRegionCalculator` answers a rectangle, never
   `null`.** A shape whose label is not laid out inside its box is a `"label"`
   type instead. `supportsAutoHeight` reads `features` and `autoHeight` alone

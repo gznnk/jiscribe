@@ -170,6 +170,27 @@ describe("applyObjectDefinition: the text slot kind's place", () => {
 		},
 	);
 
+	it("places a body type's declared kind that places nothing in the region its doc declares", () => {
+		const registries = createTestRegistries();
+		applyObjectDefinition(registries, "card", {
+			...buildFakeDefinition("card", "body"),
+			textRegion: halfBox,
+			partKinds: [
+				{ ...createTextSlotPartKindDefinition(), delete: () => null },
+			],
+		});
+		const card = {
+			...cardObject(),
+			text: { body: { text: "x" } },
+		} as unknown as ObjectState;
+
+		const textSlotKind = readTextSlotKind(registries, "card");
+		expect(textSlotKind?.delete).toBeDefined();
+		expect(textSlotKind?.region?.(card, "body")).toEqual(
+			halfBox({ width: 200, height: 100 }),
+		);
+	});
+
 	it("refuses a body type placing its body both through textRegion and a declared kind", () => {
 		expect(() =>
 			applyObjectDefinition(createTestRegistries(), "card", {

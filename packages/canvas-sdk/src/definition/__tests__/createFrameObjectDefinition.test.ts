@@ -141,6 +141,8 @@ describe("createFrameObjectDefinition", () => {
 			partKinds,
 		});
 
+		// Untouched here: registration is what places this text slot kind's body in
+		// the doc's textRegion (applyObjectDefinition).
 		expect(definition.partKinds).toBe(partKinds);
 	});
 

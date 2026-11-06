@@ -814,19 +814,17 @@ const readFinding = (
  * the document rather than a matter of taste.
  *
  * Objects the text checks pass over: types whose text the box does not hold (a
- * label drawn outside the outline — whose line heads are still looked at — a
- * `record`'s text-sized bands, a shape with no text), objects with no text, a
+ * `features.text: "label"` caption sized from its own text — whose line heads
+ * are still looked at — a `record`'s text-sized bands, a shape with no text), objects with no text, a
  * shape storing no width to wrap at (an `ellipse`), and types outside the
  * shipped set. Text nothing wraps (a `text` in its label layout and a
  * `features.text: "label"` caption, whose boxes are measured from the text
  * itself) cannot overflow, and only its line heads are looked at. The overflow check additionally passes over an object with no stored `height`,
  * which is sized from its text on every read — but where its lines fall is still
- * looked at, the width being the author's. A shipped type that holds text but
- * declares no region is reported as a warning rather than passed over silently —
- * nothing measures it, and that is a gap in the shape set rather than a fact
- * about the document. A `geometry: "point"` object whose type declares no size is
- * reported for the same reason ({@link diagnoseObjectBounds}): nothing can
- * measure a box the type never stated. A type whose body is source its own
+ * looked at, the width being the author's. A `geometry: "point"` object whose
+ * type declares no size is reported as a warning ({@link diagnoseObjectBounds}):
+ * nothing can measure a box the type never stated, and that is a gap in the
+ * shape set rather than a fact about the document. A type whose body is source its own
  * renderer lays out (`features.text: "source"`, Markdown) is not measured here
  * either: a body the caller measured on a drawn canvas
  * (`options.measuredSourceText`) is judged from that measurement, and the rest
@@ -835,7 +833,7 @@ const readFinding = (
  *
  * @param doc - A parsed document, as `validateDoc` returns; group children are checked along with the objects at the root
  * @param options - Omitted, every `"source"` body is left unchecked; see {@link DiagnoseDocOptions}
- * @returns One error per overflowing object (a measured `"source"` body included) and per message a type's declared overflow check returns, in document order, plus a warning per text whose lines start where typesetting forbids, per frame-placed body reaching outside its type's declared region, per connector whose label does not fit between its shapes, per connector end naming a connect point its owner does not offer, per object of a text-bearing type that declares no region, per point-geometry object whose type declares no size, and per svg referring to an id an earlier svg defines — all of these on their object, in document order — then per `"source"` type with text left unmeasured and per font stack measured by estimate (none of these with an `objectId`; the objects are listed in the message); empty when everything fits
+ * @returns One error per overflowing object (a measured `"source"` body included) and per message a type's declared overflow check returns, in document order, plus a warning per text whose lines start where typesetting forbids, per frame-placed body reaching outside its type's declared region, per connector whose label does not fit between its shapes, per connector end naming a connect point its owner does not offer, per point-geometry object whose type declares no size, and per svg referring to an id an earlier svg defines — all of these on their object, in document order — then per `"source"` type with text left unmeasured and per font stack measured by estimate (none of these with an `objectId`; the objects are listed in the message); empty when everything fits
  */
 export const diagnoseDoc = (
 	doc: CanvasDoc,

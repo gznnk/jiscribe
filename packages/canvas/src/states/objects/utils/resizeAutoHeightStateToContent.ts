@@ -24,9 +24,7 @@ import { readRichTextSlot } from "../types/TextSlots";
  *
  * Measured against the very region the shape draws its text in and the style
  * that region draws it with, which is what keeps the derived height the height
- * the browser then wraps the text into. A shape carrying the flag on a type that
- * declares no region is measured against its whole box, exactly as the overlay
- * draws it (`calcTextRegion`).
+ * the browser then wraps the text into.
  *
  * The shape's `textVerticalBasis` goes into the measurement as well, so
  * switching a body onto the whole height grows the box that holds it rather than
