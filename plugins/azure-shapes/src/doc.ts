@@ -15,15 +15,15 @@ import { azureIconCatalog } from "./schema/icon/azureIconCatalog";
 export const azureIconDocDefinition: ObjectDocDefinition = createFrameObjectDoc(
 	{
 		features: AzureIconFeatures,
-		defaults: AZURE_ICON_DOC_DEFAULTS,
+		validateExtra: azureIconCatalog.validateIconName,
 		extraKeys: AzureIconExtraKeys,
-		description:
-			'One icon from Microsoft\'s official Azure Architecture Icons, or Microsoft Entra ID from the Microsoft Entra architecture icons, drawn as a node: it holds text and can be a connector endpoint, so arrows attach to it directly. `icon` names the picture as a flat kebab-case name with no category prefix — "virtual-machine", "azure-cosmos-db", "app-services", "key-vaults". Common short names resolve too ("vm", "aks", "vnet", "kv", "apim", "cosmos"; "entra" and "aad" reach "entra-id"), as does a name with the "azure-"/"microsoft-" prefix dropped where that is unambiguous ("cosmos-db", "service-bus"); a name that resolves to nothing is a validation error carrying suggestions. `text` is drawn as a label below the box, auto-sized to itself: write the product\'s official name there ("Azure Cosmos DB", "Azure Kubernetes Service"), which Microsoft\'s terms ask to be placed near the icon. There is no stroke or fill: the icons may not be recoloured or altered. Keep the box square (the 64x64 default) — the drawing is scaled uniformly and centred, so a non-square box only adds margin. Group them with a container frame to show which subscription, resource group or virtual network they live in.',
-		summary: "Azure service icon (a labelled, connectable node)",
 		// Placed at its default size and adjusted afterwards. Dragging a box out
 		// would only centre the drawing on the shorter side.
 		supportsBounds: false,
-		validateExtra: azureIconCatalog.validateIconName,
+		defaults: AZURE_ICON_DOC_DEFAULTS,
+		description:
+			'One icon from Microsoft\'s official Azure Architecture Icons, or Microsoft Entra ID from the Microsoft Entra architecture icons, drawn as a node: it holds text and can be a connector endpoint, so arrows attach to it directly. `icon` names the picture as a flat kebab-case name with no category prefix — "virtual-machine", "azure-cosmos-db", "app-services", "key-vaults". Common short names resolve too ("vm", "aks", "vnet", "kv", "apim", "cosmos"; "entra" and "aad" reach "entra-id"), as does a name with the "azure-"/"microsoft-" prefix dropped where that is unambiguous ("cosmos-db", "service-bus"); a name that resolves to nothing is a validation error carrying suggestions. `text` is drawn as a label below the box, auto-sized to itself: write the product\'s official name there ("Azure Cosmos DB", "Azure Kubernetes Service"), which Microsoft\'s terms ask to be placed near the icon. There is no stroke or fill: the icons may not be recoloured or altered. Keep the box square (the 64x64 default) — the drawing is scaled uniformly and centred, so a non-square box only adds margin. Group them with a container frame to show which subscription, resource group or virtual network they live in.',
+		summary: "Azure service icon (a labelled, connectable node)",
 	},
 );
 

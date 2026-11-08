@@ -72,17 +72,17 @@ const calcTableDocBounds: ObjectDocBoundsCalculator = (doc) => {
 export const tableDocDefinition: ObjectDocDefinition = {
 	features: TableFeatures,
 	validateDoc: createFrameDocValidator(TableFeatures, validateTableFields),
+	extraKeys: TABLE_EXTRA_KEYS,
 	factory: createPointObjectFactory<Omit<TableDoc, "id">>(
 		TABLE_DOC_DEFAULTS,
 		measureTableSize,
 	),
+	defaults: TABLE_DOC_DEFAULTS,
 	bounds: calcTableDocBounds,
-	extraKeys: TABLE_EXTRA_KEYS,
+	textSlotStyleDefaults: { everyTextSlot: TABLE_CELL_STYLE_DEFAULTS },
 	description:
 		'A grid of cells. `x` / `y` are the top-left of the grid; its width is the column widths summed and its height the resolved row heights summed, so neither is stored. A row\'s `height` is a lower bound: the row is drawn as tall as its tallest cell\'s text needs, never clipping it. `cells` is dense — exactly one row per entry of "rows" and one cell per entry of "columns" — and a cell carrying nothing but text may be written as that text alone. The table has a shape-wide `fill` (its background, theme-following by default), and each cell may carry its own `fill` painted over it. Typography stays per cell, so there are no shape-wide text fields.',
 	summary: "grid of cells (table)",
-	defaults: TABLE_DOC_DEFAULTS,
-	textSlotStyleDefaults: { everyTextSlot: TABLE_CELL_STYLE_DEFAULTS },
 };
 
 /**

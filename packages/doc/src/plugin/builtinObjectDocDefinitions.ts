@@ -89,35 +89,35 @@ export const builtinObjectDocDefinitions = {
 		features: RectFeatures,
 		validateDoc: validateRectDoc,
 		factory: RectObjectFactory,
+		defaults: RECT_DOC_DEFAULTS,
 		textRegion: calcFullBoxTextRegion,
 		description: "Rectangle shape.",
 		summary: "general-purpose node / label box",
-		defaults: RECT_DOC_DEFAULTS,
 	},
 	ellipse: {
 		features: EllipseFeatures,
 		validateDoc: validateEllipseDoc,
 		factory: EllipseObjectFactory,
+		defaults: ELLIPSE_DOC_DEFAULTS,
 		textRegion: calcEllipseTextRegion,
 		description: "Ellipse (oval) shape.",
 		summary: "ellipse / oval node (center-based geometry)",
-		defaults: ELLIPSE_DOC_DEFAULTS,
 	},
 	text: {
 		features: TextFeatures,
 		validateDoc: validateTextDoc,
+		extraKeys: TEXT_EXTRA_KEYS,
 		factory: TextObjectFactory,
+		defaults: TEXT_DOC_DEFAULTS,
 		bounds: calcTextDocBounds,
 		// The box comes from the text either way — measured whole in the label
 		// layout, wrapped in the stored width in the block one — so nothing can
 		// overflow it; the declaration says where the text sits in the box it
 		// comes to.
 		textRegion: calcFullBoxTextRegion,
-		extraKeys: TEXT_EXTRA_KEYS,
 		description:
 			'Standalone text with no box drawn around it. `x` / `y` are the top-left of the text; its width and height are measured from the content, so they are not stored and growing text extends to the right and down. Under `rotation` or a flip, "right and down" means the shape\'s own axes, `x` / `y` staying put. Set `textLayout: "block"` with a `width` for body copy instead: the text then wraps inside that width, and only the height stays measured.',
 		summary: "bare text label / annotation",
-		defaults: TEXT_DOC_DEFAULTS,
 	},
 	group: {
 		features: GroupFeatures,
@@ -129,22 +129,22 @@ export const builtinObjectDocDefinitions = {
 		features: PolygonFeatures,
 		validateDoc: validatePolygonDoc,
 		factory: PolygonObjectFactory,
-		summary: "closed shape from points",
 		defaults: POLYGON_DOC_DEFAULTS,
+		summary: "closed shape from points",
 	},
 	polyline: {
 		features: PolylineFeatures,
 		validateDoc: validatePolylineDoc,
 		factory: PolylineObjectFactory,
-		summary: "open line",
 		defaults: POLYLINE_DOC_DEFAULTS,
+		summary: "open line",
 	},
 	connector: {
 		features: ConnectorFeatures,
 		validateDoc: validateConnectorDoc,
 		extraKeys: CONNECTOR_EXTRA_KEYS,
-		summary: "edge / arrow between objects",
 		defaults: CONNECTOR_DOC_DEFAULTS,
+		summary: "edge / arrow between objects",
 	},
 	svg: {
 		features: SvgFeatures,

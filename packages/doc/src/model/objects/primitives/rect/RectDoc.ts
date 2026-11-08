@@ -11,8 +11,8 @@ export const RectFeatures = {
 	transform: true,
 	stroke: true,
 	fill: true,
-	text: "body",
 	radius: true,
+	text: "body",
 	connectable: true,
 } as const satisfies ObjectFeatures;
 

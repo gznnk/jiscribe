@@ -39,19 +39,19 @@ const RECT_GEOMETRY_NOTE =
 // `regions`, calcRecordTextSlotRegions).
 export const recordDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: RecordFeatures,
-	defaults: RECORD_DOC_DEFAULTS,
-	// The schema $def is a handwritten template (text is a slotted object), so
-	// only summary is consumed — it fills the generated doc tables.
-	summary: "titled box + row compartments (UML class / DTO)",
 	validateExtra: validateRecordTextFields,
-	// The bands are stacked by the record's own rule, which the shared overflow
-	// check cannot see, so the record checks its height against them itself.
-	diagnoseOverflow: diagnoseRecordOverflow,
+	defaults: RECORD_DOC_DEFAULTS,
 	// Resolved per read, so a document keeps whichever of these it wrote itself
 	// and nothing more (ObjectTextStyleDefaultsRegistry).
 	textSlotStyleDefaults: {
 		byTextSlot: RECORD_TEXT_SLOT_STYLE_DEFAULTS_BY_ID,
 	},
+	// The bands are stacked by the record's own rule, which the shared overflow
+	// check cannot see, so the record checks its height against them itself.
+	diagnoseOverflow: diagnoseRecordOverflow,
+	// The schema $def is a handwritten template (text is a slotted object), so
+	// only summary is consumed — it fills the generated doc tables.
+	summary: "titled box + row compartments (UML class / DTO)",
 });
 
 /**
@@ -61,9 +61,9 @@ export const recordDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 export const umlPackageDocDefinition: ObjectDocDefinition =
 	createFrameObjectDoc({
 		features: UmlPackageFeatures,
-		textRegion: calcUmlPackageTextRegion,
-		outline: umlPackageOutline,
 		defaults: UML_PACKAGE_DOC_DEFAULTS,
+		outline: umlPackageOutline,
+		textRegion: calcUmlPackageTextRegion,
 		description: `UML package shape (a rectangle with a tab on its top-left corner), typically used for namespaces, modules and layers in UML package diagrams. ${RECT_GEOMETRY_NOTE} The rect is the outer bounds of the whole silhouette, tab included, and the text is laid out in the body below the tab. Distinct from "package", which is an isometric box for a build artifact or deployment unit, and from "container", which actually holds the objects placed inside it — this one is a plain shape with no children.`,
 		summary: "namespace, module, layer",
 	});
@@ -71,8 +71,8 @@ export const umlPackageDocDefinition: ObjectDocDefinition =
 export const umlComponentDocDefinition: ObjectDocDefinition =
 	createFrameObjectDoc({
 		features: UmlComponentFeatures,
-		textRegion: calcFullBoxTextRegion,
 		defaults: UML_COMPONENT_DOC_DEFAULTS,
+		textRegion: calcFullBoxTextRegion,
 		description: `UML 2 component shape (a rectangle carrying the component symbol in its top-right corner), typically used for replaceable parts of a system in UML component diagrams. ${RECT_GEOMETRY_NOTE} Text is laid out over the whole box, so keep the name short enough to clear the symbol, or widen the box. Prefer "record" with a <<component>> stereotype when the part needs compartments of its own.`,
 		summary: "component, replaceable part",
 	});

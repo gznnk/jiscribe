@@ -26,15 +26,11 @@ type FrameObjectDocCommonParams = {
 	features: ObjectFeatures;
 
 	/**
-	 * Creation defaults of the shape (its `*_DOC_DEFAULTS`, minus `id`). Feeds the
-	 * derived factory and is carried into the definition as-is, so the generated
-	 * schema and the object the canvas creates read the same values. Required even
-	 * when `factory` is given, since the definition carries it either way.
+	 * Doc checks beyond the ones features implies (the closed slot set of a
+	 * `text: "slots"` type, say), run after them. Returns the diagnostics it found;
+	 * an empty array means valid.
 	 */
-	defaults: Omit<ObjectDoc, "id"> & {
-		width: number;
-		height: number;
-	} & Record<string, unknown>;
+	validateExtra?: ObjectDocValidateFn;
 
 	/**
 	 * Names of the doc fields this shape carries beyond the ones `features` implies
@@ -48,14 +44,15 @@ type FrameObjectDocCommonParams = {
 	extraKeys?: readonly string[];
 
 	/**
-	 * Where the shape lays its text out (see `ObjectDocDefinition.textRegion`):
-	 * the rectangle the headless checks and the auto-height measurement read,
-	 * `calcFullBoxTextRegion` for the whole box. Where the canvas draws the text
-	 * is the UI definition's `textRegion` (the `"textSlot"` part kind), and the
-	 * shipped shapes pass the same function to both sides. Required of a
-	 * `"body"` / `"source"` shape; a `"label"` shape declares none.
+	 * Creation defaults of the shape (its `*_DOC_DEFAULTS`, minus `id`). Feeds the
+	 * derived factory and is carried into the definition as-is, so the generated
+	 * schema and the object the canvas creates read the same values. Required even
+	 * when `factory` is given, since the definition carries it either way.
 	 */
-	textRegion?: ObjectDocTextRegionCalculator;
+	defaults: Omit<ObjectDoc, "id"> & {
+		width: number;
+		height: number;
+	} & Record<string, unknown>;
 
 	/**
 	 * The drawn silhouette, for a shape whose outline is not its box (see
@@ -81,11 +78,23 @@ type FrameObjectDocCommonParams = {
 	layoutContainer?: ObjectDocDefinition["layoutContainer"];
 
 	/**
-	 * Reports content the shape stacks or sizes by a rule of its own that the box
-	 * is too small for (see `ObjectDocDefinition.diagnoseOverflow`). Carried into
-	 * the definition as-is.
+	 * Where the shape lays its text out (see `ObjectDocDefinition.textRegion`):
+	 * the rectangle the headless checks and the auto-height measurement read,
+	 * `calcFullBoxTextRegion` for the whole box. Where the canvas draws the text
+	 * is the UI definition's `textRegion` (the `"textSlot"` part kind), and the
+	 * shipped shapes pass the same function to both sides. Required of a
+	 * `"body"` / `"source"` shape; a `"label"` shape declares none.
 	 */
-	diagnoseOverflow?: ObjectDocOverflowDiagnoser;
+	textRegion?: ObjectDocTextRegionCalculator;
+
+	/**
+	 * Draw-time text-style defaults of a `text: "slots"` shape — `byTextSlot` for the
+	 * slots it names, `everyTextSlot` for a shape whose slot set is not fixed (see
+	 * `ObjectDocDefinition.textSlotStyleDefaults`). A root-form shape (`"body"` /
+	 * `"source"` / `"label"`) omits it: its single slot's defaults are read off
+	 * {@link defaults}.
+	 */
+	textSlotStyleDefaults?: ObjectTextSlotStyleDefaults;
 
 	/**
 	 * Pass `false` for a `"body"` shape whose box must not be sized from its
@@ -102,27 +111,18 @@ type FrameObjectDocCommonParams = {
 	 */
 	autoHeightPaddingEm?: number;
 
+	/**
+	 * Reports content the shape stacks or sizes by a rule of its own that the box
+	 * is too small for (see `ObjectDocDefinition.diagnoseOverflow`). Carried into
+	 * the definition as-is.
+	 */
+	diagnoseOverflow?: ObjectDocOverflowDiagnoser;
+
 	/** AI-facing description of the shape (see `ObjectDocDefinition.description`). */
 	description?: string;
 
 	/** One-line usage summary for doc tables (see `ObjectDocDefinition.summary`). */
 	summary?: string;
-
-	/**
-	 * Doc checks beyond the ones features implies (the closed slot set of a
-	 * `text: "slots"` type, say), run after them. Returns the diagnostics it found;
-	 * an empty array means valid.
-	 */
-	validateExtra?: ObjectDocValidateFn;
-
-	/**
-	 * Draw-time text-style defaults of a `text: "slots"` shape — `byTextSlot` for the
-	 * slots it names, `everyTextSlot` for a shape whose slot set is not fixed (see
-	 * `ObjectDocDefinition.textSlotStyleDefaults`). A root-form shape (`"body"` /
-	 * `"source"` / `"label"`) omits it: its single slot's defaults are read off
-	 * {@link defaults}.
-	 */
-	textSlotStyleDefaults?: ObjectTextSlotStyleDefaults;
 };
 
 /**
@@ -194,15 +194,15 @@ export const createFrameObjectDoc = ({
 	}),
 	extraKeys,
 	factory: factory ?? createFrameObjectFactory(defaults, { supportsBounds }),
-	textRegion,
+	defaults,
 	outline,
 	anchorRegion,
 	layoutContainer,
-	diagnoseOverflow,
+	textRegion,
+	textSlotStyleDefaults,
 	autoHeight,
 	autoHeightPaddingEm,
+	diagnoseOverflow,
 	description,
 	summary,
-	defaults,
-	textSlotStyleDefaults,
 });

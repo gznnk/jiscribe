@@ -12,6 +12,8 @@ import { STICKY_DOC_DEFAULTS, StickyFeatures } from "./schema/StickyDoc";
 
 export const stickyDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: StickyFeatures,
+	// Stickies are only center-placed on click (no bounds drawing).
+	supportsBounds: false,
 	defaults: STICKY_DOC_DEFAULTS,
 	textRegion: calcFullBoxTextRegion,
 	// Top-left prose: the line's own leading plus TEXT_BOX_PADDING_Y already
@@ -19,8 +21,6 @@ export const stickyDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	autoHeightPaddingEm: 0,
 	description: "Sticky note annotation.",
 	summary: "sticky note (no stroke or `rx`)",
-	// Stickies are only center-placed on click (no bounds drawing).
-	supportsBounds: false,
 });
 
 /**

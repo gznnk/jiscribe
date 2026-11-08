@@ -74,12 +74,12 @@ import {
 export const braceDefinition: ObjectTypeDefinition<BraceDoc, BraceState> =
 	createFrameObjectDefinition<BraceDoc, BraceState>({
 		doc: braceDocDefinition,
+		isExtraStateValid: isValidGroupMarkerTipFields,
 		component: Brace,
-		textRegion: calcGroupMarkerTextRegion,
 		visualBounds: calcGroupMarkerVisualBounds,
 		extraConnectPoints: calcGroupMarkerConnectPoints,
 		geometryKey: groupMarkerGeometryKey,
-		isExtraStateValid: isValidGroupMarkerTipFields,
+		textRegion: calcGroupMarkerTextRegion,
 		selectionControls: [
 			{
 				name: "tip",
@@ -110,12 +110,12 @@ export const braceDefinition: ObjectTypeDefinition<BraceDoc, BraceState> =
 export const bracketDefinition: ObjectTypeDefinition<BracketDoc, BracketState> =
 	createFrameObjectDefinition<BracketDoc, BracketState>({
 		doc: bracketDocDefinition,
+		isExtraStateValid: isValidGroupMarkerDirection,
 		component: Bracket,
-		textRegion: calcGroupMarkerTextRegion,
 		visualBounds: calcGroupMarkerVisualBounds,
 		extraConnectPoints: calcGroupMarkerConnectPoints,
 		geometryKey: groupMarkerGeometryKey,
-		isExtraStateValid: isValidGroupMarkerDirection,
+		textRegion: calcGroupMarkerTextRegion,
 		selectionControls: [
 			{
 				name: "tip",
@@ -138,12 +138,12 @@ export const bracketWithStemDefinition: ObjectTypeDefinition<
 	BracketWithStemState
 > = createFrameObjectDefinition<BracketWithStemDoc, BracketWithStemState>({
 	doc: bracketWithStemDocDefinition,
+	isExtraStateValid: isValidGroupMarkerTipFields,
 	component: BracketWithStem,
-	textRegion: calcGroupMarkerTextRegion,
 	visualBounds: calcGroupMarkerVisualBounds,
 	extraConnectPoints: calcGroupMarkerConnectPoints,
 	geometryKey: groupMarkerGeometryKey,
-	isExtraStateValid: isValidGroupMarkerTipFields,
+	textRegion: calcGroupMarkerTextRegion,
 	selectionControls: [
 		{
 			name: "tip",
@@ -171,11 +171,11 @@ export const bracketWithStemDefinition: ObjectTypeDefinition<
 export const calloutDefinition: ObjectTypeDefinition<CalloutDoc, CalloutState> =
 	createFrameObjectDefinition<CalloutDoc, CalloutState>({
 		doc: calloutDocDefinition,
-		component: Callout,
-		textRegion: calcCalloutTextRegion,
-		geometryKey: calloutGeometryKey,
 		isExtraStateValid: (state) =>
 			state.tail === undefined || isCalloutTail(state.tail),
+		component: Callout,
+		geometryKey: calloutGeometryKey,
+		textRegion: calcCalloutTextRegion,
 		selectionControls: [
 			{
 				name: "tailTip",

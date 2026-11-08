@@ -222,11 +222,12 @@ export const erEntityDefinition: ObjectTypeDefinition<
 	stateValidator: isValidErEntityState,
 	contentResizer: (state) => reconcileErEntityBox(state as ErEntityState),
 	component: ErEntityBox,
-	textEditOverflow: resolveErEntityTextEditOverflow,
-	textEditLineBreaks: resolveErEntityTextEditLineBreaks,
 	extraConnectPoints: (state) =>
 		calcErEntityConnectPoints(state as ErEntityState),
+	connectionAnchors: calcErEntityConnectionAnchors,
 	geometryKey: (state) => erEntityGeometryKey(state as ErEntityState),
+	textEditOverflow: resolveErEntityTextEditOverflow,
+	textEditLineBreaks: resolveErEntityTextEditLineBreaks,
 	behavior: createFrameBehavior<ErEntityState>(),
 	selectionControls: ER_ENTITY_SELECTION_CONTROLS,
 	partKinds: [
@@ -248,9 +249,7 @@ export const erEntityDefinition: ObjectTypeDefinition<
 		},
 	],
 	transformHandles: ER_ENTITY_TRANSFORM_HANDLES,
-	connectionAnchors: calcErEntityConnectionAnchors,
 	stencils: ErEntityStencils,
-	propertyPanel: ER_ENTITY_PROPERTY_PANEL,
 	menu: [
 		{
 			id: "style",
@@ -280,4 +279,5 @@ export const erEntityDefinition: ObjectTypeDefinition<
 			],
 		},
 	],
+	propertyPanel: ER_ENTITY_PROPERTY_PANEL,
 };

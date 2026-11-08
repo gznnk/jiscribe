@@ -20,6 +20,6 @@ export const markdownDefinition: ObjectTypeDefinition<
 > = createFrameObjectDefinition<MarkdownDoc, MarkdownState>({
 	doc: markdownDocDefinition,
 	component: Markdown,
-	stencils: MarkdownStencils,
 	textMeasurer: measureMarkdownText,
+	stencils: MarkdownStencils,
 });

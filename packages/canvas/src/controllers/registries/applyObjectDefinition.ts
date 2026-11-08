@@ -213,6 +213,7 @@ export const BUILTIN_OBJECT_DEFINITIONS: Record<
 			state.textLayout === "block"
 				? TEXT_BLOCK_TRANSFORM_HANDLES
 				: TEXT_LABEL_TRANSFORM_HANDLES,
+		stencils: TextStencils,
 		// The layout switch is the one row text adds to what its features
 		// imply, and it lives in the sidebar alone: the merge that keeps only
 		// what every selected type offers works row by row there, so a plain
@@ -223,7 +224,6 @@ export const BUILTIN_OBJECT_DEFINITIONS: Record<
 			PROPERTY_PANEL_SECTIONS.text,
 			{ type: "textLayout" },
 		),
-		stencils: TextStencils,
 	}),
 
 	group: defineObject({
