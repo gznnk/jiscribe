@@ -84,10 +84,10 @@ const readContainerTitleHeight = (
 	object: ObjectState,
 	registries: ICanvasRegistries,
 ): number | undefined => {
-	const container = registries.objectContainer.get(object.type);
-	return container === undefined
+	const layoutContainer = registries.objectLayoutContainer.get(object.type);
+	return layoutContainer === undefined
 		? undefined
-		: container(registries.objectMapper.toDoc(object)).titleHeight;
+		: layoutContainer(registries.objectMapper.toDoc(object)).titleHeight;
 };
 
 /**
@@ -149,7 +149,7 @@ const collectSelectedCandidateIds = (
 		const selected = state.objects[selectedId];
 		if (
 			selected === undefined ||
-			registries.objectContainer.get(selected.type) === undefined
+			registries.objectLayoutContainer.get(selected.type) === undefined
 		) {
 			continue;
 		}
@@ -307,7 +307,7 @@ export const hasLayoutScope = (
 		return (
 			sole !== undefined &&
 			(isGroupState(sole) ||
-				registries.objectContainer.get(sole.type) !== undefined)
+				registries.objectLayoutContainer.get(sole.type) !== undefined)
 		);
 	}
 	return Object.values(state.objects).some((object) => {

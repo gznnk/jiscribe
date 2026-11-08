@@ -99,7 +99,7 @@ export type ObjectDocDefinition = {
 	 * `geometry` is `"rect"` is resized that way; any other is moved whole. Omitted = a
 	 * doc of this type is a box like any other.
 	 */
-	container?: (doc: ObjectDoc) => { titleHeight: number };
+	layoutContainer?: (doc: ObjectDoc) => { titleHeight: number };
 
 	/**
 	 * Where the type lays one text slot out, given a doc of it. Read by the headless

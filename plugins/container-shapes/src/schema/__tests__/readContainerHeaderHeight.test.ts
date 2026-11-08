@@ -26,14 +26,14 @@ describe("readContainerHeaderHeight", () => {
 	);
 });
 
-describe("containerDocDefinition.container", () => {
+describe("containerDocDefinition.layoutContainer", () => {
 	it("answers the document's header band as the title band a layout keeps clear", () => {
 		const base: ObjectDoc = { id: "container-1", type: "container" };
 		const banded = { ...base, headerHeight: 64 } as ObjectDoc;
-		expect(containerDocDefinition.container?.(banded)).toEqual({
+		expect(containerDocDefinition.layoutContainer?.(banded)).toEqual({
 			titleHeight: 64,
 		});
-		expect(containerDocDefinition.container?.(base)).toEqual({
+		expect(containerDocDefinition.layoutContainer?.(base)).toEqual({
 			titleHeight: CONTAINER_HEADER_HEIGHT,
 		});
 	});

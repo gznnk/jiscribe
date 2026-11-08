@@ -102,7 +102,7 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   boxes it joins (beside the line when none does). A route leaves a box straight
   for at least a stub's length before it first bends, and a gap too narrow for the
   routes crossing it is widened. A group, and a shape whose type declares the new
-  `ObjectDocDefinition.container` hook (`container`, `awsGroup`), is a container:
+  `ObjectDocDefinition.layoutContainer` hook (`container`, `awsGroup`), is a container:
   what lies inside it is laid out inside it, the container is resized around them,
   and the title band the hook answers for it (the container's own `headerHeight`)
   is kept clear below its top edge; a connector

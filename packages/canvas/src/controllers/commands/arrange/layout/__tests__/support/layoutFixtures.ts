@@ -33,7 +33,7 @@ export const regionPlugin: CanvasPlugin = {
 		region: defineObject({
 			features: regionFeatures,
 			validateDoc: () => [],
-			container: () => ({ titleHeight: REGION_TITLE_HEIGHT }),
+			layoutContainer: () => ({ titleHeight: REGION_TITLE_HEIGHT }),
 			factory: createFrameObjectFactory({
 				type: "region",
 				width: 400,
@@ -94,7 +94,7 @@ export const portedPlugin: CanvasPlugin = {
 		"oval-region": defineObject({
 			features: ovalRegionFeatures,
 			validateDoc: () => [],
-			container: () => ({ titleHeight: 0 }),
+			layoutContainer: () => ({ titleHeight: 0 }),
 			mapper: createFrameMapper<ObjectDoc, RegionState>(ovalRegionFeatures),
 			stateValidator: () => true,
 			component: () => null,
