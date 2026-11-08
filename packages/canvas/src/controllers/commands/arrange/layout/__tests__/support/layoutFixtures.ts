@@ -282,6 +282,77 @@ export const buildChainDoc = (): CanvasDoc => {
 };
 
 /**
+ * rect-1 and rect-2 side by side with rect-3 between them, connector-1 labelled and
+ * running straight through rect-3, and connector-2 joining rect-1 to rect-3 with
+ * corners of its own.
+ */
+export const buildCrossingDoc = (): CanvasDoc => {
+	const doc = emptyDoc();
+	layoutDocOps.addObject(doc, "rect", { x: 0, y: 100, width: 100, height: 60 });
+	layoutDocOps.addObject(doc, "rect", {
+		x: 500,
+		y: 100,
+		width: 100,
+		height: 60,
+	});
+	layoutDocOps.addObject(doc, "rect", {
+		x: 250,
+		y: 100,
+		width: 100,
+		height: 60,
+	});
+	layoutDocOps.connect(doc, {
+		sourceId: "rect-1",
+		targetId: "rect-2",
+		sourceAnchor: "rightCenter",
+		targetAnchor: "leftCenter",
+		label: "yes",
+	});
+	layoutDocOps.connect(doc, {
+		sourceId: "rect-1",
+		targetId: "rect-3",
+		sourceAnchor: "bottomCenter",
+		targetAnchor: "bottomCenter",
+		points: [
+			{ x: 50, y: 300 },
+			{ x: 300, y: 300 },
+		],
+	});
+	return doc;
+};
+
+/**
+ * A rect feeding three more below it, each further right: a redrawn route's corner
+ * falls on a coordinate the doc op leaves with floating-point noise and the reducer's
+ * vertex pass rounds.
+ */
+export const buildUnroundedCornerDoc = (): CanvasDoc => {
+	const doc = emptyDoc();
+	layoutDocOps.addObject(doc, "rect", {
+		x: 0,
+		y: 0,
+		width: 100.3,
+		height: 60.7,
+	});
+	for (const [left, top] of [
+		[3.3, 300.7],
+		[173.3, 317.7],
+		[343.3, 334.7],
+	]) {
+		layoutDocOps.addObject(doc, "rect", {
+			x: left,
+			y: top,
+			width: 91.3,
+			height: 57.9,
+		});
+	}
+	for (const targetId of ["rect-2", "rect-3", "rect-4"]) {
+		layoutDocOps.connect(doc, { sourceId: "rect-1", targetId });
+	}
+	return doc;
+};
+
+/**
  * A rect fanning out to two ellipses and a rect, one ellipse of odd size (its
  * drawn ends land on half pixels, which the reducer's vertex pass then writes into
  * the corners), plus a 3-corner polygon with no line (a polygon is not

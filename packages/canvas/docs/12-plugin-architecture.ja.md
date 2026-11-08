@@ -283,7 +283,7 @@ mixed になれる（[スタイルシステム](./10-style-properties.ja.md) 参
   含む — サイドバーに残るのは、扱う種別がすべてその中にある組み込みの行だけ。カスタム行は
   何を書くかを申告できないので落ちる。部分選択に向けたカスタム行は、残る部分の
   種別を `pickedPartKinds` に並べる（表の挿入行なら `row` / `column` / `textSlot`）。
-  ボタンでコマンドを走らせるなら、組み込みの「重ね順」セクションと同じく
+  ボタンでコマンドを走らせるなら、組み込みの「整列」セクションと同じく
   `PropertyCommandGrid` / `PropertyCommandButton`・`resolveCommandLabel`・
   `commandAction` で組む。ObjectMenu も項目を同じ規則で絞る
 

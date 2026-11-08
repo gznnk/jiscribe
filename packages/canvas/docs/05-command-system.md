@@ -47,7 +47,7 @@ Because `execute` is a pure function, each Command can be tested in isolation (s
 ## Categories and included commands
 
 Commands are split into directories by purpose (under `controllers/commands/`; e.g. `selection/`, `arrange/`, `view/`).
-The built-in commands are `ALL_COMMANDS` (`controllers/registries/initializeCommands.ts`), which is the source of truth for them.
+The built-in commands are `ALL_COMMANDS` (`controllers/registries/initializeCommands.ts`), which is the source of truth for all of them but one, plus `routeConnectors`, which `initializeCommands` builds per canvas because it needs that canvas's document definitions.
 A canvas registers those first and then each plugin's own (`CanvasPlugin.commands`), in plugin declaration order, so the registered set is the two together.
 `createCanvasRegistries` registers all of them by default, or only a subset when the configuration restricts the enabled commands — one list narrows both.
 

@@ -47,7 +47,7 @@ Command パターンで一元管理するしくみ。
 ## カテゴリと収録コマンド
 
 コマンドは目的別にディレクトリ分割されている（`controllers/commands/` 配下。例: `selection/`・`arrange/`・`view/`）。
-組み込みコマンドの一覧は `ALL_COMMANDS`（`controllers/registries/initializeCommands.ts`）が正本。
+組み込みコマンドは、`ALL_COMMANDS`（`controllers/registries/initializeCommands.ts`）を正本とする一覧と、そのキャンバスの文書定義が要るので `initializeCommands` がキャンバスごとに作る `routeConnectors` からなる。
 キャンバスはまずそれを、続いて各プラグイン自前のもの（`CanvasPlugin.commands`）を宣言順に登録するので、登録される集合は両者の和になる。
 `createCanvasRegistries` は既定でそのすべてを登録し、設定で有効なコマンドを絞った場合はその部分集合だけを登録する。
 
