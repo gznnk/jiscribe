@@ -24,40 +24,25 @@ import type { ObjectStateValidator } from "../states/registry/ObjectStateValidat
 
 /**
  * The full description of a single object type: the headless
- * {@link ObjectDocDefinition} (features / validateDoc / factory) intersected with
- * the UI-layer contracts (render / interaction / style / editor UI). Fields are
- * grouped in that order below; required first within each group. Because it
- * extends {@link ObjectDocDefinition}, a UI definition is structurally a doc
- * definition, and `CanvasPlugin.objects` flows into `createCanvasParser` unchanged.
+ * {@link ObjectDocDefinition} intersected with the UI-layer contracts below, required
+ * fields first within each group. A UI definition is structurally a doc definition,
+ * so `CanvasPlugin.objects` flows into `createCanvasParser` unchanged.
  *
- * The inherited `textRegion` is the doc's, for the headless checks and the
- * auto-height measurement; it is not where the canvas draws the text. That is
- * the `"textSlot"` part kind's `region` / `regions`
- * (createTextSlotPartKindDefinition in `partKinds`, or
- * `createFrameObjectDefinition({ textRegion })`), the whole box when none is
- * declared. Most shipped shapes declare the very same function on both sides;
- * the ones that cannot are those whose region is sized from the text itself (a
- * record's bands). A `features.text: "label"` type declares no doc
- * `textRegion`: the core hangs its caption under the box, unless the type
- * places it itself (a group marker's caption beyond its tip, an AWS group's
- * title band) by declaring a `"textSlot"` kind and `visualBounds` together.
+ * The inherited `textRegion` serves the headless checks and auto height; where the
+ * canvas draws the text is the `"textSlot"` part kind's (see `partKinds`). The
+ * canvas also calls the inherited `outline` / `anchorRegion`, passing the state:
+ * they read only fields a doc and a state share.
  *
- * The inherited `outline` / `anchorRegion` are the doc's too, and the canvas
- * draws connector ends and connection anchors from them as they are: they read
- * only fields a doc and a state share, so the canvas calls them with the state.
- *
- * `TDoc` / `TState` tie `mapper` / `behavior` / `selectionControls` to one state
- * type. A plugin declares a standalone definition with an explicit
- * annotation — `ObjectTypeDefinition<ContainerDoc, ContainerState>` — and needs no
- * `defineObject` call. The built-in record uses `defineObject` instead, because a
- * record literal can only be annotated with the widened entry type, which would
- * erase per-entry inference.
+ * `TDoc` / `TState` tie the fields declared with them (`mapper`, `behavior`,
+ * `component`, …) to one type. A plugin annotates its standalone definition —
+ * `ObjectTypeDefinition<ContainerDoc, ContainerState>`; the built-ins go through
+ * {@link defineObject}.
  */
 export type ObjectTypeDefinition<
 	TDoc extends ObjectDoc = ObjectDoc,
 	TState extends ObjectState = ObjectState,
 > = ObjectDocDefinition & {
-	// --- Model (state) ---
+	// --- State ---
 
 	/** Doc ↔ State conversion. */
 	mapper: ObjectMapperType<TDoc, TState>;
@@ -68,15 +53,15 @@ export type ObjectTypeDefinition<
 	/**
 	 * Re-derives the box from the content, for a type whose doc stores no size
 	 * (`geometry: "point"`). Runs wherever content and box can drift apart: load,
-	 * undo/redo, external sync, every committed and uncommitted edit. Omitted =
-	 * no derivation, so the doc's own width/height stand as-is — which is what
-	 * every stored-box geometry wants (see ObjectContentResizerRegistry). While a
+	 * undo/redo, external sync, every committed and uncommitted edit. While a
 	 * transform handle is resizing the object, `context.resizedAxes` names the
-	 * axes the drag writes and the edge each holds.
+	 * axes the drag writes and the edge each holds. Omitted = the box stands as the
+	 * doc states it, except on a type whose documents may leave `height` out, which
+	 * gets the shared auto-height derivation (see ObjectContentResizerRegistry).
 	 */
 	contentResizer?: ObjectContentResizer<TState>;
 
-	// --- Rendering layer ---
+	// --- Drawing ---
 
 	/** SVG renderer for the shape. Editable types read `isEditing` by self-declaring `FC<TState & TextEditable>`. */
 	component: FC<TState>;
@@ -92,9 +77,67 @@ export type ObjectTypeDefinition<
 	svgDefs?: FC;
 
 	/**
+	 * Everything the type draws, including what falls outside its geometry box.
+	 * Read by the visual-extent consumers only (zoom-to-fit, export viewBox,
+	 * culling, menu placement) — selection and snapping keep using the geometry
+	 * box. A `features.text: "label"` type placing its caption itself declares this
+	 * together with a `"textSlot"` part kind, and declaring only one is refused at
+	 * registration. Omitted = the geometry box, widened by the caption hung under it
+	 * on a `"label"` type (see ObjectVisualBoundsRegistry).
+	 */
+	visualBounds?: ObjectVisualBoundsCalculator;
+
+	// --- Connections ---
+
+	/**
+	 * Named connection points this type offers on top of the four edge midpoints
+	 * every connectable shape has — the brace's `tip`, say. Each carries its own
+	 * local position and outward direction, so a connector attaches there and
+	 * leaves along it. Their ids are what a saved doc stores in
+	 * `{ kind: "connectPoint", id }`, so they must stay stable (paired with the doc
+	 * side's `extraConnectPointIds`, see there). Omitted = edge midpoints only (see
+	 * ObjectExtraConnectPointsRegistry).
+	 */
+	extraConnectPoints?: ObjectExtraConnectPointsCalculator;
+
+	/**
+	 * How each fixed connection anchor is shown (ConnectionAnchorSpec): how far its
+	 * source dot sits from the edge, for a type whose own controls occupy the band
+	 * the dot would land in, and whether it is offered at all. Keyed by the edge
+	 * anchor ids and the ids `extraConnectPoints` declares. Neither changes where a
+	 * connector a doc already attaches lands. One object for the whole type, or a
+	 * function asked per object and zoom. Omitted = every anchor offered at the
+	 * theme's distance (see ObjectConnectionAnchorsRegistry).
+	 */
+	connectionAnchors?: ObjectConnectionAnchorsDeclaration<TState>;
+
+	/**
+	 * Key over whatever `outline` / `anchorRegion` / `extraConnectPoints` read
+	 * beyond the frame fields (cx / cy / width / height / rotation / scaleX /
+	 * scaleY), for the consumers that memoize connector endpoint resolution on
+	 * those fields. Required for a type whose silhouette can change while the
+	 * frame stands still (the callout's tail); without it, connectors attached to
+	 * the shape keep the endpoints resolved against the previous silhouette.
+	 * Omitted = the frame fields fully determine the resolved geometry (see
+	 * ObjectGeometryKeyRegistry).
+	 */
+	geometryKey?: ObjectGeometryKeyCalculator;
+
+	// --- Text ---
+
+	/**
+	 * How `measure.textSlot` measures a slot of a type that draws its body
+	 * itself rather than through the shared text layout (`features.text:
+	 * "source"`). Omitted = the slot is measured as plain text with
+	 * `layoutVisualLines` (see ObjectTextMeasurerRegistry).
+	 */
+	textMeasurer?: ObjectTextMeasurer<TState>;
+
+	/**
 	 * Whether the in-place editor scrolls inside a slot's region or grows past it,
 	 * to the shape's bottom edge at most. Only a slot whose region is derived
-	 * from the text itself may grow. Omitted = `"scroll"` for every slot (see ObjectTextEditOverflowRegistry).
+	 * from the text itself may grow. Omitted = `"scroll"` for every slot (see
+	 * ObjectTextEditOverflowRegistry).
 	 */
 	textEditOverflow?: ObjectTextEditOverflowResolver;
 
@@ -106,64 +149,9 @@ export type ObjectTypeDefinition<
 	 */
 	textEditLineBreaks?: ObjectTextEditLineBreaksResolver;
 
-	/**
-	 * How `measure.textSlot` measures a slot of a type that draws its body
-	 * itself rather than through the shared text layout (`features.text:
-	 * "source"`). Omitted = the slot is measured as plain text with
-	 * `layoutVisualLines` (see ObjectTextMeasurerRegistry).
-	 */
-	textMeasurer?: ObjectTextMeasurer<TState>;
+	// --- Interaction ---
 
-	/**
-	 * Named connection points this type offers on top of the four edge midpoints
-	 * every connectable shape has — the brace's `tip`, say. Each carries its own
-	 * local position and outward direction, so a connector attaches there and
-	 * leaves along it. Their ids are what a saved doc stores in
-	 * `{ kind: "connectPoint", id }`, so they must stay stable. Omitted = edge
-	 * midpoints only (see ObjectExtraConnectPointsRegistry).
-	 */
-	extraConnectPoints?: ObjectExtraConnectPointsCalculator;
-
-	/**
-	 * How each fixed connection anchor is shown, keyed by the edge anchor ids
-	 * (`topCenter` / `rightCenter` / `bottomCenter` / `leftCenter`) and the ids
-	 * `extraConnectPoints` declares — local-space ids, so an entry stays on its
-	 * edge through rotation and flips. `offset` moves the source dot off its
-	 * edge, for a type whose own controls occupy the band the dot would land in
-	 * (screen px, divided by zoom like the theme's
-	 * `handleDimensions.connectionAnchorOffset`, which an omitted offset keeps).
-	 * `hidden` stops offering the anchor: no source dot, no landing dot during a
-	 * connection drag, no snap on drop. Neither changes where a connector a doc
-	 * already attaches lands, so `connectPoint` / `edge` / `center` endpoints
-	 * keep parsing and drawing as before. One object for the whole type, or a
-	 * function asked per object and zoom. Omitted = every anchor offered at the
-	 * theme's distance (see ObjectConnectionAnchorsRegistry).
-	 */
-	connectionAnchors?: ObjectConnectionAnchorsDeclaration<TState>;
-
-	/**
-	 * Key over whatever `outline` / `anchorRegion` / `extraConnectPoints` read beyond the frame fields
-	 * (cx / cy / width / height / rotation / scaleX / scaleY), for the consumers
-	 * that memoize connector endpoint resolution on those fields. Required for a
-	 * type whose silhouette can change while the frame stands still (the callout's
-	 * tail, in `@jiscribe/plugin-annotation-shapes`) — without it, connectors
-	 * attached to the shape keep the
-	 * endpoints resolved against the previous silhouette. Omitted = the frame
-	 * fields fully determine the resolved geometry (see ObjectGeometryKeyRegistry).
-	 */
-	geometryKey?: ObjectGeometryKeyCalculator;
-
-	/**
-	 * Everything the type draws, including what falls outside its geometry box.
-	 * Read by the visual-extent consumers only (zoom-to-fit, export viewBox,
-	 * culling, menu placement) — selection and snapping keep using the geometry
-	 * box. Omitted = geometry box (see ObjectVisualBoundsRegistry).
-	 */
-	visualBounds?: ObjectVisualBoundsCalculator;
-
-	// --- Interaction (controllers) ---
-
-	/** Group-transform ops (move / rotate / transform). */
+	/** Move and group-transform functions (`moveByDelta` / `rotateByGroup` / `transformByGroup`). */
 	behavior: ObjectBehaviorEntry<TState>;
 
 	/** Type-specific selection controls (handle renderer + gesture strategy pairs). */
@@ -174,21 +162,22 @@ export type ObjectTypeDefinition<
 	 * one entry per part-id namespace (see ObjectPartKindRegistry). Omitted = the
 	 * object is indivisible, and every part-aware seam is inert for it.
 	 *
-	 * A type with `features.text` gets the `"textSlot"` kind without declaring it,
-	 * its slots taking the whole box. Declaring it here
-	 * (createTextSlotPartKindDefinition) replaces that one, and its `region` /
-	 * `regions` are where the slots are drawn, edited and outlined.
+	 * A type with `features.text` gets the `"textSlot"` kind without declaring it:
+	 * its slots take the whole box, or on a `"label"` type its caption hangs under
+	 * the box. Declaring it here (createTextSlotPartKindDefinition, or
+	 * `createFrameObjectDefinition({ textRegion })`) replaces that one, and its
+	 * `region` / `regions` are where the slots are drawn, edited and outlined. A
+	 * `"label"` type's kind must state one of the two (and see `visualBounds`).
 	 */
 	partKinds?: ObjectPartKindDefinition<TState>[];
 
 	/**
 	 * Which handles the transform frame offers on a single selection. Omitted =
-	 * every handle (eight resize handles + rotation knob), so leaving it out
-	 * keeps the historical behavior. A function is asked per object, for a type
-	 * whose objects do not all take the same handles, and must return one of a
-	 * fixed set of values (see ObjectTransformHandlesRegistry). Affects the
-	 * handles only — the selection outline, snapping and the bounding box are
-	 * unchanged.
+	 * every handle (eight resize handles + rotation knob). A function is asked per
+	 * object, for a type whose objects do not all take the same handles, and must
+	 * return one of a fixed set of values (see ObjectTransformHandlesRegistry).
+	 * Affects the handles only — the selection outline, snapping and the bounding
+	 * box are unchanged.
 	 */
 	transformHandles?: ObjectTransformHandlesDeclaration<TState>;
 
@@ -213,13 +202,14 @@ export type ObjectTypeDefinition<
 	 */
 	styleEntries?: DeclaredStyleTable<TState>;
 
-	// --- Editor UI (StencilLibrary / ObjectMenu) ---
+	// --- Editor UI ---
 
 	/**
 	 * Stencils this type contributes to the palette (multiple allowed per type).
 	 * Registration only makes them exist; where they show and in what order is
 	 * decided by `toolbar.sections` (a pinned item, or a category's `presetIds`)
-	 * and `stencilLibrary.sections` (a sidebar section's `presetIds`).
+	 * and `stencilLibrary.sections` (a sidebar section's `presetIds`). Needs a
+	 * `factory`: declaring stencils without one is refused at registration.
 	 */
 	stencils?: Stencil[];
 
@@ -251,9 +241,13 @@ export type ObjectTypeDefinition<
 export type AnyObjectTypeDefinition = ObjectTypeDefinition<any, any>;
 
 /**
- * Builds a single built-in `ObjectTypeDefinition`, preserving per-type `TState`
- * inference at the definition site (mapper / behavior are checked together) before widening to the base-typed record entry. Plugins declare
- * standalone definitions with an explicit annotation instead (see above).
+ * Builds a single built-in `ObjectTypeDefinition`, checking `mapper` / `behavior`
+ * against one inferred `TState` before widening to the base-typed record entry;
+ * annotating the record literal with the base type would erase that inference.
+ * Plugins annotate a standalone definition instead.
+ *
+ * @param def - The definition; handed back as it is at runtime, the widening being type-level only
+ * @returns The same object, typed with the base `ObjectDoc` / `ObjectState`
  */
 export const defineObject = <
 	TDoc extends ObjectDoc,
