@@ -2,13 +2,11 @@ import type { Point, Rect } from "@jiscribe/geometry";
 
 import { toRowKey } from "./RowIndex";
 import { growByVisualMargin, readVisualMargin } from "./visualMargin";
-import { isSameCoordinate } from "../shared/isSameCoordinate";
+import { isSameCoordinate } from "../shared/coordinate";
+import { GAP_LANE_SPACING } from "../shared/edgeSpacing";
 import { type LayoutAxis, createLayoutAxis } from "../shared/LayoutAxis";
 import type { LayoutDirection } from "../shared/LayoutDirection";
 import type { LayoutVisualMargin } from "../shared/types";
-
-/** Preferred distance in px between two routes running side by side: through one gap, or spread apart by nudgeRoutes. */
-export const GAP_LANE_SPACING = 16;
 
 /** Room kept between a label on one lane and the route on the next, in px. */
 const LABEL_LANE_MARGIN = 4;
@@ -19,10 +17,10 @@ const LABEL_LANE_MARGIN = 4;
  * the rank spacing when that is more; a gap too narrow for its lanes and these stubs
  * is widened.
  */
-export const LANE_STUB_LENGTH = 24;
+const LANE_STUB_LENGTH = 24;
 
 /** Share of the rank spacing a stub takes at least, so wider spacing gives longer stubs. */
-export const LANE_STUB_RATIO = 0.3;
+const LANE_STUB_RATIO = 0.3;
 
 /** A label a route carries: where dagre put it and how much of the rank axis it takes. */
 export type GapLaneLabel = {

@@ -1,12 +1,8 @@
 import type { Rect } from "@jiscribe/geometry";
 
-import type {
-	LayoutGraphNode,
-	LayoutSide,
-	LayoutVisualMargin,
-} from "../shared/types";
-
-const LAYOUT_SIDES: readonly LayoutSide[] = ["top", "right", "bottom", "left"];
+import type { LayoutGraphNode } from "./types";
+import { LAYOUT_SIDES } from "../shared/layoutSides";
+import type { LayoutSide, LayoutVisualMargin } from "../shared/types";
 
 /** How far the margin reaches past one side of the box, in px; 0 for a side left out. */
 export const readVisualMargin = (

@@ -1,8 +1,6 @@
 import { Graph, layout } from "@dagrejs/dagre";
 import type { Point } from "@jiscribe/geometry";
 
-import { readVisualMargin, requireVisualMargin } from "./visualMargin";
-import { type LayoutAxis, createLayoutAxis } from "../shared/LayoutAxis";
 import type {
 	LaidOutContainer,
 	LaidOutNode,
@@ -10,7 +8,9 @@ import type {
 	LayoutGraphContainer,
 	LayoutGraphEdge,
 	LayoutGraphNode,
-} from "../shared/types";
+} from "./types";
+import { readVisualMargin, requireVisualMargin } from "./visualMargin";
+import { type LayoutAxis, createLayoutAxis } from "../shared/LayoutAxis";
 
 /** What dagre routed for one edge, in the drawing's own coordinates. */
 export type DagreEdge = {

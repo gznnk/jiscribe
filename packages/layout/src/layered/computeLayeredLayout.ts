@@ -1,18 +1,12 @@
 import type { Point, Rect } from "@jiscribe/geometry";
 
-import {
-	type LabelPlacement,
-	type OwnMarginLengths,
-	calcLabelPosition,
-} from "./calcLabelPosition";
-import { calcAnchorPoint, calcOrthogonalPath } from "./calcOrthogonalPath";
+import { type OwnMarginLengths, calcLabelPosition } from "./calcLabelPosition";
+import { calcOrthogonalPath } from "./calcOrthogonalPath";
 import { chooseEdgeAnchors } from "./chooseEdgeAnchors";
 import { reserveTitleBands } from "./reserveTitleBands";
 import { createRowIndex, dropBorderPoints } from "./RowIndex";
 import { runDagre } from "./runDagre";
 import { type GapLaneMarginBox, spreadGapLanes } from "./spreadGapLanes";
-import { hasVisualMargin, readVisualMargin } from "./visualMargin";
-import { createLayoutAxis } from "../shared/LayoutAxis";
 import {
 	LAYERED_LAYOUT_DEFAULTS,
 	type LaidOutEdge,
@@ -21,7 +15,11 @@ import {
 	type LayoutGraphContainer,
 	type LayoutGraphEdge,
 	type LayoutGraphNode,
-} from "../shared/types";
+} from "./types";
+import { hasVisualMargin, readVisualMargin } from "./visualMargin";
+import { calcAnchorPoint } from "../shared/calcAnchorPoint";
+import type { LabelPlacement } from "../shared/labelClearances";
+import { createLayoutAxis } from "../shared/LayoutAxis";
 
 /** Length of a right-angled route in px. */
 const calcPathLength = (path: readonly Point[]): number =>

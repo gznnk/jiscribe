@@ -6,13 +6,15 @@ import {
 } from "@jiscribe/geometry";
 
 import {
+	ceilCoordinate,
+	floorCoordinate,
+	isSameCoordinate,
+} from "../../shared/coordinate";
+import {
 	LABEL_BESIDE_CLEARANCE,
 	LABEL_CORNER_CLEARANCE,
 	type LabelPlacement,
-} from "../../layered/calcLabelPosition";
-import { ceilCoordinate } from "../../shared/ceilCoordinate";
-import { floorCoordinate } from "../../shared/floorCoordinate";
-import { isSameCoordinate } from "../../shared/isSameCoordinate";
+} from "../../shared/labelClearances";
 import { EDGE_ROUTE_MARGIN } from "../edgeRoutingCosts";
 
 /** How far apart in px the spots a label's centre is tried at along a segment stand. */
@@ -41,7 +43,7 @@ type LabelCandidate = {
 	sideRank: number;
 };
 
-type RouteSegment = {
+type LabelRouteSegment = {
 	start: Point;
 	end: Point;
 	/** How far along the path from the source it starts, in px. */
@@ -114,7 +116,7 @@ const calcRouteReach = (
 	};
 };
 
-const listRouteSegments = (path: readonly Point[]): RouteSegment[] => {
+const listRouteSegments = (path: readonly Point[]): LabelRouteSegment[] => {
 	let startDistance = 0;
 	return path.slice(1).map((end, index) => {
 		const start = path[index];
@@ -141,7 +143,7 @@ const listRouteSegments = (path: readonly Point[]): RouteSegment[] => {
  * route, unless that leaves nothing of any segment.
  */
 const listCandidates = (
-	segments: readonly RouteSegment[],
+	segments: readonly LabelRouteSegment[],
 	totalLength: number,
 	size: { width: number; height: number },
 ): LabelCandidate[] => {

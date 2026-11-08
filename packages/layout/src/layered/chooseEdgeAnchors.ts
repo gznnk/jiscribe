@@ -2,6 +2,7 @@ import type { Point, Rect } from "@jiscribe/geometry";
 
 import { type RowIndex, readSlotColumns } from "./RowIndex";
 import { spreadSideEnds } from "./spreadSideEnds";
+import type { LayoutGraphEdge, LayoutGraphNode } from "./types";
 import {
 	calcCentredAnchorRatio,
 	intersectAnchorRanges,
@@ -9,7 +10,9 @@ import {
 	scaleIntoAnchorRange,
 	scaleIntoBodyWithinUsable,
 } from "../shared/anchorRange";
+import { EDGE_ANCHOR_FAN_RANGE, EDGE_END_SPACING } from "../shared/edgeSpacing";
 import type { LayoutAxis } from "../shared/LayoutAxis";
+import { toSideKey } from "../shared/layoutSides";
 import {
 	EDGE_ANCHOR_STRAIGHT_RANGE,
 	calcSideRatio,
@@ -20,21 +23,8 @@ import {
 import type {
 	LayoutAnchorRange,
 	LayoutEdgeAnchor,
-	LayoutGraphEdge,
-	LayoutGraphNode,
 	LayoutSide,
 } from "../shared/types";
-
-/**
- * How far along a side the anchors of several edges sharing it may spread, as shares of
- * the side's body (`LayoutGraphNode.anchorBodyRanges`, the whole side by default),
- * cut down to the side's usable stretch (`LayoutGraphNode.anchorRanges`); the same
- * shares of the usable stretch where the two do not meet.
- */
-export const EDGE_ANCHOR_FAN_RANGE = { min: 0.1, max: 0.9 } as const;
-
-/** Least distance in px between two edge ends on one side: room for two arrowheads. */
-export const EDGE_END_SPACING = 20;
 
 /** Least distance in px between two edges joining the same pair of boxes. */
 export const EDGE_BUNDLE_SPACING = EDGE_END_SPACING;
@@ -86,7 +76,7 @@ export type AnchoredEdge = {
 };
 
 /** Which sides face each other along the rank axis, read off the two boxes' centres. */
-const calcFacingSides = (
+const calcRankFacingSides = (
 	source: Rect,
 	target: Rect,
 	axis: LayoutAxis,
@@ -99,10 +89,6 @@ const calcFacingSides = (
 		? { sourceSide: axis.aheadSide, targetSide: axis.behindSide }
 		: { sourceSide: axis.behindSide, targetSide: axis.aheadSide };
 };
-
-/** A side of one box, as the key the anchor rules count edges on. */
-const sideKey = (nodeId: string, side: LayoutSide): string =>
-	`${nodeId}:${side}`;
 
 /**
  * The anchor for one end of an edge, given where along the side the edge is headed
@@ -181,20 +167,20 @@ const headEnds = (
 ): HeadedEdge[] => {
 	const sided = edges.map((edge) => ({
 		...edge,
-		...calcFacingSides(edge.sourceBounds, edge.targetBounds, axis),
+		...calcRankFacingSides(edge.sourceBounds, edge.targetBounds, axis),
 	}));
 	// How many edges meet each side, which decides whether an end may sit at its midpoint.
 	const edgeCountBySide = new Map<string, number>();
 	for (const { edge, sourceSide, targetSide } of sided) {
 		for (const key of [
-			sideKey(edge.sourceId, sourceSide),
-			sideKey(edge.targetId, targetSide),
+			toSideKey(edge.sourceId, sourceSide),
+			toSideKey(edge.targetId, targetSide),
 		]) {
 			edgeCountBySide.set(key, (edgeCountBySide.get(key) ?? 0) + 1);
 		}
 	}
 	const isOnlyEdgeOnSide = (nodeId: string, side: LayoutSide): boolean =>
-		edgeCountBySide.get(sideKey(nodeId, side)) === 1;
+		edgeCountBySide.get(toSideKey(nodeId, side)) === 1;
 
 	return sided.map((working) => {
 		const { edge, sourceBounds, targetBounds, sourceSide, targetSide } =
@@ -320,7 +306,7 @@ const straightenSharedEdges = (
 		for (const end of ["source", "target"] as const) {
 			const nodeId =
 				end === "source" ? working.edge.sourceId : working.edge.targetId;
-			const key = sideKey(nodeId, working[end].side);
+			const key = toSideKey(nodeId, working[end].side);
 			const ends = endsBySide.get(key);
 			if (ends === undefined) {
 				endsBySide.set(key, [{ edgeIndex, end }]);
@@ -351,7 +337,7 @@ const straightenSharedEdges = (
 	): { ends: readonly SideEndRef[]; rank: number } => {
 		const nodeId =
 			end === "source" ? working.edge.sourceId : working.edge.targetId;
-		const ends = endsBySide.get(sideKey(nodeId, working[end].side)) ?? [];
+		const ends = endsBySide.get(toSideKey(nodeId, working[end].side)) ?? [];
 		return {
 			ends,
 			rank: ends.findIndex(
@@ -587,7 +573,7 @@ const spreadEndsOnSides = (
 		for (const end of ["source", "target"] as const) {
 			const nodeId =
 				end === "source" ? working.edge.sourceId : working.edge.targetId;
-			const key = sideKey(nodeId, working[end].side);
+			const key = toSideKey(nodeId, working[end].side);
 			const ends = endsBySide.get(key);
 			if (ends === undefined) {
 				endsBySide.set(key, [{ working, end }]);

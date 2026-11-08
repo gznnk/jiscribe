@@ -1,7 +1,8 @@
 import type { BoundingBox, Point } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
-import { type RouteEnd, type RouteToNudge, nudgeRoutes } from "../nudgeRoutes";
+import { nudgeRoutes } from "../nudgeRoutes";
+import type { RouteEnd, RouteToNudge } from "../routeSegments";
 
 let endCount = 0;
 
@@ -1095,7 +1096,7 @@ describe("nudgeRoutes", () => {
 					),
 				];
 			};
-			it("keeps the stubs pushed toward each other LEAST_JOG apart, whichever end comes first", () => {
+			it("keeps the stubs pushed toward each other LEAST_FOLD_GAP apart, whichever end comes first", () => {
 				const [zigzag] = nudgeBothWays((isReversed) => build(200, isReversed));
 
 				expect(toPairs(zigzag.path)).toEqual([

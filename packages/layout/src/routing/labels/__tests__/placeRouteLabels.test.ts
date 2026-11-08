@@ -1,7 +1,7 @@
 import type { Point, Rect } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
-import type { LabelPlacement } from "../../../layered/calcLabelPosition";
+import type { LabelPlacement } from "../../../shared/labelClearances";
 import { EDGE_ROUTE_MARGIN } from "../../edgeRoutingCosts";
 import { type RouteToLabel, placeRouteLabels } from "../placeRouteLabels";
 

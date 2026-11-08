@@ -88,6 +88,40 @@ const controllerLayerFences = CONTROLLER_LAYERS.slice(0, -1).map(
 	}),
 );
 
+/**
+ * The layout package's two features share only shared/: routing never reaches into
+ * layered/ or the other way round, and shared/ reaches into neither. Types count, so a
+ * type two features need has to live in shared/ too.
+ */
+const LAYOUT_FOLDER_FORBIDDEN_IMPORTS = {
+	shared: ["layered", "routing"],
+	layered: ["routing"],
+	routing: ["layered"],
+};
+
+// The specifiers are relative, as for the controller fences above.
+const layoutFolderFences = Object.entries(LAYOUT_FOLDER_FORBIDDEN_IMPORTS).map(
+	([folder, forbidden]) => ({
+		files: [`packages/layout/src/${folder}/**`],
+		rules: {
+			"@typescript-eslint/no-restricted-imports": [
+				"error",
+				{
+					patterns: [
+						{
+							group: [
+								...forbidden.map((name) => `**/${name}/**`),
+								"!@jiscribe/**",
+							],
+							message: `layout/src/${folder} cannot import from ${forbidden.join(" or ")}. Move what both need into shared/.`,
+						},
+					],
+				},
+			],
+		},
+	}),
+);
+
 export default tseslint.config(
 	{
 		ignores: [
@@ -280,6 +314,7 @@ export default tseslint.config(
 		},
 	},
 	...controllerLayerFences,
+	...layoutFolderFences,
 	{
 		// rendering/ is the pure drawing layer: components that draw what their Props hand
 		// them and reach no controller, so a shape can be drawn by the export path and by

@@ -1,37 +1,25 @@
+import { doRectsOverlap, type Rect } from "@jiscribe/geometry";
 import {
-	calcAffineTransformedPoint,
-	calcBoundingBox,
-	convertBoundingBoxToRect,
-	degreesToRadians,
-	doRectsOverlap,
-	type Point,
-	type Rect,
-} from "@jiscribe/geometry";
-import {
-	type LayoutVisualMargin,
 	type RoutableEdge,
 	type RoutableNode,
 	type RoutedEdge,
 	routeEdgesAroundNodes,
 } from "@jiscribe/layout";
 
-import { buildEndpoint } from "./utils/connectorEndpoints";
-import { measureLabelBox } from "./utils/connectorLabelBox";
 import {
-	readLayoutAnchorBodyRanges,
-	readLayoutAnchorRanges,
+	readLayoutNodeAnchorFields,
 	resolveLayoutAnchorShape,
 } from "./utils/layoutAnchorShapes";
 import { readOwnerId } from "./utils/layoutConnectorEnds";
 import {
-	applyLabelTextRestack,
-	planLabelTextRestack,
 	readLayoutVisualMargin,
 	readLocalLabelTextRegion,
-} from "./utils/layoutLabelTexts";
+} from "./utils/layoutLabelTextMeasures";
+import { restackConnectorsUnderLabelTexts } from "./utils/layoutLabelTextRestack";
 import { collectPlacements } from "./utils/layoutPlacements";
 import {
 	type ObjectRecord,
+	listObjectIdsInTreeOrder,
 	locateObjects,
 	readChildren,
 	requireObjects,
@@ -39,18 +27,23 @@ import {
 } from "./utils/objectAccess";
 import {
 	type DocDefinitions,
+	calcWorldBoundsOfLocalRect,
 	getObjectBounds,
 	isConnectorObject,
 } from "./utils/objectGeometry";
 import { toStoredRouteCorners } from "./utils/routeCorners";
+import {
+	buildConnectorGraphEdge,
+	buildRoutedEndpoint,
+	writeRoutedConnector,
+} from "./utils/routedConnectors";
 import { isTransformed } from "./utils/transformFields";
 import type { CanvasDoc } from "../model/canvas/CanvasDoc";
+import type { EdgeAnchorOutlineShape } from "../model/objects/connector/calcEdgeAnchorOutlineRange";
 import type { ConnectorDoc } from "../model/objects/connector/ConnectorDoc";
-import { toAnchorRegionSidePosition } from "../model/objects/connector/convertEdgeAnchorRatio";
 import { GroupFeatures } from "../model/objects/primitives/group/GroupDoc";
 import { isOnDeclaredConnectPoint } from "../model/objects/types/EndpointRef";
 import { sortEdgesByEndOrder } from "../model/objects/utils/sortEdgesByEndOrder";
-import { listConnectorsUnderLabelText } from "../text/label/calcLabelTextLayoutMargin";
 
 /**
  * Why routeConnectors left a connector as it was, in the order it asks:
@@ -90,7 +83,7 @@ export type RouteConnectorsResult = {
 	keptConnectorIdsByReason: Partial<Record<ConnectorRouteKeptReason, string[]>>;
 	/**
 	 * Ids of the connectors moved back in the stacking order, each to just beneath a
-	 * shape whose caption it runs under (see planLabelTextRestack), each parent's in the
+	 * shape whose caption it runs under (see restackConnectorsUnderLabelTexts), each parent's in the
 	 * order they stood before.
 	 */
 	restackedConnectorIds: string[];
@@ -111,40 +104,6 @@ type RoutingScene = {
 	containerIds: Set<string>;
 	titleBands: Rect[];
 	frames: Rect[];
-};
-
-/**
- * A rect in a shape's local coordinates (its centre the origin), turned and flipped
- * with the shape, as the box it fills in the world; an untransformed shape only moves it.
- */
-const transformRect = (
-	rect: Rect,
-	centre: Point,
-	object: ObjectRecord,
-): Rect => {
-	const rotation = typeof object.rotation === "number" ? object.rotation : 0;
-	const scaleX = object.flipX === true ? -1 : 1;
-	const scaleY = object.flipY === true ? -1 : 1;
-	const rectCentre = calcAffineTransformedPoint(
-		rect.x + rect.width / 2,
-		rect.y + rect.height / 2,
-		scaleX,
-		scaleY,
-		degreesToRadians(rotation),
-		centre.x,
-		centre.y,
-	);
-	return convertBoundingBoxToRect(
-		calcBoundingBox({
-			cx: rectCentre.x,
-			cy: rectCentre.y,
-			width: rect.width,
-			height: rect.height,
-			rotation,
-			scaleX,
-			scaleY,
-		}),
-	);
 };
 
 /**
@@ -200,7 +159,7 @@ const collectRoutingScene = (
 		const labelBounds =
 			localLabel === undefined
 				? undefined
-				: transformRect(localLabel, centre, object);
+				: calcWorldBoundsOfLocalRect(localLabel, centre, object);
 		scene.shapeById.set(object.id, {
 			object,
 			bounds,
@@ -208,7 +167,7 @@ const collectRoutingScene = (
 			node: {
 				id: object.id,
 				bounds: transformed
-					? transformRect(
+					? calcWorldBoundsOfLocalRect(
 							{
 								x: -bounds.width / 2,
 								y: -bounds.height / 2,
@@ -395,10 +354,7 @@ export const routeConnectors = (
 ): RouteConnectorsResult => {
 	const connectors = selectConnectors(doc, ids, definitions);
 	const scene = collectRoutingScene(doc, definitions);
-	const treeOrderIds: string[] = [];
-	visitObjects(doc.root, ({ id }) => {
-		treeOrderIds.push(id);
-	});
+	const treeOrderIds = listObjectIdsInTreeOrder(doc);
 	const objectIds = new Set(treeOrderIds);
 
 	const keptConnectorIdsByReason: RouteConnectorsResult["keptConnectorIdsByReason"] =
@@ -418,32 +374,29 @@ export const routeConnectors = (
 			continue;
 		}
 		connectorById.set(connector.id, connector);
-		const label = measureLabelBox(connector);
-		edges.push({
-			id: connector.id,
-			sourceId: readOwnerId(connector.source) as string,
-			targetId: readOwnerId(connector.target) as string,
-			...(label !== undefined ? { label } : {}),
-		});
+		edges.push(buildConnectorGraphEdge(connector));
 	}
 	const endShapeIds = new Set(
 		edges.flatMap(({ sourceId, targetId }) => [sourceId, targetId]),
 	);
-	const nodes = [...scene.shapeById.values()].map(
-		({ object, bounds, node }): RoutableNode => {
-			if (!endShapeIds.has(object.id)) {
-				return node;
-			}
-			const shape = resolveLayoutAnchorShape(object, bounds, definitions);
-			const anchorRanges = readLayoutAnchorRanges(object, shape);
-			const anchorBodyRanges = readLayoutAnchorBodyRanges(shape);
-			return {
-				...node,
-				...(anchorRanges !== undefined ? { anchorRanges } : {}),
-				...(anchorBodyRanges !== undefined ? { anchorBodyRanges } : {}),
-			};
-		},
+	const sceneShapes = [...scene.shapeById.values()];
+	const anchorShapeById = new Map(
+		sceneShapes
+			.filter(({ object }) => endShapeIds.has(object.id))
+			.map(
+				({ object, bounds }) =>
+					[
+						object.id,
+						resolveLayoutAnchorShape(object, bounds, definitions),
+					] as const,
+			),
 	);
+	const nodes = sceneShapes.map(({ object, node }): RoutableNode => {
+		const shape = anchorShapeById.get(object.id);
+		return shape === undefined
+			? node
+			: { ...node, ...readLayoutNodeAnchorFields(object, shape) };
+	});
 	const sortedEdges = sortEdgesByEndOrder(edges, treeOrderIds);
 	const routed = routeEdgesAroundNodes(nodes, sortedEdges, {
 		obstacles: scene.titleBands,
@@ -456,24 +409,20 @@ export const routeConnectors = (
 		}
 	}
 
-	// Every end is resolved before anything is written, so an owner that refuses one
-	// leaves the document untouched.
+	// Every end is resolved before anything is written, so an anchor that cannot be
+	// stored leaves the document untouched.
 	const locatedOwners = locateObjects(doc, endShapeIds);
 	const toEndpoint = (
 		ownerId: string,
 		anchor: RoutedEdge["source"],
-	): ConnectorDoc["source"] => {
-		const { object, bounds } = scene.shapeById.get(ownerId) as SceneShape;
-		return buildEndpoint(
+	): ConnectorDoc["source"] =>
+		buildRoutedEndpoint(
 			locatedOwners,
 			ownerId,
-			toAnchorRegionSidePosition(
-				anchor,
-				resolveLayoutAnchorShape(object, bounds, definitions),
-			),
+			anchor,
+			anchorShapeById.get(ownerId) as EdgeAnchorOutlineShape,
 			definitions,
 		);
-	};
 	const edgeById = new Map(edges.map((edge) => [edge.id, edge] as const));
 	const writes = routed.edges.map((routedEdge) => {
 		const { sourceId, targetId } = edgeById.get(routedEdge.id) as RoutableEdge;
@@ -490,36 +439,26 @@ export const routeConnectors = (
 		};
 	});
 	for (const { connector, source, target, points, routedEdge } of writes) {
-		connector.source = source;
-		connector.target = target;
-		connector.points = points;
-		delete connector.routing;
-		if (
-			connector.label !== undefined &&
-			routedEdge.labelPosition !== undefined
-		) {
-			connector.label.position = routedEdge.labelPosition;
-			connector.label.offset = routedEdge.labelOffset ?? 0;
-		}
+		writeRoutedConnector(connector, source, target, points, routedEdge);
 	}
 
-	const marginById = new Map<string, LayoutVisualMargin>();
-	for (const id of endShapeIds) {
-		const { object, bounds } = scene.shapeById.get(id) as SceneShape;
-		const margin = readLayoutVisualMargin(object, bounds, definitions);
-		if (margin !== undefined) {
-			marginById.set(id, margin);
-		}
-	}
-	const restack = planLabelTextRestack(
+	const restackedConnectorIds = restackConnectorsUnderLabelTexts(
 		doc,
-		listConnectorsUnderLabelText(routed.edges, edges, marginById, () => true),
+		routed.edges,
+		edges,
+		[...endShapeIds].map((id) => {
+			const { object, bounds } = scene.shapeById.get(id) as SceneShape;
+			return {
+				id,
+				visualMargin: readLayoutVisualMargin(object, bounds, definitions),
+			};
+		}),
+		() => true,
 	);
-	applyLabelTextRestack(restack);
 
 	return {
 		connectorIds: routed.edges.map(({ id }) => id),
 		keptConnectorIdsByReason,
-		restackedConnectorIds: restack.movedIds,
+		restackedConnectorIds,
 	};
 };

@@ -17,18 +17,15 @@ import {
 
 import { DocOperationError } from "./errors";
 import { buildEndpoint } from "./utils/connectorEndpoints";
-import { measureLabelBox } from "./utils/connectorLabelBox";
 import {
 	readLayoutAnchorRanges,
 	readLayoutAnchorBodyRanges,
+	readLayoutNodeAnchorFields,
 	resolveLayoutAnchorShape,
 } from "./utils/layoutAnchorShapes";
 import { readOwnerId } from "./utils/layoutConnectorEnds";
-import {
-	applyLabelTextRestack,
-	planLabelTextRestack,
-	readLayoutVisualMargin,
-} from "./utils/layoutLabelTexts";
+import { readLayoutVisualMargin } from "./utils/layoutLabelTextMeasures";
+import { restackConnectorsUnderLabelTexts } from "./utils/layoutLabelTextRestack";
 import {
 	type PlacedContainer,
 	type PlacedNode,
@@ -37,6 +34,7 @@ import {
 import { requireFiniteNumber } from "./utils/numberArgs";
 import {
 	type ObjectRecord,
+	listObjectIdsInTreeOrder,
 	locateObjects,
 	requireObjects,
 	visitObjects,
@@ -47,6 +45,11 @@ import {
 	requireObjectBounds,
 	translateObject,
 } from "./utils/objectGeometry";
+import {
+	buildConnectorGraphEdge,
+	buildRoutedEndpoint,
+	writeRoutedConnector,
+} from "./utils/routedConnectors";
 import type { CanvasDoc } from "../model/canvas/CanvasDoc";
 import type { EdgeAnchorOutlineShape } from "../model/objects/connector/calcEdgeAnchorOutlineRange";
 import type { ConnectorDoc } from "../model/objects/connector/ConnectorDoc";
@@ -59,7 +62,6 @@ import {
 	listEdgeAnchoredEnds,
 } from "../model/objects/types/EndpointRef";
 import { sortEdgesByEndOrder } from "../model/objects/utils/sortEdgesByEndOrder";
-import { listConnectorsUnderLabelText } from "../text/label/calcLabelTextLayoutMargin";
 
 export type { LayoutDirection } from "@jiscribe/layout";
 
@@ -81,7 +83,7 @@ export type LayoutObjectsResult = {
 	connectorIds: string[];
 	/**
 	 * Ids of the connectors moved back in the stacking order, each to just beneath a
-	 * shape whose caption it runs under (see planLabelTextRestack), each parent's in the
+	 * shape whose caption it runs under (see restackConnectorsUnderLabelTexts), each parent's in the
 	 * order they stood before.
 	 */
 	restackedConnectorIds: string[];
@@ -156,16 +158,13 @@ const buildGraph = (
 } => ({
 	nodes: nodes.map(({ object, bounds, parentId }) => {
 		const shape = resolveLayoutAnchorShape(object, bounds, definitions);
-		const anchorRanges = readLayoutAnchorRanges(object, shape);
-		const anchorBodyRanges = readLayoutAnchorBodyRanges(shape);
 		const visualMargin = readLayoutVisualMargin(object, bounds, definitions);
 		return {
 			id: object.id,
 			width: bounds.width,
 			height: bounds.height,
 			...(parentId !== undefined ? { parentId } : {}),
-			...(anchorRanges !== undefined ? { anchorRanges } : {}),
-			...(anchorBodyRanges !== undefined ? { anchorBodyRanges } : {}),
+			...readLayoutNodeAnchorFields(object, shape),
 			...(visualMargin !== undefined ? { visualMargin } : {}),
 		};
 	}),
@@ -174,15 +173,7 @@ const buildGraph = (
 		...(parentId !== undefined ? { parentId } : {}),
 		titleHeight,
 	})),
-	edges: edges.map((connector) => {
-		const label = measureLabelBox(connector);
-		return {
-			id: connector.id,
-			sourceId: readOwnerId(connector.source) as string,
-			targetId: readOwnerId(connector.target) as string,
-			...(label !== undefined ? { label } : {}),
-		};
-	}),
+	edges: edges.map(buildConnectorGraphEdge),
 });
 
 /**
@@ -257,8 +248,8 @@ type ConnectorWrite = {
 };
 
 /**
- * Give every edge its new ends and route. The ends are resolved first, so an owner
- * that does not offer the connect point leaves the document untouched. An end is
+ * Give every edge its new ends and route. The ends are resolved first, so an anchor
+ * that cannot be stored leaves the document untouched. An end is
  * written as a ratio of its owner's anchor region, where the layout chose it as one
  * of the box.
  *
@@ -280,70 +271,46 @@ const writeRoutes = (
 	const placedById = new Map(
 		nodes.map((placed) => [placed.object.id, placed] as const),
 	);
-	const toStoredAnchor = (
-		ownerId: string,
+	const resolveEnd = (
+		end: ConnectorDoc["source"],
 		anchor: LaidOutEdge["source"],
-	): LaidOutEdge["source"] => {
+	): ConnectorDoc["source"] => {
+		if (isOnDeclaredConnectPoint(end)) {
+			return end;
+		}
+		const ownerId = readOwnerId(end) as string;
 		const { object, bounds } = placedById.get(ownerId) as PlacedNode;
-		return toAnchorRegionSidePosition(
+		return buildRoutedEndpoint(
+			locatedOwners,
+			ownerId,
 			anchor,
 			resolveLayoutAnchorShape(object, bounds, definitions),
+			definitions,
 		);
 	};
 	const writes: ConnectorWrite[] = laidOutEdges.map((laidOutEdge) => {
 		const connector = connectorById.get(laidOutEdge.id) as ConnectorDoc;
-		const sourceKept = isOnDeclaredConnectPoint(connector.source);
-		const targetKept = isOnDeclaredConnectPoint(connector.target);
 		return {
 			connector,
 			laidOutEdge,
 			keepsRoute: isLayoutRouteWritten(connector),
-			source: sourceKept
-				? connector.source
-				: buildEndpoint(
-						locatedOwners,
-						readOwnerId(connector.source) as string,
-						toStoredAnchor(
-							readOwnerId(connector.source) as string,
-							laidOutEdge.source,
-						),
-						definitions,
-					),
-			target: targetKept
-				? connector.target
-				: buildEndpoint(
-						locatedOwners,
-						readOwnerId(connector.target) as string,
-						toStoredAnchor(
-							readOwnerId(connector.target) as string,
-							laidOutEdge.target,
-						),
-						definitions,
-					),
+			source: resolveEnd(connector.source, laidOutEdge.source),
+			target: resolveEnd(connector.target, laidOutEdge.target),
 		};
 	});
 	for (const { connector, source, target, keepsRoute, laidOutEdge } of writes) {
-		connector.source = source;
-		connector.target = target;
-		connector.points = keepsRoute
-			? laidOutEdge.points.map(({ x, y }) => ({
-					x: Math.round(origin.x + x),
-					y: Math.round(origin.y + y),
-				}))
-			: [];
-		if (
-			keepsRoute &&
-			connector.label !== undefined &&
-			laidOutEdge.labelPosition !== undefined
-		) {
-			// On the line where the layout found room for it, beside the line when the
-			// route is too short to hold it anywhere.
-			connector.label.position = laidOutEdge.labelPosition;
-			connector.label.offset = laidOutEdge.labelOffset ?? 0;
-		}
-		// A straight line is what a centre anchor defaults to; between the facing sides
-		// the arrangement was made for, the right-angled route is the one that reads.
-		delete connector.routing;
+		writeRoutedConnector(
+			connector,
+			source,
+			target,
+			keepsRoute
+				? laidOutEdge.points.map(({ x, y }) => ({
+						x: Math.round(origin.x + x),
+						y: Math.round(origin.y + y),
+					}))
+				: [],
+			keepsRoute ? laidOutEdge : undefined,
+		);
 	}
 	return writes.map(({ connector }) => connector);
 };
@@ -520,18 +487,10 @@ export const layoutObjects = (
 	const { edges, selfLoops } = collectConnectors(doc, nodeIds);
 
 	const graph = buildGraph(nodes, containers, edges, definitions);
-	const marginById = new Map(
-		graph.nodes.flatMap(({ id, visualMargin }) =>
-			visualMargin === undefined ? [] : [[id, visualMargin] as const],
-		),
-	);
 	const connectorById = new Map(
 		edges.map((connector) => [connector.id, connector] as const),
 	);
-	const treeOrderIds: string[] = [];
-	visitObjects(doc.root, ({ id }) => {
-		treeOrderIds.push(id);
-	});
+	const treeOrderIds = listObjectIdsInTreeOrder(doc);
 	const laidOut = computeLayeredLayout(
 		graph.nodes,
 		sortEdgesByEndOrder(graph.edges, treeOrderIds),
@@ -568,17 +527,14 @@ export const layoutObjects = (
 		written,
 		definitions,
 	);
-	const restack = planLabelTextRestack(
+	const restackedConnectorIds = restackConnectorsUnderLabelTexts(
 		doc,
-		listConnectorsUnderLabelText(
-			laidOut.edges,
-			graph.edges,
-			marginById,
-			(connectorId) =>
-				isLayoutRouteWritten(connectorById.get(connectorId) as ConnectorDoc),
-		),
+		laidOut.edges,
+		graph.edges,
+		graph.nodes,
+		(connectorId) =>
+			isLayoutRouteWritten(connectorById.get(connectorId) as ConnectorDoc),
 	);
-	applyLabelTextRestack(restack);
 
 	return {
 		nodeIds: nodes.map(({ object }) => object.id),
@@ -588,6 +544,6 @@ export const layoutObjects = (
 			...selfLoops.map(({ id }) => id),
 			...redrawnIds,
 		],
-		restackedConnectorIds: restack.movedIds,
+		restackedConnectorIds,
 	};
 };

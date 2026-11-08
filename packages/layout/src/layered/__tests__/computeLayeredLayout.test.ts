@@ -1,9 +1,9 @@
 import type { Rect } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
-import type { LaidOutEdge } from "../../shared/types";
-import { calcAnchorPoint } from "../calcOrthogonalPath";
+import { calcAnchorPoint } from "../../shared/calcAnchorPoint";
 import { computeLayeredLayout } from "../computeLayeredLayout";
+import type { LaidOutEdge } from "../types";
 
 const box = (id: string) => ({ id, width: 160, height: 80 });
 

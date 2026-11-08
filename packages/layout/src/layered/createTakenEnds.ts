@@ -1,11 +1,12 @@
 import type { Rect } from "@jiscribe/geometry";
 
-import { EDGE_END_SPACING } from "./chooseEdgeAnchors";
 import {
 	FULL_ANCHOR_RANGE,
 	calcCentredAnchorRatio,
 	scaleIntoBodyWithinUsable,
 } from "../shared/anchorRange";
+import { EDGE_END_SPACING } from "../shared/edgeSpacing";
+import { toSideKey } from "../shared/layoutSides";
 import type {
 	LayoutAnchorRange,
 	LayoutEdgeAnchor,
@@ -72,10 +73,8 @@ export type TakenEnds = {
  */
 export const createTakenEnds = (taken: readonly TakenEnd[]): TakenEnds => {
 	const positionsBySide = new Map<string, number[]>();
-	const keyOf = (ownerId: string, side: LayoutSide): string =>
-		`${ownerId}:${side}`;
 	const take = (ownerId: string, side: LayoutSide, t: number): void => {
-		const key = keyOf(ownerId, side);
+		const key = toSideKey(ownerId, side);
 		const positions = positionsBySide.get(key);
 		if (positions === undefined) {
 			positionsBySide.set(key, [t]);
@@ -96,7 +95,7 @@ export const createTakenEnds = (taken: readonly TakenEnd[]): TakenEnds => {
 		) => {
 			const extent =
 				side === "top" || side === "bottom" ? box.width : box.height;
-			const positions = positionsBySide.get(keyOf(ownerId, side)) ?? [];
+			const positions = positionsBySide.get(toSideKey(ownerId, side)) ?? [];
 			const gap = extent > 0 ? EDGE_END_SPACING / extent : 0;
 			const isFree = (t: number): boolean =>
 				positions.every((position) => Math.abs(position - t) >= gap);

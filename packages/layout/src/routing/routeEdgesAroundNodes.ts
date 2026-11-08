@@ -1,255 +1,39 @@
 import {
-	type BoundingBox,
 	convertRectToBoundingBox,
 	doRectsOverlap,
 	type Point,
-	type Rect,
 } from "@jiscribe/geometry";
 
-import { EDGE_ROUTE_MARGIN, ROUTE_COSTS } from "./edgeRoutingCosts";
-import { calcAnchorPoint } from "../layered/calcOrthogonalPath";
-import { EDGE_ANCHOR_FAN_RANGE } from "../layered/chooseEdgeAnchors";
-import {
-	calcCentredAnchorRatio,
-	readAnchorRange,
-	scaleIntoBodyWithinUsable,
-} from "../shared/anchorRange";
-import { ceilCoordinate } from "../shared/ceilCoordinate";
+import { EDGE_ROUTE_MARGIN } from "./edgeRoutingCosts";
+import { isOwnWall, listEndCandidates } from "./endCandidates";
 import { placeRouteLabels } from "./labels/placeRouteLabels";
+import { nudgeRoutes } from "./nudge/nudgeRoutes";
+import type { RouteEnd, RouteToNudge } from "./nudge/routeSegments";
 import {
-	type EndCandidate,
 	EdgeRouter,
 	type Obstacle,
 	type PreparedEdge,
 } from "./search/EdgeRouter";
-import { floorCoordinate } from "../shared/floorCoordinate";
-import { isSameCoordinate } from "../shared/isSameCoordinate";
-import { type LayoutAxis, createLayoutAxis } from "../shared/LayoutAxis";
-import {
-	type RouteEnd,
-	type RouteToNudge,
-	nudgeRoutes,
-} from "./nudge/nudgeRoutes";
-import {
-	type RouteDirection,
-	STEP_X,
-	STEP_Y,
-	createRouteLines,
-	growBox,
-	snapToGridResolution,
-	toGridLines,
-} from "./search/RouteGrid";
-import {
-	calcSideRatio,
-	calcStraightAnchorRatio,
-	columnAt,
-} from "../shared/straightAnchor";
+import { createRouteLines, toGridLines } from "./search/RouteGrid";
+import { collectOrigins } from "./search/routeOrigins";
 import type {
 	EdgeRoutingOptions,
 	EdgeRoutingResult,
-	LayoutEdgeAnchor,
-	LayoutSide,
 	RoutableEdge,
 	RoutableNode,
 	RoutedEdge,
-} from "../shared/types";
-
-const SIDES: readonly LayoutSide[] = ["top", "right", "bottom", "left"];
-
-/** The direction an end on `side` leaves its box in. */
-const OUTWARD_DIRECTIONS: Record<LayoutSide, RouteDirection> = {
-	top: 0,
-	right: 1,
-	bottom: 2,
-	left: 3,
-};
-
-const OPPOSITE_SIDES: Record<LayoutSide, LayoutSide> = {
-	top: "bottom",
-	right: "left",
-	bottom: "top",
-	left: "right",
-};
-
-const ALONG_TOP_BOTTOM = createLayoutAxis("TB");
-const ALONG_LEFT_RIGHT = createLayoutAxis("LR");
-/** The axis whose across coordinate runs along `side`: x on top and bottom. */
-const axisAlongSide = (side: LayoutSide): LayoutAxis =>
-	side === "top" || side === "bottom" ? ALONG_TOP_BOTTOM : ALONG_LEFT_RIGHT;
-
-/**
- * How far the stub of an end at `anchor` on `side` runs: {@link EDGE_ROUTE_MARGIN}
- * past the box, or past its caption on a bottom side, but half the gap to an
- * obstacle straight ahead nearer than that, so two facing stubs meet halfway.
- *
- * @returns The length, or undefined when an obstacle sits on the stretch the stub
- *   must cross (between the box and the end of its caption) or right against it
- */
-const calcStubLength = (
-	node: RoutableNode,
-	side: LayoutSide,
-	anchor: Point,
-	obstacles: readonly Obstacle[],
-	excluded: ReadonlySet<Obstacle>,
-): number | undefined => {
-	const box = convertRectToBoundingBox(node.bounds);
-	const runsThroughLabel = side === "bottom" && node.labelBounds !== undefined;
-	const clearFrom = runsThroughLabel
-		? convertRectToBoundingBox(node.labelBounds as Rect).bottom - box.bottom
-		: 0;
-	let nearestGap = Infinity;
-	for (const obstacle of obstacles) {
-		if (
-			excluded.has(obstacle) ||
-			(obstacle.ownerId === node.id && (!obstacle.isLabel || runsThroughLabel))
-		) {
-			continue;
-		}
-		const { left, top, right, bottom } = obstacle.box;
-		let near: number;
-		let far: number;
-		switch (side) {
-			case "top":
-				if (!(left < anchor.x && anchor.x < right)) {
-					continue;
-				}
-				near = box.top - bottom;
-				far = box.top - top;
-				break;
-			case "bottom":
-				if (!(left < anchor.x && anchor.x < right)) {
-					continue;
-				}
-				near = top - box.bottom;
-				far = bottom - box.bottom;
-				break;
-			case "left":
-				if (!(top < anchor.y && anchor.y < bottom)) {
-					continue;
-				}
-				near = box.left - right;
-				far = box.left - left;
-				break;
-			case "right":
-				if (!(top < anchor.y && anchor.y < bottom)) {
-					continue;
-				}
-				near = left - box.right;
-				far = right - box.right;
-				break;
-		}
-		if (far <= 0) {
-			continue;
-		}
-		if (near < clearFrom || isSameCoordinate(near, clearFrom)) {
-			return undefined;
-		}
-		nearestGap = Math.min(nearestGap, near - clearFrom);
-	}
-	return clearFrom + Math.min(EDGE_ROUTE_MARGIN, nearestGap / 2);
-};
-
-const offsetPoint = (
-	point: Point,
-	direction: RouteDirection,
-	distance: number,
-): Point => ({
-	x: point.x + STEP_X[direction] * distance,
-	y: point.y + STEP_Y[direction] * distance,
-});
-
-/**
- * The places one end of an edge may sit: on each side, the side's centre (as a side's
- * only end sits in a layered layout) and, when the other node lies wholly beyond the
- * side, the spot that runs straight to the other node's centred end (see
- * calcStraightAnchorRatio). A spot whose stub is blocked is left out.
- */
-const listEndCandidates = (
-	node: RoutableNode,
-	other: RoutableNode,
-	obstacles: readonly Obstacle[],
-	excluded: ReadonlySet<Obstacle>,
-): EndCandidate[] => {
-	const box = convertRectToBoundingBox(node.bounds);
-	const otherBox = convertRectToBoundingBox(other.bounds);
-	const isBeyond: Record<LayoutSide, boolean> = {
-		top: otherBox.bottom <= box.top,
-		right: otherBox.left >= box.right,
-		bottom: otherBox.top >= box.bottom,
-		left: otherBox.right <= box.left,
-	};
-	const candidates: EndCandidate[] = [];
-	for (const side of SIDES) {
-		const usable = readAnchorRange(node.anchorRanges, side);
-		const ratios = [
-			calcCentredAnchorRatio(
-				readAnchorRange(node.anchorBodyRanges, side),
-				usable,
-			),
-		];
-		if (isBeyond[side]) {
-			const otherSide = OPPOSITE_SIDES[side];
-			const axis = axisAlongSide(side);
-			const straight = calcStraightAnchorRatio(
-				node.bounds,
-				columnAt(
-					other.bounds,
-					calcCentredAnchorRatio(
-						readAnchorRange(other.anchorBodyRanges, otherSide),
-						readAnchorRange(other.anchorRanges, otherSide),
-					),
-					axis,
-				),
-				usable,
-				axis,
-			);
-			if (
-				straight !== undefined &&
-				!isSameCoordinate(
-					columnAt(node.bounds, straight, axis),
-					columnAt(node.bounds, ratios[0], axis),
-				)
-			) {
-				ratios.push(straight);
-			}
-		}
-		for (const t of ratios) {
-			const anchor = calcAnchorPoint(node.bounds, { side, t });
-			const stubLength = calcStubLength(
-				node,
-				side,
-				anchor,
-				obstacles,
-				excluded,
-			);
-			if (stubLength === undefined) {
-				continue;
-			}
-			const outward = OUTWARD_DIRECTIONS[side];
-			const tip = offsetPoint(anchor, outward, stubLength);
-			// An end with no room for a stub on the grid would leave along its own side.
-			if (
-				snapToGridResolution(tip.x) === snapToGridResolution(anchor.x) &&
-				snapToGridResolution(tip.y) === snapToGridResolution(anchor.y)
-			) {
-				continue;
-			}
-			candidates.push({
-				side,
-				t,
-				anchor,
-				tip,
-				outward,
-				sideCost:
-					side === "bottom" && node.labelBounds !== undefined
-						? ROUTE_COSTS.labelledBottom
-						: 0,
-				endKey: `${node.id}\u0000${side}\u0000${t}`,
-			});
-		}
-	}
-	return candidates;
-};
+} from "./types";
+import {
+	readAnchorRange,
+	scaleIntoBodyWithinUsable,
+} from "../shared/anchorRange";
+import { calcAnchorPoint } from "../shared/calcAnchorPoint";
+import { ceilCoordinate, floorCoordinate } from "../shared/coordinate";
+import { EDGE_ANCHOR_FAN_RANGE } from "../shared/edgeSpacing";
+import { createSideAxis } from "../shared/LayoutAxis";
+import { toSideKey } from "../shared/layoutSides";
+import { calcSideRatio, columnAt } from "../shared/straightAnchor";
+import type { LayoutEdgeAnchor } from "../shared/types";
 
 /**
  * What the nudging needs of an end at `point` on `node` (see RouteEnd): its slide is
@@ -265,7 +49,7 @@ const toRouteEnd = (
 	point: Point,
 	walls: readonly Obstacle[],
 ): RouteEnd => {
-	const axis = axisAlongSide(side);
+	const axis = createSideAxis(side);
 	const across = axis.across(point);
 	const fan = scaleIntoBodyWithinUsable(
 		readAnchorRange(node.anchorBodyRanges, side),
@@ -273,13 +57,13 @@ const toRouteEnd = (
 		EDGE_ANCHOR_FAN_RANGE,
 	);
 	const ownWallIndices: number[] = [];
-	walls.forEach(({ ownerId, isLabel }, index) => {
-		if (ownerId === node.id && (!isLabel || side === "bottom")) {
+	walls.forEach((wall, index) => {
+		if (isOwnWall(wall, node, side)) {
 			ownWallIndices.push(index);
 		}
 	});
 	return {
-		sideKey: `${node.id}\u0000${side}`,
+		sideKey: toSideKey(node.id, side),
 		slide: {
 			min: Math.min(
 				ceilCoordinate(Math.min(columnAt(node.bounds, fan.min, axis), across)),
@@ -309,7 +93,7 @@ const toNudgedAnchor = (
 	if (point.x === original.x && point.y === original.y) {
 		return anchor;
 	}
-	const axis = axisAlongSide(anchor.side);
+	const axis = createSideAxis(anchor.side);
 	return {
 		side: anchor.side,
 		t: calcSideRatio(node.bounds, axis.across(point), axis),
@@ -332,115 +116,6 @@ const listExcludedObstacles = (
 			(doRectsOverlap(obstacle.rect, source.bounds) ||
 				doRectsOverlap(obstacle.rect, target.bounds)),
 	);
-};
-
-/**
- * The points of interest every route graph runs its lines from, and the lines they
- * and the borders lie on: each obstacle's corners, the corners of its margin band
- * and the midpoints of its sides; the middle of the gap between neighbouring
- * obstacles, so a gap narrower than two margins has a lane; every end candidate's
- * anchor and stub tip; and the corners of a frame two margins around all of them.
- * The borders add their sides, and the lines a margin either side of them, as lines
- * alone.
- */
-const collectOrigins = (
-	obstacles: readonly Obstacle[],
-	borders: readonly BoundingBox[],
-	prepared: readonly PreparedEdge[],
-): { origins: Point[]; xs: number[]; ys: number[] } => {
-	const origins: Point[] = [];
-	for (const { box } of obstacles) {
-		const band = growBox(box, EDGE_ROUTE_MARGIN);
-		const middleX = (box.left + box.right) / 2;
-		const middleY = (box.top + box.bottom) / 2;
-		for (const { left, top, right, bottom } of [box, band]) {
-			origins.push(
-				{ x: left, y: top },
-				{ x: right, y: top },
-				{ x: left, y: bottom },
-				{ x: right, y: bottom },
-			);
-		}
-		origins.push(
-			{ x: middleX, y: box.top },
-			{ x: middleX, y: box.bottom },
-			{ x: box.left, y: middleY },
-			{ x: box.right, y: middleY },
-		);
-	}
-	for (const { box } of obstacles) {
-		let nearestRight: BoundingBox | undefined;
-		let nearestBelow: BoundingBox | undefined;
-		for (const { box: other } of obstacles) {
-			if (
-				other.left >= box.right &&
-				other.top < box.bottom &&
-				box.top < other.bottom &&
-				(nearestRight === undefined || other.left < nearestRight.left)
-			) {
-				nearestRight = other;
-			}
-			if (
-				other.top >= box.bottom &&
-				other.left < box.right &&
-				box.left < other.right &&
-				(nearestBelow === undefined || other.top < nearestBelow.top)
-			) {
-				nearestBelow = other;
-			}
-		}
-		if (nearestRight !== undefined) {
-			origins.push({
-				x: (box.right + nearestRight.left) / 2,
-				y:
-					(Math.max(box.top, nearestRight.top) +
-						Math.min(box.bottom, nearestRight.bottom)) /
-					2,
-			});
-		}
-		if (nearestBelow !== undefined) {
-			origins.push({
-				x:
-					(Math.max(box.left, nearestBelow.left) +
-						Math.min(box.right, nearestBelow.right)) /
-					2,
-				y: (box.bottom + nearestBelow.top) / 2,
-			});
-		}
-	}
-	for (const { sources, targets } of prepared) {
-		for (const { anchor, tip } of [...sources, ...targets]) {
-			origins.push(anchor, tip);
-		}
-	}
-	const frame = growBox(
-		{
-			left: Math.min(...origins.map(({ x }) => x)),
-			top: Math.min(...origins.map(({ y }) => y)),
-			right: Math.max(...origins.map(({ x }) => x)),
-			bottom: Math.max(...origins.map(({ y }) => y)),
-		},
-		EDGE_ROUTE_MARGIN * 2,
-	);
-	origins.push(
-		{ x: frame.left, y: frame.top },
-		{ x: frame.right, y: frame.top },
-		{ x: frame.left, y: frame.bottom },
-		{ x: frame.right, y: frame.bottom },
-	);
-	const xs = origins.map(({ x }) => x);
-	const ys = origins.map(({ y }) => y);
-	for (const border of borders) {
-		for (const offset of [-EDGE_ROUTE_MARGIN, 0, EDGE_ROUTE_MARGIN]) {
-			xs.push(border.left + offset, border.right + offset);
-			ys.push(border.top + offset, border.bottom + offset);
-		}
-	}
-	return {
-		origins,
-		xs: xs.filter((x) => x >= frame.left && x <= frame.right),
-		ys: ys.filter((y) => y >= frame.top && y <= frame.bottom),
-	};
 };
 
 /**
@@ -548,6 +223,8 @@ export const routeEdgesAroundNodes = (
 		const excludedSet = new Set(excluded);
 		prepared.push({
 			edge,
+			sourceNode: source,
+			targetNode: target,
 			sourceBox: convertRectToBoundingBox(source.bounds),
 			targetBox: convertRectToBoundingBox(target.bounds),
 			excluded,
@@ -570,6 +247,8 @@ export const routeEdgesAroundNodes = (
 		);
 		const toNudge: {
 			edge: RoutableEdge;
+			sourceNode: RoutableNode;
+			targetNode: RoutableNode;
 			routed: RoutedEdge;
 			route: RouteToNudge;
 			sourcePoint: Point;
@@ -581,15 +260,15 @@ export const routeEdgesAroundNodes = (
 				unroutedEdgeIds.add(edgeToRoute.edge.id);
 				continue;
 			}
-			const { edge } = edgeToRoute;
+			const { edge, sourceNode, targetNode } = edgeToRoute;
 			const excludedSet = new Set(edgeToRoute.excluded);
 			const walls = obstacles.filter((obstacle) => !excludedSet.has(obstacle));
-			const source = requireNode(edge.sourceId, edge.id);
-			const target = requireNode(edge.targetId, edge.id);
-			const sourcePoint = calcAnchorPoint(source.bounds, routed.source);
-			const targetPoint = calcAnchorPoint(target.bounds, routed.target);
+			const sourcePoint = calcAnchorPoint(sourceNode.bounds, routed.source);
+			const targetPoint = calcAnchorPoint(targetNode.bounds, routed.target);
 			toNudge.push({
 				edge,
+				sourceNode,
+				targetNode,
 				routed,
 				route: {
 					path: [
@@ -598,8 +277,8 @@ export const routeEdgesAroundNodes = (
 						{ ...targetPoint },
 					],
 					walls: walls.map(({ box }) => box),
-					source: toRouteEnd(source, routed.source, sourcePoint, walls),
-					target: toRouteEnd(target, routed.target, targetPoint, walls),
+					source: toRouteEnd(sourceNode, routed.source, sourcePoint, walls),
+					target: toRouteEnd(targetNode, routed.target, targetPoint, walls),
 				},
 				sourcePoint,
 				targetPoint,
@@ -618,19 +297,22 @@ export const routeEdgesAroundNodes = (
 			options.borders ?? [],
 		);
 		toNudge.forEach(
-			({ edge, routed, route, sourcePoint, targetPoint }, index) => {
+			(
+				{ sourceNode, targetNode, routed, route, sourcePoint, targetPoint },
+				index,
+			) => {
 				const { path } = route;
 				const placement = placements[index];
 				routedById.set(routed.id, {
 					...routed,
 					source: toNudgedAnchor(
-						requireNode(edge.sourceId, edge.id),
+						sourceNode,
 						routed.source,
 						sourcePoint,
 						path[0],
 					),
 					target: toNudgedAnchor(
-						requireNode(edge.targetId, edge.id),
+						targetNode,
 						routed.target,
 						targetPoint,
 						path[path.length - 1],

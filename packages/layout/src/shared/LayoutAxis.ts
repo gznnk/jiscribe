@@ -50,6 +50,34 @@ export type LayoutAxis = {
 	) => void;
 };
 
+/**
+ * The axis a side of a box runs along, read through the same members as a
+ * {@link LayoutAxis} reads the one across its ranks, so what works out a position on
+ * a side (see straightAnchor) serves both.
+ */
+export type SideAxis = Pick<
+	LayoutAxis,
+	"across" | "acrossStart" | "acrossExtent"
+>;
+
+const TOP_BOTTOM_SIDE_AXIS: SideAxis = {
+	across: ({ x }) => x,
+	acrossStart: ({ x }) => x,
+	acrossExtent: ({ width }) => width,
+};
+
+const LEFT_RIGHT_SIDE_AXIS: SideAxis = {
+	across: ({ y }) => y,
+	acrossStart: ({ y }) => y,
+	acrossExtent: ({ height }) => height,
+};
+
+/** The axis `side` runs along: x for `top` and `bottom`, y for `left` and `right`. */
+export const createSideAxis = (side: LayoutSide): SideAxis =>
+	side === "top" || side === "bottom"
+		? TOP_BOTTOM_SIDE_AXIS
+		: LEFT_RIGHT_SIDE_AXIS;
+
 export const createLayoutAxis = (direction: LayoutDirection): LayoutAxis => {
 	const vertical = isVerticalFlow(direction);
 	return {

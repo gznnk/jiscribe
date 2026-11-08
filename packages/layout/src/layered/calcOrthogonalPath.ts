@@ -1,49 +1,8 @@
-import type { Point, Rect } from "@jiscribe/geometry";
+import type { Point } from "@jiscribe/geometry";
 
 import type { RowIndex } from "./RowIndex";
-import { isSameCoordinate } from "../shared/isSameCoordinate";
 import type { LayoutAxis } from "../shared/LayoutAxis";
-import type { LayoutEdgeAnchor } from "../shared/types";
-
-/** Where an anchor sits on a box, in the same coordinates as `bounds`. */
-export const calcAnchorPoint = (
-	bounds: Rect,
-	anchor: LayoutEdgeAnchor,
-): Point => {
-	switch (anchor.side) {
-		case "top":
-			return { x: bounds.x + bounds.width * anchor.t, y: bounds.y };
-		case "bottom":
-			return {
-				x: bounds.x + bounds.width * anchor.t,
-				y: bounds.y + bounds.height,
-			};
-		case "left":
-			return { x: bounds.x, y: bounds.y + bounds.height * anchor.t };
-		case "right":
-			return {
-				x: bounds.x + bounds.width,
-				y: bounds.y + bounds.height * anchor.t,
-			};
-	}
-};
-
-/** Drop every point that lies on the straight line between its neighbours. */
-const dropCollinearPoints = (path: readonly Point[]): Point[] =>
-	path.filter((point, index) => {
-		if (index === 0 || index === path.length - 1) {
-			return true;
-		}
-		const previous = path[index - 1];
-		const next = path[index + 1];
-		const sameColumn =
-			isSameCoordinate(previous.x, point.x) &&
-			isSameCoordinate(point.x, next.x);
-		const sameRow =
-			isSameCoordinate(previous.y, point.y) &&
-			isSameCoordinate(point.y, next.y);
-		return !(sameColumn || sameRow);
-	});
+import { dropCollinearPoints } from "../shared/simplifyRoute";
 
 /**
  * Turn the polyline dagre routed into a right-angled one that stays clear of the

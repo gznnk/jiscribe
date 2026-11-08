@@ -1,76 +1,16 @@
-import type { Rect } from "@jiscribe/geometry";
-import type { LayoutVisualMargin } from "@jiscribe/layout";
+import type { LayoutGraphEdge, LayoutVisualMargin } from "@jiscribe/layout";
 
-import { type ObjectRecord, readChildren } from "./objectAccess";
-import {
-	type DocDefinitions,
-	readBodyTextStyleDefaults,
-} from "./objectGeometry";
-import { isTransformed } from "./transformFields";
+import { readChildren } from "./objectAccess";
 import type { CanvasDoc } from "../../model/canvas/CanvasDoc";
 import type { ObjectDoc } from "../../model/objects/base/ObjectDoc";
-import { isRichText } from "../../model/objects/types/text/RichText";
-import type { TextSlot } from "../../model/objects/types/text/TextSlot";
 import {
 	type RestackBeneathRequest,
 	restackBeneath,
 } from "../../model/objects/utils/restackBeneath";
 import {
 	type ConnectorUnderLabelText,
-	calcLabelTextLayoutMargin,
+	listConnectorsUnderLabelText,
 } from "../../text/label/calcLabelTextLayoutMargin";
-import {
-	calcLabelTextRegion,
-	isLabelTextDrawn,
-} from "../../text/label/calcLabelTextRegion";
-
-/** The object's caption as calcLabelTextLayoutMargin and calcLabelTextRegion take it. */
-const readLabelTextBody = (
-	object: ObjectRecord,
-): Partial<TextSlot> | undefined =>
-	isRichText(object.text) ? (object as Partial<TextSlot>) : undefined;
-
-/**
- * What the object draws past its box, which the layout keeps room for: a `"label"`
- * type's caption (calcLabelTextLayoutMargin), measured in the font it is drawn with.
- *
- * @param bounds - The object's box as the layout is given it
- */
-export const readLayoutVisualMargin = (
-	object: ObjectRecord,
-	bounds: Rect,
-	definitions: DocDefinitions,
-): LayoutVisualMargin | undefined => {
-	const definition = definitions.get(object.type);
-	return definition === undefined
-		? undefined
-		: calcLabelTextLayoutMargin(
-				definition.features.text,
-				bounds,
-				readLabelTextBody(object),
-				readBodyTextStyleDefaults(definition),
-				isTransformed(object),
-			);
-};
-
-/**
- * Where a `"label"` type hangs its caption (calcLabelTextRegion), in the shape's local
- * coordinates (its centre the origin), or undefined for any other type and for a
- * caption that draws nothing (isLabelTextDrawn).
- *
- * @param bounds - The object's untransformed box
- */
-export const readLocalLabelTextRegion = (
-	object: ObjectRecord,
-	bounds: Rect,
-	definitions: DocDefinitions,
-): Rect | undefined => {
-	const definition = definitions.get(object.type);
-	const body = readLabelTextBody(object);
-	return definition?.features.text !== "label" || !isLabelTextDrawn(body)
-		? undefined
-		: calcLabelTextRegion(bounds, body, readBodyTextStyleDefaults(definition));
-};
 
 /**
  * Where restacking takes the connectors the layout routed under a caption: each to
@@ -78,7 +18,7 @@ export const readLocalLabelTextRegion = (
  * holding it there (restackBeneath), so the caption, knocking out what lies behind it,
  * reads over the line. Nothing is moved yet (see applyLabelTextRestack).
  */
-export type LabelTextRestack = {
+type LabelTextRestack = {
 	/** Each parent's children in their new order, for the parents whose order changes. */
 	orderedIdsBySiblings: Map<ObjectDoc[], string[]>;
 	/** The connectors moved, parent by parent, each parent's in the order they stood. */
@@ -86,7 +26,7 @@ export type LabelTextRestack = {
 };
 
 /** Where restacking takes the connectors given, with the owners each runs under the caption of. */
-export const planLabelTextRestack = (
+const planLabelTextRestack = (
 	doc: CanvasDoc,
 	connectors: readonly ConnectorUnderLabelText[],
 ): LabelTextRestack => {
@@ -164,7 +104,7 @@ const readRestackedSiblings = (
 };
 
 /** Move the connectors where `restack` takes them, mutating the doc's parent arrays in place. */
-export const applyLabelTextRestack = (restack: LabelTextRestack): void => {
+const applyLabelTextRestack = (restack: LabelTextRestack): void => {
 	for (const siblings of restack.orderedIdsBySiblings.keys()) {
 		siblings.splice(
 			0,
@@ -172,4 +112,39 @@ export const applyLabelTextRestack = (restack: LabelTextRestack): void => {
 			...readRestackedSiblings(siblings, restack),
 		);
 	}
+};
+
+/**
+ * Move each connector routed under its own end's caption to just beneath that shape in
+ * the stacking order (see LabelTextRestack), mutating the doc's parent arrays in place.
+ *
+ * @param routedEdges - The edges as routed, with the side each end was put on
+ * @param graphEdges - The edges the router was given, which name the owners of each one's ends
+ * @param nodes - The shapes the ends sit on, each with the caption margin it was measured with; one without a margin hangs no caption over its bottom side
+ * @param isRouteWritten - Whether the router's route was written for the connector; see listConnectorsUnderLabelText
+ * @returns The connectors moved, parent by parent, each parent's in the order they stood
+ */
+export const restackConnectorsUnderLabelTexts = (
+	doc: CanvasDoc,
+	routedEdges: Parameters<typeof listConnectorsUnderLabelText>[0],
+	graphEdges: readonly LayoutGraphEdge[],
+	nodes: readonly { id: string; visualMargin?: LayoutVisualMargin }[],
+	isRouteWritten: (connectorId: string) => boolean,
+): string[] => {
+	const marginById = new Map(
+		nodes.flatMap(({ id, visualMargin }) =>
+			visualMargin === undefined ? [] : [[id, visualMargin] as const],
+		),
+	);
+	const restack = planLabelTextRestack(
+		doc,
+		listConnectorsUnderLabelText(
+			routedEdges,
+			graphEdges,
+			marginById,
+			isRouteWritten,
+		),
+	);
+	applyLabelTextRestack(restack);
+	return restack.movedIds;
 };

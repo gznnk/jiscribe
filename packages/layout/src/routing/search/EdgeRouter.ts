@@ -1,4 +1,9 @@
-import type { BoundingBox, Point, Rect } from "@jiscribe/geometry";
+import {
+	type BoundingBox,
+	type Point,
+	type Rect,
+	unionBoundingBoxes,
+} from "@jiscribe/geometry";
 
 import {
 	type RouteGraph,
@@ -20,9 +25,11 @@ import {
 	stepIndex,
 } from "./RouteGrid";
 import { RouteSearchQueue } from "./RouteSearchQueue";
-import { isSameCoordinate } from "../../shared/isSameCoordinate";
-import type { LayoutSide, RoutableEdge, RoutedEdge } from "../../shared/types";
+import { isAtLeast, isSameCoordinate } from "../../shared/coordinate";
+import { simplifyRoute } from "../../shared/simplifyRoute";
+import type { LayoutSide } from "../../shared/types";
 import { EDGE_ROUTE_MARGIN, ROUTE_COSTS } from "../edgeRoutingCosts";
+import type { RoutableEdge, RoutableNode, RoutedEdge } from "../types";
 
 /** A rect no route enters, with what it belongs to. */
 export type Obstacle = {
@@ -52,6 +59,10 @@ export type EndCandidate = {
 
 export type PreparedEdge = {
 	edge: RoutableEdge;
+	/** The node the edge starts at. */
+	sourceNode: RoutableNode;
+	/** The node the edge ends at. */
+	targetNode: RoutableNode;
 	/** The source node's box. */
 	sourceBox: BoundingBox;
 	/** The target node's box. */
@@ -83,9 +94,6 @@ const MAX_KEPT_GRAPH_STATES = 7_000_000;
 /** Where a finish entry stands among the directions in the search's tie-break: after them all. */
 const FINISH_DIRECTION = 4;
 
-const isAtLeastZero = (value: number): boolean =>
-	value >= 0 || isSameCoordinate(value, 0);
-
 /**
  * The fewest bends a route can make from heading `direction` at (fromX, fromY) to
  * arriving at (toX, toY) heading `arrival`, obstacles aside: what the search's
@@ -104,7 +112,7 @@ const countBendsAtLeast = (
 	const ahead = deltaX * STEP_X[direction] + deltaY * STEP_Y[direction];
 	if (arrival === direction) {
 		const lateral = deltaX * STEP_Y[direction] - deltaY * STEP_X[direction];
-		if (isSameCoordinate(lateral, 0) && isAtLeastZero(ahead)) {
+		if (isSameCoordinate(lateral, 0) && isAtLeast(ahead, 0)) {
 			return 0;
 		}
 		return ahead > 0 ? 2 : 4;
@@ -114,33 +122,12 @@ const countBendsAtLeast = (
 		return isSameCoordinate(lateral, 0) ? 4 : 2;
 	}
 	const aheadAlongArrival = deltaX * STEP_X[arrival] + deltaY * STEP_Y[arrival];
-	return isAtLeastZero(ahead) && isAtLeastZero(aheadAlongArrival) ? 1 : 3;
+	return isAtLeast(ahead, 0) && isAtLeast(aheadAlongArrival, 0) ? 1 : 3;
 };
 
-/** Drop each point equal to the one before it, then each on the straight line between its neighbours. */
-const simplifyRoute = (path: readonly Point[]): Point[] => {
-	const distinct = path.filter(
-		(point, index) =>
-			index === 0 ||
-			!(
-				isSameCoordinate(point.x, path[index - 1].x) &&
-				isSameCoordinate(point.y, path[index - 1].y)
-			),
-	);
-	return distinct.filter((point, index) => {
-		if (index === 0 || index === distinct.length - 1) {
-			return true;
-		}
-		const previous = distinct[index - 1];
-		const next = distinct[index + 1];
-		return !(
-			(isSameCoordinate(previous.x, point.x) &&
-				isSameCoordinate(point.x, next.x)) ||
-			(isSameCoordinate(previous.y, point.y) &&
-				isSameCoordinate(point.y, next.y))
-		);
-	});
-};
+/** A unit step and which way it runs, as one number: the step × 2, plus 1 for a vertical one. */
+const toDrawnStep = (step: number, direction: RouteDirection): number =>
+	isHorizontalDirection(direction) ? step * 2 : step * 2 + 1;
 
 /** A stub on the lines: its anchor's line indices and the unit steps it runs. */
 type StubOnLines = {
@@ -318,7 +305,7 @@ export class EdgeRouter {
 	}
 
 	/** Routes already drawn crossing a line running straight through (xi, yi) in `direction`. */
-	private countCrossings(
+	private countDrawnCrossingsAt(
 		xi: number,
 		yi: number,
 		direction: RouteDirection,
@@ -336,6 +323,40 @@ export class EdgeRouter {
 	}
 
 	/**
+	 * What running `steps` unit steps from (xi, yi) in `direction` costs: the routes
+	 * drawn crossing it at the points between its two ends, and what `calcStepCost` makes
+	 * of each step.
+	 *
+	 * @param calcStepCost - Given where a step starts and its index among the lines' steps
+	 */
+	private sumStepCosts(
+		xi: number,
+		yi: number,
+		direction: RouteDirection,
+		steps: number,
+		calcStepCost: (atXi: number, atYi: number, step: number) => number,
+	): number {
+		let cost = 0;
+		let atXi = xi;
+		let atYi = yi;
+		for (let index = 0; index < steps; index += 1) {
+			if (index > 0) {
+				cost +=
+					this.countDrawnCrossingsAt(atXi, atYi, direction) *
+					ROUTE_COSTS.crossing;
+			}
+			cost += calcStepCost(
+				atXi,
+				atYi,
+				stepIndex(this.lines, atXi, atYi, direction),
+			);
+			atXi += STEP_X[direction];
+			atYi += STEP_Y[direction];
+		}
+		return cost;
+	}
+
+	/**
 	 * What running `steps` unit steps from (xi, yi) in `direction` costs on top of the
 	 * link's own cost: the routes drawn before it that it runs along, and those it
 	 * crosses at the points between its two ends.
@@ -346,28 +367,14 @@ export class EdgeRouter {
 		direction: RouteDirection,
 		steps: number,
 	): number {
-		let cost = 0;
-		let atXi = xi;
-		let atYi = yi;
-		for (let index = 0; index < steps; index += 1) {
-			if (index > 0) {
-				cost +=
-					this.countCrossings(atXi, atYi, direction) * ROUTE_COSTS.crossing;
-			}
-			const occupied = this.occupiedOn(
-				stepIndex(this.lines, atXi, atYi, direction),
-				direction,
-			);
-			if (occupied > 0) {
-				cost +=
-					this.stepLength(atXi, atYi, direction) *
-					occupied *
-					ROUTE_COSTS.overlapPerPx;
-			}
-			atXi += STEP_X[direction];
-			atYi += STEP_Y[direction];
-		}
-		return cost;
+		return this.sumStepCosts(xi, yi, direction, steps, (atXi, atYi, step) => {
+			const occupied = this.occupiedOn(step, direction);
+			return occupied > 0
+				? this.stepLength(atXi, atYi, direction) *
+						occupied *
+						ROUTE_COSTS.overlapPerPx
+				: 0;
+		});
 	}
 
 	private toStubOnLines(candidate: EndCandidate): StubOnLines {
@@ -396,31 +403,32 @@ export class EdgeRouter {
 			? this.lines.borders?.sidesV
 			: this.lines.borders?.sidesH;
 		const sameEndSteps = this.stubStepsByEnd.get(candidate.endKey);
-		let cost = 0;
-		let xi = startXi;
-		let yi = startYi;
-		for (let index = 0; index < steps; index += 1) {
-			if (index > 0) {
-				cost += this.countCrossings(xi, yi, direction) * ROUTE_COSTS.crossing;
-			}
-			const step = stepIndex(this.lines, xi, yi, direction);
-			const key = isHorizontalDirection(direction) ? step * 2 : step * 2 + 1;
-			const occupied =
-				this.occupiedOn(step, direction) - (sameEndSteps?.get(key) ?? 0);
-			const length = this.stepLength(xi, yi, direction);
-			const nextXi = xi + STEP_X[direction];
-			const nextYi = yi + STEP_Y[direction];
-			cost +=
-				length +
-				length * occupied * ROUTE_COSTS.overlapPerPx +
-				(((borderSides?.[pointIndex(this.lines, xi, yi)] ?? 0) +
-					(borderSides?.[pointIndex(this.lines, nextXi, nextYi)] ?? 0)) *
-					ROUTE_COSTS.borderCrossing) /
-					2;
-			xi = nextXi;
-			yi = nextYi;
-		}
-		return cost;
+		return this.sumStepCosts(
+			startXi,
+			startYi,
+			direction,
+			steps,
+			(xi, yi, step) => {
+				const occupied =
+					this.occupiedOn(step, direction) -
+					(sameEndSteps?.get(toDrawnStep(step, direction)) ?? 0);
+				const length = this.stepLength(xi, yi, direction);
+				return (
+					length +
+					length * occupied * ROUTE_COSTS.overlapPerPx +
+					(((borderSides?.[pointIndex(this.lines, xi, yi)] ?? 0) +
+						(borderSides?.[
+							pointIndex(
+								this.lines,
+								xi + STEP_X[direction],
+								yi + STEP_Y[direction],
+							)
+						] ?? 0)) *
+						ROUTE_COSTS.borderCrossing) /
+						2
+				);
+			},
+		);
 	}
 
 	/** Count the route's unit steps, and its stubs under their ends, as drawn. */
@@ -438,15 +446,14 @@ export class EdgeRouter {
 			const step = stepIndex(this.lines, xi, yi, direction);
 			if (isHorizontalDirection(direction)) {
 				this.lines.occupiedH[step] += 1;
-				this.drawnSteps.push(step * 2);
 			} else {
 				this.lines.occupiedV[step] += 1;
-				this.drawnSteps.push(step * 2 + 1);
 			}
+			const key = toDrawnStep(step, direction);
+			this.drawnSteps.push(key);
 			if (endKey === undefined) {
 				return;
 			}
-			const key = isHorizontalDirection(direction) ? step * 2 : step * 2 + 1;
 			let steps = this.stubStepsByEnd.get(endKey);
 			if (steps === undefined) {
 				steps = new Map();
@@ -489,13 +496,10 @@ export class EdgeRouter {
 	 */
 	route(prepared: PreparedEdge): RoutedEdge | undefined {
 		const graph = this.graphFor(prepared.excluded);
-		const ends = [prepared.sourceBox, prepared.targetBox];
-		const around = {
-			left: Math.min(...ends.map(({ left }) => left)),
-			top: Math.min(...ends.map(({ top }) => top)),
-			right: Math.max(...ends.map(({ right }) => right)),
-			bottom: Math.max(...ends.map(({ bottom }) => bottom)),
-		};
+		const around = unionBoundingBoxes([
+			prepared.sourceBox,
+			prepared.targetBox,
+		]) as BoundingBox;
 		const { xs, ys } = this.lines;
 		for (let reach = SEARCH_WINDOW_REACH; ; reach *= SEARCH_WINDOW_GROWTH) {
 			const window = growBox(around, reach);
@@ -651,7 +655,8 @@ export class EdgeRouter {
 						g +
 						targetCosts[targetIndex] +
 						(arrival === oppositeDirection(candidate.outward)
-							? this.countCrossings(xi, yi, arrival) * ROUTE_COSTS.crossing
+							? this.countDrawnCrossingsAt(xi, yi, arrival) *
+								ROUTE_COSTS.crossing
 							: ROUTE_COSTS.bend);
 					if (cost < finishCosts[targetIndex]) {
 						finishCosts[targetIndex] = cost;
@@ -686,7 +691,8 @@ export class EdgeRouter {
 					linkCosts[node * 4 + direction] +
 					drawnCosts[node * 4 + direction] +
 					(direction === arrival
-						? this.countCrossings(xi, yi, direction) * ROUTE_COSTS.crossing
+						? this.countDrawnCrossingsAt(xi, yi, direction) *
+							ROUTE_COSTS.crossing
 						: ROUTE_COSTS.bend);
 				const nextState = (next << 2) | direction;
 				if (cost < bestCost[nextState]) {

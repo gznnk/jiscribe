@@ -1,10 +1,10 @@
 import type { Point, Rect } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
-import { calcAnchorPoint } from "../../layered/calcOrthogonalPath";
-import type { RoutableNode, RoutedEdge } from "../../shared/types";
+import { calcAnchorPoint } from "../../shared/calcAnchorPoint";
 import { EDGE_ROUTE_MARGIN } from "../edgeRoutingCosts";
 import { routeEdgesAroundNodes } from "../routeEdgesAroundNodes";
+import type { RoutableNode, RoutedEdge } from "../types";
 
 const box = (
 	id: string,

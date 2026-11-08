@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { EDGE_END_SPACING } from "../chooseEdgeAnchors";
+import { EDGE_END_SPACING } from "../../shared/edgeSpacing";
 import { createTakenEnds } from "../createTakenEnds";
 
 // A width the spacing divides into an exact binary fraction, so the steps land exactly.

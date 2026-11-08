@@ -1,7 +1,7 @@
 import type { Point } from "@jiscribe/geometry";
 
+import type { LaidOutContainer, LaidOutNode } from "./types";
 import type { LayoutAxis } from "../shared/LayoutAxis";
-import type { LaidOutContainer, LaidOutNode } from "../shared/types";
 
 /**
  * A rank coordinate as a lookup key: rows and gaps that are the same to the routing

@@ -1,8 +1,4 @@
-export {
-	EDGE_ANCHOR_FAN_RANGE,
-	EDGE_BUNDLE_SPACING,
-	EDGE_END_SPACING,
-} from "./layered/chooseEdgeAnchors";
+export { EDGE_BUNDLE_SPACING } from "./layered/chooseEdgeAnchors";
 export { calcFacingSides } from "./layered/calcFacingSides";
 export { computeLayeredLayout } from "./layered/computeLayeredLayout";
 export {
@@ -11,6 +7,11 @@ export {
 	type TakenEnds,
 } from "./layered/createTakenEnds";
 export { isRectInside } from "./shared/isRectInside";
+export {
+	EDGE_ANCHOR_FAN_RANGE,
+	EDGE_END_SPACING,
+	GAP_LANE_SPACING,
+} from "./shared/edgeSpacing";
 export {
 	LayoutDirections,
 	type LayoutDirection,
@@ -27,25 +28,28 @@ export {
 	splitLayoutGraph,
 	type SplittableLayoutGraph,
 } from "./layered/splitLayoutGraph";
-export { GAP_LANE_SPACING } from "./layered/spreadGapLanes";
 export { EDGE_ANCHOR_STRAIGHT_RANGE } from "./shared/straightAnchor";
 export {
 	LAYERED_LAYOUT_DEFAULTS,
-	type EdgeRoutingOptions,
-	type EdgeRoutingResult,
 	type LaidOutContainer,
 	type LaidOutEdge,
 	type LaidOutNode,
-	type LayoutAnchorRange,
 	type LayeredLayoutOptions,
 	type LayeredLayoutResult,
-	type LayoutEdgeAnchor,
 	type LayoutGraphContainer,
 	type LayoutGraphEdge,
 	type LayoutGraphNode,
-	type LayoutSide,
-	type LayoutVisualMargin,
-	type RoutableEdge,
-	type RoutableNode,
-	type RoutedEdge,
+} from "./layered/types";
+export type {
+	LayoutAnchorRange,
+	LayoutEdgeAnchor,
+	LayoutSide,
+	LayoutVisualMargin,
 } from "./shared/types";
+export type {
+	EdgeRoutingOptions,
+	EdgeRoutingResult,
+	RoutableEdge,
+	RoutableNode,
+	RoutedEdge,
+} from "./routing/types";

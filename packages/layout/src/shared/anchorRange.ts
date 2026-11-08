@@ -59,7 +59,7 @@ const pickRatioInAnchorRange = (
 
 /**
  * Where a side's only end sits: the middle of `body` (the side's body, see
- * `LayoutGraphNode.anchorBodyRanges`), or the middle of `usable` when the body's
+ * a node's `anchorBodyRanges`), or the middle of `usable` when the body's
  * middle is not on the outline.
  */
 export const calcCentredAnchorRatio = (

@@ -1,4 +1,4 @@
-import { isSameCoordinate } from "../../shared/isSameCoordinate";
+import { isSameCoordinate } from "../../shared/coordinate";
 
 /** How many times the solver may split a block before it settles for what it has. */
 const MAX_SOLVER_SPLITS = 200;
