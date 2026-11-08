@@ -184,15 +184,16 @@ describe("computeLayeredLayout", () => {
 		expect(result.edges.map(({ target }) => target.t)).toEqual([0.5, 0.5]);
 		// Root's bottom holds both, each leaning toward its child.
 		expect(result.edges.map(({ source }) => source.t).sort()).toEqual([
-			0.2, 0.8,
+			0.1, 0.9,
 		]);
 	});
 
 	it("leaves a column outside a side's usable stretch instead of running straight to it", () => {
-		// The same drawing as above, but a's bottom only reaches from 0.11 to 0.89 (a
-		// parallelogram's): both columns fall outside it, so both ends fan out, to the
-		// ends of EDGE_ANCHOR_FAN_RANGE, which the stretch holds whole.
-		const usable = { min: 0.11, max: 0.89 };
+		// The same drawing as above, but a's bottom only reaches from 0.095 to 0.905 (a
+		// parallelogram's): both columns, at 0.09375 and 0.90625, fall outside it, so
+		// both ends fan out, to the ends of EDGE_ANCHOR_FAN_RANGE, which the stretch
+		// holds whole.
+		const usable = { min: 0.095, max: 0.905 };
 		const result = computeLayeredLayout(
 			[
 				{ ...box("a"), anchorRanges: { bottom: usable } },
@@ -208,8 +209,8 @@ describe("computeLayeredLayout", () => {
 
 		const ab = result.edges.find(({ id }) => id === "ab");
 		const ac = result.edges.find(({ id }) => id === "ac");
-		expect(ab?.source.t).toBe(0.8);
-		expect(ac?.source.t).toBe(0.2);
+		expect(ab?.source.t).toBe(0.9);
+		expect(ac?.source.t).toBe(0.1);
 		expect(ab?.points.length).toBeGreaterThan(0);
 	});
 
@@ -323,7 +324,7 @@ describe("computeLayeredLayout", () => {
 		);
 
 		const sourceRatios = result.edges.map(({ source }) => source.t).sort();
-		// 0.2..0.8 cut down to 0.3..0.7.
+		// 0.1..0.9 cut down to 0.3..0.7.
 		expect(sourceRatios).toEqual([0.3, 0.7]);
 	});
 
@@ -335,7 +336,7 @@ describe("computeLayeredLayout", () => {
 					id: "root",
 					width: 400,
 					height: 80,
-					anchorRanges: { bottom: { min: 0.85, max: 1 } },
+					anchorRanges: { bottom: { min: 0.92, max: 1 } },
 				},
 				box("left"),
 				box("right"),
@@ -348,9 +349,9 @@ describe("computeLayeredLayout", () => {
 		);
 
 		const sourceRatios = result.edges.map(({ source }) => source.t).sort();
-		// EDGE_ANCHOR_FAN_RANGE taken as shares of 0.85..1.
-		expect(sourceRatios[0]).toBeCloseTo(0.88, 9);
-		expect(sourceRatios[1]).toBeCloseTo(0.97, 9);
+		// EDGE_ANCHOR_FAN_RANGE taken as shares of 0.92..1.
+		expect(sourceRatios[0]).toBeCloseTo(0.928, 9);
+		expect(sourceRatios[1]).toBeCloseTo(0.992, 9);
 	});
 
 	it("centres a side's only edge on the side's body and fans several out over it", () => {
@@ -376,8 +377,8 @@ describe("computeLayeredLayout", () => {
 		const sourceRatios = [e1.source.t, e2.source.t].sort(
 			(first, second) => first - second,
 		);
-		expect(sourceRatios[0]).toBeCloseTo(0.4, 9);
-		expect(sourceRatios[1]).toBeCloseTo(0.85, 9);
+		expect(sourceRatios[0]).toBeCloseTo(0.325, 9);
+		expect(sourceRatios[1]).toBeCloseTo(0.925, 9);
 	});
 
 	it("keeps a bundle's ends inside the side's usable stretch", () => {

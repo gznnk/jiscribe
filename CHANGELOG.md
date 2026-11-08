@@ -408,6 +408,13 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   as well as many; see Removed for the tools that went. Each batch tool's
   description now states on its own every rule the single form's carried.
 
+- **The ends sharing a side fan out over its middle 80%, up from 60%.**
+  `EDGE_ANCHOR_FAN_RANGE` (`@jiscribe/layout`) is 0.1..0.9 of the side, was
+  0.2..0.8, so `docOps.layoutObjects` and the canvas's auto layout commands
+  spread several connectors leaving one side further apart, and
+  `routeConnectors` lets their ends slide over that wider stretch: four ends on
+  a side of a 64px icon stand 16px apart there, up from 12 (`EDGE_END_SPACING`
+  is 20).
 - **A line's drawn extent takes its arrowheads in.** Zoom-to-fit, the export
   viewBox, viewport culling, zoom-to-selection, the object menu's placement and
   `measure.visualBounds` (with the AI's `measure_visual_bounds`) now count each

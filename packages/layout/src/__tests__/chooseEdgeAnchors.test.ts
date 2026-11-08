@@ -55,7 +55,7 @@ describe("chooseEdgeAnchors", () => {
 			6,
 		);
 		// Far enough from gs's fanned end that nothing is pushed.
-		expect(gs.source.t).toBe(0.8);
+		expect(gs.source.t).toBe(0.9);
 	});
 
 	it("sets the column by each end's rank on the side's body", () => {
@@ -119,22 +119,24 @@ describe("chooseEdgeAnchors", () => {
 			axis,
 		);
 
-		expect([gb.source.t, gb.target.t]).toEqual([0.8, 0.2]);
+		expect([gb.source.t, gb.target.t]).toEqual([0.9, 0.1]);
 	});
 
 	it("keeps the old ends when the column would come within an end spacing of a neighbour", () => {
-		// u's edge is fanned to 0.2 on p's left, ahead of g's in heading order.
+		// u's edge is fanned to 0.1 on p's left, ahead of g's in heading order, 4px down
+		// a p 40px tall; the column, at y 34, would come 10px from it.
+		const shortP = ["p", at(200, 20, 40)] as const;
 		const u = ["u", at(0, -100)] as const;
 		const [gp] = chooseEdgeAnchors(
-			[link("gp", g, p), link("gs", g, sql), link("up", u, p)],
+			[link("gp", g, shortP), link("gs", g, sql), link("up", u, shortP)],
 			rows,
 			axis,
 		);
 
 		// Straight toward p's centre on g's side, as before; on p's side the end is
 		// only spread clear of u's.
-		expect(gp.source.t).toBe(42 / 64);
-		expect(gp.target.t).toBeCloseTo(0.2 + 20 / 64, 6);
+		expect(gp.source.t).toBe(40 / 64);
+		expect(gp.target.t).toBeCloseTo(0.1 + 20 / 40, 6);
 	});
 
 	it("stops the column at the end of the straight range when the mean falls past it", () => {

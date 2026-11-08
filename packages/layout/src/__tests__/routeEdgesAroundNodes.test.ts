@@ -538,10 +538,10 @@ describe("routeEdgesAroundNodes", () => {
 
 		it("keeps the ends sharing a side within the stretch a layered layout fans them over", () => {
 			// Seven boxes in a column to the right: three edges leave a's bottom, whose
-			// fan stretch 12..48 shares 36px as two gaps of 18.
+			// fan stretch 4..36 shares 32px as two gaps of 16.
 			const ys = [-300, -200, -100, 0, 100, 200, 300];
 			const nodes = [
-				box("a", 0, 0),
+				box("a", 0, 0, 40),
 				...ys.map((y, index) => box(`t${index}`, 300, y)),
 			];
 			const result = routeEdgesAroundNodes(
@@ -556,7 +556,7 @@ describe("routeEdgesAroundNodes", () => {
 				onBottom.map(({ source }) =>
 					Math.round(calcAnchorPoint(nodes[0].bounds, source).x),
 				),
-			).toEqual([48, 30, 12]);
+			).toEqual([36, 20, 4]);
 		});
 
 		it("fans ends leaving a bottom side through the box's own caption", () => {
@@ -589,7 +589,7 @@ describe("routeEdgesAroundNodes", () => {
 		});
 
 		it("keeps an end off its box's caption on a side other than the bottom", () => {
-			// a is 20px tall, its left side fanning ends over y 4..16; its caption hangs
+			// a is 20px tall, its left side fanning ends over y 2..18; its caption hangs
 			// 2px below and reaches past the left side. Obstacles against a's other sides
 			// put both ends on its left, where the end turning down to c is pushed toward
 			// the caption.

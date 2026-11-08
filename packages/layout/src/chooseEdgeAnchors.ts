@@ -31,7 +31,7 @@ import type {
  * cut down to the side's usable stretch (`LayoutGraphNode.anchorRanges`); the same
  * shares of the usable stretch where the two do not meet.
  */
-export const EDGE_ANCHOR_FAN_RANGE = { min: 0.2, max: 0.8 } as const;
+export const EDGE_ANCHOR_FAN_RANGE = { min: 0.1, max: 0.9 } as const;
 
 /** Least distance in px between two edge ends on one side: room for two arrowheads. */
 export const EDGE_END_SPACING = 20;
