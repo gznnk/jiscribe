@@ -1,23 +1,10 @@
 import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
-import type { ObjectFactoryRegistry } from "@jiscribe/doc/registries/ObjectFactoryRegistry";
-import type { ObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
-import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectTextStyleDefaultsRegistry";
 
+import type { ICanvasRegistries } from "./ICanvasRegistries";
 import type { CanvasPlugin } from "../../plugin/CanvasPlugin";
-import type { ObjectAnchorRegionRegistry } from "../../rendering/objects/registry/ObjectAnchorRegionRegistry";
 import type { ObjectComponentRegistry } from "../../rendering/objects/registry/ObjectComponentRegistry";
-import type { ObjectConnectionAnchorsRegistry } from "../../rendering/objects/registry/ObjectConnectionAnchorsRegistry";
-import type { ObjectExtraConnectPointsRegistry } from "../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
-import type { ObjectGeometryKeyRegistry } from "../../rendering/objects/registry/ObjectGeometryKeyRegistry";
-import type { ObjectOutlineRegistry } from "../../rendering/objects/registry/ObjectOutlineRegistry";
-import type { ObjectPartKindRegistry } from "../../rendering/objects/registry/ObjectPartKindRegistry";
 import type { ObjectSvgDefsRegistry } from "../../rendering/objects/registry/ObjectSvgDefsRegistry";
 import type { ObjectTextMeasurerRegistry } from "../../rendering/objects/registry/ObjectTextMeasurerRegistry";
-import type { ObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
-import type { ObjectAutoHeightRegistry } from "../../states/registry/ObjectAutoHeightRegistry";
-import type { ObjectContentResizerRegistry } from "../../states/registry/ObjectContentResizerRegistry";
-import type { ObjectLayoutContainerRegistry } from "../../states/registry/ObjectLayoutContainerRegistry";
-import type { ObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import type { ObjectStateValidatorRegistry } from "../../states/registry/ObjectStateValidatorRegistry";
 import type {
 	Camera,
@@ -26,90 +13,54 @@ import type {
 } from "../CanvasTypes";
 import type { CommandRegistry } from "../commands/CommandRegistry";
 import type { GestureHandlerRegistry } from "../gestures/registry/GestureHandlerRegistry";
-import type { ObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
-import type { ObjectStyleRegistry } from "../style/tables/ObjectStyleRegistry";
 import type { ObjectTransformHandlesRegistry } from "../ui/controls/ObjectTransformHandlesRegistry";
 import type { SelectionControlRegistry } from "../ui/controls/SelectionControlRegistry";
 import type { ObjectTextEditLineBreaksRegistry } from "../ui/editors/ObjectTextEditLineBreaksRegistry";
 import type { ObjectTextEditOverflowRegistry } from "../ui/editors/ObjectTextEditOverflowRegistry";
 import type { ObjectMenuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegistry";
 import type { PropertyPanelRegistry } from "../ui/menu/PropertyPanel/PropertyPanelRegistry";
-import type { StencilRegistry } from "../ui/objects/StencilRegistry";
 
 /**
- * The full set of UI registries a single `<Canvas>` instance operates against.
- *
- * Historically these were module-level singletons shared by every canvas. The
- * bundle groups them so a canvas can own its own configured set (see
- * `createCanvasRegistries`), which is the foundation for per-canvas configuration
- * (`<Canvas initialConfig={...}>`).
+ * The full set of UI registries a single `<Canvas>` instance operates against (see
+ * `createCanvasRegistries`): the {@link ICanvasRegistries} contract, its `command`
+ * narrowed to the real class, plus what the pure tree does not read.
  *
  * The doc validators are intentionally NOT part of this bundle: they are used only
  * during parse-time validation at the input boundary (before a `<Canvas>` exists),
  * so their registry is parser-scoped rather than canvas-scoped and is built by
  * `createCanvasParser`.
  */
-export type CanvasRegistries = {
-	objectMapper: ObjectMapperRegistry;
+export type CanvasRegistries = Omit<ICanvasRegistries, "command"> & {
+	// --- State ---
+
 	objectStateValidator: ObjectStateValidatorRegistry;
-	objectContentResizer: ObjectContentResizerRegistry;
-	/**
-	 * Which types a document may leave `height` out of, so the canvas offers the
-	 * switch exactly where the parser accepts the result.
-	 */
-	objectAutoHeight: ObjectAutoHeightRegistry;
-	/**
-	 * Which types declare themselves containers (`ObjectDocDefinition.layoutContainer`),
-	 * with the title band each answers for a doc of it.
-	 */
-	objectLayoutContainer: ObjectLayoutContainerRegistry;
+
+	// --- Drawing ---
+
 	objectComponent: ObjectComponentRegistry;
+	objectSvgDefs: ObjectSvgDefsRegistry;
+
+	// --- Text ---
+
 	/**
-	 * Per-type, per-slot text-style defaults, read by every side that draws,
-	 * edits, measures or reports a text style so a field the author left unset
-	 * resolves to what that slot of that type is drawn with rather than a
-	 * type-agnostic default.
-	 */
-	objectTextStyleDefaults: ObjectTextStyleDefaultsRegistry;
-	/**
-	 * Per-type stroke / fill defaults, read by every side that draws or reports a
-	 * shape style so a field the author left unset resolves to what that type is
-	 * drawn with rather than a type-agnostic default.
-	 */
-	objectShapeStyleDefaults: ObjectShapeStyleDefaultsRegistry;
-	objectTextEditOverflow: ObjectTextEditOverflowRegistry;
-	objectTextEditLineBreaks: ObjectTextEditLineBreaksRegistry;
-	/**
-	 * Per-type measurers for a body the type lays out itself, read by
-	 * `measure.textSlot`; a type without one is measured as plain text.
+	 * Per-type measurers for a body the type lays out itself; a type without one is
+	 * measured as plain text.
 	 */
 	objectTextMeasurer: ObjectTextMeasurerRegistry;
-	objectOutline: ObjectOutlineRegistry;
-	objectAnchorRegion: ObjectAnchorRegionRegistry;
-	objectExtraConnectPoints: ObjectExtraConnectPointsRegistry;
-	objectConnectionAnchors: ObjectConnectionAnchorsRegistry;
-	objectGeometryKey: ObjectGeometryKeyRegistry;
-	objectVisualBounds: ObjectVisualBoundsRegistry;
-	objectSvgDefs: ObjectSvgDefsRegistry;
-	objectBehavior: ObjectBehaviorRegistry;
-	objectTransformHandles: ObjectTransformHandlesRegistry;
+	objectTextEditOverflow: ObjectTextEditOverflowRegistry;
+	objectTextEditLineBreaks: ObjectTextEditLineBreaksRegistry;
+
+	// --- Interaction ---
+
 	selectionControl: SelectionControlRegistry;
-	/**
-	 * Per-type sub-part definitions, keyed by `(type, kind)`: what a part
-	 * selection inside an object means to the type that owns it.
-	 */
-	objectPartKind: ObjectPartKindRegistry;
+	objectTransformHandles: ObjectTransformHandlesRegistry;
 	gestureHandler: GestureHandlerRegistry;
+
+	// --- Commands / UI ---
+
 	command: CommandRegistry;
 	objectMenu: ObjectMenuRegistry;
 	propertyPanel: PropertyPanelRegistry;
-	stencil: StencilRegistry;
-	objectFactory: ObjectFactoryRegistry;
-	/**
-	 * Per-type style tables: which style intents a type takes and where each
-	 * lands in its data, so writing a style and reporting it read one answer.
-	 */
-	objectStyle: ObjectStyleRegistry;
 };
 
 /**

@@ -49,8 +49,7 @@ import { createStencilRegistry } from "../ui/objects/StencilRegistry";
  *      id that collides with a built-in or an earlier plugin throws (see
  *      `CanvasPlugin`).
  *
- * Passing no `config` reproduces the full set, matching the historical singleton
- * behavior (backward compatible).
+ * Passing no `config` reproduces the full set.
  */
 export const createCanvasRegistries = (
 	config?: CanvasCapabilities,
@@ -62,29 +61,29 @@ export const createCanvasRegistries = (
 		objectAutoHeight: createObjectAutoHeightRegistry(),
 		objectLayoutContainer: createObjectLayoutContainerRegistry(),
 		objectComponent: createObjectComponentRegistry(),
-		objectTextStyleDefaults: createObjectTextStyleDefaultsRegistry(),
-		objectShapeStyleDefaults: createObjectShapeStyleDefaultsRegistry(),
-		objectTextEditOverflow: createObjectTextEditOverflowRegistry(),
-		objectTextEditLineBreaks: createObjectTextEditLineBreaksRegistry(),
-		objectTextMeasurer: createObjectTextMeasurerRegistry(),
+		objectSvgDefs: createObjectSvgDefsRegistry(),
+		objectVisualBounds: createObjectVisualBoundsRegistry(),
 		objectOutline: createObjectOutlineRegistry(),
 		objectAnchorRegion: createObjectAnchorRegionRegistry(),
 		objectExtraConnectPoints: createObjectExtraConnectPointsRegistry(),
 		objectConnectionAnchors: createObjectConnectionAnchorsRegistry(),
 		objectGeometryKey: createObjectGeometryKeyRegistry(),
-		objectVisualBounds: createObjectVisualBoundsRegistry(),
-		objectSvgDefs: createObjectSvgDefsRegistry(),
+		objectTextMeasurer: createObjectTextMeasurerRegistry(),
+		objectTextEditOverflow: createObjectTextEditOverflowRegistry(),
+		objectTextEditLineBreaks: createObjectTextEditLineBreaksRegistry(),
 		objectBehavior: createObjectBehaviorRegistry(),
-		objectTransformHandles: createObjectTransformHandlesRegistry(),
 		selectionControl: createSelectionControlRegistry(),
 		objectPartKind: createObjectPartKindRegistry(),
+		objectTransformHandles: createObjectTransformHandlesRegistry(),
 		gestureHandler: createGestureHandlerRegistry(),
+		objectStyle: createObjectStyleRegistry(),
+		objectTextStyleDefaults: createObjectTextStyleDefaultsRegistry(),
+		objectShapeStyleDefaults: createObjectShapeStyleDefaultsRegistry(),
 		command: createCommandRegistry(),
+		objectFactory: createObjectFactoryRegistry(),
+		stencil: createStencilRegistry(),
 		objectMenu: createObjectMenuRegistry(),
 		propertyPanel: createPropertyPanelRegistry(),
-		stencil: createStencilRegistry(),
-		objectFactory: createObjectFactoryRegistry(),
-		objectStyle: createObjectStyleRegistry(),
 	};
 
 	initializeGestureHandlerRegistry(registries);

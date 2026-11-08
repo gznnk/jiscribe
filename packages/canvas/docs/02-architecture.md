@@ -112,7 +112,7 @@ The pure geometry that renders nothing sits beside the connector's drawing compo
 
 There is **no top-level `src/registry/` directory and no `ObjectRegistry` class**. Instead, per-shape functionality is resolved through several small registry **classes**, each **colocated with the layer it belongs to**.
 
-The main ones are below. The full set is the bundle each `<Canvas>` owns (`CanvasRegistries` in `controllers/registries/CanvasRegistries.ts`, built in `createCanvasRegistries.ts`); only the doc-validator registry lives outside it (see below).
+The main ones are below. The full set is the bundle each `<Canvas>` owns (`CanvasRegistries` in `controllers/registries/CanvasRegistries.ts`, which extends the `ICanvasRegistries` contract next to it, built in `createCanvasRegistries.ts`); only the doc-validator registry lives outside it (see below).
 
 | Main registry classes                                                                              | Location                                    | Resolves (examples)                                                                                          |
 | -------------------------------------------------------------------------------------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
