@@ -89,9 +89,9 @@ export type CreateObjectType<
 		(T["transform"] extends true ? TransformDoc : object) &
 		(T["stroke"] extends true ? StrokeStyleDoc : object) &
 		(T["fill"] extends true ? FillStyleDoc : object) &
-		TextDoc<T> &
 		(T["radius"] extends true ? RadiusStyleDoc : object) &
 		(T["arrow"] extends true ? ArrowStyleDoc : object) &
+		TextDoc<T> &
 		Brand<S> &
 		P
 >;

@@ -80,10 +80,10 @@ export type CreateObjectState<
 		(T["transform"] extends true ? TransformState : object) &
 		(T["stroke"] extends true ? StrokeStyleState : object) &
 		(T["fill"] extends true ? FillStyleState : object) &
-		(T["text"] extends "body" | "label" | "slots" ? TextStyleState : object) &
-		(T["text"] extends "label" ? LabelTextStyleState : object) &
 		(T["radius"] extends true ? RadiusStyleState : object) &
 		(T["arrow"] extends true ? ArrowStyleState : object) &
+		(T["text"] extends "body" | "label" | "slots" ? TextStyleState : object) &
+		(T["text"] extends "label" ? LabelTextStyleState : object) &
 		Brand<S> &
 		P
 >;
