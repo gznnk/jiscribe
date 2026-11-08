@@ -88,15 +88,35 @@ const controllerLayerFences = CONTROLLER_LAYERS.slice(0, -1).map(
 	}),
 );
 
+/** The stages of layout/src/routing, which only routeEdgesAroundNodes joins. */
+const LAYOUT_ROUTING_STAGES = ["search", "nudge", "labels"];
+
+const LAYOUT_ROUTING_FORBIDDEN_IMPORTS = ["**/layered/**"];
+
 /**
  * The layout package's two features share only shared/: routing never reaches into
  * layered/ or the other way round, and shared/ reaches into neither. Types count, so a
- * type two features need has to live in shared/ too.
+ * type two features need has to live in shared/ too. Inside routing/, no stage imports
+ * another stage or the orchestration. A stage's list starts from routing/'s because
+ * its block comes after routing/'s and replaces that block's options for the same rule.
  */
 const LAYOUT_FOLDER_FORBIDDEN_IMPORTS = {
-	shared: ["layered", "routing"],
-	layered: ["routing"],
-	routing: ["layered"],
+	shared: ["**/layered/**", "**/routing/**"],
+	layered: ["**/routing/**"],
+	routing: LAYOUT_ROUTING_FORBIDDEN_IMPORTS,
+	...Object.fromEntries(
+		LAYOUT_ROUTING_STAGES.map((stage) => [
+			`routing/${stage}`,
+			[
+				...LAYOUT_ROUTING_FORBIDDEN_IMPORTS,
+				...LAYOUT_ROUTING_STAGES.filter((other) => other !== stage).map(
+					(other) => `**/${other}/**`,
+				),
+				"**/routeEdgesAroundNodes",
+				"**/endCandidates",
+			],
+		]),
+	),
 };
 
 // The specifiers are relative, as for the controller fences above.
@@ -109,11 +129,8 @@ const layoutFolderFences = Object.entries(LAYOUT_FOLDER_FORBIDDEN_IMPORTS).map(
 				{
 					patterns: [
 						{
-							group: [
-								...forbidden.map((name) => `**/${name}/**`),
-								"!@jiscribe/**",
-							],
-							message: `layout/src/${folder} cannot import from ${forbidden.join(" or ")}. Move what both need into shared/.`,
+							group: [...forbidden, "!@jiscribe/**"],
+							message: `layout/src/${folder} cannot import this. Move what both sides need to where both may import it: shared/, or routing/ for its stages.`,
 						},
 					],
 				},
