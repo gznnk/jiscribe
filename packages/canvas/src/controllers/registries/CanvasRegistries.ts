@@ -15,8 +15,8 @@ import type { ObjectSvgDefsRegistry } from "../../rendering/objects/registry/Obj
 import type { ObjectTextMeasurerRegistry } from "../../rendering/objects/registry/ObjectTextMeasurerRegistry";
 import type { ObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import type { ObjectAutoHeightRegistry } from "../../states/registry/ObjectAutoHeightRegistry";
-import type { ObjectContainerRegistry } from "../../states/registry/ObjectContainerRegistry";
 import type { ObjectContentResizerRegistry } from "../../states/registry/ObjectContentResizerRegistry";
+import type { ObjectLayoutContainerRegistry } from "../../states/registry/ObjectLayoutContainerRegistry";
 import type { ObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import type { ObjectStateValidatorRegistry } from "../../states/registry/ObjectStateValidatorRegistry";
 import type {
@@ -59,10 +59,10 @@ export type CanvasRegistries = {
 	 */
 	objectAutoHeight: ObjectAutoHeightRegistry;
 	/**
-	 * Which types declare themselves containers (`ObjectDocDefinition.container`),
+	 * Which types declare themselves containers (`ObjectDocDefinition.layoutContainer`),
 	 * with the title band each answers for a doc of it.
 	 */
-	objectContainer: ObjectContainerRegistry;
+	objectLayoutContainer: ObjectLayoutContainerRegistry;
 	objectComponent: ObjectComponentRegistry;
 	/**
 	 * Per-type, per-slot text-style defaults, read by every side that draws,

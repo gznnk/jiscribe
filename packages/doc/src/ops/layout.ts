@@ -77,7 +77,7 @@ export type LayoutObjectsParams = {
 export type LayoutObjectsResult = {
 	/** Ids of the objects that were placed, in the order they were given (or found). */
 	nodeIds: string[];
-	/** Ids of the containers (groups, and shapes whose type declares `container`) sized around their members. */
+	/** Ids of the containers (groups, and shapes whose type declares `layoutContainer`) sized around their members. */
 	containerIds: string[];
 	/** Ids of the connectors whose ends were re-anchored or whose routes were rewritten. */
 	connectorIds: string[];
@@ -442,7 +442,7 @@ const redrawContainerConnectors = (
  * @param ids - Objects to place; omitted means every top-level object the build can
  *   measure. Connectors among them are skipped (they follow their ends), and an object
  *   named together with a group it sits in counts once. A group is a container around its
- *   children, and a shape whose type declares `container` (a VPC, a subsystem
+ *   children, and a shape whose type declares `layoutContainer` (a VPC, a subsystem
  *   boundary) is a container around the objects lying inside it when the call is made,
  *   so to lay out a container shape's contents name the contents as well: members are laid
  *   out inside their container, and a container shape is moved and resized to the box the
@@ -452,7 +452,7 @@ const redrawContainerConnectors = (
  *   declares (an ER entity's column) stays there, and that connector's route is left to
  *   the engine, as is a self loop's
  * @param params - Direction and gaps; see {@link LayoutObjectsParams}
- * @param definitions - Type table `features.geometry`, `container` (and the title band
+ * @param definitions - Type table `features.geometry`, `layoutContainer` (and the title band
  *   it answers for each object), the offered connect points and the `outline` /
  *   `anchorRegion` an end is kept on are read from
  * @returns Which objects moved, which containers were sized around them, which

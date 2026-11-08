@@ -296,7 +296,7 @@ export const columnCardDefinition: ObjectDocDefinition = {
 };
 
 /**
- * A titled region other shapes sit inside, declaring `container` the way the container
+ * A titled region other shapes sit inside, declaring `layoutContainer` the way the container
  * and AWS group shapes do (which a doc test cannot import). Its title band is 20px tall
  * unless the doc sets `headerHeight`. Created 400 by 300.
  */
@@ -308,7 +308,7 @@ export const regionDefinition: ObjectDocDefinition = {
 	},
 	validateDoc: () => [],
 	extraKeys: ["headerHeight"],
-	container: (doc) => {
+	layoutContainer: (doc) => {
 		const { headerHeight } = doc as { headerHeight?: unknown };
 		return {
 			titleHeight: typeof headerHeight === "number" ? headerHeight : 20,
@@ -333,7 +333,7 @@ export const ovalRegionDefinition: ObjectDocDefinition = {
 		connectable: true,
 	},
 	validateDoc: () => [],
-	container: () => ({ titleHeight: 0 }),
+	layoutContainer: () => ({ titleHeight: 0 }),
 };
 
 /**

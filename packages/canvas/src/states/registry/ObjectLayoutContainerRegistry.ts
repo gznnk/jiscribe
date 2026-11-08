@@ -3,10 +3,10 @@ import type { ObjectDocDefinition } from "@jiscribe/doc/plugin/ObjectDocDefiniti
 
 /**
  * A type's answer to whether a doc of it is a container other objects sit inside,
- * and how tall its title band is (`ObjectDocDefinition.container`).
+ * and how tall its title band is (`ObjectDocDefinition.layoutContainer`).
  */
-export type ObjectContainerCalculator = NonNullable<
-	ObjectDocDefinition["container"]
+export type ObjectLayoutContainerCalculator = NonNullable<
+	ObjectDocDefinition["layoutContainer"]
 >;
 
 /**
@@ -14,13 +14,16 @@ export type ObjectContainerCalculator = NonNullable<
  * so a container shape holds the objects lying inside it. Types without one are
  * boxes like any other.
  */
-export class ObjectContainerRegistry {
+export class ObjectLayoutContainerRegistry {
 	private readonly calculators = new Map<
 		ObjectType,
-		ObjectContainerCalculator
+		ObjectLayoutContainerCalculator
 	>();
 
-	register(type: ObjectType, calculator: ObjectContainerCalculator): void {
+	register(
+		type: ObjectType,
+		calculator: ObjectLayoutContainerCalculator,
+	): void {
 		this.calculators.set(type, calculator);
 	}
 
@@ -29,7 +32,7 @@ export class ObjectContainerRegistry {
 	 *
 	 * @param type - The object type; an unregistered one answers undefined
 	 */
-	get(type: ObjectType): ObjectContainerCalculator | undefined {
+	get(type: ObjectType): ObjectLayoutContainerCalculator | undefined {
 		return this.calculators.get(type);
 	}
 
@@ -38,5 +41,5 @@ export class ObjectContainerRegistry {
 	}
 }
 
-export const createObjectContainerRegistry = (): ObjectContainerRegistry =>
-	new ObjectContainerRegistry();
+export const createObjectLayoutContainerRegistry =
+	(): ObjectLayoutContainerRegistry => new ObjectLayoutContainerRegistry();

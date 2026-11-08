@@ -20,8 +20,8 @@ import { createObjectSvgDefsRegistry } from "../../rendering/objects/registry/Ob
 import { createObjectTextMeasurerRegistry } from "../../rendering/objects/registry/ObjectTextMeasurerRegistry";
 import { createObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import { createObjectAutoHeightRegistry } from "../../states/registry/ObjectAutoHeightRegistry";
-import { createObjectContainerRegistry } from "../../states/registry/ObjectContainerRegistry";
 import { createObjectContentResizerRegistry } from "../../states/registry/ObjectContentResizerRegistry";
+import { createObjectLayoutContainerRegistry } from "../../states/registry/ObjectLayoutContainerRegistry";
 import { createObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import { createObjectStateValidatorRegistry } from "../../states/registry/ObjectStateValidatorRegistry";
 import { createCommandRegistry } from "../commands/CommandRegistry";
@@ -60,7 +60,7 @@ export const createCanvasRegistries = (
 		objectStateValidator: createObjectStateValidatorRegistry(),
 		objectContentResizer: createObjectContentResizerRegistry(),
 		objectAutoHeight: createObjectAutoHeightRegistry(),
-		objectContainer: createObjectContainerRegistry(),
+		objectLayoutContainer: createObjectLayoutContainerRegistry(),
 		objectComponent: createObjectComponentRegistry(),
 		objectTextStyleDefaults: createObjectTextStyleDefaultsRegistry(),
 		objectShapeStyleDefaults: createObjectShapeStyleDefaultsRegistry(),

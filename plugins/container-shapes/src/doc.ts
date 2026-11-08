@@ -25,7 +25,7 @@ export const containerDocDefinition: ObjectDocDefinition = createFrameObjectDoc(
 			"headerHeight",
 		] satisfies readonly (keyof ContainerDoc)[],
 		textRegion: calcContainerTextRegion,
-		container: (doc) => ({ titleHeight: readContainerHeaderHeight(doc) }),
+		layoutContainer: (doc) => ({ titleHeight: readContainerHeaderHeight(doc) }),
 		// The region is the title band, so sizing the box from the text would give
 		// the height of the title and swallow whatever the container frames.
 		autoHeight: false,

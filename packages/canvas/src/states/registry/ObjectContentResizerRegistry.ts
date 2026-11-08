@@ -71,9 +71,10 @@ export type ObjectContentResizer<TState extends ObjectState = ObjectState> = (
 
 /**
  * Per-type registry of content resizers. A type with no registered resizer keeps
- * the box its doc stored, which is every type but the point-geometry ones — so
- * the three derivation passes (canvasToState, reconcileObjectContentSizes,
- * graftTextEditDraft) skip it entirely.
+ * the box its doc stored, so the three derivation passes (canvasToState,
+ * reconcileObjectContentSizes, graftTextEditDraft) skip it entirely. Registered
+ * for the point-geometry types and, with the shared auto-height derivation, for a
+ * type whose documents may leave `height` out.
  */
 export class ObjectContentResizerRegistry {
 	private readonly resizers = new Map<ObjectType, ObjectContentResizer>();

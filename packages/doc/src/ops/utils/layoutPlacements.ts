@@ -39,7 +39,7 @@ export type PlacedContainer = {
  *
  * @param candidates - The objects named, or the root's objects; an object reached twice
  *   (a group and a child of it both named) counts once
- * @param definitions - Type table `container` and `features.geometry` are read from
+ * @param definitions - Type table `layoutContainer` and `features.geometry` are read from
  * @param skipsUnmeasurable - True when the candidates were not named: an object the build
  *   cannot measure (an unknown type) is then left out instead of failing the call
  * @returns The nodes in the order found, then the container shapes that hold nothing
@@ -68,8 +68,8 @@ export const collectPlacements = (
 			if (!objectById.has(object.id)) {
 				objectById.set(object.id, object);
 			}
-			// A type declaring `container` makes a container shape of every object of it.
-			const container = definitions.get(object.type)?.container;
+			// A type declaring `layoutContainer` makes a container shape of every object of it.
+			const layoutContainer = definitions.get(object.type)?.layoutContainer;
 			if (isGroupObject(object)) {
 				placementCandidates.push({
 					id: object.id,
@@ -77,12 +77,12 @@ export const collectPlacements = (
 					kind: "group",
 					children: toCandidates(readChildren(object)),
 				});
-			} else if (container !== undefined) {
+			} else if (layoutContainer !== undefined) {
 				placementCandidates.push({
 					id: object.id,
 					bounds,
 					kind: "containerShape",
-					titleHeight: container(object).titleHeight,
+					titleHeight: layoutContainer(object).titleHeight,
 				});
 			} else {
 				placementCandidates.push({ id: object.id, bounds, kind: "node" });
