@@ -59,8 +59,9 @@ import {
 } from "./style/groupMarkerStyleEntries";
 
 /**
- * The label hangs off the tip, outside the geometry box, so `visualBounds` is
- * what keeps zoom-to-fit and the export viewBox from cropping it. `outline`
+ * The label hangs off the tip, outside the geometry box, so these `"label"`
+ * types place it themselves: `textRegion` and `visualBounds` together, the
+ * latter being what keeps zoom-to-fit and the export viewBox from cropping it. `outline`
  * stays undeclared on all three group markers: the box is the marker band itself, so the
  * default bounding-box outline is already the shape's extent. The one place a
  * connector should really land is the tip, so all three declare it as an

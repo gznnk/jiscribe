@@ -80,7 +80,7 @@ export const AwsGroupFeatures = {
 	transform: true,
 	stroke: true,
 	fill: true,
-	text: "body",
+	text: "label",
 	connectable: true,
 } as const satisfies ObjectFeatures;
 
@@ -123,11 +123,11 @@ export const AWS_GROUP_DOC_DEFAULTS: Omit<AwsGroupDoc, "id"> = {
 	strokeWidth: DEFAULT_STROKE_WIDTH,
 	text: "",
 	textAlign: "left",
-	verticalAlign: "middle",
 	fontColor: AUTO_COLOR,
 	fontSize: 14,
 	fontFamily: DEFAULT_FONT_FAMILY,
 	fontWeight: "bold",
+	labelFill: "transparent",
 } as const as AwsGroupDoc;
 
 /**

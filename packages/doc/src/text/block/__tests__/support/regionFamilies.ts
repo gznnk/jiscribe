@@ -1,9 +1,6 @@
 import type { RichText } from "../../../../model/objects/types/text/RichText";
 import type { ObjectDocTextRegionCalculator } from "../../../../plugin/ObjectDocTextRegion";
-import {
-	calcFullBoxTextRegion,
-	calcOutsideBoxTextRegion,
-} from "../../../../plugin/ObjectDocTextRegion";
+import { calcFullBoxTextRegion } from "../../../../plugin/ObjectDocTextRegion";
 
 /** Region insetting each side by a constant fraction of the box, as most shipped types declare theirs. */
 const insetRegion =
@@ -114,10 +111,6 @@ export const REGION_FAMILIES: readonly {
 			width: doc.width,
 			height: (doc as { headerHeight?: number }).headerHeight ?? 32,
 		}),
-	},
-	{
-		name: "no region at all (actor, cross)",
-		textRegion: calcOutsideBoxTextRegion,
 	},
 ];
 

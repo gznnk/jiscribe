@@ -75,7 +75,7 @@ const MAX_AUTO_SHAPE_HEIGHT = 1_000_000;
  * @param textRegion - The type's text-region calculator, called once per height the search tries
  * @param basis - The shape's `textVerticalBasis`; `undefined` — the field absent, which is every document written before it existed — derives against the declared region, and equals `"frame"`'s answer for a region that sits on the box's centre
  * @param paddingEm - Room above and below the text, in multiples of `font.fontSize`; 0 asks for none. Pass the type's value through `resolveAutoHeightPaddingEm` rather than raw: `NaN` or `Infinity` here fits no height and answers null.
- * @returns The height in whole pixels, or null when no height up to 1,000,000px fits the text — a height at which the calculator answers `null` merely does not fit, so a region existing only above some minimum height is searched through rather than given up on
+ * @returns The height in whole pixels, or null when no height up to 1,000,000px fits the text
  */
 export const calcAutoShapeHeight = (
 	shape: AutoHeightShape,
@@ -155,8 +155,7 @@ export const calcAutoShapeHeight = (
 
 	/**
 	 * The room a shape of this height leaves the text block and its comfort
-	 * padding, and the width the text wraps at to fill it — or null where the box
-	 * holds no text.
+	 * padding, and the width the text wraps at to fill it.
 	 *
 	 * On the region basis that is the content box the region leaves, so the
 	 * padding is charged against the very region the shape has at that height —
@@ -178,11 +177,8 @@ export const calcAutoShapeHeight = (
 	 * and none is derived for it here — `diagnose` is what reports that placement
 	 * (its decoration-overlap check reads the alignment).
 	 */
-	const calcTextRoom = (height: number): Dimensions | null => {
+	const calcTextRoom = (height: number): Dimensions => {
 		const region = textRegion({ ...shape, height }, BODY_TEXT_SLOT_ID);
-		if (region === null) {
-			return null;
-		}
 		const regionBox = calcTextContentBox(region);
 		if (basis !== "frame") {
 			return { width: regionBox.width, height: regionBox.height };
@@ -200,12 +196,9 @@ export const calcAutoShapeHeight = (
 
 	/**
 	 * How far the text and its comfort padding overshoot the room at this height:
-	 * at or below zero the height fits. Infinity where the calculator answers no
-	 * region — a height that does not fit rather than a verdict on the type (a
-	 * plugin's region may answer null below its minimum height and a box above
-	 * it). A region squeezed to no width is *not* Infinity: the layout still
-	 * answers there (a character per line, an empty text its one line), and an
-	 * empty text genuinely fits a width nothing else would.
+	 * at or below zero the height fits. A region squeezed to no width still
+	 * answers: the layout runs there (a character per line, an empty text its one
+	 * line), and an empty text genuinely fits a width nothing else would.
 	 *
 	 * The sign is exact either way; `exact` decides the positive magnitudes.
 	 * Without it a positive answer may be the lower bound
@@ -217,9 +210,6 @@ export const calcAutoShapeHeight = (
 	 */
 	const calcFitShortfall = (height: number, exact = false): number => {
 		const room = calcTextRoom(height);
-		if (room === null) {
-			return Infinity;
-		}
 		if (!exact) {
 			const floorShortfall =
 				calcTextHeightFloor(room.width) + comfortPadding * 2 - room.height;
@@ -255,7 +245,8 @@ export const calcAutoShapeHeight = (
 				closestProbe = probe;
 			}
 		}
-		// Nowhere did the box hold text at all; there is no dip to look beside.
+		// No probe answered a finite shortfall (a non-finite `paddingEm`); there is
+		// no dip to look beside.
 		if (closestProbe === null) {
 			return null;
 		}

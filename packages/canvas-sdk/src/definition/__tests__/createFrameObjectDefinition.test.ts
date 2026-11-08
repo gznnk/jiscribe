@@ -4,11 +4,7 @@ import {
 	TEXT_SLOT_PART_KIND,
 } from "@jiscribe/canvas/unstable";
 import type { CreateObjectType, ObjectFeatures } from "@jiscribe/doc";
-import {
-	calcFullBoxTextRegion,
-	calcOutsideBoxTextRegion,
-	supportsAutoHeight,
-} from "@jiscribe/doc";
+import { calcFullBoxTextRegion } from "@jiscribe/doc";
 import { AUTO_COLOR } from "@jiscribe/doc/unstable";
 import type { Dimensions } from "@jiscribe/geometry";
 import { describe, it, expect } from "vitest";
@@ -71,6 +67,19 @@ const demoDocDefinition = createFrameObjectDoc({
 
 const DemoComponent = () => null;
 
+const labelDocDefinition = createFrameObjectDoc({
+	features: { ...DemoFeatures, text: "label" },
+	defaults: DEMO_DOC_DEFAULTS,
+});
+
+/** A caption placed to the right of the box, the way a label type placing its own does. */
+const captionBeside = ({ width }: Dimensions) => ({
+	x: width / 2 + 8,
+	y: -10,
+	width: 40,
+	height: 20,
+});
+
 const demoDoc = { ...DEMO_DOC_DEFAULTS, id: "demo-1" } as unknown as DemoDoc;
 
 describe("createFrameObjectDefinition", () => {
@@ -98,40 +107,6 @@ describe("createFrameObjectDefinition", () => {
 		expect(definition.outline).toBe(outline);
 		expect(definition.anchorRegion).toBe(anchorRegion);
 		expect(definition.stencils).toEqual([]);
-	});
-
-	it("keeps the doc's own region and verdict on a height that may follow the text", () => {
-		const inTheBox = createFrameObjectDefinition<DemoDoc, DemoState>({
-			doc: createFrameObjectDoc({
-				features: DemoFeatures,
-				defaults: DEMO_DOC_DEFAULTS,
-				textRegion: calcFullBoxTextRegion,
-			}),
-			component: DemoComponent,
-			textRegion: calcFullBoxTextRegion,
-		});
-		// A shape placing its label outside its outline itself: its doc says the box
-		// holds no text, while its canvas region is the box it draws that label in. Only
-		// the doc's answer decides, so the canvas one must not talk the canvas into
-		// offering a height the parser then refuses.
-		const belowTheBox = createFrameObjectDefinition<DemoDoc, DemoState>({
-			doc: createFrameObjectDoc({
-				features: DemoFeatures,
-				defaults: DEMO_DOC_DEFAULTS,
-				textRegion: calcOutsideBoxTextRegion,
-			}),
-			component: DemoComponent,
-			textRegion: ({ width, height }) => ({
-				x: -width / 2,
-				y: height / 2,
-				width,
-				height: 20,
-			}),
-		});
-
-		expect(belowTheBox.textRegion).toBe(calcOutsideBoxTextRegion);
-		expect(supportsAutoHeight(inTheBox)).toBe(true);
-		expect(supportsAutoHeight(belowTheBox)).toBe(false);
 	});
 
 	it("carries an explicit denial across untouched", () => {
@@ -208,23 +183,44 @@ describe("createFrameObjectDefinition", () => {
 		);
 	});
 
-	it("refuses textRegion on a label text type, naming the type and the parameter", () => {
-		const labelFeatures = {
-			...DemoFeatures,
-			text: "label",
-		} as const satisfies ObjectFeatures;
+	it("refuses textRegion without visualBounds on a label text type, naming the type and the parameters", () => {
 		expect(() =>
 			createFrameObjectDefinition<DemoDoc, DemoState>({
-				doc: createFrameObjectDoc({
-					features: labelFeatures,
-					defaults: DEMO_DOC_DEFAULTS,
-				}),
+				doc: labelDocDefinition,
 				component: DemoComponent,
-				textRegion: calcFullBoxTextRegion,
+				textRegion: captionBeside,
 			}),
 		).toThrow(
-			'createFrameObjectDefinition "sdkDemo": features.text "label" has its caption placed under the box by the core (calcLabelTextRegion); pass no textRegion',
+			'createFrameObjectDefinition "sdkDemo": features.text "label" passes textRegion without visualBounds; pass both to place the caption, or neither to have it placed under the box',
 		);
+	});
+
+	it("refuses visualBounds without textRegion on a label text type", () => {
+		expect(() =>
+			createFrameObjectDefinition<DemoDoc, DemoState>({
+				doc: labelDocDefinition,
+				component: DemoComponent,
+				visualBounds: () => ({ x: 0, y: 0, width: 1, height: 1 }),
+			}),
+		).toThrow(
+			'createFrameObjectDefinition "sdkDemo": features.text "label" passes visualBounds without textRegion; pass both to place the caption, or neither to have it placed under the box',
+		);
+	});
+
+	it("builds the text slot kind of a label text type passing textRegion and visualBounds together", () => {
+		const visualBounds = () => ({ x: -60, y: -40, width: 200, height: 80 });
+		const definition = createFrameObjectDefinition<DemoDoc, DemoState>({
+			doc: labelDocDefinition,
+			component: DemoComponent,
+			textRegion: captionBeside,
+			visualBounds,
+		});
+
+		expect(definition.partKinds?.map((part) => part.kind)).toEqual([
+			TEXT_SLOT_PART_KIND,
+		]);
+		expect(definition.partKinds?.[0].region).toBe(captionBeside);
+		expect(definition.visualBounds).toBe(visualBounds);
 	});
 
 	it("derives a mapper that converts geometry both ways", () => {

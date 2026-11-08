@@ -1,5 +1,6 @@
 import { BODY_TEXT_SLOT_ID } from "@jiscribe/canvas";
 import type { TextSlots } from "@jiscribe/canvas/unstable";
+import { LABEL_TEXT_STYLE_DEFAULTS } from "@jiscribe/doc";
 import {
 	TEXT_BOX_PADDING_X,
 	TEXT_BOX_PADDING_Y,
@@ -7,7 +8,6 @@ import {
 } from "@jiscribe/doc/unstable";
 import { describe, expect, it } from "vitest";
 
-import { BELOW_LABEL_STYLE_DEFAULTS } from "../../schema/belowLabelStyleDefaults";
 import { calcLabelBoxSize } from "../calcLabelBoxSize";
 
 /**
@@ -42,12 +42,12 @@ const slots = (slot: TextSlots[string]): TextSlots => ({
 
 describe("calcLabelBoxSize", () => {
 	// The shapes placing such a label themselves size it from here, so the
-	// defaults they spread into their docs (BELOW_LABEL_STYLE_DEFAULTS) have to be
-	// the ones measured with
+	// defaults they spread into their docs (LABEL_TEXT_STYLE_DEFAULTS) have to be
+	// the ones measured with.
 	it("sizes an absent slot as one empty line at the default font size", () => {
 		expect(calcLabelBoxSize(undefined, BODY_TEXT_SLOT_ID)).toEqual({
 			width: MIN_WIDTH,
-			height: expectedHeight(1, BELOW_LABEL_STYLE_DEFAULTS.fontSize),
+			height: expectedHeight(1, LABEL_TEXT_STYLE_DEFAULTS.fontSize),
 		});
 	});
 
@@ -60,7 +60,7 @@ describe("calcLabelBoxSize", () => {
 	it("sizes an empty string as one empty line, down to the minimum width", () => {
 		expect(calcLabelBoxSize(slots({ text: "" }), BODY_TEXT_SLOT_ID)).toEqual({
 			width: MIN_WIDTH,
-			height: expectedHeight(1, BELOW_LABEL_STYLE_DEFAULTS.fontSize),
+			height: expectedHeight(1, LABEL_TEXT_STYLE_DEFAULTS.fontSize),
 		});
 	});
 
@@ -80,8 +80,19 @@ describe("calcLabelBoxSize", () => {
 		expect(
 			calcLabelBoxSize(slots({ text: "one\nthree" }), BODY_TEXT_SLOT_ID),
 		).toEqual({
-			width: expectedWidth("three".length, BELOW_LABEL_STYLE_DEFAULTS.fontSize),
-			height: expectedHeight(2, BELOW_LABEL_STYLE_DEFAULTS.fontSize),
+			width: expectedWidth("three".length, LABEL_TEXT_STYLE_DEFAULTS.fontSize),
+			height: expectedHeight(2, LABEL_TEXT_STYLE_DEFAULTS.fontSize),
+		});
+	});
+
+	it("measures over the type defaults it is handed instead of the label ones", () => {
+		expect(
+			calcLabelBoxSize(slots({ text: "VPC" }), BODY_TEXT_SLOT_ID, {
+				fontSize: 14,
+			}),
+		).toEqual({
+			width: expectedWidth("VPC".length, 14),
+			height: expectedHeight(1, 14),
 		});
 	});
 });

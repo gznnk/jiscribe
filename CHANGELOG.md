@@ -15,22 +15,28 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Added
 
-- **`features.text: "label"`: a body hung below the box as a caption.** A type
-  whose drawing fills its box declares it, and its text is placed the same way
-  for every such type — centred under the box, 4px below it, sized from the text
-  itself — by `calcLabelTextRegion` / `calcLabelTextVisualBounds` /
+- **`features.text: "label"`: a body drawn as a caption sized from its own
+  text.** A type whose drawing fills its box, or that places its label off the
+  box itself, declares it. By default the caption is centred under the box, 4px
+  below it, by `calcLabelTextRegion` / `calcLabelTextVisualBounds` /
   `calcLabelTextBoxSize` (`@jiscribe/doc`, with `LABEL_TEXT_GAP`), measured with
   the type's own text defaults, so a headless reader and the canvas place it
-  alike. The type declares no `textRegion`, `visualBounds` or `"textSlot"` part
-  kind: `resolveDocDefinitions` and `applyObjectDefinition` refuse any of them on
-  a `"label"` type, along with `textVerticalBasis` and a geometry other than
-  `"rect"`, and `createFrameObjectDefinition` refuses its `textRegion`. Its doc
-  takes the `"body"` typography less `verticalAlign` (`LabelTextStyleDoc`,
-  `textStyleKeysOf("label")`); `LABEL_TEXT_STYLE_DEFAULTS` is the creation
-  typography to spread into its defaults. The twelve shapes that hung their
-  label below the box are `"label"` types now: actor, server, package, envelope,
-  queue, gear and lock (general), extract and cross (flowchart), and awsIcon,
-  azureIcon and gcpIcon.
+  alike. A type placing it elsewhere declares a `"textSlot"` part kind and
+  `visualBounds` together on its UI definition (`createFrameObjectDefinition`'s
+  `textRegion` and `visualBounds`), and the core registers them in place of its
+  own. The doc declares no `textRegion`: `resolveDocDefinitions` and
+  `applyObjectDefinition` refuse one on a `"label"` type, along with
+  `textVerticalBasis` and a geometry other than `"rect"`, and
+  `applyObjectDefinition` refuses a `"textSlot"` kind or `visualBounds` declared
+  without the other, or a kind with no `region` / `regions`;
+  `createFrameObjectDefinition` refuses a `textRegion` or `visualBounds` passed
+  alone. Its doc takes the `"body"` typography less `verticalAlign`
+  (`LabelTextStyleDoc`, `textStyleKeysOf("label")`); `LABEL_TEXT_STYLE_DEFAULTS`
+  is the creation typography to spread into its defaults. The sixteen shapes
+  whose label is sized from its own text are `"label"` types now: actor,
+  server, package, envelope, queue, gear and lock (general), extract and cross
+  (flowchart), brace, bracket and bracketWithStem (annotation), and awsIcon,
+  awsGroup, azureIcon and gcpIcon.
 - **`labelFill`: the background of a `"label"` caption.** The caption is drawn
   over a box painted in `labelFill`, which `set_style` / `add_objects`, the
   ObjectMenu and the properties sidebar (a `label-style` section, built-in item
@@ -283,20 +289,36 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 ### Changed
 
 - **The label below a pictogram, an icon or a flowchart marker is painted on
-  the page's color.** The twelve `"label"` shapes draw a box in `labelFill`
-  behind their label, so a connector or a shape lying under it is hidden where
-  the label is, in images exported too. Set `labelFill` to `"transparent"` for
-  the old look, or reorder the objects.
+  the page's color.** The twelve `"label"` shapes hanging their label below the
+  box draw a box in `labelFill` behind it, so a connector or a shape lying under
+  it is hidden where the label is, in images exported too. Set `labelFill` to
+  `"transparent"` for the old look, or reorder the objects. The group markers
+  and awsGroup create with `labelFill: "transparent"`, and look as they did.
+- **The group markers (brace, bracket, bracketWithStem) and awsGroup are
+  `"label"` types.** Their label is sized from its own text as before; they now
+  take `labelFill` and no `verticalAlign` (a `verticalAlign` in an existing
+  document is dropped on open with a warning), and awsGroup's menu offers the
+  label's background and no vertical alignment.
+- **Breaking: `ObjectDocTextRegionCalculator` answers a rectangle, never
+  `null`.** A shape whose label is not laid out inside its box is a `"label"`
+  type instead; one that places that label itself declares a `"textSlot"` part
+  kind and `visualBounds` together on its UI definition. A `"body"` /
+  `"source"` type has to declare one: `resolveDocDefinitions` refuses it
+  otherwise (`calcFullBoxTextRegion` for the whole box). `supportsAutoHeight` reads `features` and `autoHeight` alone
+  (`AutoHeightDeclaration` loses `textRegion`, and so does
+  `createFrameDocValidator`'s third argument), so a `geometry: "rect"`,
+  `text: "body"` type may leave `height` out unless it declares
+  `autoHeight: false`.
 - **A `verticalAlign` on a `"label"` shape is dropped on open.** It never
   moved the label, whose box is sized from its text; the parser's migration
   removes it with a warning, and the next save writes the object without it.
-- **`BELOW_LABEL_STYLE_DEFAULTS` and `calcLabelBoxSize` (`@jiscribe/canvas-sdk`)
-  are for a `"body"` shape that places a label sized from its own text itself**
-  (the group markers, awsGroup). The defaults are `LABEL_TEXT_STYLE_DEFAULTS`
-  plus `verticalAlign`, and `calcLabelBoxSize` measures through
-  `calcLabelTextBoxSize`; `BelowLabelHitArea` places its grab area with
-  `calcLabelTextRegion` from the shape's `type`, which its `state` now has to
-  carry. `resolveLabelFill` resolves a caption's `labelFill` as well as a
+- **`calcLabelBoxSize` (`@jiscribe/canvas-sdk`) is for a `"label"` shape that
+  places its caption itself** (the group markers, awsGroup). It measures through
+  `calcLabelTextBoxSize` over `LABEL_TEXT_STYLE_DEFAULTS`, or over the type's own
+  text defaults handed as its new third argument (awsGroup's 14px bold).
+  `BelowLabelHitArea` places its grab area with `calcLabelTextRegion` from the
+  shape's `type`, which its `state` now has to carry; it serves a type on the
+  core's placement under the box. `resolveLabelFill` resolves a caption's `labelFill` as well as a
   connector label's `fill`.
 - **Breaking: a type declares its `outline` and `anchorRegion` on its doc
   definition.** Both move from `ObjectTypeDefinition` to `ObjectDocDefinition`
@@ -509,6 +531,12 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Removed
 
+- **Breaking: `calcOutsideBoxTextRegion` (`@jiscribe/doc`) and
+  `BELOW_LABEL_STYLE_DEFAULTS` (`@jiscribe/canvas-sdk`) are gone.** A shape
+  placing a label sized from its own text off the box declares
+  `features.text: "label"`, spreads `LABEL_TEXT_STYLE_DEFAULTS`
+  (`@jiscribe/doc`) into its defaults, and passes its UI definition a
+  `textRegion` and `visualBounds` together.
 - **Breaking: `calcBelowLabelTextRegion`, `calcBelowLabelVisualBounds` and
   `BELOW_LABEL_GAP` are gone from `@jiscribe/canvas-sdk`.** A shape hanging its
   text below the box declares `features.text: "label"` and passes neither a

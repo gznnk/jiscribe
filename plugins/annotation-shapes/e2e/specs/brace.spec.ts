@@ -16,8 +16,9 @@ async function bracePathD(
 
 /**
  * Two seams end to end:
- * - the label is sized from its own text and placed *outside* the geometry box
- *   (calcGroupMarkerTextRegion), which no other shipped shape does
+ * - the label is sized from its own text and placed beyond the tip, outside
+ *   the geometry box (calcGroupMarkerTextRegion, which the UI definition
+ *   declares as a `"label"` type placing its own caption)
  * - the tip handle (selection:brace:tip) moves the tip along its edge and
  *   re-attaches it to another one, changing direction and tipPosition together
  * - the tip is also a connection anchor of its own ("tip"), so a connector

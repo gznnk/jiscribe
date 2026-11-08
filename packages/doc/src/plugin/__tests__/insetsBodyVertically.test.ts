@@ -54,10 +54,6 @@ describe("insetsBodyVertically", () => {
 		expect(insetsBodyVertically({})).toBe(false);
 	});
 
-	it("is false for a region that never holds the text", () => {
-		expect(insetsBodyVertically({ textRegion: () => null })).toBe(false);
-	});
-
 	it("is true for a region inset top and bottom", () => {
 		expect(insetsBodyVertically({ textRegion: insetTopAndBottom })).toBe(true);
 	});

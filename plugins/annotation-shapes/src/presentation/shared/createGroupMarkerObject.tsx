@@ -2,12 +2,12 @@ import { BODY_TEXT_SLOT_ID } from "@jiscribe/canvas";
 import { createFrameObject, readTextSlot } from "@jiscribe/canvas-sdk";
 
 import { calcGroupMarkerTextRegion } from "./calcGroupMarkerTextRegion";
+import { GroupMarkerHitArea, GroupMarkerPath } from "./GroupMarkerStyled";
+import type { GroupMarkerDirection } from "../../schema/shared/GroupMarkerFields";
 import {
 	resolveGroupMarkerDirection,
 	resolveGroupMarkerTipPosition,
-} from "./groupMarkerGeometry";
-import { GroupMarkerHitArea, GroupMarkerPath } from "./GroupMarkerStyled";
-import type { GroupMarkerDirection } from "../../schema/shared/GroupMarkerFields";
+} from "../../schema/shared/groupMarkerGeometry";
 import type { BraceState } from "../../state/brace/BraceState";
 import type { BracketState } from "../../state/bracket/BracketState";
 import type { BracketWithStemState } from "../../state/bracketWithStem/BracketWithStemState";

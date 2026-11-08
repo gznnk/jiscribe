@@ -111,8 +111,8 @@ export const umlPackageDefinition: ObjectTypeDefinition<
 });
 
 /**
- * No `textRegion`, and no `outline` on its doc definition: the silhouette is the bounding box itself
- * (the icon is drawn inside it), which is exactly what both default to, and the
+ * No `outline` on its doc definition, and a `textRegion` of the whole box: the
+ * silhouette is the bounding box itself (the icon is drawn inside it), and the
  * name is centered over the whole box.
  */
 export const umlComponentDefinition: ObjectTypeDefinition<

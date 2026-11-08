@@ -1,8 +1,5 @@
-import {
-	AUTO_COLOR,
-	BELOW_LABEL_STYLE_DEFAULTS,
-} from "@jiscribe/canvas-sdk/doc";
-import { DEFAULT_STROKE_WIDTH } from "@jiscribe/doc";
+import { AUTO_COLOR } from "@jiscribe/canvas-sdk/doc";
+import { DEFAULT_STROKE_WIDTH, LABEL_TEXT_STYLE_DEFAULTS } from "@jiscribe/doc";
 import type { CreateObjectType, ObjectFeatures } from "@jiscribe/doc";
 
 import type {
@@ -32,7 +29,7 @@ export const BraceFeatures = {
 	geometry: "rect",
 	transform: true,
 	stroke: true,
-	text: "body",
+	text: "label",
 	connectable: true,
 } as const satisfies ObjectFeatures;
 
@@ -56,5 +53,6 @@ export const BRACE_DOC_DEFAULTS: Omit<BraceDoc, "id"> = {
 	direction: GROUP_MARKER_DIRECTION_DEFAULT,
 	tipPosition: GROUP_MARKER_TIP_POSITION_DEFAULT,
 	text: "",
-	...BELOW_LABEL_STYLE_DEFAULTS,
+	...LABEL_TEXT_STYLE_DEFAULTS,
+	labelFill: "transparent",
 } as const as BraceDoc;

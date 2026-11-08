@@ -6,7 +6,6 @@
 // presentation / state / stencil.
 import { createFrameObjectDoc } from "@jiscribe/canvas-sdk/doc";
 import type { CanvasDocPlugin, ObjectDocDefinition } from "@jiscribe/doc";
-import { calcOutsideBoxTextRegion } from "@jiscribe/doc";
 
 import type { BraceDoc } from "./schema/brace/BraceDoc";
 import { BRACE_DOC_DEFAULTS, BraceFeatures } from "./schema/brace/BraceDoc";
@@ -52,7 +51,6 @@ export const braceDocDefinition: ObjectDocDefinition =
 	withGroupMarkerTipConnectPoint(
 		createFrameObjectDoc({
 			features: BraceFeatures,
-			textRegion: calcOutsideBoxTextRegion,
 			defaults: BRACE_DOC_DEFAULTS,
 			extraKeys: [
 				"direction",
@@ -70,7 +68,6 @@ export const bracketDocDefinition: ObjectDocDefinition =
 	withGroupMarkerTipConnectPoint(
 		createFrameObjectDoc({
 			features: BracketFeatures,
-			textRegion: calcOutsideBoxTextRegion,
 			defaults: BRACKET_DOC_DEFAULTS,
 			extraKeys: ["direction"] satisfies readonly (keyof BracketDoc)[],
 			description:
@@ -87,7 +84,6 @@ export const bracketWithStemDocDefinition: ObjectDocDefinition =
 	withGroupMarkerTipConnectPoint(
 		createFrameObjectDoc({
 			features: BracketWithStemFeatures,
-			textRegion: calcOutsideBoxTextRegion,
 			defaults: BRACKET_WITH_STEM_DOC_DEFAULTS,
 			extraKeys: [
 				"direction",

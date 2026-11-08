@@ -1,4 +1,5 @@
 import type { ObjectDocTextRegionCalculator } from "@jiscribe/doc/plugin/ObjectDocTextRegion";
+import { calcFullBoxTextRegion } from "@jiscribe/doc/plugin/ObjectDocTextRegion";
 import { AUTO_HEIGHT_COMFORT_PADDING_EM } from "@jiscribe/doc/text/block/autoHeightComfortPadding";
 import { describe, expect, it } from "vitest";
 
@@ -62,6 +63,7 @@ describe("applyObjectDefinition: contentResizer", () => {
 			defineObject({
 				...buildFakeDefinition("measured"),
 				features: { type: "measured", geometry: "rect", text: "body" },
+				textRegion: calcFullBoxTextRegion,
 				defaults: {
 					type: "measured",
 					x: 0,

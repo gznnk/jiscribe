@@ -23,9 +23,9 @@ export const LABEL_TEXT_GAP = 4;
  * the box is what keeps it legible when the drawing is scaled down. It has no
  * maximum width: it runs sideways past the shape until the author breaks it.
  *
- * The one placement of every such type, which none of them declares: the canvas
- * registers it as the type's text slot region, and a headless reader asks it
- * directly, `textRegion` being the question of whether the box holds its text.
+ * The placement of every such type whose UI definition does not place the
+ * caption itself (a `"textSlot"` part kind declared with `visualBounds`): the
+ * canvas registers it as the type's text slot region.
  *
  * @param box - The shape's untransformed box; only its height is read, the caption being centred on the origin whatever the width. A zero height puts the caption {@link LABEL_TEXT_GAP} below the centre
  * @param body - The caption's content and styling (see calcLabelTextBoxSize); undefined sizes an empty caption, which still has the minimum box

@@ -58,8 +58,8 @@ export const TEXT_BODY_KEYS = exhaustiveKeysOf<
 >()(["textVerticalBasis"] as const);
 
 /**
- * The doc form of a body hung below the box as a caption (features.text:
- * "label"): the single-body form less what has no meaning for a box sized from
+ * The doc form of a body drawn as a caption sized from its own text
+ * (features.text: "label"): the single-body form less what has no meaning for a box sized from
  * its own text — `verticalAlign` and the basis it is measured against — plus the
  * color painted behind the caption. Derived from {@link TextStyleDoc} rather than
  * copied, like {@link SourceTextStyleDoc}.

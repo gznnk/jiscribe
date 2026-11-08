@@ -43,7 +43,7 @@ describe("resolveDocDefinitions: a label text type", () => {
 		expect(() =>
 			resolveWith(labelDefinition({ textRegion: calcFullBoxTextRegion })),
 		).toThrow(
-			'ObjectDocDefinition "label-icon": features.text "label" is placed under the box by the core (calcLabelTextRegion); declare no textRegion',
+			'ObjectDocDefinition "label-icon": features.text "label" has its caption placed on the canvas side (under the box by the core, calcLabelTextRegion, unless the UI definition places it); declare no textRegion',
 		);
 	});
 
@@ -61,5 +61,24 @@ describe("resolveDocDefinitions: a label text type", () => {
 		).toThrow(
 			'ObjectDocDefinition "label-icon": features.text "label" needs geometry "rect", the caption being placed under a stored width and height (declares "point")',
 		);
+	});
+});
+
+describe("resolveDocDefinitions: a body text type", () => {
+	it.each(["body", "source"] as const)(
+		"refuses a %s type declaring no text region",
+		(text) => {
+			expect(() =>
+				resolveWith(labelDefinition({ features: { text } })),
+			).toThrow(
+				`ObjectDocDefinition "label-icon": features.text "${text}" needs a textRegion, the body being laid out inside the box (calcFullBoxTextRegion for the whole of it)`,
+			);
+		},
+	);
+
+	it("accepts a slots type declaring none, its slots placed on its part kind", () => {
+		expect(() =>
+			resolveWith(labelDefinition({ features: { text: "slots" } })),
+		).not.toThrow();
 	});
 });

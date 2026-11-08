@@ -4,16 +4,16 @@ import type {
 } from "@jiscribe/canvas";
 import type { Dimensions, Point } from "@jiscribe/geometry";
 
-import {
-	calcGroupMarkerTip,
-	resolveGroupMarkerDirection,
-	resolveGroupMarkerTipPosition,
-} from "./groupMarkerGeometry";
 import { GROUP_MARKER_TIP_CONNECT_POINT_ID } from "../../schema/shared/groupMarkerConnectPointIds";
 import type {
 	GroupMarkerDirection,
 	GroupMarkerTipFields,
 } from "../../schema/shared/GroupMarkerFields";
+import {
+	calcGroupMarkerTip,
+	resolveGroupMarkerDirection,
+	resolveGroupMarkerTipPosition,
+} from "../../schema/shared/groupMarkerGeometry";
 
 /** The way each marker faces, as a local outward unit vector. */
 const TIP_OUTWARD_DIRECTIONS: Record<GroupMarkerDirection, Point> = {

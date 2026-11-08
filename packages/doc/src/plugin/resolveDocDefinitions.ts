@@ -30,12 +30,37 @@ const checkTextVerticalBasisFeature = (
 };
 
 /**
+ * Refuses a type whose single body is laid out inside its box (`features.text`
+ * `"body"` / `"source"`) declaring no `textRegion`: the headless checks and the
+ * auto-height measurement read the body's place from it, so a missing one would
+ * leave both guessing.
+ *
+ * Compared against undefined rather than tested for presence:
+ * `createFrameObjectDoc` writes the key whether or not the type gave one.
+ */
+const checkBodyTextRegion = (
+	type: string,
+	definition: ObjectDocDefinition,
+): void => {
+	const { text } = definition.features;
+	if (
+		(text === "body" || text === "source") &&
+		definition.textRegion === undefined
+	) {
+		throw new Error(
+			`ObjectDocDefinition "${type}": features.text "${text}" needs a textRegion, the body being laid out inside the box (calcFullBoxTextRegion for the whole of it)`,
+		);
+	}
+};
+
+/**
  * Refuses a `features.text: "label"` type declaring what the label already
- * settles or cannot work with. The caption is placed the same way for every
- * such type (calcLabelTextRegion), so a `textRegion` of its own would leave two
- * answers for where the text is; it takes no `verticalAlign`, so a
- * `textVerticalBasis` would have nothing to measure; and the placement reads a
- * stored width and height, which only a `geometry: "rect"` type has.
+ * settles or cannot work with. The caption is placed on the canvas side (under
+ * the box by the core, calcLabelTextRegion, unless the UI definition places it),
+ * so a `textRegion` of its own would leave two answers for where the text is; it
+ * takes no `verticalAlign`, so a `textVerticalBasis` would have nothing to
+ * measure; and the placement reads a stored width and height, which only a
+ * `geometry: "rect"` type has.
  *
  * `textRegion` is compared against undefined rather than tested for presence:
  * `createFrameObjectDoc` writes the key whether or not the type gave one.
@@ -60,7 +85,7 @@ const checkLabelTextFeature = (
 	}
 	if (definition.textRegion !== undefined) {
 		throw new Error(
-			`ObjectDocDefinition "${type}": features.text "label" is placed under the box by the core (calcLabelTextRegion); declare no textRegion`,
+			`ObjectDocDefinition "${type}": features.text "label" has its caption placed on the canvas side (under the box by the core, calcLabelTextRegion, unless the UI definition places it); declare no textRegion`,
 		);
 	}
 };
@@ -81,7 +106,8 @@ const checkLabelTextFeature = (
  * @param config - The preset / plugin sources to merge; omit for the built-in set as-is
  * @returns One definition per type, keyed by the `type` each was registered under
  * @throws When two sources claim one type, or when a definition's own declarations
- *   contradict each other ({@link checkTextVerticalBasisFeature},
+ *   contradict each other or leave out one its text needs
+ *   ({@link checkTextVerticalBasisFeature}, {@link checkBodyTextRegion},
  *   {@link checkLabelTextFeature})
  */
 export const resolveDocDefinitions = (
@@ -109,6 +135,7 @@ export const resolveDocDefinitions = (
 	const duplicateMessages: string[] = [];
 	sourcedDefinitions.forEach(({ type, definition, origin }) => {
 		checkTextVerticalBasisFeature(type, definition);
+		checkBodyTextRegion(type, definition);
 		checkLabelTextFeature(type, definition);
 		const firstOrigin = originByType.get(type);
 		if (firstOrigin !== undefined) {

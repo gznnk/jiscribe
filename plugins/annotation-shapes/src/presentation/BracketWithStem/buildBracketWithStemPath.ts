@@ -1,7 +1,7 @@
 import type { GroupMarkerDirection } from "../../schema/shared/GroupMarkerFields";
+import { calcGroupMarkerAxes } from "../../schema/shared/groupMarkerGeometry";
 import type { CanonicalGroupMarkerCommand } from "../shared/buildGroupMarkerPath";
 import { buildGroupMarkerPath } from "../shared/buildGroupMarkerPath";
-import { calcGroupMarkerAxes } from "../shared/groupMarkerGeometry";
 
 /**
  * The canonical stemmed bracket: the spine is pulled in to the depth/2 line so

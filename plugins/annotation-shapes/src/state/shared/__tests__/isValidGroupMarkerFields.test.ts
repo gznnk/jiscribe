@@ -57,6 +57,7 @@ describe("the group markers' state validators", () => {
 		} as BraceDoc),
 		stroke: "auto",
 		fill: "auto",
+		labelFill: "auto",
 	};
 	const bracketState = {
 		...bracketDefinition.mapper.toState({
@@ -65,6 +66,7 @@ describe("the group markers' state validators", () => {
 		} as BracketDoc),
 		stroke: "auto",
 		fill: "auto",
+		labelFill: "auto",
 	};
 
 	it("accepts what the mappers produce", () => {

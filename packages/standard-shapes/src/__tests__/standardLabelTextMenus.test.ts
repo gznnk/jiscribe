@@ -5,8 +5,8 @@ import { standardPlugins } from "../index";
 
 /**
  * A selection mixing two types offers only what both offer, section by section
- * and item by item. A type hanging its text below the box offers the label's
- * background, so every such type has to put it under the one section id the
+ * and item by item. A type whose caption is sized from its own text offers the
+ * label's background, so every such type has to put it under the one section id the
  * others do — the default menus and the icon sets' hand-written ones alike — or
  * selecting a server beside an AWS icon drops the item without a word.
  */
@@ -17,10 +17,19 @@ describe("the standard set's label text types", () => {
 		.filter(([, definition]) => definition?.features.text === "label")
 		.map(([type]) => type);
 
-	it("are the twelve shapes drawing their text below the box", () => {
-		expect(labelTypes).toHaveLength(12);
+	it("are the sixteen shapes drawing a caption sized from its own text", () => {
+		expect(labelTypes).toHaveLength(16);
 		expect(labelTypes).toEqual(
-			expect.arrayContaining(["server", "awsIcon", "azureIcon", "gcpIcon"]),
+			expect.arrayContaining([
+				"server",
+				"awsIcon",
+				"azureIcon",
+				"gcpIcon",
+				"brace",
+				"bracket",
+				"bracketWithStem",
+				"awsGroup",
+			]),
 		);
 	});
 

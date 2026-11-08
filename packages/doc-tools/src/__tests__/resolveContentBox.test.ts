@@ -77,7 +77,7 @@ describe("resolveContentBox", () => {
 		});
 	});
 
-	it("reports outside for a shape whose label is drawn outside the outline", () => {
+	it("reports outside for a label type, whose caption is sized from its own text", () => {
 		expect(
 			resolveContentBox({ type: "actor", width: 80, height: 120 }),
 		).toEqual({ kind: "outside" });
@@ -95,7 +95,7 @@ describe("resolveContentBox", () => {
 		).toEqual({ kind: "outside" });
 	});
 
-	it("reports outside for a shipped shape that declares no region at all", () => {
+	it("reports outside for a shipped shape holding no text at all", () => {
 		expect(
 			resolveContentBox({ type: "lucideIcon", width: 64, height: 64 }),
 		).toEqual({ kind: "outside" });

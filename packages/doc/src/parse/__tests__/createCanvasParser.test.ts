@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { SemanticDiagnostic } from "../../model/types/SemanticDiagnostic";
 import { builtinObjectDocDefinitions } from "../../plugin/builtinObjectDocDefinitions";
 import type { ObjectDocDefinition } from "../../plugin/ObjectDocDefinition";
+import { calcFullBoxTextRegion } from "../../plugin/ObjectDocTextRegion";
 import type { ObjectDocValidateFn } from "../../plugin/ObjectDocValidateFn";
 import type { CanvasParseResult } from "../createCanvasParser";
 import { createCanvasParser } from "../createCanvasParser";
@@ -177,6 +178,7 @@ describe("createCanvasParser", () => {
 		it("lets a plugin override a built-in type once the preset entry is filtered out", () => {
 			const strictRectDefinition: ObjectDocDefinition = {
 				features: builtinObjectDocDefinitions.rect.features,
+				textRegion: builtinObjectDocDefinitions.rect.textRegion,
 				validateDoc: (_obj, path) => [
 					{
 						path,
@@ -781,6 +783,7 @@ describe("parse: the staged pipeline", () => {
 						text: "source",
 					},
 					validateDoc: () => [],
+					textRegion: calcFullBoxTextRegion,
 				} satisfies ObjectDocDefinition,
 			},
 		};
