@@ -131,7 +131,7 @@ const collectRoutingScene = (
 			return;
 		}
 		const bounds = getObjectBounds(object, definitions);
-		const container = definitions.get(object.type)?.container;
+		const container = definitions.get(object.type)?.layoutContainer;
 		if (container !== undefined) {
 			scene.containerIds.add(object.id);
 			if (bounds === null) {
@@ -209,7 +209,7 @@ const collectNamedShapeIds = (
 			});
 			continue;
 		}
-		if (definitions.get(object.type)?.container === undefined) {
+		if (definitions.get(object.type)?.layoutContainer === undefined) {
 			continue;
 		}
 		const { nodes, containers } = collectPlacements(
