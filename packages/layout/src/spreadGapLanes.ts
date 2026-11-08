@@ -7,7 +7,7 @@ import { toRowKey } from "./RowIndex";
 import type { LayoutVisualMargin } from "./types";
 import { growByVisualMargin, readVisualMargin } from "./visualMargin";
 
-/** Preferred distance in px between two routes running side by side through one gap. */
+/** Preferred distance in px between two routes running side by side: through one gap, or spread apart by nudgeRoutes. */
 export const GAP_LANE_SPACING = 16;
 
 /** Room kept between a label on one lane and the route on the next, in px. */

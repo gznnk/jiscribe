@@ -3,7 +3,6 @@ import type { Point, Rect } from "@jiscribe/geometry";
 import {
 	calcCentredAnchorRatio,
 	intersectAnchorRanges,
-	isWithinAnchorRange,
 	readAnchorRange,
 	scaleIntoAnchorRange,
 	scaleIntoBodyWithinUsable,
@@ -11,6 +10,13 @@ import {
 import type { LayoutAxis } from "./LayoutAxis";
 import { type RowIndex, readSlotColumns } from "./RowIndex";
 import { spreadSideEnds } from "./spreadSideEnds";
+import {
+	EDGE_ANCHOR_STRAIGHT_RANGE,
+	calcSideRatio,
+	calcStraightAnchorRatio,
+	columnAt,
+	isStraightRatio,
+} from "./straightAnchor";
 import type {
 	LayoutAnchorRange,
 	LayoutEdgeAnchor,
@@ -18,14 +24,6 @@ import type {
 	LayoutGraphNode,
 	LayoutSide,
 } from "./types";
-
-/**
- * How far along a side an anchor may sit when it puts the edge straight on the column
- * it travels in, so a short jog in the gap is traded for a line near the corner. As
- * ratios of the whole side, taken together with the side's usable stretch
- * (`LayoutGraphNode.anchorRanges`): both must hold the column.
- */
-export const EDGE_ANCHOR_STRAIGHT_RANGE = { min: 0.05, max: 0.95 } as const;
 
 /**
  * How far along a side the anchors of several edges sharing it may spread, as shares of
@@ -105,24 +103,6 @@ const calcFacingSides = (
 /** A side of one box, as the key the anchor rules count edges on. */
 const sideKey = (nodeId: string, side: LayoutSide): string =>
 	`${nodeId}:${side}`;
-
-/** Where `column` (a coordinate across the rank axis) falls along the box's side, 0..1. */
-const calcSideRatio = (
-	bounds: Rect,
-	column: number,
-	axis: LayoutAxis,
-): number => (column - axis.acrossStart(bounds)) / axis.acrossExtent(bounds);
-
-/** The column (a coordinate across the rank axis) at `ratio` along the box's side. */
-const columnAt = (bounds: Rect, ratio: number, axis: LayoutAxis): number =>
-	axis.acrossStart(bounds) + ratio * axis.acrossExtent(bounds);
-
-/** Whether an end at `ratio` lets its edge leave straight, inside the side's usable stretch. */
-const isStraightRatio = (ratio: number, usable: Range): boolean =>
-	isWithinAnchorRange(
-		ratio,
-		intersectAnchorRanges(EDGE_ANCHOR_STRAIGHT_RANGE, usable),
-	);
 
 /**
  * The anchor for one end of an edge, given where along the side the edge is headed
@@ -270,12 +250,13 @@ const anchorEnd = (headed: HeadedEdge, axis: LayoutAxis): WorkingEdge => {
 	if (headed.isAdjacent) {
 		if (targetAlone) {
 			const targetCentre = calcCentredAnchorRatio(targetBody, targetUsable);
-			const towardTargetCentre = calcSideRatio(
+			const towardTargetCentre = calcStraightAnchorRatio(
 				sourceBounds,
 				columnAt(targetBounds, targetCentre, axis),
+				sourceUsable,
 				axis,
 			);
-			if (isStraightRatio(towardTargetCentre, sourceUsable)) {
+			if (towardTargetCentre !== undefined) {
 				return {
 					...headed,
 					source: { side: sourceSide, t: towardTargetCentre },
@@ -285,12 +266,13 @@ const anchorEnd = (headed: HeadedEdge, axis: LayoutAxis): WorkingEdge => {
 		}
 		if (sourceAlone) {
 			const sourceCentre = calcCentredAnchorRatio(sourceBody, sourceUsable);
-			const towardSourceCentre = calcSideRatio(
+			const towardSourceCentre = calcStraightAnchorRatio(
 				targetBounds,
 				columnAt(sourceBounds, sourceCentre, axis),
+				targetUsable,
 				axis,
 			);
-			if (isStraightRatio(towardSourceCentre, targetUsable)) {
+			if (towardSourceCentre !== undefined) {
 				return {
 					...headed,
 					source: { side: sourceSide, t: sourceCentre },

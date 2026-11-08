@@ -77,6 +77,7 @@ import {
 	setRotation,
 	type SetRotationResult,
 } from "./reshape";
+import { type RouteConnectorsResult, routeConnectors } from "./routing";
 import { setStyle, type SetStyleResult } from "./style";
 import {
 	setBackground,
@@ -401,6 +402,18 @@ export type DocOps = {
 		params?: LayoutObjectsParams,
 	): LayoutObjectsResult;
 	/**
+	 * Redraw connectors without moving any shape: each one's ends and right-angled route
+	 * are chosen to go around the other shapes, the captions below them and the container
+	 * title bands, and to cross and run along one another as little as they can. Omitted
+	 * `ids` means every connector; a shape, group or container shape named stands for the
+	 * connectors joining what it names. Nothing follows a shape moved afterwards. Throws
+	 * `DocOperationError` for a missing id.
+	 */
+	routeConnectors(
+		doc: CanvasDoc,
+		ids: readonly string[] | undefined,
+	): RouteConnectorsResult;
+	/**
 	 * Wrap sibling objects in a new group and return its id.
 	 * Throws `DocOperationError` for fewer than 2 distinct ids, a connector, or members of
 	 * different parents.
@@ -541,6 +554,7 @@ export const createDocOps = (config?: DocDefinitionsConfig): DocOps => {
 			distributeObjects(doc, ids, axis, spacing, definitions),
 		layoutObjects: (doc, ids, params = {}) =>
 			layoutObjects(doc, ids, params, definitions),
+		routeConnectors: (doc, ids) => routeConnectors(doc, ids, definitions),
 		groupObjects: (doc, ids) => groupObjects(doc, ids),
 		dissolveGroup: (doc, id) => dissolveGroup(doc, id),
 		dissolveGroups: (doc, ids) => dissolveGroups(doc, ids),

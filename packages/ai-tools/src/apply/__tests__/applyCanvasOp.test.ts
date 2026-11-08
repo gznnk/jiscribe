@@ -491,6 +491,37 @@ describe("applyCanvasOp", () => {
 		]);
 	});
 
+	it("says in the result sentence which connectors routeConnectors redrew, left alone and sent back beneath a caption", () => {
+		const { apply, currentDoc } = createFakeDocBridge();
+		apply({
+			kind: "addObjects",
+			objects: [
+				{ type: "cross", x: 0, y: 0, text: "join" },
+				{ type: "rect", x: 0, y: 400 },
+			],
+		});
+		apply({
+			kind: "connectMany",
+			entries: [
+				{ sourceId: "cross-1", targetId: "rect-1" },
+				{ sourceId: "rect-1", targetId: "rect-1" },
+			],
+		});
+
+		const result = apply({ kind: "routeConnectors" });
+
+		expect(result).toMatchObject({
+			ok: true,
+			text: 'redrew "connector-1"; left as they were: "connector-2" (a self loop); sent "connector-1" back to just beneath the shape whose caption each runs under',
+		});
+		expect(currentDoc().root.map(({ id }) => id)).toEqual([
+			"connector-1",
+			"cross-1",
+			"rect-1",
+			"connector-2",
+		]);
+	});
+
 	it("writes the paint opacities onto the object", () => {
 		const { apply, currentDoc } = createFakeDocBridge();
 		apply({ kind: "addObjects", objects: [{ type: "rect", x: 0, y: 0 }] });

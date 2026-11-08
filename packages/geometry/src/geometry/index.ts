@@ -16,6 +16,7 @@ export * from "./calcInsetRect";
 export * from "./isLineIntersectingBox";
 export * from "./isPointInPolygon";
 export * from "./snapToDirection";
+export * from "./doRectsOverlap";
 export * from "./doSegmentsIntersect";
 export * from "./doSegmentsIntersectByCoords";
 export * from "./convertRectToFrame";

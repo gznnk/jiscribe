@@ -55,7 +55,7 @@ ordering _is_ the spec — every past conflict was a disagreement about it.
 
 ## Key definitions
 
-- **margin** — the clearance a route keeps from a shape (`DEFAULT_CONNECTOR_MARGIN`, 30px). Also the
+- **margin** — the clearance a route keeps from a shape (`DEFAULT_CONNECTOR_MARGIN`, which reads `EDGE_ROUTE_MARGIN` from `@jiscribe/layout`). Also the
   stub push-out length.
 - **stub** — the point each endpoint is pushed out to along its exit direction before the elbow. For
   close endpoints it is clamped to half the forward distance so facing stubs meet at the midpoint
