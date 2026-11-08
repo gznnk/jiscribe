@@ -1,9 +1,9 @@
 import type { Point, Rect } from "@jiscribe/geometry";
 
 import { calcPositionAlongPath } from "./calcPositionAlongPath";
-import { isSameCoordinate } from "./isSameCoordinate";
-import { createLayoutAxis } from "./LayoutAxis";
-import type { LayoutDirection } from "./LayoutDirection";
+import { isSameCoordinate } from "../shared/isSameCoordinate";
+import { createLayoutAxis } from "../shared/LayoutAxis";
+import type { LayoutDirection } from "../shared/LayoutDirection";
 
 /** Room kept between a label's box and the nearest corner of its own route, in px. */
 export const LABEL_CORNER_CLEARANCE = 8;

@@ -1,7 +1,5 @@
 import type { BoundingBox, Point, Rect } from "@jiscribe/geometry";
 
-import { EDGE_ROUTE_MARGIN, ROUTE_COSTS } from "./edgeRoutingCosts";
-import { isSameCoordinate } from "./isSameCoordinate";
 import {
 	type RouteGraph,
 	buildRouteGraph,
@@ -22,7 +20,9 @@ import {
 	stepIndex,
 } from "./RouteGrid";
 import { RouteSearchQueue } from "./RouteSearchQueue";
-import type { LayoutSide, RoutableEdge, RoutedEdge } from "./types";
+import { isSameCoordinate } from "../../shared/isSameCoordinate";
+import type { LayoutSide, RoutableEdge, RoutedEdge } from "../../shared/types";
+import { EDGE_ROUTE_MARGIN, ROUTE_COSTS } from "../edgeRoutingCosts";
 
 /** A rect no route enters, with what it belongs to. */
 export type Obstacle = {

@@ -1,7 +1,7 @@
 import { bench, describe } from "vitest";
 
+import type { LayoutGraphEdge, LayoutGraphNode } from "../../shared/types";
 import { computeLayeredLayout } from "../computeLayeredLayout";
-import type { LayoutGraphEdge, LayoutGraphNode } from "../types";
 
 type Graph = { nodes: LayoutGraphNode[]; edges: LayoutGraphEdge[] };
 

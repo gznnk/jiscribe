@@ -6,26 +6,30 @@ import {
 	type Rect,
 } from "@jiscribe/geometry";
 
+import { EDGE_ROUTE_MARGIN, ROUTE_COSTS } from "./edgeRoutingCosts";
+import { calcAnchorPoint } from "../layered/calcOrthogonalPath";
+import { EDGE_ANCHOR_FAN_RANGE } from "../layered/chooseEdgeAnchors";
 import {
 	calcCentredAnchorRatio,
 	readAnchorRange,
 	scaleIntoBodyWithinUsable,
-} from "./anchorRange";
-import { calcAnchorPoint } from "./calcOrthogonalPath";
-import { ceilCoordinate } from "./ceilCoordinate";
-import { EDGE_ANCHOR_FAN_RANGE } from "./chooseEdgeAnchors";
+} from "../shared/anchorRange";
+import { ceilCoordinate } from "../shared/ceilCoordinate";
+import { placeRouteLabels } from "./labels/placeRouteLabels";
 import {
 	type EndCandidate,
 	EdgeRouter,
 	type Obstacle,
 	type PreparedEdge,
-} from "./EdgeRouter";
-import { EDGE_ROUTE_MARGIN, ROUTE_COSTS } from "./edgeRoutingCosts";
-import { floorCoordinate } from "./floorCoordinate";
-import { isSameCoordinate } from "./isSameCoordinate";
-import { type LayoutAxis, createLayoutAxis } from "./LayoutAxis";
-import { type RouteEnd, type RouteToNudge, nudgeRoutes } from "./nudgeRoutes";
-import { placeRouteLabels } from "./placeRouteLabels";
+} from "./search/EdgeRouter";
+import { floorCoordinate } from "../shared/floorCoordinate";
+import { isSameCoordinate } from "../shared/isSameCoordinate";
+import { type LayoutAxis, createLayoutAxis } from "../shared/LayoutAxis";
+import {
+	type RouteEnd,
+	type RouteToNudge,
+	nudgeRoutes,
+} from "./nudge/nudgeRoutes";
 import {
 	type RouteDirection,
 	STEP_X,
@@ -34,12 +38,12 @@ import {
 	growBox,
 	snapToGridResolution,
 	toGridLines,
-} from "./RouteGrid";
+} from "./search/RouteGrid";
 import {
 	calcSideRatio,
 	calcStraightAnchorRatio,
 	columnAt,
-} from "./straightAnchor";
+} from "../shared/straightAnchor";
 import type {
 	EdgeRoutingOptions,
 	EdgeRoutingResult,
@@ -48,7 +52,7 @@ import type {
 	RoutableEdge,
 	RoutableNode,
 	RoutedEdge,
-} from "./types";
+} from "../shared/types";
 
 const SIDES: readonly LayoutSide[] = ["top", "right", "bottom", "left"];
 

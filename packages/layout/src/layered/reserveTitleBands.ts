@@ -1,7 +1,7 @@
 import type { Point, Rect } from "@jiscribe/geometry";
 
-import { isSameCoordinate } from "./isSameCoordinate";
-import type { LaidOutContainer } from "./types";
+import { isSameCoordinate } from "../shared/isSameCoordinate";
+import type { LaidOutContainer } from "../shared/types";
 
 /**
  * Make room for every container's title band: everything below a container's top

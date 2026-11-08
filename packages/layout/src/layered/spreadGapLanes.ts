@@ -1,11 +1,11 @@
 import type { Point, Rect } from "@jiscribe/geometry";
 
-import { isSameCoordinate } from "./isSameCoordinate";
-import { type LayoutAxis, createLayoutAxis } from "./LayoutAxis";
-import type { LayoutDirection } from "./LayoutDirection";
 import { toRowKey } from "./RowIndex";
-import type { LayoutVisualMargin } from "./types";
 import { growByVisualMargin, readVisualMargin } from "./visualMargin";
+import { isSameCoordinate } from "../shared/isSameCoordinate";
+import { type LayoutAxis, createLayoutAxis } from "../shared/LayoutAxis";
+import type { LayoutDirection } from "../shared/LayoutDirection";
+import type { LayoutVisualMargin } from "../shared/types";
 
 /** Preferred distance in px between two routes running side by side: through one gap, or spread apart by nudgeRoutes. */
 export const GAP_LANE_SPACING = 16;

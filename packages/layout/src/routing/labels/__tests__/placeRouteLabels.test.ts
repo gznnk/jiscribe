@@ -1,8 +1,8 @@
 import type { Point, Rect } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
-import type { LabelPlacement } from "../calcLabelPosition";
-import { EDGE_ROUTE_MARGIN } from "../edgeRoutingCosts";
+import type { LabelPlacement } from "../../../layered/calcLabelPosition";
+import { EDGE_ROUTE_MARGIN } from "../../edgeRoutingCosts";
 import { type RouteToLabel, placeRouteLabels } from "../placeRouteLabels";
 
 const LABEL = { width: 40, height: 20 };

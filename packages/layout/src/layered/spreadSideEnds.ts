@@ -1,5 +1,5 @@
-import { FULL_ANCHOR_RANGE } from "./anchorRange";
-import type { LayoutAnchorRange } from "./types";
+import { FULL_ANCHOR_RANGE } from "../shared/anchorRange";
+import type { LayoutAnchorRange } from "../shared/types";
 
 /** One edge end on a side of a box, as the spreading sees it. */
 export type SideEnd = {

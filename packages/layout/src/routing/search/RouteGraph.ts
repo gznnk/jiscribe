@@ -1,6 +1,6 @@
 import type { BoundingBox } from "@jiscribe/geometry";
 
-import { EDGE_ROUTE_MARGIN, ROUTE_COSTS } from "./edgeRoutingCosts";
+import { EDGE_ROUTE_MARGIN, ROUTE_COSTS } from "../edgeRoutingCosts";
 import {
 	type GridSpan,
 	type RouteLines,

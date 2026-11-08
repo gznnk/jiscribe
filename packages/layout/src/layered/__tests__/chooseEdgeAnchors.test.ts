@@ -1,8 +1,8 @@
 import type { Rect } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
+import { createLayoutAxis } from "../../shared/LayoutAxis";
 import { type EdgeToAnchor, chooseEdgeAnchors } from "../chooseEdgeAnchors";
-import { createLayoutAxis } from "../LayoutAxis";
 import { createRowIndex } from "../RowIndex";
 
 const axis = createLayoutAxis("LR");

@@ -4,16 +4,16 @@ import {
 	type Point,
 } from "@jiscribe/geometry";
 
-import { ceilCoordinate } from "./ceilCoordinate";
-import { EDGE_END_SPACING } from "./chooseEdgeAnchors";
-import { floorCoordinate } from "./floorCoordinate";
-import { isSameCoordinate } from "./isSameCoordinate";
 import {
 	type SeparationConstraint,
 	type SeparationVariable,
 	solveSeparation,
 } from "./solveSeparation";
-import { GAP_LANE_SPACING } from "./spreadGapLanes";
+import { EDGE_END_SPACING } from "../../layered/chooseEdgeAnchors";
+import { GAP_LANE_SPACING } from "../../layered/spreadGapLanes";
+import { ceilCoordinate } from "../../shared/ceilCoordinate";
+import { floorCoordinate } from "../../shared/floorCoordinate";
+import { isSameCoordinate } from "../../shared/isSameCoordinate";
 
 /**
  * The narrowest spacing in px a group of runs is squeezed to in a tight channel; a

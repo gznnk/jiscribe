@@ -1,7 +1,7 @@
 import { bench, describe } from "vitest";
 
+import type { RoutableEdge, RoutableNode } from "../../shared/types";
 import { routeEdgesAroundNodes } from "../routeEdgesAroundNodes";
-import type { RoutableEdge, RoutableNode } from "../types";
 
 /** A deterministic generator, so a run compares with the last. */
 const createRandom = (seed: number): (() => number) => {

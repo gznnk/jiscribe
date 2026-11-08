@@ -2,30 +2,33 @@ export {
 	EDGE_ANCHOR_FAN_RANGE,
 	EDGE_BUNDLE_SPACING,
 	EDGE_END_SPACING,
-} from "./chooseEdgeAnchors";
-export { calcFacingSides } from "./calcFacingSides";
-export { computeLayeredLayout } from "./computeLayeredLayout";
+} from "./layered/chooseEdgeAnchors";
+export { calcFacingSides } from "./layered/calcFacingSides";
+export { computeLayeredLayout } from "./layered/computeLayeredLayout";
 export {
 	createTakenEnds,
 	type TakenEnd,
 	type TakenEnds,
-} from "./createTakenEnds";
-export { isRectInside } from "./isRectInside";
-export { LayoutDirections, type LayoutDirection } from "./LayoutDirection";
+} from "./layered/createTakenEnds";
+export { isRectInside } from "./shared/isRectInside";
+export {
+	LayoutDirections,
+	type LayoutDirection,
+} from "./shared/LayoutDirection";
 export {
 	resolvePlacements,
 	type PlacementCandidate,
 	type ResolvedContainer,
 	type ResolvedNode,
-} from "./resolvePlacements";
-export { EDGE_ROUTE_MARGIN } from "./edgeRoutingCosts";
-export { routeEdgesAroundNodes } from "./routeEdgesAroundNodes";
+} from "./shared/resolvePlacements";
+export { EDGE_ROUTE_MARGIN } from "./routing/edgeRoutingCosts";
+export { routeEdgesAroundNodes } from "./routing/routeEdgesAroundNodes";
 export {
 	splitLayoutGraph,
 	type SplittableLayoutGraph,
-} from "./splitLayoutGraph";
-export { GAP_LANE_SPACING } from "./spreadGapLanes";
-export { EDGE_ANCHOR_STRAIGHT_RANGE } from "./straightAnchor";
+} from "./layered/splitLayoutGraph";
+export { GAP_LANE_SPACING } from "./layered/spreadGapLanes";
+export { EDGE_ANCHOR_STRAIGHT_RANGE } from "./shared/straightAnchor";
 export {
 	LAYERED_LAYOUT_DEFAULTS,
 	type EdgeRoutingOptions,
@@ -45,4 +48,4 @@ export {
 	type RoutableEdge,
 	type RoutableNode,
 	type RoutedEdge,
-} from "./types";
+} from "./shared/types";

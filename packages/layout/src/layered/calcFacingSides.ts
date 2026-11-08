@@ -1,6 +1,6 @@
 import type { Rect } from "@jiscribe/geometry";
 
-import type { LayoutEdgeAnchor } from "./types";
+import type { LayoutEdgeAnchor } from "../shared/types";
 
 const centreOf = (bounds: Rect): { x: number; y: number } => ({
 	x: bounds.x + bounds.width / 2,

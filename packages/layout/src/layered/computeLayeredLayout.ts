@@ -7,11 +7,12 @@ import {
 } from "./calcLabelPosition";
 import { calcAnchorPoint, calcOrthogonalPath } from "./calcOrthogonalPath";
 import { chooseEdgeAnchors } from "./chooseEdgeAnchors";
-import { createLayoutAxis } from "./LayoutAxis";
 import { reserveTitleBands } from "./reserveTitleBands";
 import { createRowIndex, dropBorderPoints } from "./RowIndex";
 import { runDagre } from "./runDagre";
 import { type GapLaneMarginBox, spreadGapLanes } from "./spreadGapLanes";
+import { hasVisualMargin, readVisualMargin } from "./visualMargin";
+import { createLayoutAxis } from "../shared/LayoutAxis";
 import {
 	LAYERED_LAYOUT_DEFAULTS,
 	type LaidOutEdge,
@@ -20,8 +21,7 @@ import {
 	type LayoutGraphContainer,
 	type LayoutGraphEdge,
 	type LayoutGraphNode,
-} from "./types";
-import { hasVisualMargin, readVisualMargin } from "./visualMargin";
+} from "../shared/types";
 
 /** Length of a right-angled route in px. */
 const calcPathLength = (path: readonly Point[]): number =>

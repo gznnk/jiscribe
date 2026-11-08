@@ -1,12 +1,16 @@
 import type { Rect } from "@jiscribe/geometry";
 
+import { EDGE_END_SPACING } from "./chooseEdgeAnchors";
 import {
 	FULL_ANCHOR_RANGE,
 	calcCentredAnchorRatio,
 	scaleIntoBodyWithinUsable,
-} from "./anchorRange";
-import { EDGE_END_SPACING } from "./chooseEdgeAnchors";
-import type { LayoutAnchorRange, LayoutEdgeAnchor, LayoutSide } from "./types";
+} from "../shared/anchorRange";
+import type {
+	LayoutAnchorRange,
+	LayoutEdgeAnchor,
+	LayoutSide,
+} from "../shared/types";
 
 /**
  * Where on a side a handed-out end may go, as shares of the side's body, cut down to

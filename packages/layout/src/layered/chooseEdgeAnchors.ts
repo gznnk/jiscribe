@@ -1,29 +1,29 @@
 import type { Point, Rect } from "@jiscribe/geometry";
 
+import { type RowIndex, readSlotColumns } from "./RowIndex";
+import { spreadSideEnds } from "./spreadSideEnds";
 import {
 	calcCentredAnchorRatio,
 	intersectAnchorRanges,
 	readAnchorRange,
 	scaleIntoAnchorRange,
 	scaleIntoBodyWithinUsable,
-} from "./anchorRange";
-import type { LayoutAxis } from "./LayoutAxis";
-import { type RowIndex, readSlotColumns } from "./RowIndex";
-import { spreadSideEnds } from "./spreadSideEnds";
+} from "../shared/anchorRange";
+import type { LayoutAxis } from "../shared/LayoutAxis";
 import {
 	EDGE_ANCHOR_STRAIGHT_RANGE,
 	calcSideRatio,
 	calcStraightAnchorRatio,
 	columnAt,
 	isStraightRatio,
-} from "./straightAnchor";
+} from "../shared/straightAnchor";
 import type {
 	LayoutAnchorRange,
 	LayoutEdgeAnchor,
 	LayoutGraphEdge,
 	LayoutGraphNode,
 	LayoutSide,
-} from "./types";
+} from "../shared/types";
 
 /**
  * How far along a side the anchors of several edges sharing it may spread, as shares of

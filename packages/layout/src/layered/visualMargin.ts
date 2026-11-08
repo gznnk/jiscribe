@@ -1,6 +1,10 @@
 import type { Rect } from "@jiscribe/geometry";
 
-import type { LayoutGraphNode, LayoutSide, LayoutVisualMargin } from "./types";
+import type {
+	LayoutGraphNode,
+	LayoutSide,
+	LayoutVisualMargin,
+} from "../shared/types";
 
 const LAYOUT_SIDES: readonly LayoutSide[] = ["top", "right", "bottom", "left"];
 

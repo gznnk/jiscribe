@@ -1,9 +1,9 @@
 import type { Point, Rect } from "@jiscribe/geometry";
 
-import { isSameCoordinate } from "./isSameCoordinate";
-import type { LayoutAxis } from "./LayoutAxis";
 import type { RowIndex } from "./RowIndex";
-import type { LayoutEdgeAnchor } from "./types";
+import { isSameCoordinate } from "../shared/isSameCoordinate";
+import type { LayoutAxis } from "../shared/LayoutAxis";
+import type { LayoutEdgeAnchor } from "../shared/types";
 
 /** Where an anchor sits on a box, in the same coordinates as `bounds`. */
 export const calcAnchorPoint = (

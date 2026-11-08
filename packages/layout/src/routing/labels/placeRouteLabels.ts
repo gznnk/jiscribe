@@ -9,11 +9,11 @@ import {
 	LABEL_BESIDE_CLEARANCE,
 	LABEL_CORNER_CLEARANCE,
 	type LabelPlacement,
-} from "./calcLabelPosition";
-import { ceilCoordinate } from "./ceilCoordinate";
-import { EDGE_ROUTE_MARGIN } from "./edgeRoutingCosts";
-import { floorCoordinate } from "./floorCoordinate";
-import { isSameCoordinate } from "./isSameCoordinate";
+} from "../../layered/calcLabelPosition";
+import { ceilCoordinate } from "../../shared/ceilCoordinate";
+import { floorCoordinate } from "../../shared/floorCoordinate";
+import { isSameCoordinate } from "../../shared/isSameCoordinate";
+import { EDGE_ROUTE_MARGIN } from "../edgeRoutingCosts";
 
 /** How far apart in px the spots a label's centre is tried at along a segment stand. */
 const LABEL_STEP = 4;
