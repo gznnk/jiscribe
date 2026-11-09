@@ -134,13 +134,77 @@ describe("erEntity insert commands", () => {
 		}
 	});
 
-	it("inserts above the picked column and opens the new column's name", () => {
-		const result = run(
-			"erEntity.insertColumnAbove",
-			canvasWith(pickOf("erEntityColumn", "col:1")),
-		);
+	it("inserts above the picked column and picks the new one, the editor staying closed", () => {
+		const start = canvasWith(pickOf("erEntityColumn", "col:1"));
+		const result = run("erEntity.insertColumnAbove", start);
 		expect(columnNamesOf(result)).toEqual(["id", "", "email", "name"]);
 		expect(result.commitVersion).toBe(8);
+		expect(result.selection.part).toEqual(pickOf("erEntityColumn", "col:1"));
+		expect(result.mode).toEqual(start.mode);
+	});
+
+	it("inserts below the column of a picked slot and picks the new column", () => {
+		const result = run(
+			"erEntity.insertColumnBelow",
+			canvasWith(pickOf(TEXT_SLOT_PART_KIND, "col:1:key")),
+		);
+		expect(columnNamesOf(result)).toEqual(["id", "email", "", "name"]);
+		expect(result.selection.part).toEqual(pickOf("erEntityColumn", "col:2"));
+	});
+
+	it("inserts outside a range of slots spanning several columns, the pick narrowing to the new column", () => {
+		const range: PartSelection = {
+			kind: TEXT_SLOT_PART_KIND,
+			ranges: [{ anchorId: "col:0:type", focusId: "col:1:key" }],
+		};
+		const below = run("erEntity.insertColumnBelow", canvasWith(range));
+		expect(columnNamesOf(below)).toEqual(["id", "email", "", "name"]);
+		expect(below.selection.part).toEqual(pickOf("erEntityColumn", "col:2"));
+
+		const above = run("erEntity.insertColumnAbove", canvasWith(range));
+		expect(columnNamesOf(above)).toEqual(["", "id", "email", "name"]);
+		expect(above.selection.part).toEqual(pickOf("erEntityColumn", "col:0"));
+	});
+
+	it("narrows a range of columns to the new column", () => {
+		const result = run(
+			"erEntity.insertColumnBelow",
+			canvasWith(columnRangeOf("col:0", "col:2")),
+		);
+		expect(columnNamesOf(result)).toEqual(["id", "email", "name", ""]);
+		expect(result.selection.part).toEqual(pickOf("erEntityColumn", "col:3"));
+	});
+
+	it("appends to the whole entity and picks the new column, an entity of no columns included", () => {
+		const start = canvasWith(null);
+		const result = run("erEntity.appendColumn", start);
+		expect(columnNamesOf(result)).toEqual(["id", "email", "name", ""]);
+		expect(result.selection.part).toEqual(pickOf("erEntityColumn", "col:3"));
+		expect(result.mode).toEqual(start.mode);
+
+		const emptied = runDelete(canvasWith(columnRangeOf("col:0", "col:2")));
+		expect(columnNamesOf(emptied)).toEqual([]);
+		const appended = run("erEntity.appendColumn", emptied);
+		expect(columnNamesOf(appended)).toEqual([""]);
+		expect(appended.selection.part).toEqual(pickOf("erEntityColumn", "col:0"));
+	});
+
+	it("inserts again below the column the last insertion picked", () => {
+		const once = run(
+			"erEntity.insertColumnBelow",
+			canvasWith(pickOf("erEntityColumn", "col:0")),
+		);
+		const twice = run("erEntity.insertColumnBelow", once);
+		expect(columnNamesOf(twice)).toEqual(["id", "", "", "email", "name"]);
+		expect(twice.selection.part).toEqual(pickOf("erEntityColumn", "col:2"));
+	});
+
+	it("opens the new column's name on Enter after an insertion", () => {
+		const inserted = run(
+			"erEntity.insertColumnBelow",
+			canvasWith(pickOf("erEntityColumn", "col:0")),
+		);
+		const result = run("erEntity.editColumnName", inserted);
 		expect(result.selection.part).toEqual(
 			pickOf(TEXT_SLOT_PART_KIND, "col:1:name"),
 		);
@@ -150,42 +214,21 @@ describe("erEntity insert commands", () => {
 		});
 	});
 
-	it("inserts below the column of a picked slot", () => {
-		const result = run(
-			"erEntity.insertColumnBelow",
-			canvasWith(pickOf(TEXT_SLOT_PART_KIND, "col:1:key")),
-		);
-		expect(columnNamesOf(result)).toEqual(["id", "email", "", "name"]);
-		expect(result.selection.part).toEqual(
-			pickOf(TEXT_SLOT_PART_KIND, "col:2:name"),
-		);
-	});
-
-	it("inserts outside a range of slots spanning several columns", () => {
-		const range: PartSelection = {
-			kind: TEXT_SLOT_PART_KIND,
-			ranges: [{ anchorId: "col:0:type", focusId: "col:1:key" }],
-		};
+	it("closes a section left open over the whole entity, and leaves one open over a pick", () => {
 		expect(
-			columnNamesOf(run("erEntity.insertColumnBelow", canvasWith(range))),
-		).toEqual(["id", "email", "", "name"]);
+			run(
+				"erEntity.appendColumn",
+				canvasWith(null, { objectMenuOpenId: "bg-color" }),
+			).objectMenuOpenId,
+		).toBeNull();
 		expect(
-			columnNamesOf(run("erEntity.insertColumnAbove", canvasWith(range))),
-		).toEqual(["", "id", "email", "name"]);
-	});
-
-	it("appends to the whole entity, an entity of no columns included", () => {
-		expect(
-			columnNamesOf(run("erEntity.appendColumn", canvasWith(null))),
-		).toEqual(["id", "email", "name", ""]);
-
-		const emptied = runDelete(canvasWith(columnRangeOf("col:0", "col:2")));
-		expect(columnNamesOf(emptied)).toEqual([]);
-		const appended = run("erEntity.appendColumn", emptied);
-		expect(columnNamesOf(appended)).toEqual([""]);
-		expect(appended.selection.part).toEqual(
-			pickOf(TEXT_SLOT_PART_KIND, "col:0:name"),
-		);
+			run(
+				"erEntity.insertColumnBelow",
+				canvasWith(pickOf("erEntityColumn", "col:0"), {
+					objectMenuOpenId: "font-size",
+				}),
+			).objectMenuOpenId,
+		).toBe("font-size");
 	});
 });
 

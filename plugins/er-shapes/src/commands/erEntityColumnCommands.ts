@@ -18,9 +18,9 @@ import { ER_ENTITY_COLUMN_PART_KIND } from "../parts/erEntityColumnPartKind";
 import {
 	parseErEntityColumnPartId,
 	countErEntityColumns,
+	erEntityColumnPartId,
 	erEntityColumnTextSlotId,
 } from "../schema/erEntityColumnIds";
-import type { ErEntityState } from "../state/ErEntityState";
 
 /** The ids of the three insertions, which the menu and the sidebar key their buttons by. */
 export type ErEntityInsertCommandId =
@@ -112,8 +112,9 @@ const toKeyBinding = (arrowCode: string): KeyBinding => ({
 /**
  * Builds one insertion. The command commits its own edit (commitEdit) — the
  * entity and the connectors on the columns that moved along, in one step
- * (rewriteErEntityColumnsWithConnectors) — then opens the editor on the new column's name: typing it is why a column is added, so the
- * pick goes straight to it rather than being remapped past the insertion.
+ * (rewriteErEntityColumnsWithConnectors) — and picks the new column alone,
+ * whatever was picked before: Enter then opens its name, and the arrow-key
+ * insertion repeats from it.
  */
 const createErEntityInsertCommand = (
 	spec: ErEntityInsertCommandSpec,
@@ -139,12 +140,22 @@ const createErEntityInsertCommand = (
 			target.objectId,
 			listErEntityColumnSourcesForInsert(target.entity, at),
 		);
-		const committed = commitEdit({ ...state, objects });
-		return openErEntityTextSlotEditor(
-			committed,
-			objects[target.objectId] as ErEntityState,
-			erEntityColumnTextSlotId(at, "name"),
-		);
+		const newColumnPartId = erEntityColumnPartId(at);
+		return commitEdit({
+			...state,
+			objects,
+			// A section open over the whole entity may not exist for a column pick,
+			// and an open id with nothing drawn would hold the menu as in use.
+			objectMenuOpenId:
+				state.selection.part === null ? null : state.objectMenuOpenId,
+			selection: {
+				...state.selection,
+				part: {
+					kind: ER_ENTITY_COLUMN_PART_KIND,
+					ranges: [{ anchorId: newColumnPartId, focusId: newColumnPartId }],
+				},
+			},
+		});
 	},
 });
 

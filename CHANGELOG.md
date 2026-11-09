@@ -288,6 +288,10 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Changed
 
+- **Adding a column to an `erEntity` picks the new column instead of opening
+  its name.** Add Above, Add Below and Add at Bottom leave the editor closed,
+  as a table's row insertion does, and Enter opens the new column's name. Tab
+  off the last slot still adds a column and carries on editing.
 - **The label below a pictogram, an icon or a flowchart marker is painted on
   the page's color.** The twelve `"label"` shapes hanging their label below the
   box draw a box in `labelFill` behind it, so a connector or a shape lying under
