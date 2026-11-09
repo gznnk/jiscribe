@@ -624,8 +624,8 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   the layout throw, nor writes `NaN` into the ends of two connectors sharing its
   side. Two container shapes with the same box no longer throw on a parent cycle:
   the first of the two (in the ids given, or in the stacking order) holds the
-  other. A `text` is moved to a whole pixel, where its measured box used to
-  leave a float's tail on `x` / `y`.
+  other. A `text` no longer gets a float's tail on `x` / `y` from its measured
+  box.
 - **A connector label with no `fill` masks the line in the document's
   `background`.** It drew in the theme's canvas colour, so on a document with its
   own opaque `background` every default label was a box of another colour, in the

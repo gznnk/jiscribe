@@ -283,8 +283,8 @@ export const buildChainDoc = (): CanvasDoc => {
 
 /**
  * rect-1 and rect-2 side by side in group-1 at the top-left (0, 0), with rect-3 below
- * them and a line rect-1 → rect-3: a group's members start at its padding once laid
- * out, not at the drawing's top-left.
+ * them and a line rect-1 → rect-3: in the layout's own coordinates, a group's members
+ * start at its padding.
  */
 export const buildGroupedDoc = (): CanvasDoc => {
 	const doc = emptyDoc();

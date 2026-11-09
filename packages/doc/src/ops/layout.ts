@@ -267,8 +267,8 @@ const writePlacements = (
 			Math.round(origin.y + bounds.y) - before.y,
 			definitions,
 		);
-		// A point shape's box is measured from its centre, a float's tail off the corner
-		// it stores; rounded as its mapper rounds it (see roundDocCoordinate).
+		// A point shape's measured box differs from its stored corner by a float's tail;
+		// rounded as its mapper rounds it (see roundDocCoordinate).
 		if (definitions.get(object.type)?.features.geometry === "point") {
 			object.x = roundDocCoordinate(object.x as number);
 			object.y = roundDocCoordinate(object.y as number);

@@ -122,7 +122,7 @@ export const resolvePlacements = (
 				continue;
 			}
 			// Of two container shapes with the same box, the one found first holds the
-			// other, so neither ends up inside the other both ways.
+			// other, so the two do not each hold the other.
 			const placementIndex = foundIndexOf.get(placement);
 			if (
 				placementIndex !== undefined &&
