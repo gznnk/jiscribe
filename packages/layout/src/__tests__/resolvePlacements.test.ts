@@ -88,6 +88,21 @@ describe("resolvePlacements", () => {
 		]);
 	});
 
+	it("nests two container shapes with the same box in the order found, the box in the later", () => {
+		const { nodes, containers } = resolvePlacements([
+			containerShape("first", 0, 0, 400, 300),
+			containerShape("second", 0, 0, 400, 300),
+			box("a", 20, 20),
+		]);
+		expect(nodes).toEqual([
+			expect.objectContaining({ id: "a", parentId: "second" }),
+		]);
+		expect(containers.map(({ id, parentId }) => ({ id, parentId }))).toEqual([
+			{ id: "first", parentId: undefined },
+			{ id: "second", parentId: "first" },
+		]);
+	});
+
 	it("places container shapes holding no node as nodes, without a parent", () => {
 		// "empty" sits in "outer", but neither holds a node, so both are boxes of their own.
 		const { nodes, containers } = resolvePlacements([

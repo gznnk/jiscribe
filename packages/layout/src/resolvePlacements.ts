@@ -59,7 +59,8 @@ type Placement = {
  * Sort candidates into the nodes to place and the containers around them, as
  * `computeLayeredLayout` takes them. A group's members are its children; a container
  * shape's members are the candidates at its own level (the same group, or none) that
- * lie inside it, the smallest such container winning when they nest. A container shape
+ * lie inside it, the smallest such container winning when they nest; of two with the
+ * same box, the one found first holds the other. A container shape
  * holding nothing to place is a node like any other, so it still moves with the
  * drawing; a group holding nothing is dropped.
  *
@@ -104,6 +105,12 @@ export const resolvePlacements = (
 	);
 	const area = ({ candidate }: Placement): number =>
 		candidate.bounds.width * candidate.bounds.height;
+	const isSameBox = (first: Placement, second: Placement): boolean =>
+		isRectInside(first.candidate.bounds, second.candidate.bounds) &&
+		isRectInside(second.candidate.bounds, first.candidate.bounds);
+	const foundIndexOf = new Map(
+		containerShapes.map((container, index) => [container, index] as const),
+	);
 	const adopt = (placement: Placement): void => {
 		let smallest: Placement | undefined;
 		for (const container of containerShapes) {
@@ -114,7 +121,21 @@ export const resolvePlacements = (
 			) {
 				continue;
 			}
-			if (smallest === undefined || area(container) < area(smallest)) {
+			// Of two container shapes with the same box, the one found first holds the
+			// other, so neither ends up inside the other both ways.
+			const placementIndex = foundIndexOf.get(placement);
+			if (
+				placementIndex !== undefined &&
+				(foundIndexOf.get(container) as number) > placementIndex &&
+				isSameBox(container, placement)
+			) {
+				continue;
+			}
+			if (
+				smallest === undefined ||
+				area(container) < area(smallest) ||
+				isSameBox(container, smallest)
+			) {
 				smallest = container;
 			}
 		}

@@ -32,7 +32,8 @@ export type DagreResult = {
  * The size dagre places a node by: its box grown by its visual margin, along the rank
  * axis by the larger of the two margins there on both sides, so that dagre's centre is
  * the box's centre on that axis and a rank's boxes stay lined up on their centres
- * (every later stage tells rows apart by them, see RowIndex).
+ * (every later stage tells rows apart by them, see RowIndex). At least 1px each way,
+ * since dagre cannot clip an edge to a box with no extent and throws.
  */
 const calcDagreNodeSize = (
 	node: LayoutGraphNode,
@@ -51,7 +52,7 @@ const calcDagreNodeSize = (
 		readVisualMargin(margin, axis.acrossStartSide) +
 		readVisualMargin(margin, axis.acrossEndSide);
 	const { x: width, y: height } = axis.make(across, along);
-	return { width, height };
+	return { width: Math.max(width, 1), height: Math.max(height, 1) };
 };
 
 /**

@@ -106,12 +106,18 @@ const calcFacingSides = (
 const sideKey = (nodeId: string, side: LayoutSide): string =>
 	`${nodeId}:${side}`;
 
-/** Where `column` (a coordinate across the rank axis) falls along the box's side, 0..1. */
+/**
+ * Where `column` (a coordinate across the rank axis) falls along the box's side, 0..1;
+ * the midpoint on a side with no extent.
+ */
 const calcSideRatio = (
 	bounds: Rect,
 	column: number,
 	axis: LayoutAxis,
-): number => (column - axis.acrossStart(bounds)) / axis.acrossExtent(bounds);
+): number => {
+	const extent = axis.acrossExtent(bounds);
+	return extent === 0 ? 0.5 : (column - axis.acrossStart(bounds)) / extent;
+};
 
 /** The column (a coordinate across the rank axis) at `ratio` along the box's side. */
 const columnAt = (bounds: Rect, ratio: number, axis: LayoutAxis): number =>
@@ -569,13 +575,17 @@ const spreadBundles = (
 				anchor: LayoutEdgeAnchor,
 				bounds: Rect,
 				anchorRanges: LayoutGraphNode["anchorRanges"],
-			): LayoutEdgeAnchor => ({
-				side: anchor.side,
-				t: clampRatio(
-					anchor.t + shift / axis.acrossExtent(bounds),
-					readAnchorRange(anchorRanges, anchor.side),
-				),
-			});
+			): LayoutEdgeAnchor => {
+				const extent = axis.acrossExtent(bounds);
+				// A side with no extent has nowhere to shift an end to.
+				return {
+					side: anchor.side,
+					t: clampRatio(
+						extent === 0 ? anchor.t : anchor.t + shift / extent,
+						readAnchorRange(anchorRanges, anchor.side),
+					),
+				};
+			};
 			working.source = shiftAnchor(
 				working.source,
 				working.sourceBounds,
