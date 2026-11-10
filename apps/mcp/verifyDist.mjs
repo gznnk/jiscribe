@@ -60,6 +60,20 @@ if (clientAssetFiles.length === 0) {
 	problems.push("dist/client/assets is missing or empty (the viewer's fonts)");
 }
 
+// The notices are what keeps the bundled licenses and the AWS / Azure / Google
+// Cloud icon terms with the package; publishing without them ships those under a
+// bare MIT. Whether they are current is CI's check:notices, which needs the
+// engine's own install
+const notices = await readFile(
+	join(packageDir, "THIRD-PARTY-NOTICES.txt"),
+	"utf8",
+).catch(() => "");
+if (notices.trim() === "") {
+	problems.push(
+		"THIRD-PARTY-NOTICES.txt is missing or empty — run pnpm generate:notices after the build",
+	);
+}
+
 // A build made before the version was bumped would ship the old number in the
 // MCP handshake, which is what clients display. Matched loosely because a
 // `--watch` build (unminified) writes `version: "x.y.z"` with a space after

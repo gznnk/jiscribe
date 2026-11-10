@@ -196,3 +196,15 @@ an undo that stays with its own file across a switch to another directory,
 `capture_canvas` and `export_image` answered by the drawn canvas, and a write refused for a file
 that moved on. The hosts take the usual port (5190 upwards), so nothing else may
 be serving a canvas while it runs.
+
+## License
+
+[MIT](./LICENSE) © gznnk, apart from what the package bundles from others.
+`dist/` carries third-party open-source software, and in the viewer the
+drawings of the **AWS Architecture Icons**, the **Microsoft Azure Architecture
+Icons** (with Microsoft Entra ID from the **Microsoft Entra architecture
+icons**) and the **Google Cloud product icons**. **The MIT license does not
+cover the icons**: they are not open source, and are redistributed unmodified
+under their owners' terms (Microsoft's limit them to architecture diagrams,
+training materials and documentation). The bundled `THIRD-PARTY-NOTICES.txt`
+reproduces the license texts and those terms.

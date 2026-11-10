@@ -150,6 +150,9 @@ they hold.
 - **`dist/` must run on its own** — no checkout. `build.mjs` produces
   `dist/index.mjs` (esbuild, single file), `dist/client/` (JS and CSS inlined
   into `index.html`; only fonts remain beside it) and `dist/node_modules/`.
+  The source maps (`dist/index.mjs.map`, and the viewer's, moved out of
+  `dist/client/` into `dist/viewer-sourcemaps/`) are not shipped; they are what
+  `scripts/generateNotices.mjs` reads to write `THIRD-PARTY-NOTICES.txt`.
 - **`dist/node_modules/` is read at runtime by node resolution**: the two guides
   (`canvas-prompt.md`, `authoring-json.md`) and the measurement fonts
   (`resolveFontSourceDir`). No JSON schema. Dropping it fails
