@@ -32,9 +32,9 @@ describe("awsGroupDocDefinition's label", () => {
 });
 
 describe("an awsGroup written with a label background", () => {
-	// An "innerLabel" caption holds no labelFill, so one in a document (written
-	// while awsGroup was a "label" type) is a name the type does not carry:
-	// reported with the warning any unknown key gets and dropped.
+	// An "innerLabel" caption holds no labelFill, so one in a document is a name
+	// the type does not carry: reported with the warning any unknown key gets and
+	// dropped.
 	const parsed = createCanvasParser({ plugins: [awsShapesDocPlugin] }).parse(
 		JSON.stringify({
 			version: 1,

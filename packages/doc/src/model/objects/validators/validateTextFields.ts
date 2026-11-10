@@ -277,7 +277,7 @@ export function validateSourceTextStyleFields(
 }
 
 /**
- * Validate the fields a caption carries beyond its slot's styling
+ * Validate the fields a `"label"` caption carries beyond its slot's styling
  * (`LABEL_TEXT_KEYS`): `labelFill` as a safe CSS color, `"auto"` included.
  *
  * @param o - The doc to check, or a style about to be written onto one

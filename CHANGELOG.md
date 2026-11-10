@@ -321,7 +321,7 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   properties sidebar offers the label's background.
 - **Breaking: `ObjectDocTextRegionCalculator` answers a rectangle, never
   `null`.** A shape whose label is not laid out inside its box is a `"label"`
-  type instead; one that places that label itself declares a `"textSlot"` part
+  or `"innerLabel"` type instead; one that places that label itself declares a `"textSlot"` part
   kind and `visualBounds` together on its UI definition. A `"body"` /
   `"source"` type has to declare one: `resolveDocDefinitions` refuses it
   otherwise (`calcFullBoxTextRegion` for the whole box). `supportsAutoHeight` reads `features` and `autoHeight` alone

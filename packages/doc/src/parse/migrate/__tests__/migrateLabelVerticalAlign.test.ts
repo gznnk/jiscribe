@@ -39,6 +39,22 @@ describe("migrateLabelVerticalAlign", () => {
 		]);
 	});
 
+	it("drops the vertical placement off an innerLabel type too", () => {
+		const node = icon({ type: "awsGroup", verticalAlign: "top" });
+		const result = migrate(node, {
+			...labelFeatures,
+			type: "awsGroup",
+			text: "innerLabel",
+		});
+		expect(result.node).not.toHaveProperty("verticalAlign");
+		expect(result.warnings).toEqual([
+			expect.objectContaining({
+				path: "root[0].verticalAlign",
+				severity: "warning",
+			}),
+		]);
+	});
+
 	it("changes nothing on the result of its own rewrite", () => {
 		const once = migrate(icon({ verticalAlign: "middle" }));
 		const twice = migrate(once.node);

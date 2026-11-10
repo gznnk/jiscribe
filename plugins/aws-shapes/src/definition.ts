@@ -48,9 +48,9 @@ export const awsIconDefinition: ObjectTypeDefinition<AwsIconDoc, AwsIconState> =
 
 /**
  * The label band is sized from the text and a long label runs past the frame's
- * right edge, so this `"innerLabel"` type places it with `textRegion` and
- * `visualBounds` together, without which zoom-to-fit and the export would crop
- * that off.
+ * right edge. An `"innerLabel"` type has no default place for it, so
+ * `textRegion` and `visualBounds` are declared together (registration refuses
+ * either alone).
  *
  * The stroke menu is offered: the default follows `kind`, but telling two VPCs
  * apart in one diagram is worth an override (resolveAwsGroupStroke). AWS frames
