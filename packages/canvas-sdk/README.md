@@ -66,7 +66,8 @@ ESM 専用、など）。1 ファイル 1 エントリで対応させること�
   置くことと、doc の既定に `LABEL_TEXT_STYLE_DEFAULTS`（`@jiscribe/doc`）を spread する
   ことだけ（`textRegion` / `visualBounds` は渡さない）
 - `calcLabelBoxSize` — 文字から大きさを決めるラベル箱の採寸。箱の下以外へラベルを置く
-  `"label"` の図形（グループマーカー・awsGroup）が、UI 定義の `textRegion` と
+  `"label"` の図形（グループマーカー）と、見出しを自分の内側に置く `"innerLabel"` の図形
+  （awsGroup）が、UI 定義の `textRegion` と
   `visualBounds` で置き場所だけ自前で決めるときに使う。既定は `LABEL_TEXT_STYLE_DEFAULTS`
   （`@jiscribe/doc`）で測り、型の文字の既定がそれと違えば第 3 引数で渡す
 - `centeredPolygonOutline` / `OUTLINE_CURVE_SEGMENTS`（`/doc` からも import できる。

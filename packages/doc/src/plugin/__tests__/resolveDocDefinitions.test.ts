@@ -64,6 +64,41 @@ describe("resolveDocDefinitions: a label text type", () => {
 	});
 });
 
+describe("resolveDocDefinitions: an innerLabel text type", () => {
+	const innerLabel = (
+		extra: Parameters<typeof labelDefinition>[0] = {},
+	): ObjectDocDefinition =>
+		labelDefinition({
+			...extra,
+			features: { text: "innerLabel", ...extra.features },
+		});
+
+	it("accepts one declaring no region of its own", () => {
+		expect(resolveWith(innerLabel()).get("label-icon")).toBeDefined();
+	});
+
+	it("refuses a region of its own, naming its own text type", () => {
+		expect(() =>
+			resolveWith(innerLabel({ textRegion: calcFullBoxTextRegion })),
+		).toThrow(
+			'ObjectDocDefinition "label-icon": features.text "innerLabel" has its caption placed on the canvas side (by the UI definition\'s textSlot part kind); declare no textRegion',
+		);
+	});
+
+	it("refuses a vertical basis and a geometry storing no width and height", () => {
+		expect(() =>
+			resolveWith(innerLabel({ features: { textVerticalBasis: true } })),
+		).toThrow(
+			'ObjectDocDefinition "label-icon": features.text "innerLabel" takes no verticalAlign',
+		);
+		expect(() =>
+			resolveWith(innerLabel({ features: { geometry: "point" } })),
+		).toThrow(
+			'ObjectDocDefinition "label-icon": features.text "innerLabel" needs geometry "rect"',
+		);
+	});
+});
+
 describe("resolveDocDefinitions: a body text type", () => {
 	it.each(["body", "source"] as const)(
 		"refuses a %s type declaring no text region",

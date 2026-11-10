@@ -9,6 +9,7 @@ import type { ObjectDoc } from "../base/ObjectDoc";
 import type { RadiusStyleDoc } from "../base/RadiusStyleDoc";
 import type { StrokeStyleDoc } from "../base/StrokeStyleDoc";
 import type {
+	InnerLabelTextStyleDoc,
 	LabelTextStyleDoc,
 	SourceTextStyleDoc,
 	TextStyleDoc,
@@ -45,6 +46,7 @@ type TextDocByType = {
 	body: TextStyleDoc;
 	source: SourceTextStyleDoc;
 	label: LabelTextStyleDoc;
+	innerLabel: InnerLabelTextStyleDoc;
 	slots: object;
 };
 

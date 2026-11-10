@@ -33,6 +33,7 @@ import {
 	type TextSlot,
 } from "../../model/objects/types/text/TextSlot";
 import {
+	hasLabelFill,
 	isSingleBodyText,
 	textStyleKeysOf,
 } from "../../model/objects/types/text/TextType";
@@ -53,7 +54,7 @@ import { DocOperationError } from "../errors";
  * Every styling property the doc-ops can set, gathered from the same style groups the
  * per-type docs mix in. Which of them an object actually accepts follows its
  * `features` — `fill` needs `features.fill`, the typography needs `features.text`,
- * `labelFill` needs `features.text: "label"`, and so on — and the rest are reported
+ * `labelFill` needs `features.text: "label"` (hasLabelFill), and so on — and the rest are reported
  * back as ignored rather than written blindly.
  */
 export type StyleParams = FillStyleDoc &
@@ -90,7 +91,8 @@ export const requestedStyleKeys = (style: StyleParams): string[] =>
 
 /**
  * The non-typographic style keys `features` admits, in declaration order: the
- * shape's own groups, and the background a `text: "label"` caption is painted on.
+ * shape's own groups, and the background a `text: "label"` caption is painted on
+ * (hasLabelFill).
  */
 const shapeStyleKeys = (
 	features: ObjectFeatures | undefined,
@@ -99,7 +101,7 @@ const shapeStyleKeys = (
 	...(features?.stroke === true ? STROKE_STYLE_KEYS : []),
 	...(features?.radius === true ? RADIUS_STYLE_KEYS : []),
 	...(features?.arrow === true ? ARROW_STYLE_KEYS : []),
-	...(features?.text === "label" ? LABEL_TEXT_KEYS : []),
+	...(hasLabelFill(features?.text) ? LABEL_TEXT_KEYS : []),
 ];
 
 /**

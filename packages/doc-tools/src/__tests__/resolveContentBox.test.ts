@@ -86,6 +86,12 @@ describe("resolveContentBox", () => {
 		).toEqual({ kind: "outside" });
 	});
 
+	it("reports outside for an innerLabel type, whose title is sized from its own text", () => {
+		expect(
+			resolveContentBox({ type: "awsGroup", width: 320, height: 200 }),
+		).toEqual({ kind: "outside" });
+	});
+
 	it("reports outside for a slots type, whose cells and bands hold no single body", () => {
 		expect(
 			resolveContentBox({ type: "table", width: 200, height: 100 }),

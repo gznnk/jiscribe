@@ -82,8 +82,9 @@ export type ObjectTypeDefinition<
 	 * culling, menu placement) — selection and snapping keep using the geometry
 	 * box. A `features.text: "label"` type placing its caption itself declares this
 	 * together with a `"textSlot"` part kind, and declaring only one is refused at
-	 * registration. Omitted = the geometry box, widened by the caption hung under it
-	 * on a `"label"` type (see ObjectVisualBoundsRegistry).
+	 * registration; a `features.text: "innerLabel"` type always declares both.
+	 * Omitted = the geometry box, widened by the caption hung under it on a
+	 * `"label"` type (see ObjectVisualBoundsRegistry).
 	 */
 	visualBounds?: ObjectVisualBoundsCalculator;
 
@@ -167,7 +168,8 @@ export type ObjectTypeDefinition<
 	 * the box. Declaring it here (createTextSlotPartKindDefinition, or
 	 * `createFrameObjectDefinition({ textRegion })`) replaces that one, and its
 	 * `region` / `regions` are where the slots are drawn, edited and outlined. A
-	 * `"label"` type's kind must state one of the two (and see `visualBounds`).
+	 * `"label"` / `"innerLabel"` type's kind must state one of the two, and an
+	 * `"innerLabel"` type must declare the kind (and see `visualBounds`).
 	 */
 	partKinds?: ObjectPartKindDefinition<TState>[];
 

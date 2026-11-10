@@ -70,6 +70,10 @@ describe("calcLabelTextLayoutMargin", () => {
 		expect(
 			calcLabelTextLayoutMargin(undefined, box, caption, undefined, false),
 		).toBeUndefined();
+		// An innerLabel caption sits inside its box, where the layout already keeps room.
+		expect(
+			calcLabelTextLayoutMargin("innerLabel", box, caption, undefined, false),
+		).toBeUndefined();
 		expect(
 			calcLabelTextLayoutMargin("label", box, caption, undefined, true),
 		).toBeUndefined();

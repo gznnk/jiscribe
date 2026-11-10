@@ -211,6 +211,14 @@ describe("validateDocKeys on the object itself", () => {
 				),
 			),
 		).toEqual([["text", 0, "zz"]]);
+		expect(
+			keyPathsOf(
+				validateWith(
+					{ type: "captioned", geometry: "rect", text: "innerLabel" },
+					{ ...rectWith({ text: [{ text: "a", zz: 1 }] }), type: "captioned" },
+				),
+			),
+		).toEqual([["text", 0, "zz"]]);
 	});
 
 	it("accepts the names the definition declares for the type, and only those", () => {

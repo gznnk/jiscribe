@@ -110,7 +110,7 @@ export type ObjectDocDefinition = {
 	 * Required of every `"body"` / `"source"` type, the parser refusing the
 	 * definition otherwise ({@link import("./ObjectDocTextRegion").calcFullBoxTextRegion}
 	 * for a plain box); optional for a `"slots"` type, which may place its slots on
-	 * its `"textSlot"` part kind instead; refused on a `"label"` type, whose caption
+	 * its `"textSlot"` part kind instead; refused on a `"label"` / `"innerLabel"` type, whose caption
 	 * is placed on the canvas side.
 	 */
 	textRegion?: ObjectDocTextRegionCalculator;
@@ -121,7 +121,7 @@ export type ObjectDocDefinition = {
 	 * (ObjectTextStyleDefaultsRegistry). Declared as `byTextSlot` for the slots the
 	 * type names (a map, or a function of the slot id), or as `everyTextSlot` by a
 	 * type whose slot set is not fixed (see {@link ObjectTextSlotStyleDefaults}).
-	 * A `"body"` / `"source"` / `"label"` type needs none, its one slot's defaults
+	 * A `"body"` / `"source"` / `"label"` / `"innerLabel"` type needs none, its one slot's defaults
 	 * being read off {@link defaults}. Resolved per read and never written back, so a
 	 * field the author omitted stays omitted in the saved document.
 	 */

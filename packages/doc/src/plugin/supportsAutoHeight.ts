@@ -19,7 +19,7 @@ export type AutoHeightDeclaration = Pick<
  * body of text as `"body"` — laid out inside its box, in the region the type
  * declares (`ObjectDocDefinition.textRegion`, which such a type must declare) —
  * and has not denied it (`ObjectDocDefinition.autoHeight: false`). A
- * `"label"` caption, sized from its own text and placed outside the box, a type
+ * caption (`"label"` / `"innerLabel"`), sized from its own text rather than the box, a type
  * dividing its box into slots, and one storing no height have nothing to derive
  * a height from, so their `height` stays required. So does a `text: "source"`
  * shape: its body is not drawn by the shared text layout, so a height measured

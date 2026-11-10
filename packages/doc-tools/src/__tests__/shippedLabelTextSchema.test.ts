@@ -1,12 +1,13 @@
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 
+import { hasLabelFill, isCaptionText } from "@jiscribe/doc";
 import { standardObjectDocDefinitions } from "@jiscribe/standard-shapes/doc";
 import { describe, expect, it } from "vitest";
 
-// What the published schema offers a `features.text: "label"` type has to be
-// what its doc validator takes: the caption's background, and no vertical
-// placement. The generator assembles that from the features; this pins the
+// What the published schema offers a caption type has to be what its doc
+// validator takes: no vertical placement, and the caption's background for a
+// `features.text: "label"` type alone. The generator assembles that from the features; this pins the
 // assembled result for every shipped type, whichever path its $def took.
 
 const require = createRequire(import.meta.url);
@@ -34,13 +35,17 @@ const offeredProperties = (defName: string): string[] => {
 const defNameOf = (type: string): string =>
 	`${type.charAt(0).toUpperCase()}${type.slice(1)}Doc`;
 
-const labelTypes = [...standardObjectDocDefinitions]
-	.filter(([, definition]) => definition.features.text === "label")
+const captionTypes = [...standardObjectDocDefinitions]
+	.filter(([, definition]) => isCaptionText(definition.features.text))
 	.map(([type]) => type);
 
-describe("the published schema's label text types", () => {
+const labelTypes = [...standardObjectDocDefinitions]
+	.filter(([, definition]) => hasLabelFill(definition.features.text))
+	.map(([type]) => type);
+
+describe("the published schema's caption text types", () => {
 	it("covers the sixteen shipped types drawing a caption sized from its own text", () => {
-		expect(labelTypes.sort()).toEqual(
+		expect(captionTypes.sort()).toEqual(
 			[
 				"actor",
 				"awsGroup",
@@ -62,15 +67,29 @@ describe("the published schema's label text types", () => {
 		);
 	});
 
-	it.each(labelTypes)(
-		"offers %s the caption's background and no vertical placement",
+	it("gives every one but awsGroup a background behind the caption", () => {
+		expect(captionTypes.filter((type) => !labelTypes.includes(type))).toEqual([
+			"awsGroup",
+		]);
+	});
+
+	it.each(captionTypes)(
+		"offers %s the typography and no vertical placement",
 		(type) => {
 			const properties = offeredProperties(defNameOf(type));
-			expect(properties).toContain("labelFill");
 			expect(properties).toContain("fontWeight");
 			expect(properties).not.toContain("verticalAlign");
+			expect(properties).not.toContain("textVerticalBasis");
 		},
 	);
+
+	it.each(labelTypes)("offers %s the caption's background", (type) => {
+		expect(offeredProperties(defNameOf(type))).toContain("labelFill");
+	});
+
+	it("offers awsGroup, whose title sits on its own fill, no caption background", () => {
+		expect(offeredProperties("AwsGroupDoc")).not.toContain("labelFill");
+	});
 
 	it("offers no caption background to a type holding its text inside the box", () => {
 		expect(offeredProperties("RectDoc")).not.toContain("labelFill");

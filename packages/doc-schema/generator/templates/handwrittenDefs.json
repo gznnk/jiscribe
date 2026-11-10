@@ -1,6 +1,6 @@
 {
 	"LabelBoxShapeDoc": {
-		"description": "Shared structure of the box shapes whose text is a caption sized from the text itself rather than laid out inside the box, placed where the shape puts it — below the box unless the shape's own description says otherwise (the pictograms, the icon sets, the flowchart markers; a group marker's label sits beyond its tip, an AWS group's title beside its corner badge): rect geometry plus the Stroke / Fill / Text / Transform styles, with no `verticalAlign` (the label's box is sized from its text, leaving nothing to align it within) and with `labelFill`, the color painted behind the label. Each concrete shape def pins `type` with a const.",
+		"description": "Shared structure of the box shapes whose text is a caption sized from the text itself rather than laid out inside the box, placed where the shape puts it — below the box unless the shape's own description says otherwise (the pictograms, the icon sets, the flowchart markers; a group marker's label sits beyond its tip): rect geometry plus the Stroke / Fill / Text / Transform styles, with no `verticalAlign` (the label's box is sized from its text, leaving nothing to align it within) and with `labelFill`, the color painted behind the label. Each concrete shape def pins `type` with a const.",
 		"type": "object",
 		"required": ["id", "type", "x", "y", "width", "height"],
 		"additionalProperties": false,

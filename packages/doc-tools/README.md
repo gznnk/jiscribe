@@ -134,8 +134,8 @@ report either one usefully:
   `jiscribe measure` and the MCP `measure_text` give no verdict for it, and
   `diagnoseDoc` judges it only from a measurement taken on a drawn canvas.
 - **`{ kind: "outside" }`** — the box does not hold one body of text: the shape's
-  text is a caption sized from its own text (`features.text: "label"` — the
-  pictograms, the group markers, an AWS group's title), or its box is divided
+  text is a caption sized from its own text (`features.text: "label"`: the
+  pictograms, the group markers; `"innerLabel"`: an AWS group's title), or its box is divided
   into slots (`record`, `table`), or it carries no text at all. Nothing about such
   a shape's size can make its text overflow, so `diagnoseDoc` does not measure it against the box (only where
   the author's newlines open a line, a label being wrapped by nothing) and

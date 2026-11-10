@@ -15,6 +15,7 @@ import {
 	createTextSlotPartKindDefinition,
 	TEXT_SLOT_PART_KIND,
 } from "@jiscribe/canvas/unstable";
+import { isCaptionText } from "@jiscribe/doc";
 import type { TransformedFrame } from "@jiscribe/geometry";
 
 /** Arguments of {@link createFrameObjectDefinition}. */
@@ -38,9 +39,10 @@ export type FrameObjectDefinitionParams<
 	 * appended to `partKinds`, so declaring that kind there as well is refused.
 	 * Usually the very calculator `doc.textRegion` declares. Omitted = the whole
 	 * box. A `features.text: "label"` type placing its caption itself (beyond a
-	 * group marker's tip, in an AWS group's band) passes it together with
-	 * `visualBounds`, one without the other being refused; passing neither leaves
-	 * the core to place the caption under the box.
+	 * group marker's tip) passes it together with `visualBounds`, one without the
+	 * other being refused; passing neither leaves the core to place the caption
+	 * under the box. A `features.text: "innerLabel"` type (an AWS group's title in
+	 * its band) always passes both, there being no default place for its caption.
 	 */
 	textRegion?: ObjectTextRegionCalculator<TState>;
 
@@ -53,8 +55,10 @@ export type FrameObjectDefinitionParams<
 };
 
 /**
- * Refuses a `features.text: "label"` type passing only one of `textRegion` and
- * `visualBounds`: the core takes a caption's placement only as both, so the
+ * Refuses a caption type (`features.text: "label"` / `"innerLabel"`) whose
+ * placement the core would not take: a `"label"` type passing only one of
+ * `textRegion` and `visualBounds` (the core takes a caption's placement only as
+ * both), an `"innerLabel"` type missing either (it has no default place). The
  * refusal is made here, naming the parameters as they were given. A
  * `"textSlot"` kind declared in `partKinds` stands for `textRegion`.
  */
@@ -67,7 +71,7 @@ const checkLabelTextPlacement = <TState extends ObjectState & TransformedFrame>(
 		"partKinds" | "visualBounds"
 	>,
 ): void => {
-	if (features.text !== "label") {
+	if (!isCaptionText(features.text)) {
 		return;
 	}
 	const declaresPlacement =
@@ -75,6 +79,18 @@ const checkLabelTextPlacement = <TState extends ObjectState & TransformedFrame>(
 		definition.partKinds?.some((part) => part.kind === TEXT_SLOT_PART_KIND) ===
 			true;
 	const declaresBounds = definition.visualBounds !== undefined;
+	if (features.text === "innerLabel") {
+		if (!declaresPlacement || !declaresBounds) {
+			const missing = [
+				...(declaresPlacement ? [] : ["textRegion"]),
+				...(declaresBounds ? [] : ["visualBounds"]),
+			].join(" and ");
+			throw new Error(
+				`createFrameObjectDefinition "${type}": features.text "innerLabel" passes no ${missing}; pass both textRegion and visualBounds, the caption having no default place`,
+			);
+		}
+		return;
+	}
 	if (textRegion !== undefined && !declaresBounds) {
 		throw new Error(
 			`createFrameObjectDefinition "${type}": features.text "label" passes textRegion without visualBounds; pass both to place the caption, or neither to have it placed under the box`,
@@ -130,7 +146,7 @@ const appendTextSlotPartKind = <TState extends ObjectState & TransformedFrame>(
  * @param params - `doc` and `component` are required; the rest is the optional
  *   part of `ObjectTypeDefinition` plus `textRegion` and the derivation hook (see
  *   {@link FrameObjectDefinitionParams})
- * @throws When `textRegion` is given and `partKinds` already holds a `"textSlot"` kind, or when a `features.text: "label"` type is given only one of `textRegion` and `visualBounds`, naming the type
+ * @throws When `textRegion` is given and `partKinds` already holds a `"textSlot"` kind, when a `features.text: "label"` type is given only one of `textRegion` and `visualBounds`, or when a `features.text: "innerLabel"` type is not given both, naming the type
  */
 export const createFrameObjectDefinition = <
 	TDoc extends ObjectDoc,

@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import { TEXT_SLOT_STYLE_KEYS } from "../TextSlot";
 import {
 	acceptsTextEmphasisStyle,
+	hasLabelFill,
+	isCaptionText,
 	isSingleBodyText,
 	textStyleKeysOf,
 } from "../TextType";
@@ -12,8 +14,31 @@ describe("isSingleBodyText", () => {
 		expect(isSingleBodyText("body")).toBe(true);
 		expect(isSingleBodyText("source")).toBe(true);
 		expect(isSingleBodyText("label")).toBe(true);
+		expect(isSingleBodyText("innerLabel")).toBe(true);
 		expect(isSingleBodyText("slots")).toBe(false);
 		expect(isSingleBodyText(undefined)).toBe(false);
+	});
+});
+
+describe("isCaptionText", () => {
+	it("is true for the two caption types sized from their own text", () => {
+		expect(isCaptionText("label")).toBe(true);
+		expect(isCaptionText("innerLabel")).toBe(true);
+		expect(isCaptionText("body")).toBe(false);
+		expect(isCaptionText("source")).toBe(false);
+		expect(isCaptionText("slots")).toBe(false);
+		expect(isCaptionText(undefined)).toBe(false);
+	});
+});
+
+describe("hasLabelFill", () => {
+	it("is true for a label caption alone, an innerLabel one sitting on the shape's own fill", () => {
+		expect(hasLabelFill("label")).toBe(true);
+		expect(hasLabelFill("innerLabel")).toBe(false);
+		expect(hasLabelFill("body")).toBe(false);
+		expect(hasLabelFill("source")).toBe(false);
+		expect(hasLabelFill("slots")).toBe(false);
+		expect(hasLabelFill(undefined)).toBe(false);
 	});
 });
 
@@ -42,6 +67,7 @@ describe("textStyleKeysOf", () => {
 			TEXT_SLOT_STYLE_KEYS.filter((key) => key !== "verticalAlign"),
 		);
 		expect(textStyleKeysOf("label")).toContain("fontWeight");
+		expect(textStyleKeysOf("innerLabel")).toEqual(textStyleKeysOf("label"));
 	});
 
 	it("answers with a fresh array, so a caller may keep what it is handed", () => {
@@ -54,6 +80,7 @@ describe("acceptsTextEmphasisStyle", () => {
 		expect(acceptsTextEmphasisStyle("body")).toBe(true);
 		expect(acceptsTextEmphasisStyle("slots")).toBe(true);
 		expect(acceptsTextEmphasisStyle("label")).toBe(true);
+		expect(acceptsTextEmphasisStyle("innerLabel")).toBe(true);
 		expect(acceptsTextEmphasisStyle("source")).toBe(false);
 		expect(acceptsTextEmphasisStyle(undefined)).toBe(false);
 	});

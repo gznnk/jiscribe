@@ -1,5 +1,9 @@
 import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
-import { acceptsTextEmphasisStyle } from "@jiscribe/doc/model/objects/types/text/TextType";
+import {
+	acceptsTextEmphasisStyle,
+	hasLabelFill,
+	isCaptionText,
+} from "@jiscribe/doc/model/objects/types/text/TextType";
 
 import type { ObjectMenuItem, ObjectMenuSection } from "../ObjectMenuTypes";
 
@@ -12,10 +16,10 @@ import type { ObjectMenuItem, ObjectMenuSection } from "../ObjectMenuTypes";
  * ({@link acceptsTextEmphasisStyle}); `font` stays either way, carrying fields
  * every text type takes.
  *
- * A `text: "label"` type gets its caption's background under `label-style`, the
+ * A `text: "label"` type (hasLabelFill) gets its caption's background under `label-style`, the
  * section id a connector's label background sits under too, so the merge across
- * selected types keeps it for every type offering it there. Its alignment row
- * offers no vertical values, the caption having no slack to move through.
+ * selected types keeps it for every type offering it there. A caption's
+ * (isCaptionText) alignment row offers no vertical values, the caption having no slack to move through.
  */
 export const createDefaultMenu = (
 	features: ObjectFeatures,
@@ -41,7 +45,7 @@ export const createDefaultMenu = (
 		}
 		sections.push({ id: "style", items });
 	}
-	if (features.text === "label") {
+	if (hasLabelFill(features.text)) {
 		sections.push({
 			id: "label-style",
 			items: [{ type: "labelBackgroundColor" }],
@@ -52,7 +56,7 @@ export const createDefaultMenu = (
 		// so no vertical value has slack to move through; the horizontal row stays
 		// because a short line still shifts inside the box its longest line widened.
 		const textAlignment: ObjectMenuItem =
-			features.geometry === "point" || features.text === "label"
+			features.geometry === "point" || isCaptionText(features.text)
 				? { type: "textAlignment", vertical: false }
 				: { type: "textAlignment" };
 		const items: ObjectMenuItem[] = [{ type: "font" }];

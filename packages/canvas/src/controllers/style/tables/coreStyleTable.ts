@@ -1,4 +1,5 @@
 import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
+import { hasLabelFill } from "@jiscribe/doc/model/objects/types/text/TextType";
 
 import { textStyleTable } from "./textStyleTable";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
@@ -49,7 +50,7 @@ export const coreStyleTable = (
 		lockAspectRatio: lockAspectRatioEntry,
 	}),
 	...(features.text && textStyleTable(features.text)),
-	...(features.text === "label" && {
+	...(hasLabelFill(features.text) && {
 		labelFill: labelFillEntry,
 	}),
 	...(features.textVerticalBasis && {

@@ -317,3 +317,26 @@ describe("createFrameDocValidator label text group", () => {
 		).toEqual(["root.text", "root.fontSize"]);
 	});
 });
+
+describe("createFrameDocValidator innerLabel text group", () => {
+	const geometry = { x: 0, y: 0, width: 10, height: 10 };
+	const validate = createFrameDocValidator(features({ text: "innerLabel" }));
+
+	it("checks the run list and the typography a caption takes, as a label one's are", () => {
+		expect(
+			paths(validate({ ...geometry, text: [], fontSize: -1 }, "root")),
+		).toEqual(["root.text", "root.fontSize"]);
+		expect(
+			validate(
+				{ ...geometry, text: [{ text: "VPC", fontWeight: "bold" }] },
+				"root",
+			),
+		).toEqual([]);
+	});
+
+	it("passes over a background, which it does not hold", () => {
+		expect(
+			validate({ ...geometry, labelFill: "url(javascript:alert(1))" }, "root"),
+		).toEqual([]);
+	});
+});

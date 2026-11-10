@@ -388,6 +388,26 @@ describe("createFrameObject", () => {
 			shape.unmount();
 		});
 
+		it("paints no box behind an innerLabel caption, which sits on the shape's own fill", () => {
+			const shape = renderFrameShape({
+				state: captioned({
+					features: {
+						type: "captioned",
+						geometry: "rect",
+						text: "innerLabel",
+					},
+				}),
+				partKinds: captionKinds(),
+			});
+			shape.render(0);
+
+			expect(readFill(shape.container)).toBeNull();
+			expect(overlayPropsBySlotId.get(BODY_TEXT_SLOT_ID)).toMatchObject(
+				captionRegion,
+			);
+			shape.unmount();
+		});
+
 		it("paints no box for a body type, whatever it states", () => {
 			const shape = renderFrameShape({
 				state: { ...probeState, labelFill: "#ff0000" },
