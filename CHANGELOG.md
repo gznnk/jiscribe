@@ -297,7 +297,10 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   box draw a box in `labelFill` behind it, so a connector or a shape lying under
   it is hidden where the label is, in images exported too. Set `labelFill` to
   `"transparent"` for the old look, or reorder the objects. The group markers
-  and awsGroup create with `labelFill: "transparent"`, and look as they did.
+  and awsGroup create with `labelFill: "transparent"`, and look as they did;
+  one saved before this release carries no `labelFill`, so its label is painted
+  on the page's color too — over a tinted awsGroup, the title sits on a box of
+  the page's color. Set its `labelFill` to `"transparent"` for the old look.
 - **The group markers (brace, bracket, bracketWithStem) and awsGroup are
   `"label"` types.** Their label is sized from its own text as before; they now
   take `labelFill` and no `verticalAlign` (a `verticalAlign` in an existing

@@ -37,5 +37,9 @@ export default defineConfig({
 		// data: URL, which the page's Content-Security-Policy (font-src 'self') does
 		// not load; every font stays a file under assets/
 		assetsInlineLimit: 0,
+		// The map is read by scripts/generateNotices.mjs to list what the viewer
+		// bundles. "hidden" leaves out the sourceMappingURL comment, since the script
+		// is inlined into index.html and build.mjs moves the map out of dist/client
+		sourcemap: "hidden",
 	},
 });

@@ -113,7 +113,10 @@ The extension also opens `.jiscribe` and the legacy `.jis.json` / `.jiscribe.jso
 MIT © 2026 gznnk. The source lives at
 [github.com/gznnk/jiscribe](https://github.com/gznnk/jiscribe).
 
-This extension bundles third-party open-source software and, for the AWS
-shapes, the AWS Architecture Icons, which are not open source and are
-redistributed unmodified under AWS's terms. See the bundled
+This extension bundles third-party open-source software and, for the AWS,
+Azure and Google Cloud shapes, the AWS Architecture Icons, the Microsoft Azure
+Architecture Icons (with Microsoft Entra ID from the Microsoft Entra
+architecture icons) and the Google Cloud product icons. The MIT license does
+not cover the icons: they are not open source, and are redistributed
+unmodified under their owners' terms. See the bundled
 `THIRD-PARTY-NOTICES.txt` for the license texts and those terms.
