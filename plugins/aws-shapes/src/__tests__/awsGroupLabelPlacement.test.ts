@@ -40,3 +40,45 @@ describe("awsGroup's label as the canvas places it", () => {
 		);
 	});
 });
+
+// A "label" type the definition gives no menu or panel of its own is offered
+// the background by the defaults, so these read what the definition declares.
+describe("awsGroup's label background", () => {
+	const itemTypes = (
+		sections: readonly { items: readonly { type: string }[] }[] | undefined,
+	) =>
+		(sections ?? []).flatMap((section) =>
+			section.items.map((item) => item.type),
+		);
+
+	it("is offered neither in the object menu nor in the properties panel", () => {
+		expect(awsGroupDefinition.menu).toBeDefined();
+		expect(itemTypes(awsGroupDefinition.menu)).not.toContain(
+			"labelBackgroundColor",
+		);
+		expect(awsGroupDefinition.propertyPanel).toBeDefined();
+		expect(itemTypes(awsGroupDefinition.propertyPanel)).not.toContain(
+			"labelBackgroundColor",
+		);
+	});
+
+	it("keeps the rest of the panel the features would derive", () => {
+		expect(itemTypes(awsGroupDefinition.propertyPanel)).toEqual([
+			"position",
+			"size",
+			"rotation",
+			"lockAspectRatio",
+			"fill",
+			"fillOpacity",
+			"strokeColor",
+			"strokeWidth",
+			"strokeDashType",
+			"strokeOpacity",
+			"fontFamily",
+			"fontSize",
+			"fontColor",
+			"textFormat",
+			"textAlign",
+		]);
+	});
+});

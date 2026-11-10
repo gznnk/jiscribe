@@ -19,9 +19,9 @@ describe("awsGroupDocDefinition.layoutContainer", () => {
 });
 
 describe("awsGroupDocDefinition's label", () => {
-	it("is created over a transparent background, the label sitting on the frame's own fill", () => {
+	it("is created without a background of its own, the label sitting on the frame's own fill", () => {
 		const created = awsGroupDocDefinition.factory?.createDoc({ x: 0, y: 0 });
-		expect(created).toMatchObject({ labelFill: "transparent" });
+		expect(created).not.toHaveProperty("labelFill");
 		expect(created).not.toHaveProperty("verticalAlign");
 	});
 });

@@ -74,4 +74,25 @@ test.describe("drawing an awsGroup", () => {
 		// are the whole difference.
 		await expect(cornerBadge(canvas, id)).toHaveCount(0);
 	});
+
+	test("the label is drawn on nothing, never knocked out in the page's color", async ({
+		canvas,
+	}) => {
+		await canvas.drawShapeFromFlyout(
+			CATEGORY,
+			VPC_PRESET,
+			{ x: 300, y: 220 },
+			{ x: 640, y: 440 },
+		);
+		await canvas.deselect();
+		// The header row, right of the corner badge: the frame's handle.
+		await canvas.typeTextAt({ x: 400, y: 240 }, "Production VPC");
+		await canvas.commitText();
+
+		const labelBox = canvas.page.locator(
+			'g[data-canvas-export="flatten"] > rect',
+		);
+		await expect(labelBox).toHaveCount(1);
+		await expect(labelBox).toHaveCSS("fill", "rgba(0, 0, 0, 0)");
+	});
 });

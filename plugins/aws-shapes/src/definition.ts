@@ -55,6 +55,9 @@ export const awsIconDefinition: ObjectTypeDefinition<AwsIconDoc, AwsIconState> =
  * The stroke menu is offered: the default follows `kind`, but telling two VPCs
  * apart in one diagram is worth an override (resolveAwsGroupStroke). AWS frames
  * have no rounded corners, hence `radius: false`.
+ *
+ * Neither the menu nor the panel offers the label's background: the label sits
+ * on the frame's own body, and AwsGroup draws it on nothing.
  */
 export const awsGroupDefinition: ObjectTypeDefinition<
 	AwsGroupDoc,
@@ -79,15 +82,51 @@ export const awsGroupDefinition: ObjectTypeDefinition<
 				{ type: "borderStyle", radius: false },
 			],
 		},
-		// The label's background sits under the section id every label type's
-		// does, so selecting this beside another label type keeps it.
-		{ id: "label-style", items: [{ type: "labelBackgroundColor" }] },
 		{
 			id: "text",
 			items: [
 				{ type: "font" },
 				{ type: "textFormat" },
 				{ type: "textAlignment", vertical: false },
+			],
+		},
+	],
+	// The panel the features would derive, less the label's background.
+	propertyPanel: [
+		{
+			id: "layout",
+			label: "Layout",
+			items: [
+				{ type: "position" },
+				{ type: "size" },
+				{ type: "rotation" },
+				{ type: "lockAspectRatio" },
+			],
+		},
+		{
+			id: "fill",
+			label: "Fill",
+			items: [{ type: "fill" }, { type: "fillOpacity" }],
+		},
+		{
+			id: "stroke",
+			label: "Border",
+			items: [
+				{ type: "strokeColor" },
+				{ type: "strokeWidth" },
+				{ type: "strokeDashType" },
+				{ type: "strokeOpacity" },
+			],
+		},
+		{
+			id: "text",
+			label: "Text",
+			items: [
+				{ type: "fontFamily" },
+				{ type: "fontSize" },
+				{ type: "fontColor" },
+				{ type: "textFormat" },
+				{ type: "textAlign" },
 			],
 		},
 	],
