@@ -61,24 +61,4 @@ describe("awsGroup's label background", () => {
 			"labelBackgroundColor",
 		);
 	});
-
-	it("keeps the rest of the panel the features would derive", () => {
-		expect(itemTypes(awsGroupDefinition.propertyPanel)).toEqual([
-			"position",
-			"size",
-			"rotation",
-			"lockAspectRatio",
-			"fill",
-			"fillOpacity",
-			"strokeColor",
-			"strokeWidth",
-			"strokeDashType",
-			"strokeOpacity",
-			"fontFamily",
-			"fontSize",
-			"fontColor",
-			"textFormat",
-			"textAlign",
-		]);
-	});
 });

@@ -91,7 +91,7 @@ export const awsGroupDefinition: ObjectTypeDefinition<
 			],
 		},
 	],
-	// The panel the features would derive, less the label's background.
+	// Written out so the label's background is left off; the rows are the defaults' as of writing.
 	propertyPanel: [
 		{
 			id: "layout",
