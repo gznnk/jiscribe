@@ -222,10 +222,16 @@ function mitPermissionText() {
 }
 
 /**
- * Stands in for the license file of a package that declares MIT but ships none
- * (fontkit and its own dependencies brotli and dfa): its declared author, then
- * the MIT terms. Any other license declared without a file still throws, since
- * its text cannot be supplied from here.
+ * Packages that declare MIT but ship no license file, each checked by hand
+ * against its sources (no file in the package or the repository, no copyright
+ * header in the bundled files). {@link declaredMitText} stands in for their
+ * license file; any other package without one fails the run.
+ */
+const MIT_WITHOUT_LICENSE_FILE = new Set(["fontkit", "dfa"]);
+
+/**
+ * Stands in for the license file of a package that declares MIT but ships none:
+ * its declared author, then the MIT terms.
  *
  * @param dir - Package root, from {@link packageDir}
  */
@@ -241,11 +247,13 @@ function declaredMitText(dir) {
 					.join(" ")
 			: manifest.author;
 	if (manifest.license !== "MIT" || !author) {
-		throw new Error(`no license file in ${dir}`);
+		throw new Error(
+			`${dir} no longer declares MIT with an author; check its sources again`,
+		);
 	}
 	return [
 		"This package ships no license file. Its package.json declares the MIT",
-		"license and names as its author:",
+		"license and names as its author, and gives no copyright line:",
 		"",
 		`  ${author}`,
 		"",
@@ -256,19 +264,129 @@ function declaredMitText(dir) {
 }
 
 /**
+ * The Apache License 2.0's terms as @swc/helpers ships them, up to "END OF
+ * TERMS AND CONDITIONS": its appendix carries SWC's own copyright line.
+ *
+ * @param storeDir - From {@link resolveStoreDir}
+ */
+function apacheLicenseText(storeDir) {
+	const dir = packageDir(
+		storeDir,
+		"@swc/helpers",
+		installedVersion(storeDir, "@swc/helpers"),
+	);
+	const text = readFileSync(join(dir, "LICENSE"), "utf8");
+	const marker = "END OF TERMS AND CONDITIONS";
+	const end = text.indexOf(marker);
+	if (!/^\s*Apache License\s+Version 2\.0/.test(text) || end === -1) {
+		throw new Error(`${dir}/LICENSE is no longer the Apache License 2.0`);
+	}
+	return text.slice(0, end + marker.length).replace(/^\n+/, "");
+}
+
+/**
+ * The license a package's bundled code is under, where that is not what its
+ * package.json declares: brotli declares MIT, but its dec/ decoder is Google's
+ * Apache-2.0 code ({@link brotliText}).
+ *
+ * @param name - Package name as it is imported, scope included
+ * @param dir - Package root, from {@link packageDir}
+ */
+function bundledLicense(name, dir) {
+	return name === "brotli" ? "MIT AND Apache-2.0" : declaredLicense(dir);
+}
+
+/** The copyright header brotli's decoder files carry, which minification strips. */
+const BROTLI_GOOGLE_HEADER = "Copyright 2013 Google Inc. All Rights Reserved.";
+
+/**
+ * brotli's section. The package declares MIT and ships no license file, but most
+ * of what gets bundled is its dec/ decoder, whose files carry Google's
+ * Apache-2.0 header. That header is reproduced as the files carry it, then the
+ * Apache-2.0 text, then the MIT stand-in for the rest of the package.
+ *
+ * @param storeDir - From {@link resolveStoreDir}
+ * @param dir - Package root, from {@link packageDir}
+ * @param inputs - Source map inputs, from {@link sourceMapInputs}
+ */
+function brotliText(storeDir, dir, inputs) {
+	const marker = "/node_modules/brotli/";
+	const headers = new Map();
+	for (const source of inputs) {
+		const at = source.lastIndexOf(marker);
+		if (!source.includes(".pnpm/brotli@") || at === -1) {
+			continue;
+		}
+		const file = source.slice(at + marker.length);
+		const text = readFileSync(join(dir, file), "utf8");
+		const comment = text.match(/^\/\*([\s\S]*?)\*\//);
+		if (comment && comment[1].includes(BROTLI_GOOGLE_HEADER)) {
+			// Some files go on to describe themselves below the license notice
+			const noticeEnd = "limitations under the License.";
+			const end = comment[1].indexOf(noticeEnd);
+			headers.set(
+				file,
+				end === -1 ? comment[1] : comment[1].slice(0, end + noticeEnd.length),
+			);
+		}
+	}
+	if (new Set(headers.values()).size !== 1) {
+		throw new Error(
+			"brotli's bundled files no longer carry one Google header; check its sources again",
+		);
+	}
+	const header = [...headers.values()][0]
+		.split("\n")
+		.map((line) => line.replace(/^ {3}/, "").trimEnd())
+		.join("\n")
+		.trim();
+	return [
+		"These bundled files of this package carry the following header, which",
+		"minification strips:",
+		"",
+		...[...headers.keys()].sort().map((file) => `  ${file}`),
+		"",
+		header,
+		"",
+		"The Apache License 2.0 text follows.",
+		"",
+		apacheLicenseText(storeDir),
+		"",
+		"For the rest of the package:",
+		"",
+		declaredMitText(dir),
+	].join("\n");
+}
+
+/**
  * License text a package ships. Every license-ish file is taken in name order,
  * so dompurify's dual license (Apache text plus LICENSE-MPL) comes out whole.
- * A package with none is handled by {@link declaredMitText}.
+ * brotli has a section of its own ({@link brotliText}); a package without a
+ * license file must be in {@link MIT_WITHOUT_LICENSE_FILE}.
  *
+ * @param storeDir - From {@link resolveStoreDir}
+ * @param name - Package name as it is imported, scope included
  * @param dir - Package root, from {@link packageDir}
+ * @param inputs - Source map inputs, from {@link sourceMapInputs}
  * @returns The files' contents joined by a blank line, without leading or trailing ones
  */
-function licenseText(dir) {
+function licenseText(storeDir, name, dir, inputs) {
+	if (name === "brotli") {
+		return brotliText(storeDir, dir, inputs);
+	}
 	const files = readdirSync(dir)
 		.filter((one) => /^(license|licence|copying)/i.test(one))
 		.sort();
 	if (files.length === 0) {
-		return declaredMitText(dir);
+		if (MIT_WITHOUT_LICENSE_FILE.has(name)) {
+			return declaredMitText(dir);
+		}
+		throw new Error(
+			`no license file in ${dir}. Check the package's actual sources (file headers, ` +
+				"its repository) for the license and copyright of what is bundled, then " +
+				"either add it to MIT_WITHOUT_LICENSE_FILE or give it an entry of its own " +
+				"in scripts/thirdPartyNotices.mjs.",
+		);
 	}
 	return files
 		.map((one) =>
@@ -540,8 +658,8 @@ function generate(storeDir, options) {
 			const note = notes[name] ? `${notes[name]}\n` : "";
 			return {
 				sortKey: name,
-				heading: `${name}@${version} — ${declaredLicense(dir)}`,
-				body: note + licenseText(dir),
+				heading: `${name}@${version} — ${bundledLicense(name, dir)}`,
+				body: note + licenseText(storeDir, name, dir, inputs),
 			};
 		})
 		.concat({
@@ -585,7 +703,7 @@ function generate(storeDir, options) {
 	const listed = [...bundled]
 		.map(([name, version]) => ({
 			sortKey: name,
-			line: `${name}@${version} (${declaredLicense(packageDir(storeDir, name, version))})`,
+			line: `${name}@${version} (${bundledLicense(name, packageDir(storeDir, name, version))})`,
 		}))
 		.concat(
 			fontPackages.map((name) => ({

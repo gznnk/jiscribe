@@ -55,7 +55,8 @@ runThirdPartyNotices({
 		"are redistributed under.",
 	],
 	fontSectionLead: [
-		"The font files under dist/client/assets/ (the viewer's) and",
+		"The font files under dist/client/assets/ (the viewer's; the KaTeX_* ones",
+		"there come with katex, under its own section) and",
 		"dist/node_modules/@fontsource/ (the server's, for measuring text) come",
 		"from these packages, which repackage the families as published at",
 		"https://github.com/google/fonts. Copyright notice of each, as it appears",

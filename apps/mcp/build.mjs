@@ -391,8 +391,42 @@ const config = {
 			"const require = __createRequire(import.meta.url);",
 		].join("\n"),
 	},
-	sourcemap: true,
+	// "external" writes the map (scripts/generateNotices.mjs reads it) without
+	// the sourceMappingURL comment: package.json's files leave the map out
+	sourcemap: "external",
 	minify: !isWatch,
+};
+
+/**
+ * Fails the build when what ships names a source map that does not ship:
+ * package.json's files leave out every *.map, and apps/desktop copies
+ * dist/client whole. Covers a later chunk whose map nobody moved as well.
+ */
+const assertNoShippedSourcemapReference = async () => {
+	const problems = [];
+	for (const shippedPath of [
+		join(clientDir, "index.html"),
+		join(__dirname, "dist", "index.mjs"),
+	]) {
+		if ((await readFile(shippedPath, "utf8")).includes("sourceMappingURL")) {
+			problems.push(`${shippedPath} names a sourceMappingURL`);
+		}
+	}
+	const clientMaps = (await readdir(clientDir, { recursive: true })).filter(
+		(entry) => entry.endsWith(".map"),
+	);
+	for (const entry of clientMaps) {
+		problems.push(`dist/client/${entry} is a source map left in the viewer`);
+	}
+	if (problems.length > 0) {
+		throw new Error(
+			[
+				"The build leaves a source map reference that the package does not ship:",
+				...problems.map((problem) => `  - ${problem}`),
+				'Keep sourcemap "hidden" in vite.config.ts and "external" here.',
+			].join("\n"),
+		);
+	}
 };
 
 // ツール定義は AI のコンテキストに載る。deferred loading を持つクライアントなら
@@ -492,6 +526,7 @@ if (isWatch) {
 	await inlineViewerHtml();
 	await stageRuntimeDependencies();
 	await esbuild.build(config);
+	await assertNoShippedSourcemapReference();
 	console.log("Build completed: dist/index.mjs");
 	await reportToolPayload();
 }
