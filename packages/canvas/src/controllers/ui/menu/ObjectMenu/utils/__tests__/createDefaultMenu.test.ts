@@ -117,6 +117,25 @@ describe("createDefaultMenu", () => {
 		]);
 	});
 
+	it("innerLabel -> no caption background, and no vertical row", () => {
+		const sections = createDefaultMenu(
+			features({
+				type: "awsGroup",
+				geometry: "rect",
+				transform: true,
+				stroke: true,
+				fill: true,
+				text: "innerLabel",
+			}),
+		);
+		expect(sections.map((section) => section.id)).toEqual(["style", "text"]);
+		expect(sections[1].items).toEqual([
+			{ type: "font" },
+			{ type: "textFormat" },
+			{ type: "textAlignment", vertical: false },
+		]);
+	});
+
 	it("no flags -> empty", () => {
 		expect(createDefaultMenu(features({}))).toEqual([]);
 	});

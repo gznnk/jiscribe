@@ -6,8 +6,6 @@ import {
 	readIconSetArt,
 	readIconSetViewBoxSize,
 } from "@jiscribe/canvas-sdk";
-import { memo } from "react";
-import type { ComponentProps } from "react";
 
 import {
 	AwsGroupBody,
@@ -36,7 +34,7 @@ import type { AwsGroupState } from "../state/AwsGroupState";
  * The colour and line style come from resolveAwsGroupStroke rather than from
  * `shape`: a type holds one default apiece, which cannot express nineteen kinds.
  */
-const AwsGroupFrame = createFrameObject<AwsGroupState>((state, shape) => {
+export const AwsGroup = createFrameObject<AwsGroupState>((state, shape) => {
 	const { width, height } = state;
 	const left = -width / 2;
 	const top = -height / 2;
@@ -109,15 +107,3 @@ const AwsGroupFrame = createFrameObject<AwsGroupState>((state, shape) => {
 		</g>
 	);
 });
-
-const AwsGroupComponent = (props: ComponentProps<typeof AwsGroupFrame>) => (
-	<AwsGroupFrame {...props} labelFill="transparent" />
-);
-
-/**
- * awsGroup as the canvas draws it. The label sits inside the frame, over its
- * own body, so it is drawn on nothing whatever `labelFill` says: knocking it out
- * in the page's color, which `"auto"` and an omitted value mean, would cut a
- * patch out of a filled frame.
- */
-export const AwsGroup = memo(AwsGroupComponent);

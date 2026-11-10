@@ -13,6 +13,7 @@ import {
 	TEXT_SLOT_KEYS,
 	isIntegerLikeTextSlotId,
 } from "../model/objects/types/text/TextSlot";
+import { isCaptionText } from "../model/objects/types/text/TextType";
 import { exhaustiveKeysOf } from "../model/objects/utils/exhaustiveKeys";
 import type { SemanticDiagnostic } from "../model/types/SemanticDiagnostic";
 import { isSemanticError } from "../model/types/SemanticDiagnostic";
@@ -229,7 +230,7 @@ export const validateDocKeys = (
 			.filter((key) => !declaration.knownKeys.has(key))
 			.map((key) => [key]),
 		...(features.geometry === "poly" ? collectPolyPointKeyPaths(o.points) : []),
-		...(features.text === "body" || features.text === "label"
+		...(features.text === "body" || isCaptionText(features.text)
 			? collectRunKeyPaths(o.text, ["text"])
 			: []),
 		...slots.keyPaths,

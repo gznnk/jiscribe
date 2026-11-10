@@ -1,5 +1,9 @@
 import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
-import { acceptsTextEmphasisStyle } from "@jiscribe/doc/model/objects/types/text/TextType";
+import {
+	acceptsTextEmphasisStyle,
+	hasLabelFill,
+	isCaptionText,
+} from "@jiscribe/doc/model/objects/types/text/TextType";
 
 import { hasSelectedLabelText } from "../../../../utils/hasSelectedLabelText";
 import { PROPERTY_PANEL_SECTIONS } from "../propertyPanelSections";
@@ -22,7 +26,7 @@ import type {
  * @returns The sections in display order, each labelled with the English wording
  *   its message key carries; the text section leaves the format row out for a
  *   type accepting no emphasis field ({@link acceptsTextEmphasisStyle}), and a
- *   `text: "label"` type gets its caption's background under `label-style`
+ *   `text: "label"` type (hasLabelFill) gets its caption's background under `label-style`
  *   ahead of the text section
  */
 export const createDefaultPropertyPanel = (
@@ -73,7 +77,7 @@ export const createDefaultPropertyPanel = (
 			items: [{ type: "arrowHeads" }],
 		});
 	}
-	if (features.text === "label") {
+	if (hasLabelFill(features.text)) {
 		// The section is offered only while there is a caption to paint, so its
 		// heading does not stand over a row that draws nothing.
 		sections.push({
@@ -97,7 +101,7 @@ export const createDefaultPropertyPanel = (
 		// A point's height and a caption's box are measured from their own text,
 		// so no vertical value has slack to move through; the horizontal row stays
 		// because a short line still shifts inside the box its longest line widened.
-		if (features.geometry !== "point" && features.text !== "label") {
+		if (features.geometry !== "point" && !isCaptionText(features.text)) {
 			items.push({ type: "verticalAlign" });
 		}
 		sections.push({ ...PROPERTY_PANEL_SECTIONS.text, items });

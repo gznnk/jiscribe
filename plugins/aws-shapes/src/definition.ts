@@ -48,16 +48,13 @@ export const awsIconDefinition: ObjectTypeDefinition<AwsIconDoc, AwsIconState> =
 
 /**
  * The label band is sized from the text and a long label runs past the frame's
- * right edge, so this `"label"` type places it itself: `textRegion` and
+ * right edge, so this `"innerLabel"` type places it with `textRegion` and
  * `visualBounds` together, without which zoom-to-fit and the export would crop
  * that off.
  *
  * The stroke menu is offered: the default follows `kind`, but telling two VPCs
  * apart in one diagram is worth an override (resolveAwsGroupStroke). AWS frames
  * have no rounded corners, hence `radius: false`.
- *
- * Neither the menu nor the panel offers the label's background: the label sits
- * on the frame's own body, and AwsGroup draws it on nothing.
  */
 export const awsGroupDefinition: ObjectTypeDefinition<
 	AwsGroupDoc,
@@ -88,45 +85,6 @@ export const awsGroupDefinition: ObjectTypeDefinition<
 				{ type: "font" },
 				{ type: "textFormat" },
 				{ type: "textAlignment", vertical: false },
-			],
-		},
-	],
-	// Written out so the label's background is left off; the rows are the defaults' as of writing.
-	propertyPanel: [
-		{
-			id: "layout",
-			label: "Layout",
-			items: [
-				{ type: "position" },
-				{ type: "size" },
-				{ type: "rotation" },
-				{ type: "lockAspectRatio" },
-			],
-		},
-		{
-			id: "fill",
-			label: "Fill",
-			items: [{ type: "fill" }, { type: "fillOpacity" }],
-		},
-		{
-			id: "stroke",
-			label: "Border",
-			items: [
-				{ type: "strokeColor" },
-				{ type: "strokeWidth" },
-				{ type: "strokeDashType" },
-				{ type: "strokeOpacity" },
-			],
-		},
-		{
-			id: "text",
-			label: "Text",
-			items: [
-				{ type: "fontFamily" },
-				{ type: "fontSize" },
-				{ type: "fontColor" },
-				{ type: "textFormat" },
-				{ type: "textAlign" },
 			],
 		},
 	],

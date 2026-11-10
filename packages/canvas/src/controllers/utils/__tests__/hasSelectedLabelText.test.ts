@@ -50,6 +50,20 @@ describe("hasSelectedLabelText", () => {
 		).toBe(false);
 	});
 
+	it("is false for an innerLabel caption, which has no background to state", () => {
+		expect(
+			hasSelectedLabelText({
+				selection: selectionOf(["g"]),
+				objects: objectsOf({
+					id: "g",
+					type: "awsGroup",
+					features: { type: "awsGroup", geometry: "rect", text: "innerLabel" },
+					text: { body: { text: "VPC" } },
+				}),
+			}),
+		).toBe(false);
+	});
+
 	it("reaches a caption inside a selected group", () => {
 		expect(
 			hasSelectedLabelText({

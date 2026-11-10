@@ -5,7 +5,10 @@ import {
 	isTextRows,
 	BODY_TEXT_SLOT_ID,
 } from "@jiscribe/doc/model/objects/types/text/TextSlot";
-import { isSingleBodyText } from "@jiscribe/doc/model/objects/types/text/TextType";
+import {
+	hasLabelFill,
+	isSingleBodyText,
+} from "@jiscribe/doc/model/objects/types/text/TextType";
 import type { TransformedFrame } from "@jiscribe/geometry";
 import { memo, useMemo, useRef } from "react";
 import type React from "react";
@@ -180,8 +183,8 @@ const useTextPlacementSource = <TProps extends object>(
  * `"auto"` therefore draws the theme surface, matching what the editor's factory
  * would have written.
  *
- * Text follows `features.text`: a root-form type ("body" / "source" / "label")
- * draws its single body slot — a "label" one over the box painted behind it in
+ * Text follows `features.text`: a root-form type ("body" / "source" / "label" /
+ * "innerLabel") draws its single body slot — a "label" one over the box painted behind it in
  * its `labelFill` (LabelTextFill) — a "slots" type draws one overlay per key of `state.text` (the
  * authority on which slots the shape has). Each overlay is placed by the type's
  * registered `"textSlot"` part kind (unregistered = full bbox): the body via
@@ -348,7 +351,7 @@ export const createFrameObject = <TState extends FrameRenderState>(
 				);
 				return (
 					<>
-						{textType === "label" && (
+						{hasLabelFill(textType) && (
 							<LabelTextFill
 								objectType={type}
 								textSlot={bodySlot}

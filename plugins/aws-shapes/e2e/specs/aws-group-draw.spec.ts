@@ -75,7 +75,7 @@ test.describe("drawing an awsGroup", () => {
 		await expect(cornerBadge(canvas, id)).toHaveCount(0);
 	});
 
-	test("the label is drawn on nothing, never knocked out in the page's color", async ({
+	test("the label is drawn on nothing, with no box painted behind it", async ({
 		canvas,
 	}) => {
 		await canvas.drawShapeFromFlyout(
@@ -89,10 +89,10 @@ test.describe("drawing an awsGroup", () => {
 		await canvas.typeTextAt({ x: 400, y: 240 }, "Production VPC");
 		await canvas.commitText();
 
-		const labelBox = canvas.page.locator(
-			'g[data-canvas-export="flatten"] > rect',
-		);
-		await expect(labelBox).toHaveCount(1);
-		await expect(labelBox).toHaveCSS("fill", "rgba(0, 0, 0, 0)");
+		await expect(canvas.page.getByText("Production VPC")).toBeVisible();
+		// A "label" type's caption box is the one rect in the text overlay's group.
+		await expect(
+			canvas.page.locator('g[data-canvas-export="flatten"] > rect'),
+		).toHaveCount(0);
 	});
 });

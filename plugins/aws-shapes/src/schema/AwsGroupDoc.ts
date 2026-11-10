@@ -80,7 +80,7 @@ export const AwsGroupFeatures = {
 	transform: true,
 	stroke: true,
 	fill: true,
-	text: "label",
+	text: "innerLabel",
 	connectable: true,
 } as const satisfies ObjectFeatures;
 

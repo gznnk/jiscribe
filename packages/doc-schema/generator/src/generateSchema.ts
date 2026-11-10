@@ -10,6 +10,7 @@ import {
 	DEFAULT_STROKE_OPACITY,
 	DEFAULT_STROKE_WIDTH,
 	FILL_STYLE_KEYS,
+	hasLabelFill,
 	OPACITY_MAX,
 	OPACITY_MIN,
 	STROKE_STYLE_KEYS,
@@ -231,8 +232,8 @@ const STYLE_PROP_SOURCES: ReadonlyArray<{
 	{
 		// The content first, then the styling of it: "text" is the body, which the slot
 		// keys deliberately leave out (they are `Omit<TextSlot, "text">`). Which of the
-		// styling the type takes is its text type's answer (a `"label"` caption takes
-		// no `verticalAlign`).
+		// styling the type takes is its text type's answer (a caption, isCaptionText,
+		// takes no `verticalAlign`).
 		feature: "text",
 		styleDef: "TextStyle",
 		props: (features) => ["text", ...textStyleKeysOf(features.text)],
@@ -256,7 +257,7 @@ const BOX_SHAPE_FEATURES: ObjectDocDefinition["features"] = {
 
 /**
  * A caption's own fields (LABEL_TEXT_KEYS), which a `features.text: "label"`
- * type's $def carries beside the text group, each a $ref into
+ * type's $def carries (hasLabelFill; an `"innerLabel"` one carries none) beside the text group, each a $ref into
  * {@link LABEL_BOX_SHAPE_DEF_NAME} where their prose is written once.
  */
 const LABEL_TEXT_PROP_SOURCE = {
@@ -578,7 +579,13 @@ function isBoxShapeCompatible(
 	features: ObjectDocDefinition["features"],
 	defaults: Readonly<Record<string, unknown>>,
 ): boolean {
-	if (features.geometry !== "rect" || features.radius) {
+	// An `"innerLabel"` caption has no shared $def to extend: BoxShapeDoc gives it a
+	// `verticalAlign` and LabelBoxShapeDoc a `labelFill`, neither of which it takes.
+	if (
+		features.geometry !== "rect" ||
+		features.radius ||
+		features.text === "innerLabel"
+	) {
 		return false;
 	}
 	if (Object.keys(propertyOverrides[type] ?? {}).length > 0) {
@@ -678,7 +685,7 @@ function buildShapeDef(
 	const autoHeight = supportsAutoHeight(definition);
 
 	if (isBoxShapeCompatible(type, features, defaults)) {
-		return features.text === "label"
+		return hasLabelFill(features.text)
 			? buildThinShapeDef(type, description, LABEL_BOX_SHAPE_DEF_NAME)
 			: buildBoxShapeRefDef(
 					type,
@@ -732,7 +739,7 @@ function buildShapeDef(
 			(source) => source.props(features),
 		),
 		...(features.textVerticalBasis ? TEXT_BODY_PROP_SOURCE.props : []),
-		...(features.text === "label" ? LABEL_TEXT_PROP_SOURCE.props : []),
+		...(hasLabelFill(features.text) ? LABEL_TEXT_PROP_SOURCE.props : []),
 	]);
 	for (const [name, node] of Object.entries(overrides)) {
 		if (!generatedPropNames.has(name)) {
@@ -765,7 +772,7 @@ function buildShapeDef(
 			}),
 		),
 		...(features.textVerticalBasis ? [TEXT_BODY_PROP_SOURCE] : []),
-		...(features.text === "label" ? [LABEL_TEXT_PROP_SOURCE] : []),
+		...(hasLabelFill(features.text) ? [LABEL_TEXT_PROP_SOURCE] : []),
 	];
 	for (const source of styleSources) {
 		const sharedDef = handwrittenDefs[source.styleDef];

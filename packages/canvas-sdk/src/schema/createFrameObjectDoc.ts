@@ -83,7 +83,7 @@ type FrameObjectDocCommonParams = {
 	 * `calcFullBoxTextRegion` for the whole box. Where the canvas draws the text
 	 * is the UI definition's `textRegion` (the `"textSlot"` part kind), and the
 	 * shipped shapes pass the same function to both sides. Required of a
-	 * `"body"` / `"source"` shape; a `"label"` shape declares none.
+	 * `"body"` / `"source"` shape; a `"label"` / `"innerLabel"` shape declares none.
 	 */
 	textRegion?: ObjectDocTextRegionCalculator;
 
@@ -91,7 +91,7 @@ type FrameObjectDocCommonParams = {
 	 * Draw-time text-style defaults of a `text: "slots"` shape — `byTextSlot` for the
 	 * slots it names, `everyTextSlot` for a shape whose slot set is not fixed (see
 	 * `ObjectDocDefinition.textSlotStyleDefaults`). A root-form shape (`"body"` /
-	 * `"source"` / `"label"`) omits it: its single slot's defaults are read off
+	 * `"source"` / `"label"` / `"innerLabel"`) omits it: its single slot's defaults are read off
 	 * {@link defaults}.
 	 */
 	textSlotStyleDefaults?: ObjectTextSlotStyleDefaults;

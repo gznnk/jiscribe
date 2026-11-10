@@ -4,6 +4,7 @@ import {
 	FILL_STYLE_KEYS,
 	isRichText,
 	RADIUS_STYLE_KEYS,
+	isCaptionText,
 	richTextToPlain,
 	STROKE_STYLE_KEYS,
 	TEXT_SLOT_STYLE_KEYS,
@@ -100,7 +101,7 @@ const holdsMeasuredText = (object: ObjectDoc): boolean => {
 		return resolveConnectorLabel(object) !== null;
 	}
 	const textType = standardObjectDocDefinitions.get(object.type)?.features.text;
-	if (textType === "body" || textType === "label") {
+	if (textType === "body" || isCaptionText(textType)) {
 		const text = (object as { text?: unknown }).text;
 		return isRichText(text) && richTextToPlain(text) !== "";
 	}

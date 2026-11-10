@@ -57,7 +57,9 @@ connector 以外の全型）」のような能力ベースの言い回しを使�
 `verticalAlign` を持たず `labelFill` を持つので、代わりに手書きの `LabelBoxShapeDoc`
 （`handwrittenDefs.json`）を参照する。これは生成時に `BoxShapeDoc` から `verticalAlign` を
 除いて `labelFill` を足した形と照合され、ずれていれば生成が失敗する。全プロパティを展開する
-`"label"` の型も、`labelFill` はこの `$def` の節を参照する。既定値の inline 上書きや
+`"label"` の型も、`labelFill` はこの `$def` の節を参照する。`features.text: "innerLabel"` の型は
+`verticalAlign` も `labelFill` も持たないので、どちらの共有 `$def` にも落とさず常に全プロパティを
+展開する（`labelFill` は出さない）。既定値の inline 上書きや
 `propertyOverrides` のエントリがあれば自動的に対象外となり、従来どおり全プロパティを
 展開した `$def` が生成される。
 
