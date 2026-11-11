@@ -28,6 +28,7 @@ export type UiStateReset = Pick<
 	| "objectMenuOpenId"
 	| "stencilLibraryOpenCategory"
 	| "isOtherShapesPopoverOpen"
+	| "pendingBusyCommandId"
 	| "multiSelectGroup"
 	| "lastDuplicate"
 >;
@@ -56,6 +57,7 @@ export const resetUiState = (): UiStateReset => ({
 	contextMenuPosition: null,
 	objectMenuOpenId: null,
 	...closeStencilPopups(),
+	pendingBusyCommandId: null,
 	multiSelectGroup: null,
 	lastDuplicate: null,
 });

@@ -82,7 +82,7 @@ const executeRouteConnectors = (
 		));
 	} catch (error) {
 		// Thrown while building an end (an auto-height shape read as height 0), before
-		// the op writes anything; handleCommand has no catch.
+		// the op writes anything; executeCommand has no catch.
 		if (error instanceof DocOperationError) {
 			console.warn(
 				`Command ${ROUTE_CONNECTORS_COMMAND_ID} changed nothing: ${error.message}`,
@@ -187,6 +187,7 @@ export const createRouteConnectorsCommand = (
 			en: "Redraw lines only (shapes stay put)",
 			ja: "線だけ引き直す（図形は動かしません）",
 		},
+		busyLabel: { en: "Redrawing lines…", ja: "線を引き直しています…" },
 		category: "arrange",
 		canExecute: (state, canvasRegistries) =>
 			state.mode.kind !== "textEdit" && hasRouteScope(state, canvasRegistries),

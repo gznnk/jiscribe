@@ -51,6 +51,7 @@ import { useNotifySidebarsChange } from "./hooks/useNotifySidebarsChange";
 import { useNotifyViewportChange } from "./hooks/useNotifyViewportChange";
 import { usePropertyPanelState } from "./hooks/usePropertyPanelState";
 import { usePropertyUpdaters } from "./hooks/usePropertyUpdaters";
+import { useRunPendingCommand } from "./hooks/useRunPendingCommand";
 import { useSelfSaveNonceTracker } from "./hooks/useSelfSaveNonceTracker";
 import { useSnapshotRenderScope } from "./hooks/useSnapshotRenderScope";
 import { useSyncExternalDoc } from "./hooks/useSyncExternalDoc";
@@ -67,6 +68,7 @@ import { darkCanvasTheme } from "../foundation/theme/themePresets";
 import { CanvasView } from "../rendering/CanvasView";
 import { CanvasControlLayers } from "./ui/controls/CanvasControlLayers";
 import { TextEditorLayer } from "./ui/editors/TextEditorLayer";
+import { BusyIndicator } from "./ui/feedback/BusyIndicator";
 import { ErrorToast } from "./ui/feedback/ErrorToast";
 import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
@@ -539,6 +541,8 @@ const CanvasComponent = ({
 		dispatch,
 	});
 
+	useRunPendingCommand(state.pendingBusyCommandId !== null, dispatch);
+
 	const handlePaste = useClipboardPaste(
 		state.internalClipboard,
 		dispatch,
@@ -814,6 +818,15 @@ const CanvasComponent = ({
 						    placed here for the same reasons as the stencil bar */}
 						{!isChromeExpanded && toolbarElement}
 						<ViewportOverlay>
+							<BusyIndicator
+								busyLabel={
+									state.pendingBusyCommandId === null
+										? null
+										: (registries.command.get(state.pendingBusyCommandId)
+												?.busyLabel ?? null)
+								}
+								isChromeExpanded={isChromeExpanded}
+							/>
 							<ErrorToast notification={errorNotification} />
 							<ContextMenu
 								position={state.contextMenuPosition}

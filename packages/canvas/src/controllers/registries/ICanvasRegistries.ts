@@ -2,6 +2,7 @@ import type { ObjectFactoryRegistry } from "@jiscribe/doc/registries/ObjectFacto
 import type { ObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
 import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectTextStyleDefaultsRegistry";
 
+import type { LocaleMessages } from "../../foundation/i18n/resolveLocaleMessages";
 import type { ObjectAnchorRegionRegistry } from "../../rendering/objects/registry/ObjectAnchorRegionRegistry";
 import type { ObjectConnectionAnchorsRegistry } from "../../rendering/objects/registry/ObjectConnectionAnchorsRegistry";
 import type { ObjectExtraConnectPointsRegistry } from "../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
@@ -133,6 +134,8 @@ export interface ICanvasRegistries {
 type CommandLike = {
 	/** Read to decide whether the command may run mid-drag (see `handleCommand`). */
 	category?: "edit" | "view" | "arrange" | "selection";
+	/** Read to decide whether a press from any entry defers the run (see `Command.busyLabel`). */
+	busyLabel?: string | LocaleMessages<string>;
 	canExecute(
 		state: CanvasControllerState,
 		registries: ICanvasRegistries,

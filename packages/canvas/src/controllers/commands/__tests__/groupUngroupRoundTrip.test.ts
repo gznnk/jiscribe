@@ -14,7 +14,7 @@ import { selectionOf } from "../../selection/__tests__/support/selectionOf";
  * parentId / root membership / relative z-order, and grouping must compose
  * correctly through the LCA (lowest common ancestor) when nesting. Spans
  * GroupCommand, UngroupCommand, and cleanupGroups through the real
- * handleCommand path.
+ * executeCommand path.
  */
 describe("group → ungroup restores the flat structure", () => {
 	it("children return to the root with no parentId, replacing the group at its z position", () => {

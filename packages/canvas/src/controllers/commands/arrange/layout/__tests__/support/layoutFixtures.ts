@@ -8,8 +8,12 @@ import type { CanvasPlugin } from "../../../../../../plugin/CanvasPlugin";
 import { defineObject } from "../../../../../../plugin/ObjectTypeDefinition";
 import { createFrameMapper } from "../../../../../../states/objects/base/FrameMapper";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
+import { deepFreezeState } from "../../../../../__tests__/support/deepFreezeState";
 import { createFrameBehavior } from "../../../../../behaviors/base/FrameController";
+import type { CanvasControllerState } from "../../../../../CanvasTypes";
+import { createCanvasReducer } from "../../../../../reducer/canvasReducer";
 import { createCanvasRegistries } from "../../../../../registries/createCanvasRegistries";
+import { ROUTE_CONNECTORS_COMMAND_ID } from "../../RouteConnectorsCommand";
 
 type RegionState = ObjectState & TransformedFrame;
 
@@ -231,6 +235,26 @@ export const layoutRegistries = createCanvasRegistries({
 });
 
 export const layoutDocOps = createDocOps({ plugins: layoutPlugins });
+
+const layoutReducer = createCanvasReducer(layoutRegistries);
+
+/**
+ * Redraws the lines through the reducer the way a press does: COMMAND, which
+ * leaves the command pending for its `busyLabel`, then the RUN_PENDING_COMMAND
+ * useRunPendingCommand dispatches once the indicator is painted.
+ *
+ * @param state - Built on layoutRegistries; frozen before the first dispatch
+ */
+export const runRouteConnectors = (
+	state: CanvasControllerState,
+): CanvasControllerState =>
+	layoutReducer(
+		layoutReducer(deepFreezeState(state), {
+			type: "COMMAND",
+			commandId: ROUTE_CONNECTORS_COMMAND_ID,
+		}),
+		{ type: "RUN_PENDING_COMMAND" },
+	);
 
 const emptyDoc = (): CanvasDoc => ({ version: 1, root: [] });
 

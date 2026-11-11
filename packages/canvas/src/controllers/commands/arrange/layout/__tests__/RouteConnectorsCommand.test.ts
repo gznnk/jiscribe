@@ -18,6 +18,7 @@ import {
 	buildUnroundedCornerDoc,
 	layoutDocOps,
 	layoutRegistries,
+	runRouteConnectors,
 } from "./support/layoutFixtures";
 import { defaultCanvasMessages } from "../../../../../foundation/i18n/CanvasMessages";
 import type { CanvasPlugin } from "../../../../../plugin/CanvasPlugin";
@@ -64,12 +65,6 @@ const createState = (
 	});
 };
 
-const runRoute = (state: CanvasControllerState): CanvasControllerState =>
-	reducer(deepFreezeState(state), {
-		type: "COMMAND",
-		commandId: ROUTE_CONNECTORS_COMMAND_ID,
-	});
-
 const connectorOf = (
 	state: CanvasControllerState,
 	id: string,
@@ -91,7 +86,7 @@ const expectSameAsDocOp = (
 	selectedIds: readonly string[],
 ): void => {
 	const state = createState(doc, selectedIds);
-	const viaCommand = runRoute(state);
+	const viaCommand = runRouteConnectors(state);
 
 	const viaDocOp = structuredClone(doc);
 	layoutDocOps.routeConnectors(
@@ -165,7 +160,7 @@ describe("the routeConnectors command", () => {
 	it("takes a line out of a shape it ran through", () => {
 		const state = createState(buildCrossingDoc());
 
-		const result = runRoute(state);
+		const result = runRouteConnectors(state);
 
 		const before = connectorOf(state, "connector-1");
 		const after = connectorOf(result, "connector-1");
@@ -176,7 +171,7 @@ describe("the routeConnectors command", () => {
 	it("keeps every shape where it is, down to the object", () => {
 		const state = createState(buildCrossingDoc());
 
-		const result = runRoute(state);
+		const result = runRouteConnectors(state);
 
 		for (const id of ["rect-1", "rect-2", "rect-3"]) {
 			expect(result.objects[id]).toBe(state.objects[id]);
@@ -184,14 +179,14 @@ describe("the routeConnectors command", () => {
 	});
 
 	it("redraws a hand-shaped connector in scope, and leaves one out of scope alone", () => {
-		const allRedrawn = runRoute(createState(buildCrossingDoc()));
+		const allRedrawn = runRouteConnectors(createState(buildCrossingDoc()));
 		expect(connectorOf(allRedrawn, "connector-2").points).not.toEqual([
 			{ x: 50, y: 300 },
 			{ x: 300, y: 300 },
 		]);
 
 		const state = createState(buildCrossingDoc(), ["connector-1"]);
-		const result = runRoute(state);
+		const result = runRouteConnectors(state);
 		expect(result.objects["connector-2"]).toEqual(state.objects["connector-2"]);
 	});
 
@@ -208,10 +203,10 @@ describe("the routeConnectors command", () => {
 				buildKeptEndsDoc(),
 				buildUnroundedCornerDoc(),
 			]) {
-				const once = runRoute(createState(doc));
+				const once = runRouteConnectors(createState(doc));
 
 				expect(routeCommand.execute(once, layoutRegistries)).toBe(once);
-				const twice = runRoute(once);
+				const twice = runRouteConnectors(once);
 				expect(twice.commitVersion).toBe(once.commitVersion);
 				expect(twice.history.past).toHaveLength(once.history.past.length);
 			}
@@ -224,7 +219,9 @@ describe("the routeConnectors command", () => {
 		});
 
 		it("makes no commit for an out-of-scope connector whose corners lag", () => {
-			const once = runRoute(createState(buildChainDoc(), ["connector-2"]));
+			const once = runRouteConnectors(
+				createState(buildChainDoc(), ["connector-2"]),
+			);
 			const lagging: CanvasControllerState = deepFreezeState({
 				...once,
 				objects: {
@@ -247,7 +244,7 @@ describe("the routeConnectors command", () => {
 		const isConnector = (id: string): boolean => id.startsWith("connector-");
 
 		it("commits a restack of the root's lines", () => {
-			const once = runRoute(createState(buildCaptionedDoc()));
+			const once = runRouteConnectors(createState(buildCaptionedDoc()));
 			const linesOnTop = {
 				...once,
 				rootIds: [
@@ -256,7 +253,7 @@ describe("the routeConnectors command", () => {
 				],
 			};
 
-			const result = runRoute(linesOnTop);
+			const result = runRouteConnectors(linesOnTop);
 
 			expect(result.commitVersion).toBe(linesOnTop.commitVersion + 1);
 			expect(result.rootIds).toEqual(once.rootIds);
@@ -285,7 +282,7 @@ describe("the routeConnectors command", () => {
 			group.children.push(connector);
 			const childIdsOf = (target: CanvasControllerState): readonly string[] =>
 				(target.objects["group-1"] as GroupState).childIds;
-			const once = runRoute(createState(doc));
+			const once = runRouteConnectors(createState(doc));
 			expect(childIdsOf(once)[0]).toBe("connector-1");
 			const raised = {
 				...once,
@@ -298,7 +295,7 @@ describe("the routeConnectors command", () => {
 				},
 			};
 
-			const result = runRoute(raised);
+			const result = runRouteConnectors(raised);
 
 			expect(result.commitVersion).toBe(raised.commitVersion + 1);
 			expect(childIdsOf(result)).toEqual(childIdsOf(once));
@@ -325,7 +322,7 @@ describe("the routeConnectors command", () => {
 	it("takes one Undo to restore everything, a moved label included", () => {
 		const state = createState(buildCrossingDoc());
 
-		const result = runRoute(state);
+		const result = runRouteConnectors(state);
 
 		expect(result.commitVersion).toBe(state.commitVersion + 1);
 		expect(result.history.past).toHaveLength(state.history.past.length + 1);
@@ -351,7 +348,7 @@ describe("the routeConnectors command", () => {
 		const selectedIds = ["rect-1", "connector-1"];
 		const state = createState(buildCrossingDoc(), selectedIds);
 
-		const result = runRoute(state);
+		const result = runRouteConnectors(state);
 
 		expect(result.selection).toBe(state.selection);
 		expect(result.multiSelectGroup).toEqual(

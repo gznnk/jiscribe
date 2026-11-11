@@ -185,9 +185,14 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   op's `ids` means: every connector with nothing selected; a selected connector,
   or the connectors joining the shapes the selection stands for. Shapes do not
   move, hand-shaped routes and moved labels in scope are redrawn, one run is one
-  undo step, and a run that changes nothing records nothing. The auto layout
-  buttons' tooltip now also says they redraw the lines, and the Japanese label of
-  the Arrange section is 「整列」 instead of 「重ね順」.
+  undo step, and a run that changes nothing records nothing. A command, a
+  plugin's included, may now declare `busyLabel`: a press from any entry paints
+  a small indicator with that text at the top centre of the canvas before the
+  run blocks the main thread, fading in after 300 ms so a quick run shows
+  nothing, its ring turning through the block. The redraw declares one,
+  "Redrawing lines…". The auto layout buttons' tooltip now also says they redraw
+  the lines, and the Japanese label of the Arrange section is 「整列」 instead of
+  「重ね順」.
 - **A stencil bar floats over the canvas.** `<Canvas stencilBar>` draws a
   column of buttons over the viewport's left edge, centred top to bottom below
   the top-left pill and scrolling when the room there is shorter, over the

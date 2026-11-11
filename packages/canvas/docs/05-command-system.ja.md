@@ -35,11 +35,12 @@ Command パターンで一元管理するしくみ。
 
 どちらも state（`CanvasControllerState`）とキャンバスのレジストリ束（`ICanvasRegistries`）を受け取る。
 `execute` が純粋関数なので、Command 単体でテストできる（[テスト](./09-testing.ja.md)）。
+メインスレッドを長く塞ぐコマンドは、プラグインのものも含めて `busyLabel` を宣言でき、どの入口からの押下でもその文言のインジケーターを描いてから実行する。
 
 ### 主要コンポーネント
 
 - `CommandRegistry`（`commands/CommandRegistry.ts`）… キャンバスごとに 1 つあり、レジストリ束の `registries.command` として引く。ID で引く `get`、キーイベントに一致するコマンドを全て返す `findAllByShortcut` など
-- `handleCommand`（`commands/handlers/handleCommand.ts`）… `get` で引いたコマンドが `execute` を持たないとき、または `canExecute` が偽のときは state をそのまま返し、それ以外は `execute` を呼ぶ
+- `handleCommand`（`commands/handlers/handleCommand.ts`）… `busyLabel` を宣言したコマンドは保留として記録し、インジケーターを描いた後に `RUN_PENDING_COMMAND` が走らせる。それ以外は同じファイルの `executeCommand` に渡し、`get` で引いたコマンドが `execute` を持たないとき、または `canExecute` が偽のときは state をそのまま返し、それ以外は `execute` を呼ぶ
 - `useKeyboardShortcuts`（`hooks/`）… keydown を `findAllByShortcut` で解決し、`canExecute` が通った最初の 1 つを dispatch（プラグインが足したコマンドは組み込みより先に問う）（どれも通らなければキーはブラウザへ渡す。入力フィールド上では無効化）。`callbacks` に実行を渡されたコマンドはそちらを呼ぶ
 - `CommandUtils`… プラットフォーム判定・`getPlatformShortcuts` / `formatShortcut`（`⌘A` ↔ `Ctrl+A`）
 - 登録は `registries/`（`initializeCommands`）でまとめて行う

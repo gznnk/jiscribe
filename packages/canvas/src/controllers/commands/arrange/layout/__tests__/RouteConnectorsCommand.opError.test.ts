@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { buildChainDoc, layoutRegistries } from "./support/layoutFixtures";
 import { deepFreezeState } from "../../../../__tests__/support/deepFreezeState";
+import { createCanvasReducer } from "../../../../reducer/canvasReducer";
 import { createInitialControllerState } from "../../../../reducer/createInitialControllerState";
 import type { ExecutableCommand } from "../../../CommandTypes";
 
@@ -32,6 +33,27 @@ describe("the routeConnectors command when the op throws", () => {
 
 		expect(warn).toHaveBeenCalledOnce();
 		expect(warn.mock.calls[0][0]).toContain("no box to measure");
+		warn.mockRestore();
+	});
+
+	it("clears the pending id of a deferred run and changes nothing", () => {
+		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+		vi.mocked(routeConnectors).mockImplementation(() => {
+			throw new DocOperationError("no box to measure");
+		});
+		const pending = deepFreezeState({
+			...state,
+			pendingBusyCommandId: "routeConnectors",
+		});
+
+		const result = createCanvasReducer(layoutRegistries)(pending, {
+			type: "RUN_PENDING_COMMAND",
+		});
+
+		expect(result.pendingBusyCommandId).toBeNull();
+		expect(result.objects).toBe(pending.objects);
+		expect(result.commitVersion).toBe(pending.commitVersion);
+		expect(result.history.past).toHaveLength(pending.history.past.length);
 		warn.mockRestore();
 	});
 

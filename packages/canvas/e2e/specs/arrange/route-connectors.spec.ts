@@ -19,6 +19,9 @@ const SAMPLES_PER_STRETCH = 64;
 
 const REDRAW_BUTTON = selectors.propertyPanelCommand("routeConnectors");
 
+/** How long the heavy drawing's run must keep the indicator fully up. */
+const MIN_SHOWN_MS = 500;
+
 /** Three rectangles in a row, the outer two joined; returns the ids and the connector's. */
 async function drawLineThroughShape(
 	canvas: CanvasDriver,
@@ -84,6 +87,111 @@ async function expectRowDirectlyAfterAutoLayout(
 			'[data-action="command:layoutLeftToRight"]',
 		);
 	expect(isDirectlyAfter).toBe(true);
+}
+
+/** A grid of rectangles with lines to far cells: enough for the run to take over a second. */
+function buildHeavyDocText(): string {
+	const COLUMNS = 16;
+	const ROWS = 12;
+	const idOf = (column: number, row: number) => `rect-${column}-${row}`;
+	const rects = [];
+	const connectors = [];
+	for (let column = 0; column < COLUMNS; column += 1) {
+		for (let row = 0; row < ROWS; row += 1) {
+			rects.push({
+				id: idOf(column, row),
+				type: "rect",
+				x: column * 180,
+				y: row * 120,
+				width: 100,
+				height: 60,
+			});
+			connectors.push({
+				id: `line-${column}-${row}`,
+				type: "connector",
+				points: [],
+				source: {
+					owner: { id: idOf(column, row) },
+					anchor: { kind: "connectPoint", id: "rightCenter" },
+				},
+				target: {
+					owner: { id: idOf((column + 7) % COLUMNS, (row + 5) % ROWS) },
+					anchor: { kind: "connectPoint", id: "leftCenter" },
+				},
+			});
+		}
+	}
+	return JSON.stringify({ version: 1, root: [...rects, ...connectors] });
+}
+
+async function loadDoc(canvas: CanvasDriver, docText: string): Promise<void> {
+	await canvas.page.evaluate((text) => {
+		const hook = (
+			window as unknown as { __setHarnessDoc?: (docText: string) => void }
+		).__setHarnessDoc;
+		if (!hook) {
+			throw new Error(
+				"__setHarnessDoc is undefined (harness hook not installed)",
+			);
+		}
+		hook(text);
+	}, docText);
+}
+
+type IndicatorLog = {
+	addedAt?: number;
+	removedAt?: number;
+	text?: string | null;
+	initialOpacity?: string;
+	fadeDelay?: string;
+	fadeDuration?: string;
+};
+
+/** A computed `animation-delay` or `animation-duration` (`"0.3s"`) in ms. */
+function cssSecondsToMs(seconds: string | undefined): number {
+	return Number.parseFloat(seconds as string) * 1000;
+}
+
+/**
+ * Logs when the indicator enters and leaves the DOM, in epoch ms. The redraw blocks
+ * the main thread, so nothing in the page can read it during the run; the two
+ * timestamps bracket the run instead.
+ */
+async function watchIndicator(
+	canvas: CanvasDriver,
+	canvasArea: string,
+): Promise<void> {
+	await canvas.page.evaluate((area) => {
+		const log: IndicatorLog = {};
+		(window as unknown as { __indicatorLog: IndicatorLog }).__indicatorLog =
+			log;
+		const root = document.querySelector(area) as Element;
+		new MutationObserver(() => {
+			const indicator = root.querySelector('[role="status"]');
+			if (indicator !== null && log.addedAt === undefined) {
+				log.addedAt = Date.now();
+				log.text = indicator.textContent;
+				const pillStyle = getComputedStyle(indicator);
+				log.initialOpacity = pillStyle.opacity;
+				log.fadeDelay = pillStyle.animationDelay;
+				log.fadeDuration = pillStyle.animationDuration;
+			}
+			if (
+				indicator === null &&
+				log.addedAt !== undefined &&
+				log.removedAt === undefined
+			) {
+				log.removedAt = Date.now();
+			}
+		}).observe(root, { childList: true, subtree: true });
+	}, canvasArea);
+}
+
+function readIndicatorLog(canvas: CanvasDriver): Promise<IndicatorLog> {
+	return canvas.page.evaluate(
+		() =>
+			(window as unknown as { __indicatorLog: IndicatorLog }).__indicatorLog,
+	);
 }
 
 /** Runs `press`, then checks the line left the obstacle, the shapes stayed and Undo restores it. */
@@ -167,6 +275,42 @@ test.describe("redrawing the lines only", () => {
 				await expect.poll(() => canvas.contextMenuVisible()).toBe(false);
 			},
 		);
+	});
+
+	test("on a run that takes a while, the indicator shows after a delay and goes when the run ends", async ({
+		canvas,
+	}) => {
+		test.slow();
+		await loadDoc(canvas, buildHeavyDocText());
+		await canvas.openPropertyPanel();
+		const button = canvas.page.locator(REDRAW_BUTTON);
+		await expect(button).toBeEnabled();
+		await watchIndicator(canvas, selectors.canvasArea);
+
+		const clicked = button.click();
+		await expect
+			.poll(async () => (await readIndicatorLog(canvas)).removedAt, {
+				timeout: 60_000,
+			})
+			.toBeDefined();
+		await clicked;
+
+		const {
+			addedAt,
+			removedAt,
+			text,
+			initialOpacity,
+			fadeDelay,
+			fadeDuration,
+		} = await readIndicatorLog(canvas);
+		const fadeDelayMs = cssSecondsToMs(fadeDelay);
+		const shownFrom =
+			(addedAt as number) + fadeDelayMs + cssSecondsToMs(fadeDuration);
+		expect(text).toBe("Redrawing lines…");
+		expect(initialOpacity).toBe("0");
+		expect(fadeDelayMs).toBeGreaterThan(0);
+		expect((removedAt as number) - shownFrom).toBeGreaterThan(MIN_SHOWN_MS);
+		await expect(canvas.page.getByRole("status")).toHaveCount(0);
 	});
 
 	test("is disabled with no line to redraw, the row staying", async ({
