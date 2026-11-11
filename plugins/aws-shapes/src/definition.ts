@@ -30,13 +30,13 @@ import { AWS_GROUP_STYLE_ENTRIES } from "./style/awsStyleEntries";
 export const awsIconDefinition: ObjectTypeDefinition<AwsIconDoc, AwsIconState> =
 	createFrameObjectDefinition<AwsIconDoc, AwsIconState>({
 		doc: awsIconDocDefinition,
-		component: AwsIcon,
 		// The same resolution the doc validation runs: a name no document may
 		// carry does not reach the drawing through a state either.
 		isExtraStateValid: (state) =>
 			state.icon === undefined ||
 			(typeof state.icon === "string" &&
 				awsIconCatalog.isKnownName(state.icon)),
+		component: AwsIcon,
 		stencils: AwsIconStencils,
 		// The label's background sits under the section id every label type's
 		// does, so selecting this beside another label type keeps it.
@@ -48,9 +48,9 @@ export const awsIconDefinition: ObjectTypeDefinition<AwsIconDoc, AwsIconState> =
 
 /**
  * The label band is sized from the text and a long label runs past the frame's
- * right edge, so this `"label"` type places it itself: `textRegion` and
- * `visualBounds` together, without which zoom-to-fit and the export would crop
- * that off.
+ * right edge. An `"innerLabel"` type has no default place for it, so
+ * `textRegion` and `visualBounds` are declared together (registration refuses
+ * either alone).
  *
  * The stroke menu is offered: the default follows `kind`, but telling two VPCs
  * apart in one diagram is worth an override (resolveAwsGroupStroke). AWS frames
@@ -61,13 +61,13 @@ export const awsGroupDefinition: ObjectTypeDefinition<
 	AwsGroupState
 > = createFrameObjectDefinition<AwsGroupDoc, AwsGroupState>({
 	doc: awsGroupDocDefinition,
-	component: AwsGroup,
-	textRegion: calcAwsGroupLabelTextRegion,
-	visualBounds: calcAwsGroupVisualBounds,
 	// The same range the doc validation accepts. The drawing side falls back to
 	// the default kind, so an unknown one is stopped at the state's door.
 	isExtraStateValid: (state) =>
 		state.kind === undefined || isAwsGroupKind(state.kind),
+	component: AwsGroup,
+	visualBounds: calcAwsGroupVisualBounds,
+	textRegion: calcAwsGroupLabelTextRegion,
 	styleEntries: AWS_GROUP_STYLE_ENTRIES,
 	stencils: AwsGroupStencils,
 	menu: [
@@ -79,9 +79,6 @@ export const awsGroupDefinition: ObjectTypeDefinition<
 				{ type: "borderStyle", radius: false },
 			],
 		},
-		// The label's background sits under the section id every label type's
-		// does, so selecting this beside another label type keeps it.
-		{ id: "label-style", items: [{ type: "labelBackgroundColor" }] },
 		{
 			id: "text",
 			items: [

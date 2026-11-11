@@ -3,6 +3,7 @@ import { calcEllipseTextRegion } from "@jiscribe/doc/model/objects/primitives/el
 import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
 import type { TextSlotStyle } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/model/objects/types/text/TextSlot";
+import { isCaptionText } from "@jiscribe/doc/model/objects/types/text/TextType";
 import { collectStyleKeys } from "@jiscribe/doc/model/objects/utils/collectStyleKeys";
 import { builtinObjectDocDefinitions } from "@jiscribe/doc/plugin/builtinObjectDocDefinitions";
 import { resolveAutoHeightPaddingEm } from "@jiscribe/doc/text/block/autoHeightComfortPadding";
@@ -213,6 +214,7 @@ export const BUILTIN_OBJECT_DEFINITIONS: Record<
 			state.textLayout === "block"
 				? TEXT_BLOCK_TRANSFORM_HANDLES
 				: TEXT_LABEL_TRANSFORM_HANDLES,
+		stencils: TextStencils,
 		// The layout switch is the one row text adds to what its features
 		// imply, and it lives in the sidebar alone: the merge that keeps only
 		// what every selected type offers works row by row there, so a plain
@@ -223,7 +225,6 @@ export const BUILTIN_OBJECT_DEFINITIONS: Record<
 			PROPERTY_PANEL_SECTIONS.text,
 			{ type: "textLayout" },
 		),
-		stencils: TextStencils,
 	}),
 
 	group: defineObject({
@@ -486,31 +487,34 @@ const checkDeclaredStyleFields = (
 };
 
 /**
- * Refuses a `features.text: "label"` type whose own placement would disagree
- * with what is drawn. The core places the caption under the box
+ * Refuses a caption type (`features.text: "label"` / `"innerLabel"`,
+ * isCaptionText) whose own placement would disagree with what is drawn. The
+ * core places a `"label"` caption under the box
  * ({@link createLabelTextSlotPartKind}, {@link createLabelTextVisualBounds})
  * unless the type declares both a `"textSlot"` part kind and `visualBounds`;
- * one without the other leaves the caption and its extent in different places,
- * and a kind with no `region` / `regions` would spread the caption over the
- * whole box. A doc `textRegion` is refused outright, the doc side holding no
- * place for a caption. It is compared against undefined rather than tested for
- * presence: `createFrameObjectDoc` writes the key whether or not the type gave
- * one, and the UI definition inherits it.
+ * one without the other leaves the caption and its extent in different places.
+ * An `"innerLabel"` caption has no such default, so it must declare both. A kind
+ * with no `region` / `regions` would spread the caption over the whole box. A doc
+ * `textRegion` is refused outright, the doc side holding no place for a caption.
+ * It is compared against undefined rather than tested for presence:
+ * `createFrameObjectDoc` writes the key whether or not the type gave one, and
+ * the UI definition inherits it.
  *
  * @param type - The type being registered; named in the error
  * @param definition - Its whole definition
- * @throws When a `"label"` type declares a doc `textRegion`, only one of a `"textSlot"` part kind and `visualBounds`, or a `"textSlot"` kind placing nothing, naming the type and what it declares
+ * @throws When a caption type declares a doc `textRegion`, or a `"textSlot"` kind placing nothing; when a `"label"` type declares only one of a `"textSlot"` part kind and `visualBounds`; when an `"innerLabel"` type lacks either. Names the type and what it declares
  */
 const checkLabelTextDefinition = (
 	type: ObjectType,
 	definition: AnyObjectTypeDefinition,
 ): void => {
-	if (definition.features.text !== "label") {
+	const textType = definition.features.text;
+	if (!isCaptionText(textType)) {
 		return;
 	}
 	if (definition.textRegion !== undefined) {
 		throw new Error(
-			`ObjectTypeDefinition "${type}": features.text "label" has its caption placed on the canvas side (under the box by the core, calcLabelTextRegion, or by a declared "${TEXT_SLOT_PART_KIND}" part kind); remove its doc textRegion`,
+			`ObjectTypeDefinition "${type}": features.text "${textType}" has its caption placed on the canvas side (${textType === "label" ? "under the box by the core, calcLabelTextRegion, or " : ""}by a declared "${TEXT_SLOT_PART_KIND}" part kind); remove its doc textRegion`,
 		);
 	}
 	const textSlotKinds = (definition.partKinds ?? []).filter(
@@ -518,6 +522,18 @@ const checkLabelTextDefinition = (
 	);
 	const declaresTextSlotKind = textSlotKinds.length > 0;
 	const declaresVisualBounds = definition.visualBounds !== undefined;
+	if (
+		textType === "innerLabel" &&
+		(!declaresTextSlotKind || !declaresVisualBounds)
+	) {
+		const missing = [
+			...(declaresTextSlotKind ? [] : [`a "${TEXT_SLOT_PART_KIND}" part kind`]),
+			...(declaresVisualBounds ? [] : ["visualBounds"]),
+		].join(" and ");
+		throw new Error(
+			`ObjectTypeDefinition "${type}": features.text "innerLabel" has no default place for its caption, so it declares both a "${TEXT_SLOT_PART_KIND}" part kind and visualBounds; declares no ${missing}`,
+		);
+	}
 	if (declaresTextSlotKind !== declaresVisualBounds) {
 		const [declared, missing] = declaresTextSlotKind
 			? [`a "${TEXT_SLOT_PART_KIND}" part kind`, "visualBounds"]
@@ -532,7 +548,7 @@ const checkLabelTextDefinition = (
 		)
 	) {
 		throw new Error(
-			`ObjectTypeDefinition "${type}": features.text "label" declares a "${TEXT_SLOT_PART_KIND}" part kind with no region or regions, which would place the caption over the whole box`,
+			`ObjectTypeDefinition "${type}": features.text "${textType}" declares a "${TEXT_SLOT_PART_KIND}" part kind with no region or regions, which would place the caption over the whole box`,
 		);
 	}
 };

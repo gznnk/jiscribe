@@ -16,12 +16,12 @@ import { IconStencils } from "./stencil/IconStencils";
 export const lucideIconDefinition: ObjectTypeDefinition<IconDoc, IconState> =
 	createFrameObjectDefinition<IconDoc, IconState>({
 		doc: lucideIconDocDefinition,
-		component: Icon,
 		// The same resolution the doc validator applies, so a name that could not be
 		// written to a document cannot reach the renderer through a state either.
 		isExtraStateValid: (state) =>
 			state.icon === undefined ||
 			(typeof state.icon === "string" && isKnownIconName(state.icon)),
+		component: Icon,
 		stencils: IconStencils,
 		menu: [
 			{ id: "line", items: [{ type: "lineColor" }, { type: "lineStyle" }] },

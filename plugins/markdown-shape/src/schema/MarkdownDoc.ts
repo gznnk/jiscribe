@@ -26,8 +26,8 @@ export const MarkdownFeatures = {
 	transform: true,
 	stroke: true,
 	fill: true,
-	text: "source",
 	radius: true,
+	text: "source",
 	connectable: true,
 } as const satisfies ObjectFeatures;
 

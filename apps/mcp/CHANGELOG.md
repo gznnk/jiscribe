@@ -179,6 +179,11 @@ covers that.
 
 ### Fixed
 
+- **The package ships `THIRD-PARTY-NOTICES.txt`.** It bundles third-party code
+  into the server and the viewer, the viewer's fonts, and the drawings of the
+  AWS, Azure and Google Cloud icons, yet carried only its own MIT license. The
+  notices now reproduce each bundled package's license and the terms the icons
+  are redistributed under, which the MIT license does not cover.
 - **`list_types` answers before the file exists.** It lists the shape set, not
   the drawing, yet it read the file it was given and failed with `ENOENT` when
   `open_canvas` had not created it yet. Now it answers without reading the file

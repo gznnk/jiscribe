@@ -82,11 +82,14 @@ Then, by impact:
 - **Shapes or AI-facing metadata** (new shape, `ObjectFeatures`, `description`,
   `defaults`): run `pnpm generate:schema` and commit the regenerated
   `packages/doc-schema/assets/`, or CI's `check:schema` fails on the drift.
-- **Anything the VSCode extension ships** (a bundled dependency's version, a
-  font family, the Lucide, AWS, Azure or Google Cloud icon set): run `pnpm build:vscode` and then
+- **Anything the VSCode extension or `jiscribe-mcp` ships** (a bundled
+  dependency's version, a font family, the Lucide, AWS, Azure or Google Cloud
+  icon set): run `pnpm build:vscode` and `pnpm build:mcp`, then
   `pnpm generate:notices`, and commit the regenerated
-  `apps/vscode-extension/THIRD-PARTY-NOTICES.txt`, or CI's `check:notices`
-  fails on the drift. It reads the built bundle, so the build has to come
+  `apps/vscode-extension/THIRD-PARTY-NOTICES.txt` and
+  `apps/mcp/THIRD-PARTY-NOTICES.txt`, or CI's `check:notices` fails on the
+  drift. Both come from `scripts/thirdPartyNotices.mjs`. It reads the built
+  bundles, so the builds have to come
   first — and it has to run in a standalone clone or worktree of this
   repository. Mounted as a submodule the tree is installed by the outer
   workspace, whose lockfile resolves some ranges to other versions; the script

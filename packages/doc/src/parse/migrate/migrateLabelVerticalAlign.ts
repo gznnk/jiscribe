@@ -1,9 +1,10 @@
 import type { ObjectMigration } from "./ObjectMigration";
+import { isCaptionText } from "../../model/objects/types/text/TextType";
 
 /**
- * A `verticalAlign` on a caption sized from its own text, from before a `"label"`
- * text was held to the typography it can use (`textStyleKeysOf`), or before the
- * type became a `"label"` one: dropped, the caption's box being sized from its
+ * A `verticalAlign` on a caption sized from its own text, from before a caption
+ * (`"label"` / `"innerLabel"`, isCaptionText) was held to the typography it can use (`textStyleKeysOf`), or before the
+ * type became a caption one: dropped, the caption's box being sized from its
  * text and leaving the block nowhere to move. It was drawn the same whatever it
  * said, so nothing on screen changes.
  */
@@ -12,7 +13,7 @@ export const migrateLabelVerticalAlign: ObjectMigration = (
 	path,
 	features,
 ) => {
-	if (features.text !== "label" || !("verticalAlign" in node)) {
+	if (!isCaptionText(features.text) || !("verticalAlign" in node)) {
 		return { node, warnings: [] };
 	}
 	const { verticalAlign: _verticalAlign, ...rest } = node;

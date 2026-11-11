@@ -1,4 +1,8 @@
-import { isSingleBodyText, isTextVerticalBasis } from "@jiscribe/doc";
+import {
+	isCaptionText,
+	isSingleBodyText,
+	isTextVerticalBasis,
+} from "@jiscribe/doc";
 import {
 	applyTextVerticalBasis,
 	BODY_TEXT_SLOT_ID,
@@ -53,7 +57,7 @@ export type ContentBoxResolution =
 	| {
 			/**
 			 * The type's box does not hold one body of text: its caption is sized
-			 * from its own text (`features.text: "label"`), its text is keyed slots,
+			 * from its own text (`features.text: "label"` / `"innerLabel"`), its text is keyed slots,
 			 * or it carries no text at all. No width and height can make such a text
 			 * overflow.
 			 */
@@ -78,7 +82,7 @@ export type ContentBoxResolution =
  * region is the whole box resolves to `{ x: -width / 2 + 6, y: -height / 2 + 2, … }`.
  *
  * @param shape - The object to measure: its `type`, its `width` / `height`, its `textVerticalBasis` if it sets one, and any field its type's region reads (see {@link ContentBoxShape})
- * @returns `{ kind: "region", rect, declaredRegion, isSourceText }` for a `"body"` / `"source"` type, whose box holds its one body; `{ kind: "outside" }` for a `"label"` type (its caption sized from its own text), a `"slots"` type whose text is not one body, and one with no text at all; and `{ kind: "unknown" }` for a type name outside the shipped set
+ * @returns `{ kind: "region", rect, declaredRegion, isSourceText }` for a `"body"` / `"source"` type, whose box holds its one body; `{ kind: "outside" }` for a `"label"` / `"innerLabel"` type (its caption sized from its own text), a `"slots"` type whose text is not one body, and one with no text at all; and `{ kind: "unknown" }` for a type name outside the shipped set
  */
 export const resolveContentBox = <TShape extends ContentBoxShape>(
 	shape: TShape,
@@ -91,7 +95,7 @@ export const resolveContentBox = <TShape extends ContentBoxShape>(
 	// wherever the type places it, and a type whose text is keyed slots has no
 	// single body to place, whatever its region declares for a slot.
 	if (
-		definition.features.text === "label" ||
+		isCaptionText(definition.features.text) ||
 		!isSingleBodyText(definition.features.text)
 	) {
 		return { kind: "outside" };

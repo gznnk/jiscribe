@@ -36,7 +36,7 @@ const textStyleDefaultKeys = (
  * fields rather than one map keyed by slot id, so that neither kind has to
  * reserve an id the other could not then be a slot of.
  *
- * A root-form type (`"body"` / `"source"` / `"label"`) declares `byTextSlot` under the one key
+ * A root-form type (`"body"` / `"source"` / `"label"` / `"innerLabel"`) declares `byTextSlot` under the one key
  * every single-text shape holds ({@link BODY_TEXT_SLOT_ID}). A `"slots"` type
  * declares `byTextSlot` for the slots of its own fixed set, a slot left out
  * contributing no defaults; one whose slot set is not fixed — a table's cells are
@@ -138,7 +138,7 @@ const narrowTextSlotStyleMap = (
  * The per-slot draw-time defaults of one type, from whichever of its two
  * declarations applies.
  *
- * A root-form type (`features.text: "body"` / `"source"` / `"label"`) is read out of the
+ * A root-form type (`features.text: "body"` / `"source"` / `"label"` / `"innerLabel"`) is read out of the
  * creation defaults it already declares (`ObjectDocDefinition.defaults`), which
  * spell the single body's styling out flat on the doc (TextStyleDoc) — exactly
  * one slot's worth — so a type gets its draw-time defaults from the same place

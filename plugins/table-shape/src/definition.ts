@@ -217,28 +217,12 @@ export const tableDefinition: ObjectTypeDefinition<TableDoc, TableState> = {
 	contentResizer: (state, context) =>
 		reconcileTableBoxWithGrid(state as TableState, context),
 	component: Table,
+	connectionAnchors: calcTableConnectionAnchors,
 	behavior: createFrameBehavior<TableState>(),
 	selectionControls: TABLE_SELECTION_CONTROLS,
 	partKinds: TABLE_PARTS,
-	connectionAnchors: calcTableConnectionAnchors,
-	stencils: TableStencils,
 	styleEntries: TABLE_STYLE_ENTRIES,
-	propertyPanel: [
-		...createDefaultPropertyPanel(tableDocDefinition.features),
-		{
-			id: "table-insert",
-			label: { en: "Insert", ja: "挿入" },
-			isShown: ({ selection }) => selection.part !== null,
-			items: [
-				{
-					type: "custom",
-					id: "table-insert",
-					component: TableInsertProperty,
-					pickedPartKinds: TABLE_INSERT_PICKED_PART_KINDS,
-				},
-			],
-		},
-	],
+	stencils: TableStencils,
 	menu: [
 		{
 			id: "style",
@@ -263,6 +247,22 @@ export const tableDefinition: ObjectTypeDefinition<TableDoc, TableState> = {
 					type: "custom",
 					id: "table-insert",
 					component: TableInsertMenu,
+					pickedPartKinds: TABLE_INSERT_PICKED_PART_KINDS,
+				},
+			],
+		},
+	],
+	propertyPanel: [
+		...createDefaultPropertyPanel(tableDocDefinition.features),
+		{
+			id: "table-insert",
+			label: { en: "Insert", ja: "挿入" },
+			isShown: ({ selection }) => selection.part !== null,
+			items: [
+				{
+					type: "custom",
+					id: "table-insert",
+					component: TableInsertProperty,
 					pickedPartKinds: TABLE_INSERT_PICKED_PART_KINDS,
 				},
 			],

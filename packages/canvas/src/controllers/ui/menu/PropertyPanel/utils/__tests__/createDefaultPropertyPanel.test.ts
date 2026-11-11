@@ -167,6 +167,28 @@ describe("createDefaultPropertyPanel", () => {
 		).toBe(hasSelectedLabelText);
 	});
 
+	it("offers an innerLabel caption no background and no vertical alignment", () => {
+		const sections = createDefaultPropertyPanel(
+			features({
+				type: "awsGroup",
+				geometry: "rect",
+				transform: true,
+				stroke: true,
+				fill: true,
+				text: "innerLabel",
+			}),
+		);
+
+		expect(sectionIds(sections)).toEqual(["layout", "fill", "stroke", "text"]);
+		expect(itemsOf(sections, "text")).toEqual([
+			"fontFamily",
+			"fontSize",
+			"fontColor",
+			"textFormat",
+			"textAlign",
+		]);
+	});
+
 	it("derives nothing from a type that declares no feature at all", () => {
 		expect(createDefaultPropertyPanel(features({}))).toEqual([]);
 	});

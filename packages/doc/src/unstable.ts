@@ -109,7 +109,7 @@ export {
 	TEXT_BOX_PADDING_Y,
 } from "./text/block/textBoxPadding";
 
-// The slot id of a single-body type's one text (`text: "body"` / `"source"` / `"label"`),
+// The slot id of a single-body type's one text (`text: "body"` / `"source"` / `"label"` / `"innerLabel"`),
 // for a headless consumer resolving a type's text region
 // (`ObjectDocDefinition.textRegion`), which takes a slot id as the rendering
 // layer's does.

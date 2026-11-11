@@ -6,7 +6,8 @@ import {
 	validateStrokeStyleFields,
 } from "./validateStyleFields";
 import {
-	validateLabelTextStyleFields,
+	validateCaptionTextStyleFields,
+	validateLabelTextFields,
 	validateSourceTextStyleFields,
 	validateTextStyleFields,
 } from "./validateTextFields";
@@ -15,6 +16,7 @@ import type { ObjectDocValidateFn } from "../../../plugin/ObjectDocValidateFn";
 import type { AutoHeightDeclaration } from "../../../plugin/supportsAutoHeight";
 import { supportsAutoHeight } from "../../../plugin/supportsAutoHeight";
 import type { ObjectFeatures } from "../types/ObjectFeatures";
+import { hasLabelFill, isCaptionText } from "../types/text/TextType";
 
 /**
  * Builds a doc validator for Frame-based objects (geometry: "rect" | "ellipse"
@@ -53,7 +55,10 @@ export const createFrameDocValidator = (
 		...(features.text === "source"
 			? validateSourceTextStyleFields(o, path)
 			: []),
-		...(features.text === "label" ? validateLabelTextStyleFields(o, path) : []),
+		...(isCaptionText(features.text)
+			? validateCaptionTextStyleFields(o, path)
+			: []),
+		...(hasLabelFill(features.text) ? validateLabelTextFields(o, path) : []),
 		...(features.radius ? validateRadiusStyleFields(o, path) : []),
 		// The mappers pass the arrow group through for any type declaring it
 		// (collectStyleKeys), so it must be validated here too — an unchecked

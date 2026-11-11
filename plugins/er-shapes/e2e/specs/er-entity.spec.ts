@@ -378,11 +378,12 @@ async function rowRightEdge(
 	return { x: type.x + type.width, y: type.y + type.height / 2 };
 }
 
-/** Types into the editor an insertion opened and commits it. */
-async function typeIntoOpenEditor(
+/** Opens the name of the column an insertion picked, with Enter, then types it and commits. */
+async function nameInsertedColumn(
 	canvas: CanvasDriver,
 	text: string,
 ): Promise<void> {
+	await canvas.page.keyboard.press("Enter");
 	await canvas.waitForTextEditor();
 	await canvas.page.keyboard.type(text);
 	await canvas.commitText();
@@ -732,16 +733,23 @@ test.describe("erEntity columns", () => {
 		expect(await canvas.objectById(id).boundingBox()).toEqual(boxBefore);
 	});
 
-	test("inserts below a picked column with Alt+Shift+ArrowDown and edits its name", async ({
+	test("inserts below a picked column with Alt+Shift+ArrowDown, picks the new column, and Enter edits its name", async ({
 		canvas,
 	}) => {
 		const id = await canvas.placeShapeFromFlyout(CATEGORY, PRESET);
+		const unpickedFill = await columnGripFill(canvas, 0);
 		await clickColumnGrip(canvas, 0);
 
 		await canvas.page.keyboard.press("Alt+Shift+ArrowDown");
-		await typeIntoOpenEditor(canvas, "org_id");
 
 		await expect.poll(() => columnCount(canvas, id)).toBe(4);
+		await expect(canvas.page.locator(selectors.textEditor)).toHaveCount(0);
+		await expect
+			.poll(() => pickedColumns(canvas, id, unpickedFill))
+			.toEqual([1]);
+
+		await nameInsertedColumn(canvas, "org_id");
+
 		const texts = (await drawnTexts(canvas, id)).join("|");
 		expect(texts).toContain("org_id");
 		// Declared right after the primary key, so drawn right under it.
@@ -764,7 +772,7 @@ test.describe("erEntity columns", () => {
 		await canvas.clickAt(await slotCenter(canvas, id, "name"));
 		await clickColumnGrip(canvas, 1);
 		await canvas.page.keyboard.press("Alt+Shift+ArrowUp");
-		await typeIntoOpenEditor(canvas, "org_id");
+		await nameInsertedColumn(canvas, "org_id");
 		await expect.poll(() => columnCount(canvas, id)).toBe(4);
 		const afterInsert = await rowRightEdge(canvas, id, 2);
 		await expect
@@ -925,7 +933,7 @@ test.describe("erEntity columns", () => {
 		await canvas.page.click(
 			selectors.objectMenuCommand("erEntity.insertColumnBelow"),
 		);
-		await typeIntoOpenEditor(canvas, "email");
+		await nameInsertedColumn(canvas, "email");
 
 		await expect.poll(() => columnCount(canvas, id)).toBe(4);
 		const inserted = await slotRect(canvas, id, "col:2:name");
@@ -938,6 +946,7 @@ test.describe("erEntity columns", () => {
 		canvas,
 	}) => {
 		const id = await canvas.placeShapeFromFlyout(CATEGORY, PRESET);
+		const unpickedFill = await columnGripFill(canvas, 0);
 		await expect(
 			canvas.page.locator(
 				selectors.objectMenuCommand("erEntity.insertColumnBelow"),
@@ -947,9 +956,15 @@ test.describe("erEntity columns", () => {
 		await canvas.page.click(
 			selectors.objectMenuCommand("erEntity.appendColumn"),
 		);
-		await typeIntoOpenEditor(canvas, "updated_at");
 
 		await expect.poll(() => columnCount(canvas, id)).toBe(4);
+		await expect(canvas.page.locator(selectors.textEditor)).toHaveCount(0);
+		await expect
+			.poll(() => pickedColumns(canvas, id, unpickedFill))
+			.toEqual([3]);
+
+		await nameInsertedColumn(canvas, "updated_at");
+
 		const last = await slotRect(canvas, id, "col:3:name");
 		const previous = await slotRect(canvas, id, "col:2:name");
 		expect(last.y).toBeGreaterThan(previous.y);
@@ -1345,7 +1360,7 @@ test.describe("erEntity column insert from the properties sidebar", () => {
 		await canvas.page.click(
 			selectors.propertyPanelCommand("erEntity.insertColumnAbove"),
 		);
-		await typeIntoOpenEditor(canvas, "org_id");
+		await nameInsertedColumn(canvas, "org_id");
 
 		await expect.poll(() => columnCount(canvas, id)).toBe(4);
 		const inserted = await slotRect(canvas, id, "col:1:name");

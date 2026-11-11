@@ -14,15 +14,15 @@ import { gcpIconCatalog } from "./schema/icon/gcpIconCatalog";
 
 export const gcpIconDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: GcpIconFeatures,
-	defaults: GCP_ICON_DOC_DEFAULTS,
+	validateExtra: gcpIconCatalog.validateIconName,
 	extraKeys: GcpIconExtraKeys,
-	description:
-		'One icon from Google\'s official Google Cloud product icons, drawn as a node: it holds text and can be a connector endpoint, so arrows attach to it directly. Google draws its core products with icons of their own and every other product with the icon of its category, and `icon` follows that: it names the picture as a flat kebab-case name — a core product ("compute-engine", "cloud-run", "gke", "cloud-storage", "cloud-sql", "bigquery", "vertex-ai") or a category ("networking", "data-analytics", "security-identity", "serverless-computing"). Any other product\'s name resolves to its category\'s icon ("pubsub" and "dataflow" draw "data-analytics", "cloud-functions" draws "serverless-computing", "vpc" draws "networking", "iam" draws "security-identity"), and common short names resolve too ("gce", "gcs", "spanner", "scc"); a name that resolves to nothing is a validation error carrying suggestions. `text` is drawn as a label below the box, auto-sized to itself: write the product\'s official name there ("Compute Engine", "Pub/Sub", "Cloud Load Balancing"), which tells apart the products sharing one category icon and belongs near the icon. There is no stroke or fill: the icons may not be recoloured or altered. Keep the box square (the 64x64 default) — the drawing is scaled uniformly and centred, so a non-square box only adds margin. Group them with a container frame to show which project, region or VPC network they live in.',
-	summary: "Google Cloud product icon (a labelled, connectable node)",
 	// Placed at its default size and adjusted afterwards. Dragging a box out
 	// would only centre the drawing on the shorter side.
 	supportsBounds: false,
-	validateExtra: gcpIconCatalog.validateIconName,
+	defaults: GCP_ICON_DOC_DEFAULTS,
+	description:
+		'One icon from Google\'s official Google Cloud product icons, drawn as a node: it holds text and can be a connector endpoint, so arrows attach to it directly. Google draws its core products with icons of their own and every other product with the icon of its category, and `icon` follows that: it names the picture as a flat kebab-case name — a core product ("compute-engine", "cloud-run", "gke", "cloud-storage", "cloud-sql", "bigquery", "vertex-ai") or a category ("networking", "data-analytics", "security-identity", "serverless-computing"). Any other product\'s name resolves to its category\'s icon ("pubsub" and "dataflow" draw "data-analytics", "cloud-functions" draws "serverless-computing", "vpc" draws "networking", "iam" draws "security-identity"), and common short names resolve too ("gce", "gcs", "spanner", "scc"); a name that resolves to nothing is a validation error carrying suggestions. `text` is drawn as a label below the box, auto-sized to itself: write the product\'s official name there ("Compute Engine", "Pub/Sub", "Cloud Load Balancing"), which tells apart the products sharing one category icon and belongs near the icon. There is no stroke or fill: the icons may not be recoloured or altered. Keep the box square (the 64x64 default) — the drawing is scaled uniformly and centred, so a non-square box only adds margin. Group them with a container frame to show which project, region or VPC network they live in.',
+	summary: "Google Cloud product icon (a labelled, connectable node)",
 });
 
 /**

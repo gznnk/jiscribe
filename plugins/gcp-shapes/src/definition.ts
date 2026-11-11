@@ -20,13 +20,13 @@ import { GcpIconStencils } from "./stencil/GcpIconStencils";
 export const gcpIconDefinition: ObjectTypeDefinition<GcpIconDoc, GcpIconState> =
 	createFrameObjectDefinition<GcpIconDoc, GcpIconState>({
 		doc: gcpIconDocDefinition,
-		component: GcpIcon,
 		// The same resolution the doc validation runs: a name no document may carry
 		// does not reach the drawing through a state either.
 		isExtraStateValid: (state) =>
 			state.icon === undefined ||
 			(typeof state.icon === "string" &&
 				gcpIconCatalog.isKnownName(state.icon)),
+		component: GcpIcon,
 		stencils: GcpIconStencils,
 		// The label's background sits under the section id every label type's
 		// does, so selecting this beside another label type keeps it.

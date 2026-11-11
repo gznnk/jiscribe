@@ -22,112 +22,91 @@ import type { StencilRegistry } from "../ui/objects/StencilRegistry";
 /**
  * The registry contract passed as an argument to the pure reducer/handler tree
  * (commands' `execute`/`canExecute`, gesture handlers' `handle`, `handleCommand`).
+ * Exported as unstable, but all its members except `command` are also members of the
+ * stable `CanvasRegistries`, which extends this type, so changing one changes that
+ * public type too.
  *
- * Structured to keep the dependency graph acyclic: the recursive `command`
- * registry is described by an **inline structural shape** (not the concrete
- * `CommandRegistry` / `Command`), so `CommandTypes` / `GestureHandlerTypes` can
- * reference this contract without it importing them back — structural typing binds
- * the real classes at the bundle-construction site instead (#165).
+ * `command` is described by an **inline structural shape** rather than the concrete
+ * `CommandRegistry` / `Command`, so `CommandTypes` / `GestureHandlerTypes` can
+ * reference this contract without it importing them back. The real class is checked
+ * against that shape where a bundle is passed as an `ICanvasRegistries`. The
+ * registries living in `rendering` are imported type-only, so no runtime edge is added.
  *
- * The concrete `CanvasRegistries` bundle is structurally assignable to this
- * contract, so callers pass their real bundle where an `ICanvasRegistries` is
- * expected.
- *
- * The three geometry registries are declared by their real classes: they live in
- * `rendering` but are imported type-only (as `CanvasRegistries` already
- * does), so no runtime edge is added and the graph stays acyclic.
+ * Some members have no direct reader: they are read through slices taken structurally
+ * (StyleIntentRegistries, VisualExtentRegistries), so a member nothing names is not
+ * dead.
  */
 export interface ICanvasRegistries {
+	// --- State ---
+
 	objectMapper: ObjectMapperRegistry;
 	/**
-	 * Per-type content resizers, needed by the commands that rebuild a whole state
-	 * from a doc (undo / redo): a type whose doc stores no size gets its box back
-	 * from here, and without it a restored object would come back collapsed.
+	 * Per-type resizers deriving a box from its content. For a type whose doc stores
+	 * no size or may leave `height` out, a state rebuilt from a doc gets its box here.
 	 */
 	objectContentResizer: ObjectContentResizerRegistry;
-	/**
-	 * Which types a document may leave `height` out of, needed by the command that
-	 * switches the selection between a stated height and one following the text.
-	 */
+	/** Which types a document may leave `height` out of. */
 	objectAutoHeight: ObjectAutoHeightRegistry;
 	/**
-	 * Which types are containers other objects sit inside, read by the automatic
-	 * layout commands so a container shape is sized around what lies in it.
+	 * Which types declare themselves containers (`ObjectDocDefinition.layoutContainer`),
+	 * with the title band each answers for a doc of it.
 	 */
 	objectLayoutContainer: ObjectLayoutContainerRegistry;
+
+	// --- Drawing ---
+
+	/** Per-type visual bounds: everything a shape draws, including what falls outside its geometry box. */
+	objectVisualBounds: ObjectVisualBoundsRegistry;
+
+	// --- Connections ---
+
+	/** Per-type outline polygons: the drawn silhouette a connector end lands on. */
+	objectOutline: ObjectOutlineRegistry;
+	/** Per-type anchor regions: the rect a shape's edge anchors are centered on. */
+	objectAnchorRegion: ObjectAnchorRegionRegistry;
+	/** Per-type connection points beyond the four edge anchors (the brace's `tip`). */
+	objectExtraConnectPoints: ObjectExtraConnectPointsRegistry;
+	/** Per-type declarations of which anchors are offered and where their dots sit. */
+	objectConnectionAnchors: ObjectConnectionAnchorsRegistry;
+	/** Per-type keys the connector route cache compares an owner by besides its frame. */
+	objectGeometryKey: ObjectGeometryKeyRegistry;
+
+	// --- Interaction ---
+
+	objectBehavior: ObjectBehaviorRegistry;
 	/**
-	 * Per-type, per-slot text-style defaults, needed by the pure tree wherever it
-	 * reads a
-	 * text style back: the format toggles resolve the styling a keystroke flips
-	 * against them, so a slot that sets nothing still toggles against what it is
-	 * actually drawn with.
+	 * Per-type sub-part definitions, keyed by `(type, kind)`: what a part selection
+	 * inside an object means to the type that owns it.
+	 */
+	objectPartKind: ObjectPartKindRegistry;
+
+	// --- Style ---
+
+	/**
+	 * Per-type style tables: which style intents a type takes and where each lands in
+	 * its data, so writing a style and reporting it read one answer.
+	 */
+	objectStyle: ObjectStyleRegistry;
+	/**
+	 * Per-type, per-slot text-style defaults: what a field the author left unset
+	 * resolves to, the value that slot of that type is drawn with rather than a
+	 * type-agnostic default.
 	 */
 	objectTextStyleDefaults: ObjectTextStyleDefaultsRegistry;
 	/**
-	 * Per-type stroke / fill defaults, needed by the pure tree wherever it reports
-	 * a shape style back: the style menus show the value the shape is drawn with,
-	 * so an object that sets nothing still shows its type's answer.
+	 * Per-type stroke / fill defaults: what a field the author left unset resolves to,
+	 * the value that type is drawn with rather than a type-agnostic default.
 	 */
 	objectShapeStyleDefaults: ObjectShapeStyleDefaultsRegistry;
-	objectBehavior: ObjectBehaviorRegistry;
-	/**
-	 * Per-type sub-part definitions, needed by the commands that act on a part
-	 * selection rather than the whole object: Delete asks this registry whether
-	 * the selected parts can be removed before claiming the key.
-	 */
-	objectPartKind: ObjectPartKindRegistry;
-	objectFactory: ObjectFactoryRegistry;
-	stencil: StencilRegistry;
-	/**
-	 * Per-type outline polygons, needed by every consumer that resolves a
-	 * connector path (`resolveConnectorPoints`) so its endpoints land on the drawn
-	 * silhouette — the same coordinates the rendering resolves.
-	 */
-	objectOutline: ObjectOutlineRegistry;
-	/**
-	 * Per-type anchor regions, the companion of `objectOutline` in connector path
-	 * resolution: it recenters the edge anchors of a tapering silhouette.
-	 */
-	objectAnchorRegion: ObjectAnchorRegionRegistry;
-	/**
-	 * Per-type extra connection points, the third member of the connector
-	 * path-resolution set: it is what lets an endpoint name an anchor the shape's
-	 * type declares itself (the brace's `tip`).
-	 */
-	objectExtraConnectPoints: ObjectExtraConnectPointsRegistry;
-	/**
-	 * Per-type connection-anchor declarations, read by the connection drag so a
-	 * drop does not snap onto an anchor its type hides.
-	 */
-	objectConnectionAnchors: ObjectConnectionAnchorsRegistry;
-	/**
-	 * Per-type geometry keys, which the connector route cache compares an owner by
-	 * besides its frame (resolveConnectorPointsCached), so a route resolved here
-	 * is the one the renderer already holds.
-	 */
-	objectGeometryKey: ObjectGeometryKeyRegistry;
-	/**
-	 * Per-type visual bounds, read only by the commands that frame a view
-	 * (zoom-to-fit / zoom-to-selection) so decoration drawn outside a shape's
-	 * geometry box — an actor's label, say — is not cropped.
-	 */
-	objectVisualBounds: ObjectVisualBoundsRegistry;
-	/**
-	 * Command lookup, used by `handleCommand` (reached from the menu/context/toolbar
-	 * gesture handlers). Inline shape — mirrors what the pure tree calls on the
-	 * command registry — so this contract does not import `CommandRegistry`/`Command`.
-	 */
+
+	// --- Commands / UI ---
+
+	/** Command lookup, in the inline shape described above. */
 	command: {
 		get(commandId: string): CommandLike | undefined;
 	};
-	/**
-	 * Per-type style tables, read by the walkers that write a style
-	 * (applyStyleIntent) and report it (readSelectionStyle): what a style intent
-	 * means to the type it is addressed to. The whole bundle is handed to the
-	 * walkers' callers, each of which takes the slice it needs
-	 * (StyleIntentRegistries) structurally.
-	 */
-	objectStyle: ObjectStyleRegistry;
+	objectFactory: ObjectFactoryRegistry;
+	stencil: StencilRegistry;
 }
 
 /** The slice of a `Command` the pure tree invokes (structural; not the `Command` type). */

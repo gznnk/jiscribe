@@ -37,11 +37,11 @@ export const containerDefinition: ObjectTypeDefinition<
 	ContainerState
 > = createFrameObjectDefinition<ContainerDoc, ContainerState>({
 	doc: containerDocDefinition,
-	component: Container,
-	textRegion: calcContainerTextRegion,
 	isExtraStateValid: (state) =>
 		state.headerHeight === undefined ||
 		isContainerHeaderHeight(state.headerHeight),
+	component: Container,
+	textRegion: calcContainerTextRegion,
 	selectionControls: [
 		{
 			name: "headerHeight",
@@ -51,6 +51,25 @@ export const containerDefinition: ObjectTypeDefinition<
 	],
 	styleEntries: CONTAINER_STYLE_ENTRIES,
 	stencils: ContainerStencils,
+	menu: [
+		{
+			id: "style",
+			items: [
+				{ type: "backgroundColor" },
+				{ type: "custom", id: "header-color", component: HeaderColorMenu },
+				{ type: "borderColor" },
+				{ type: "borderStyle", radius: false },
+			],
+		},
+		{
+			id: "text",
+			items: [
+				{ type: "font" },
+				{ type: "textFormat" },
+				{ type: "textAlignment" },
+			],
+		},
+	],
 	propertyPanel: [
 		{
 			id: "layout",
@@ -96,25 +115,6 @@ export const containerDefinition: ObjectTypeDefinition<
 				{ type: "textFormat" },
 				{ type: "textAlign" },
 				{ type: "verticalAlign" },
-			],
-		},
-	],
-	menu: [
-		{
-			id: "style",
-			items: [
-				{ type: "backgroundColor" },
-				{ type: "custom", id: "header-color", component: HeaderColorMenu },
-				{ type: "borderColor" },
-				{ type: "borderStyle", radius: false },
-			],
-		},
-		{
-			id: "text",
-			items: [
-				{ type: "font" },
-				{ type: "textFormat" },
-				{ type: "textAlignment" },
 			],
 		},
 	],

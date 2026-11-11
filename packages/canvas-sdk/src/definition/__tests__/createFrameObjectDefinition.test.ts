@@ -72,6 +72,11 @@ const labelDocDefinition = createFrameObjectDoc({
 	defaults: DEMO_DOC_DEFAULTS,
 });
 
+const innerLabelDocDefinition = createFrameObjectDoc({
+	features: { ...DemoFeatures, text: "innerLabel" },
+	defaults: DEMO_DOC_DEFAULTS,
+});
+
 /** A caption placed to the right of the box, the way a label type placing its own does. */
 const captionBeside = ({ width }: Dimensions) => ({
 	x: width / 2 + 8,
@@ -219,6 +224,42 @@ describe("createFrameObjectDefinition", () => {
 		expect(definition.partKinds?.map((part) => part.kind)).toEqual([
 			TEXT_SLOT_PART_KIND,
 		]);
+		expect(definition.partKinds?.[0].region).toBe(captionBeside);
+		expect(definition.visualBounds).toBe(visualBounds);
+	});
+
+	it.each([
+		["neither", {}, "textRegion and visualBounds"],
+		["only textRegion", { textRegion: captionBeside }, "visualBounds"],
+		[
+			"only visualBounds",
+			{ visualBounds: () => ({ x: 0, y: 0, width: 1, height: 1 }) },
+			"textRegion",
+		],
+	])(
+		"refuses an innerLabel text type passing %s, its caption having no default place",
+		(_case, placement, missing) => {
+			expect(() =>
+				createFrameObjectDefinition<DemoDoc, DemoState>({
+					doc: innerLabelDocDefinition,
+					component: DemoComponent,
+					...placement,
+				}),
+			).toThrow(
+				`createFrameObjectDefinition "sdkDemo": features.text "innerLabel" passes no ${missing}; pass both textRegion and visualBounds, the caption having no default place`,
+			);
+		},
+	);
+
+	it("builds the text slot kind of an innerLabel text type passing textRegion and visualBounds together", () => {
+		const visualBounds = () => ({ x: -60, y: -40, width: 200, height: 80 });
+		const definition = createFrameObjectDefinition<DemoDoc, DemoState>({
+			doc: innerLabelDocDefinition,
+			component: DemoComponent,
+			textRegion: captionBeside,
+			visualBounds,
+		});
+
 		expect(definition.partKinds?.[0].region).toBe(captionBeside);
 		expect(definition.visualBounds).toBe(visualBounds);
 	});

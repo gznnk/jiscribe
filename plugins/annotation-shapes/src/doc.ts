@@ -51,16 +51,16 @@ export const braceDocDefinition: ObjectDocDefinition =
 	withGroupMarkerTipConnectPoint(
 		createFrameObjectDoc({
 			features: BraceFeatures,
-			defaults: BRACE_DOC_DEFAULTS,
+			validateExtra: validateGroupMarkerTipFields,
 			extraKeys: [
 				"direction",
 				"tipPosition",
 			] satisfies readonly (keyof BraceDoc)[],
+			factory: createGroupMarkerObjectFactory(BRACE_DOC_DEFAULTS),
+			defaults: BRACE_DOC_DEFAULTS,
 			description:
 				'Curly brace shape, used to mark a run of shapes as one group and name it. Uses the same rect-based geometry (x/y/width/height) as RectDoc, but the box is the bracket alone: its short side is how far the curve bulges, its long side how far the arms reach. "direction" is the way the tip points, away from what is being grouped — a "left" brace is the typographic "{" and groups what is to its right, so place the box just left of that run and give it a small width (e.g. 24x160). "tipPosition" (0..1) moves the tip along the span, from the top for a left/right brace and from the left for an up/down one. Text is drawn as a label just beyond the tip, auto-sized to the text itself and outside the box, so the box stays a thin band however long the label is. The brace has no fill. Beyond the four edge midpoints it offers a connect point at its tip, "tip": pass "tip" as the connector\'s sourceAnchor / targetAnchor (stored as { "kind": "connectPoint", "id": "tip" }) so the line meets the cusp instead of a midpoint of the thin band.',
 			summary: "group marker, grouping annotation",
-			validateExtra: validateGroupMarkerTipFields,
-			factory: createGroupMarkerObjectFactory(BRACE_DOC_DEFAULTS),
 		}),
 	);
 
@@ -68,15 +68,15 @@ export const bracketDocDefinition: ObjectDocDefinition =
 	withGroupMarkerTipConnectPoint(
 		createFrameObjectDoc({
 			features: BracketFeatures,
-			defaults: BRACKET_DOC_DEFAULTS,
-			extraKeys: ["direction"] satisfies readonly (keyof BracketDoc)[],
-			description:
-				'Square bracket shape, used to mark a run of shapes as one group and name it. Same box and same "direction" as BraceDoc — a "left" bracket is the typographic "[" and groups what is to its right — but it is drawn with straight lines only: a spine along the outer edge with a foot at each end, reaching towards the grouped shapes. It has no "tipPosition", because nothing on it singles out a place along the spine; the label always sits just beyond the middle of the spine, auto-sized to the text itself and outside the box. Use BracketWithStemDoc instead when the label should point at one particular place in the run. The bracket has no fill. Beyond the four edge midpoints it offers a connect point named "tip", which for a plain bracket is the middle of the spine — the same place its label points from; pass "tip" as the connector\'s sourceAnchor / targetAnchor to attach there.',
-			summary: "group marker, grouping annotation",
 			// There is no tipPosition to check: the bracket's label is pinned to the
 			// middle of its spine.
 			validateExtra: validateGroupMarkerDirection,
+			extraKeys: ["direction"] satisfies readonly (keyof BracketDoc)[],
 			factory: createGroupMarkerObjectFactory(BRACKET_DOC_DEFAULTS),
+			defaults: BRACKET_DOC_DEFAULTS,
+			description:
+				'Square bracket shape, used to mark a run of shapes as one group and name it. Same box and same "direction" as BraceDoc — a "left" bracket is the typographic "[" and groups what is to its right — but it is drawn with straight lines only: a spine along the outer edge with a foot at each end, reaching towards the grouped shapes. It has no "tipPosition", because nothing on it singles out a place along the spine; the label always sits just beyond the middle of the spine, auto-sized to the text itself and outside the box. Use BracketWithStemDoc instead when the label should point at one particular place in the run. The bracket has no fill. Beyond the four edge midpoints it offers a connect point named "tip", which for a plain bracket is the middle of the spine — the same place its label points from; pass "tip" as the connector\'s sourceAnchor / targetAnchor to attach there.',
+			summary: "group marker, grouping annotation",
 		}),
 	);
 
@@ -84,16 +84,16 @@ export const bracketWithStemDocDefinition: ObjectDocDefinition =
 	withGroupMarkerTipConnectPoint(
 		createFrameObjectDoc({
 			features: BracketWithStemFeatures,
-			defaults: BRACKET_WITH_STEM_DOC_DEFAULTS,
+			validateExtra: validateGroupMarkerTipFields,
 			extraKeys: [
 				"direction",
 				"tipPosition",
 			] satisfies readonly (keyof BracketWithStemDoc)[],
+			factory: createGroupMarkerObjectFactory(BRACKET_WITH_STEM_DOC_DEFAULTS),
+			defaults: BRACKET_WITH_STEM_DOC_DEFAULTS,
 			description:
 				'Square bracket with a stem, used to mark a run of shapes as one group and name it at a chosen point. Same box and same "direction" as BracketDoc, except that the spine sits half way into the box and a straight stem runs out of it, at right angles, to the outer edge. "tipPosition" (0..1) moves the stem along the span, from the top for a left/right bracket and from the left for an up/down one, and the label hangs off the stem\'s end, auto-sized to the text itself and outside the box. Use BracketDoc instead when the label needs to point at nothing in particular. It has no fill. Beyond the four edge midpoints it offers a connect point named "tip", the stem\'s end: pass "tip" as the connector\'s sourceAnchor / targetAnchor so it meets the stem where the label does.',
 			summary: "group marker with a pointer, grouping annotation",
-			validateExtra: validateGroupMarkerTipFields,
-			factory: createGroupMarkerObjectFactory(BRACKET_WITH_STEM_DOC_DEFAULTS),
 		}),
 	);
 
@@ -103,14 +103,14 @@ export const bracketWithStemDocDefinition: ObjectDocDefinition =
  */
 export const calloutDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: CalloutFeatures,
-	textRegion: calcCalloutTextRegion,
-	outline: calloutOutline,
-	defaults: CALLOUT_DOC_DEFAULTS,
+	validateExtra: validateCalloutTail,
 	extraKeys: ["tail"] satisfies readonly (keyof CalloutDoc)[],
+	defaults: CALLOUT_DOC_DEFAULTS,
+	outline: calloutOutline,
+	textRegion: calcCalloutTextRegion,
 	description:
 		"Speech-bubble callout, typically used for annotations and explanatory comments. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a bubble. The tail stays inside the bounding box, occupying a quarter of it on its side; text is laid out in the bubble body beside it. Point the tail at the annotated object via `tail` (default: bottom edge, position 0.2).",
 	summary: "annotation bubble",
-	validateExtra: validateCalloutTail,
 });
 
 /**
@@ -120,12 +120,12 @@ export const calloutDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
  */
 export const noteDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: NoteFeatures,
-	textRegion: calcNoteTextRegion,
+	defaults: NOTE_DOC_DEFAULTS,
 	outline: noteOutline,
+	textRegion: calcNoteTextRegion,
 	// Top-left prose: the line's own leading plus TEXT_BOX_PADDING_Y already
 	// matches the left inset, so extra room would only open the top.
 	autoHeightPaddingEm: 0,
-	defaults: NOTE_DOC_DEFAULTS,
 	description:
 		'Note shape: a box with its top-right corner folded back, holding a comment about the diagram — the UML note. It uses the same rect geometry (x/y/width/height) as RectDoc and only swaps the drawing, so it takes text inside the box, unlike the group markers in this package. Give it a landscape box (e.g. 180x110) and left-aligned text, and attach it to what it comments on with a connector. Two shapes are easily mistaken for it, and neither is the same thing: "document" (a wavy bottom edge) is a flowchart step that produces paperwork, and "file" is a portrait pictogram standing for a file on disk. Reach for "note" when the box holds prose *about* the diagram, and for those two when the shape *is* one of the things the diagram is about. Where the comment should point at one spot on one shape, CalloutDoc (a bubble with a tail) says so more directly.',
 	summary: "comment box, UML note",

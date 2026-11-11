@@ -108,3 +108,33 @@ describe("CreateObjectType with text: label", () => {
 		expect(filled.labelFill).toBe("#ffffff");
 	});
 });
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+declare const InnerLabelIconDocBrand: unique symbol;
+
+type InnerLabelIconDoc = CreateObjectType<
+	{ type: "label-icon"; geometry: "rect"; text: "innerLabel" },
+	typeof InnerLabelIconDocBrand
+>;
+
+/** Pins down that `text: "innerLabel"` is the caption form less the background. */
+describe("CreateObjectType with text: innerLabel", () => {
+	const innerLabelIcon = { ...labelIcon } as unknown as InnerLabelIconDoc;
+
+	it("takes the caption's typography, and neither the vertical placement nor a background", () => {
+		const styled: InnerLabelIconDoc = { ...innerLabelIcon, fontWeight: "bold" };
+		expect(styled.fontWeight).toBe("bold");
+
+		const aligned: InnerLabelIconDoc = {
+			...innerLabelIcon,
+			// @ts-expect-error a caption sized from its text has no slack to place it in
+			verticalAlign: "top",
+		};
+		const filled: InnerLabelIconDoc = {
+			...innerLabelIcon,
+			// @ts-expect-error the caption sits on the shape's own fill
+			labelFill: "#fff",
+		};
+		expect([aligned, filled]).toHaveLength(2);
+	});
+});

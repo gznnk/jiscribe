@@ -12,8 +12,8 @@ export const StickyFeatures = {
 	transform: true,
 	stroke: false,
 	fill: true,
-	text: "body",
 	radius: false,
+	text: "body",
 	connectable: true,
 } as const satisfies ObjectFeatures;
 

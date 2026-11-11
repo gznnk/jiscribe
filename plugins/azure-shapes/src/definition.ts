@@ -22,13 +22,13 @@ export const azureIconDefinition: ObjectTypeDefinition<
 	AzureIconState
 > = createFrameObjectDefinition<AzureIconDoc, AzureIconState>({
 	doc: azureIconDocDefinition,
-	component: AzureIcon,
 	// The same resolution the doc validation runs: a name no document may carry
 	// does not reach the drawing through a state either.
 	isExtraStateValid: (state) =>
 		state.icon === undefined ||
 		(typeof state.icon === "string" &&
 			azureIconCatalog.isKnownName(state.icon)),
+	component: AzureIcon,
 	stencils: AzureIconStencils,
 	// The label's background sits under the section id every label type's
 	// does, so selecting this beside another label type keeps it.

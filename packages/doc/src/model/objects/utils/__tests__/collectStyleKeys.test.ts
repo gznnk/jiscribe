@@ -27,7 +27,13 @@ describe("collectStyleKeys", () => {
 	});
 
 	it("excludes the text group's styling, which the mappers rebuild per slot", () => {
-		for (const textType of ["body", "source", "label", "slots"] as const) {
+		for (const textType of [
+			"body",
+			"source",
+			"label",
+			"innerLabel",
+			"slots",
+		] as const) {
 			const keys = collectStyleKeys(features({ text: textType }));
 			expect(keys).not.toContain("text");
 			expect(keys).not.toContain("textAlign");
@@ -41,6 +47,7 @@ describe("collectStyleKeys", () => {
 		expect(collectStyleKeys(features({ text: "body" }))).not.toContain(
 			"labelFill",
 		);
+		expect(collectStyleKeys(features({ text: "innerLabel" }))).toEqual([]);
 	});
 
 	it("omits the groups that are off", () => {

@@ -272,6 +272,28 @@ describe("line-start prohibition", () => {
 		});
 	});
 
+	it("warns about a line the author opened on a full stop in an AWS group's title, nothing wrapping it", () => {
+		const diagnostics = diagnoseDoc(
+			docOf({
+				id: "vpc",
+				type: "awsGroup",
+				x: 0,
+				y: 0,
+				width: 320,
+				height: 200,
+				text: "本番環境\n。VPC",
+			}),
+		);
+		expect(diagnostics).toHaveLength(1);
+		expect(diagnostics[0]).toMatchObject({
+			severity: "warning",
+			objectId: "vpc",
+		});
+		expect(diagnostics[0].message).toMatch(
+			/^text in awsGroup breaks a line .*line 2 starts with "。" \(nothing wraps it, font 14px\)$/,
+		);
+	});
+
 	it("still passes over an ellipse, whose doc stores no width to wrap at", () => {
 		expect(
 			diagnoseDoc(

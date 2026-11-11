@@ -153,6 +153,23 @@ describe("text set in a font the canvas does not ship", () => {
 		expect(warnings[0].message).toMatch(/: web; /);
 	});
 
+	it("finds the family of a title placed inside its own box", () => {
+		const warnings = findFontWarnings(
+			docOf({
+				id: "vpc",
+				type: "awsGroup",
+				x: 0,
+				y: 0,
+				width: 320,
+				height: 200,
+				text: "VPC",
+				fontFamily: UNSHIPPED,
+			}),
+		);
+		expect(warnings).toHaveLength(1);
+		expect(warnings[0].message).toMatch(/: vpc; /);
+	});
+
 	it("passes over objects with no text to measure, and a markdown body", () => {
 		expect(
 			findFontWarnings(

@@ -4,11 +4,12 @@ import { RADIUS_STYLE_KEYS } from "../base/RadiusStyleDoc";
 import { STROKE_STYLE_KEYS } from "../base/StrokeStyleDoc";
 import { LABEL_TEXT_KEYS } from "../base/TextStyleDoc";
 import type { ObjectFeatures } from "../types/ObjectFeatures";
+import { hasLabelFill } from "../types/text/TextType";
 
 /**
  * The field names of the style groups `features` enables — stroke / fill / radius
- * / arrow, plus a caption's own fields (`LABEL_TEXT_KEYS`) for a `text: "label"`
- * type: the ones that share their names between Doc and State and so read the
+ * / arrow, plus a caption's own fields (`LABEL_TEXT_KEYS`) for a type whose
+ * caption carries them (hasLabelFill — `text: "label"`, not `"innerLabel"`): the ones that share their names between Doc and State and so read the
  * same in either direction. The single answer to "which style fields does a type
  * of these features own": the parser builds the names it accepts from it
  * (ObjectDocValidatorRegistry) and the canvas mappers pass exactly these through
@@ -25,7 +26,7 @@ import type { ObjectFeatures } from "../types/ObjectFeatures";
  * once updated the new field flows through every side that reuses these keys.
  *
  * @param features - The type's descriptor; the four style flags and whether
- *   `text` is `"label"` are read, the geometry having no say here
+ *   `text` is `"label"` (hasLabelFill) are read, the geometry having no say here
  * @returns A fresh array in group order (stroke, fill, radius, arrow, caption),
  *   empty for a type enabling none of them
  */
@@ -36,5 +37,5 @@ export const collectStyleKeys = (
 	...(features.fill ? FILL_STYLE_KEYS : []),
 	...(features.radius ? RADIUS_STYLE_KEYS : []),
 	...(features.arrow ? ARROW_STYLE_KEYS : []),
-	...(features.text === "label" ? LABEL_TEXT_KEYS : []),
+	...(hasLabelFill(features.text) ? LABEL_TEXT_KEYS : []),
 ];

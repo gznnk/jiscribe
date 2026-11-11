@@ -23,6 +23,22 @@ export const stickyDefinition: ObjectTypeDefinition<StickyDoc, StickyState> =
 		component: Sticky,
 		svgDefs: StickyDefs,
 		stencils: StickyStencils,
+		menu: [
+			{
+				id: "style",
+				items: [
+					{ type: "custom", id: "sticky-color", component: StickyColorMenu },
+				],
+			},
+			{
+				id: "text",
+				items: [
+					{ type: "font" },
+					{ type: "textFormat" },
+					{ type: "textAlignment" },
+				],
+			},
+		],
 		propertyPanel: [
 			{
 				id: "layout",
@@ -56,22 +72,6 @@ export const stickyDefinition: ObjectTypeDefinition<StickyDoc, StickyState> =
 					{ type: "textFormat" },
 					{ type: "textAlign" },
 					{ type: "verticalAlign" },
-				],
-			},
-		],
-		menu: [
-			{
-				id: "style",
-				items: [
-					{ type: "custom", id: "sticky-color", component: StickyColorMenu },
-				],
-			},
-			{
-				id: "text",
-				items: [
-					{ type: "font" },
-					{ type: "textFormat" },
-					{ type: "textAlignment" },
 				],
 			},
 		],
