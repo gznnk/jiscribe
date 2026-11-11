@@ -225,6 +225,9 @@ describe("ConnectorLabel backdrop", () => {
 		expect((knockout as SVGRectElement).style.fill).toBe(SURFACE);
 		expect(layerGroup.tagName).toBe("g");
 		expect(layerGroup.getAttribute("pointer-events")).toBe("none");
+		// Unsmoothed alike, so no rim of the knockout shows around the layers.
+		expect(knockout.getAttribute("shape-rendering")).toBe("crispEdges");
+		expect(layerGroup.getAttribute("shape-rendering")).toBe("crispEdges");
 		// The layer reaching the box's corners is a path; the inner one stays a rect.
 		const [cornered, inner] = [...layerGroup.children] as SVGElement[];
 		expect(cornered.tagName).toBe("path");
@@ -245,6 +248,7 @@ describe("ConnectorLabel backdrop", () => {
 		expect([...label.svg.children].map((child) => child.tagName)).toEqual([
 			"foreignObject",
 		]);
+		expect(label.svg.querySelector("[shape-rendering]")).toBeNull();
 		expect(
 			(label.svg.querySelector("foreignObject > div") as HTMLElement).style
 				.background,

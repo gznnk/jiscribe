@@ -152,6 +152,8 @@ foreignObject に `display="none"` を付ける。テキストオーバーレイ
 ストアに入れ、各ラベルは持ち主の id で自分の分だけを購読する（`rendering/objects/LabelBackdropStoreContext.ts`・
 `useLabelBackdropLayers`）。ラベルはページ色を塗り、その上に領域ごとの図形を領域の色と不透明度で重ねる
 （`rendering/objects/base/LabelBackdropLayers.tsx`）。半透明の塗りもテーマ色も枠と同じ見た目になる。
+層があるときはページ色と層を `shape-rendering="crispEdges"` で描き、縁を同じピクセルに揃えて、箱の周りに
+ページ色の縁が出ないようにする。
 枠かラベルの持ち主が回転・反転していれば、箱の中心点だけで判定し、入っていれば箱全体を塗る。
 コネクターラベルのインライン編集中の箱はページ色のまま。
 

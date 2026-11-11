@@ -118,6 +118,25 @@ describe("LabelTextFill backdrop", () => {
 		expect(layers[0].getAttribute("y")).toBe("25");
 	});
 
+	it("rasterizes the knockout and the layers without smoothing while it has layers", () => {
+		const { container } = renderFill({ ownerId: "shape" });
+		const group = container.querySelector('g[data-canvas-export="flatten"]')!;
+		expect(
+			group.querySelector(":scope > rect")?.getAttribute("shape-rendering"),
+		).toBe("crispEdges");
+		expect(
+			group.querySelector(":scope > g")?.getAttribute("shape-rendering"),
+		).toBe("crispEdges");
+	});
+
+	it("keeps the knockout smoothed on no backdrop", () => {
+		const { container } = renderFill({});
+		const knockout = container.querySelector(
+			'g[data-canvas-export="flatten"] > rect',
+		);
+		expect(knockout?.hasAttribute("shape-rendering")).toBe(false);
+	});
+
 	it("paints the page's color alone without an ownerId, as before", () => {
 		const { container } = renderFill({});
 		const group = container.querySelector('g[data-canvas-export="flatten"]')!;

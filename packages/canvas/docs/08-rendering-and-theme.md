@@ -155,7 +155,9 @@ objects in drawing order and cuts each label's box against the regions the frame
 result to each label through a store it subscribes to by its owner's id
 (`rendering/objects/LabelBackdropStoreContext.ts`, `useLabelBackdropLayers`). The label then draws the
 page's color and, over it, one shape per region (`rendering/objects/base/LabelBackdropLayers.tsx`), in the
-region's own color and opacity, so a translucent fill or a theme token looks the same as on the frame. A
+region's own color and opacity, so a translucent fill or a theme token looks the same as on the frame.
+While it has layers, the page's color and the layers are drawn with `shape-rendering="crispEdges"`, so their
+edges land on the same pixels and no rim of the page's color shows around the box. A
 frame or a label owner that is rotated or flipped is judged by the box's center alone, the region then
 covering the whole box. A connector label's inline editor stays on the page's color.
 

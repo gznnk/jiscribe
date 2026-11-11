@@ -4,6 +4,14 @@ import { memo } from "react";
 
 import type { LabelBackdropLayer } from "../LabelBackdropStoreContext";
 
+/**
+ * How a label's knockout and the layers over it are rasterized while it has
+ * layers: unsmoothed, so the knockout's edge pixels are exactly the top
+ * layer's and no rim of the page's color shows around the box. A label with
+ * no layers keeps the default smoothing.
+ */
+export const LABEL_BACKDROP_SHAPE_RENDERING = "crispEdges";
+
 /** How close a layer's edge has to come to the box's to count as reaching it, in the box's units. */
 const EDGE_TOLERANCE = 1e-6;
 
@@ -84,7 +92,11 @@ const LabelBackdropLayersComponent: React.FC<LabelBackdropLayersProps> = ({
 	cornerRadius,
 	isShown,
 }) => (
-	<g pointerEvents="none" display={isShown ? undefined : "none"}>
+	<g
+		pointerEvents="none"
+		display={isShown ? undefined : "none"}
+		shapeRendering={LABEL_BACKDROP_SHAPE_RENDERING}
+	>
 		{layers.map((layer, index) => {
 			const layerRect: Rect = {
 				x: box.x + layer.rect.x,

@@ -4,7 +4,10 @@ import type React from "react";
 import { memo, useMemo } from "react";
 
 import { LABEL_BOX_CORNER_RADIUS, LabelBox } from "./ConnectorLabelStyled";
-import { LabelBackdropLayers } from "../../base/LabelBackdropLayers";
+import {
+	LABEL_BACKDROP_SHAPE_RENDERING,
+	LabelBackdropLayers,
+} from "../../base/LabelBackdropLayers";
 import { useDocumentSurface } from "../../DocumentSurfaceContext";
 import { useFontsLoadedNonceContext } from "../../FontsLoadedNonceContext";
 import { useIsTextLegible } from "../../useIsTextLegible";
@@ -121,6 +124,7 @@ const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
 						ry={LABEL_BOX_CORNER_RADIUS}
 						pointerEvents="none"
 						display={display}
+						shapeRendering={LABEL_BACKDROP_SHAPE_RENDERING}
 						// A style rather than the attribute: a CSS variable does not
 						// resolve in a presentation attribute.
 						style={{ fill: knockout }}

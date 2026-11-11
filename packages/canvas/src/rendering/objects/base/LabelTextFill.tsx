@@ -17,7 +17,10 @@ import type { Rect } from "@jiscribe/geometry";
 import type React from "react";
 import { memo, useMemo } from "react";
 
-import { LabelBackdropLayers } from "./LabelBackdropLayers";
+import {
+	LABEL_BACKDROP_SHAPE_RENDERING,
+	LabelBackdropLayers,
+} from "./LabelBackdropLayers";
 import { useDocumentSurface } from "../DocumentSurfaceContext";
 import { useObjectTextStyleDefaultsRegistry } from "../registry/ObjectTextStyleDefaultsRegistryContext";
 import { useIsTextLegible } from "../useIsTextLegible";
@@ -84,6 +87,9 @@ const LabelTextFillComponent: React.FC<LabelTextFillProps> = ({
 				height={region.height}
 				pointerEvents="none"
 				display={isLegible ? undefined : "none"}
+				shapeRendering={
+					layers.length > 0 ? LABEL_BACKDROP_SHAPE_RENDERING : undefined
+				}
 				// A style rather than the attribute: the knockout is the theme's canvas
 				// color unless the document sets an opaque background, and a CSS variable
 				// does not resolve in a presentation attribute.
