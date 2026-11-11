@@ -33,9 +33,7 @@ export type RoutableNode = {
 	/**
 	 * Set for a node that is a frame around others and no body (a container): its box
 	 * is an obstacle to the edges ending on it alone, which end on its sides and leave
-	 * outward as on any node; every other route runs through it freely. What lies
-	 * wholly inside it stays an obstacle to its own edges, and what covers or straddles
-	 * it is left out for them as for any end node. Give its outline among
+	 * outward as on any node; every other route runs through it freely. Give its outline among
 	 * `EdgeRoutingOptions.borders` as well for routes to keep off it. An edge between
 	 * it and a node inside it finds no route.
 	 */

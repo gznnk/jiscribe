@@ -1,9 +1,11 @@
-import type { Point, Rect } from "@jiscribe/geometry";
+import type { BoundingBox, Point, Rect } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
 import { calcAnchorPoint } from "../../shared/calcAnchorPoint";
 import { GAP_LANE_SPACING } from "../../shared/edgeSpacing";
+import type { LayoutEdgeAnchor, LayoutSide } from "../../shared/types";
 import { EDGE_ROUTE_MARGIN } from "../edgeRoutingCosts";
+import { listEndCandidates } from "../endCandidates";
 import { routeEdgesAroundNodes } from "../routeEdgesAroundNodes";
 import type { RoutableNode, RoutedEdge } from "../types";
 
@@ -14,6 +16,15 @@ const box = (
 	width = 60,
 	height = 40,
 ): RoutableNode => ({ id, bounds: { x, y, width, height } });
+
+/** A frame such as a container shape: see RoutableNode.isHollow. */
+const hollowBox = (
+	id: string,
+	x: number,
+	y: number,
+	width: number,
+	height: number,
+): RoutableNode => ({ ...box(id, x, y, width, height), isHollow: true });
 
 const edge = (id: string, sourceId: string, targetId: string) => ({
 	id,
@@ -528,8 +539,9 @@ describe("routeEdgesAroundNodes", () => {
 
 	describe("fanning the ends that share a side", () => {
 		it("fans two ends stage one puts on one spot, rewriting each one's t", () => {
-			// Five boxes in a column to the right: two edges leave a's bottom centre.
-			const ys = [-300, -150, 0, 150, 300];
+			// Three boxes in a column below and to the right, none facing a: two edges
+			// leave a's bottom centre.
+			const ys = [100, 200, 300];
 			const nodes = [
 				box("a", 0, 0),
 				...ys.map((y, index) => box(`t${index}`, 300, y)),
@@ -544,8 +556,8 @@ describe("routeEdgesAroundNodes", () => {
 			);
 			// The one turning off first, toward the boxes, takes the side nearer them.
 			expect(onBottom.map(({ id, source }) => [id, source.t])).toEqual([
-				["e2", 40 / 60],
-				["e3", 20 / 60],
+				["e0", 40 / 60],
+				["e1", 20 / 60],
 			]);
 			for (const routed of onBottom) {
 				expect(routed.points[0].x).toBe(
@@ -555,9 +567,9 @@ describe("routeEdgesAroundNodes", () => {
 		});
 
 		it("keeps the ends sharing a side within the stretch a layered layout fans them over", () => {
-			// Seven boxes in a column to the right: three edges leave a's bottom, whose
-			// fan stretch 4..36 shares 32px as two gaps of 16.
-			const ys = [-300, -200, -100, 0, 100, 200, 300];
+			// Six boxes in a column to the right, none facing a: three edges leave a's
+			// bottom, whose fan stretch 4..36 shares 32px as two gaps of 16.
+			const ys = [-300, -200, -100, 100, 200, 300];
 			const nodes = [
 				box("a", 0, 0, 40),
 				...ys.map((y, index) => box(`t${index}`, 300, y)),
@@ -1262,6 +1274,269 @@ describe("routeEdgesAroundNodes", () => {
 				}
 			}
 			expect(alongsideCount).toBeGreaterThan(0);
+		});
+	});
+	describe("a hollow node", () => {
+		it("lets another edge's route through its box, where the same box not hollow forces a detour", () => {
+			const scene = (frame: RoutableNode) => [
+				box("a", 0, 0),
+				box("b", 400, 0),
+				frame,
+			];
+
+			const throughHollow = routeEdgesAroundNodes(
+				scene(hollowBox("H", 150, -100, 150, 240)),
+				[edge("e", "a", "b")],
+			);
+			const aroundSolid = routeEdgesAroundNodes(
+				scene(box("H", 150, -100, 150, 240)),
+				[edge("e", "a", "b")],
+			);
+
+			expect(throughHollow.edges[0]).toMatchObject({
+				source: { side: "right", t: 0.5 },
+				target: { side: "left", t: 0.5 },
+				points: [],
+			});
+			expect(aroundSolid.edges[0].points).not.toEqual([]);
+		});
+
+		it("ends an edge on its side from outside, entering neither its box nor a node inside it, though the facing side is walled off", () => {
+			// Walls against H's top and bottom and across the middle of its right side
+			// leave its left side, which the route reaches around the outside.
+			const nodes = [
+				hollowBox("H", 0, 0, 300, 200),
+				box("inner", 120, 80),
+				box("o", 500, 80),
+			];
+			const result = routeEdgesAroundNodes(nodes, [edge("e", "o", "H")], {
+				obstacles: [
+					{ x: -50, y: -20, width: 400, height: 20 },
+					{ x: -50, y: 200, width: 400, height: 20 },
+					{ x: 300, y: 60, width: 20, height: 80 },
+				],
+			});
+
+			expect(result.unroutedEdgeIds).toEqual([]);
+			const routed = result.edges[0];
+			expect(routed.target).toEqual({ side: "left", t: 0.5 });
+			const path = pathOf(routed, nodes, "o", "H");
+			expect(entersRect(path, nodes[0].bounds)).toBe(false);
+			expect(entersRect(path, nodes[1].bounds)).toBe(false);
+		});
+
+		it("spreads the ends on its top side with an obstacle lying inside along it, such as a title band, as it does without", () => {
+			// Walls against H's other three sides put both ends on its top, reaching for
+			// its centre from far off either way.
+			const nodes = [
+				hollowBox("H", 0, 0, 300, 200),
+				box("s1", -300, -300),
+				box("s2", 540, -300),
+			];
+			const edges = [edge("e1", "s1", "H"), edge("e2", "s2", "H")];
+			const walls = [
+				{ x: -40, y: 0, width: 40, height: 240 },
+				{ x: 300, y: 0, width: 40, height: 240 },
+				{ x: -40, y: 200, width: 380, height: 40 },
+			];
+			const titleBand = { x: 0, y: 0, width: 300, height: 30 };
+
+			const withBand = routeEdgesAroundNodes(nodes, edges, {
+				obstacles: [...walls, titleBand],
+			});
+			const withoutBand = routeEdgesAroundNodes(nodes, edges, {
+				obstacles: walls,
+			});
+
+			const targetsOf = (routed: readonly RoutedEdge[]) =>
+				routed.map(({ target }) => target);
+			expect(targetsOf(withBand.edges)).toEqual(targetsOf(withoutBand.edges));
+			expect(
+				targetsOf(withBand.edges).map((target) => [
+					target.side,
+					calcAnchorPoint(nodes[0].bounds, target).x,
+				]),
+			).toEqual([
+				["top", 140],
+				["top", 160],
+			]);
+		});
+
+		it("routes its edge through an obstacle covering it and more, such as a backdrop", () => {
+			const result = routeEdgesAroundNodes(
+				[hollowBox("H", 0, 0, 300, 200), box("o", 500, 80)],
+				[edge("e", "o", "H")],
+				{ obstacles: [{ x: -50, y: -50, width: 400, height: 300 }] },
+			);
+
+			expect(result).toEqual({
+				edges: [
+					{
+						id: "e",
+						source: { side: "left", t: 0.5 },
+						target: { side: "right", t: 0.5 },
+						points: [],
+					},
+				],
+				unroutedEdgeIds: [],
+			});
+		});
+
+		it("reports an edge between it and a node inside it as unrouted", () => {
+			const nodes = [hollowBox("H", 0, 0, 300, 200), box("inner", 120, 80)];
+
+			for (const routed of [
+				edge("out", "H", "inner"),
+				edge("in", "inner", "H"),
+			]) {
+				expect(routeEdgesAroundNodes(nodes, [routed])).toEqual({
+					edges: [],
+					unroutedEdgeIds: [routed.id],
+				});
+			}
+		});
+
+		it("places a label without keeping off its box", () => {
+			// H stands across the line's middle, where the label sits with no H at all.
+			const labelled = {
+				...edge("e", "a", "b"),
+				label: { width: 40, height: 20 },
+			};
+			const ends = [box("a", 0, 0), box("b", 400, 0)];
+
+			const withHollow = routeEdgesAroundNodes(
+				[...ends, hollowBox("H", 200, -60, 80, 140)],
+				[labelled],
+			);
+			const withoutNode = routeEdgesAroundNodes(ends, [labelled]);
+
+			expect(withoutNode.edges[0]).toMatchObject({
+				labelPosition: 0.5,
+				labelOffset: 0,
+			});
+			expect(withHollow).toEqual(withoutNode);
+		});
+	});
+
+	describe("ends beside the centre", () => {
+		const facingPair = [box("a", 0, 0), box("b", 300, 0)];
+		const twoEdges = [edge("first", "a", "b"), edge("second", "a", "b")];
+
+		it("runs a second edge between two facing boxes straight beside the first", () => {
+			const result = routeEdgesAroundNodes(facingPair, twoEdges);
+
+			expect(result.unroutedEdgeIds).toEqual([]);
+			const [first, second] = result.edges;
+			for (const routed of [first, second]) {
+				expect(routed).toMatchObject({
+					source: { side: "right" },
+					target: { side: "left" },
+					points: [],
+				});
+			}
+			expect(second.source.t).not.toBe(first.source.t);
+		});
+
+		it("still runs a lone edge from the centre where a spot beside it runs straight too", () => {
+			const result = routeEdgesAroundNodes(
+				[box("a", 0, 0, 60, 120), box("b", 300, 0, 60, 120)],
+				[edge("e", "a", "b")],
+			);
+
+			expect(result.edges[0]).toMatchObject({
+				source: { side: "right", t: 0.5 },
+				target: { side: "left", t: 0.5 },
+				points: [],
+			});
+		});
+
+		it("does not run a second edge straight past obstacles within the margin of either spot beside the centre", () => {
+			// 35px off the centre line, 19px off the line 16px to either side of it.
+			const result = routeEdgesAroundNodes(facingPair, twoEdges, {
+				obstacles: [
+					{ x: 150, y: -40, width: 40, height: 25 },
+					{ x: 150, y: 55, width: 40, height: 25 },
+				],
+			});
+
+			const [first, second] = result.edges;
+			expect(first.points).toEqual([]);
+			expect(second.points).not.toEqual([]);
+		});
+
+		it("does not run a second edge straight along borders' sides within the margin of either spot beside the centre", () => {
+			const result = routeEdgesAroundNodes(facingPair, twoEdges, {
+				borders: [
+					{ x: 150, y: -100, width: 40, height: 85 },
+					{ x: 150, y: 55, width: 40, height: 85 },
+				],
+			});
+
+			const [first, second] = result.edges;
+			expect(first.points).toEqual([]);
+			expect(second.points).not.toEqual([]);
+		});
+
+		it("offers spots beside the centre only to an end whose edge has both ends free", () => {
+			const [a, b] = facingPair;
+			const listRightSide = (
+				pinnedEnds?: readonly LayoutEdgeAnchor[],
+				otherPinnedEnds?: readonly LayoutEdgeAnchor[],
+			) =>
+				listEndCandidates(
+					a,
+					b,
+					[],
+					new Set(),
+					[],
+					[],
+					pinnedEnds,
+					otherPinnedEnds,
+				)
+					.filter(({ side }) => side === "right")
+					.map(({ t, sideCost }) => ({ t, sideCost }));
+			const centre = [{ side: "left", t: 0.5 }] as const;
+
+			// 16px either side of y 20, a little dearer than the centre.
+			expect(listRightSide()).toEqual([
+				{ t: 0.5, sideCost: 0 },
+				{ t: 0.1, sideCost: 1 },
+				{ t: 0.9, sideCost: 1 },
+			]);
+			expect(listRightSide(undefined, centre)).toEqual([
+				{ t: 0.5, sideCost: 0 },
+			]);
+			expect(listRightSide([{ side: "right", t: 0.5 }], undefined)).toEqual([
+				{ t: 0.5, sideCost: 0 },
+			]);
+		});
+
+		it("offers no horizontal run inside a crossable band's strip, where a vertical one is still offered", () => {
+			// Each band spans exactly the margin either side of the spot 16px past the
+			// centre (y 36, x 46), its sides no nearer than the margin.
+			const [a, b] = facingPair;
+			const below = box("c", 0, 300);
+			const listBeside = (
+				other: RoutableNode,
+				band: BoundingBox,
+				side: LayoutSide,
+			) =>
+				listEndCandidates(a, other, [], new Set(), [band], [])
+					.filter(
+						(candidate) => candidate.side === side && candidate.sideCost > 0,
+					)
+					.map(({ t }) => t);
+
+			expect(
+				listBeside(b, { left: 100, right: 200, top: 6, bottom: 66 }, "right"),
+			).toEqual([]);
+			expect(
+				listBeside(
+					below,
+					{ left: 16, right: 76, top: 100, bottom: 200 },
+					"bottom",
+				),
+			).toEqual([46 / 60]);
 		});
 	});
 });

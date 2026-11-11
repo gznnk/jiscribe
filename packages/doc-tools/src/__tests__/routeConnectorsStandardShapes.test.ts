@@ -16,7 +16,8 @@ import { standardDocOps } from "../canvasTools";
 import { validateDoc } from "../validateDoc";
 
 // routeConnectors on the shipped shapes, which no plugin's e2e suite runs: the title
-// regions the container and AWS group types answer, and the ER entity's column anchors.
+// regions the container and AWS group types answer and the lines ending on them, the
+// ER entity's column anchors, and the group markers' tip.
 
 /** The shipped plugins with no type answering a title region: every title band whole. */
 const titleRegionlessDocOps = createDocOps({
@@ -119,6 +120,99 @@ describe("routeConnectors on the shipped container shapes", () => {
 			).not.toEqual([]);
 		},
 	);
+
+	it.each([
+		["a container", { type: "container", title: "Orders", fields: {} }],
+		[
+			"an AWS group",
+			{ type: "awsGroup", title: "VPC", fields: { kind: "vpc" } },
+		],
+	])(
+		"routes a line from %s to a shape outside it, the frame's end on its side",
+		(_, frame) => {
+			const doc: CanvasDoc = { version: 1, root: [] };
+			const frameId = standardDocOps.addObject(doc, frame.type, {
+				x: 0,
+				y: 0,
+				width: 600,
+				height: 300,
+				text: frame.title,
+				extraProps: frame.fields,
+			});
+			standardDocOps.addObject(doc, "rect", {
+				x: 800,
+				y: 130,
+				width: 60,
+				height: 40,
+			});
+			const connectorId = standardDocOps.connect(doc, {
+				sourceId: frameId,
+				targetId: "rect-1",
+			});
+			const parsed = parseDoc(doc);
+
+			const result = standardDocOps.routeConnectors(parsed, undefined);
+
+			expect(result.connectorIds).toEqual([connectorId]);
+			expect(result.keptConnectorIdsByReason).toEqual({});
+			expect(findObject(parsed, connectorId)).toMatchObject({
+				source: {
+					owner: { id: frameId },
+					anchor: { kind: "edge", side: "right", t: 0.5 },
+				},
+				target: { anchor: { kind: "edge", side: "left", t: 0.5 } },
+				points: [],
+			});
+		},
+	);
+});
+
+describe("routeConnectors on the shipped group markers", () => {
+	it("routes a line to a brace's tip, keeping its end on the tip", () => {
+		// A left brace 24 by 160: its tip is the middle of its left side, y 80.
+		const doc = parseDoc({
+			version: 1,
+			root: [
+				{
+					id: "brace",
+					type: "brace",
+					x: 0,
+					y: 0,
+					width: 24,
+					height: 160,
+					direction: "left",
+				},
+				{ id: "box", type: "rect", x: -300, y: -200, width: 60, height: 40 },
+				{
+					id: "box-brace",
+					type: "connector",
+					source: {
+						owner: { id: "box" },
+						anchor: { kind: "edge", side: "bottom", t: 0.5 },
+					},
+					target: {
+						owner: { id: "brace" },
+						anchor: { kind: "connectPoint", id: "tip" },
+					},
+					points: [],
+				},
+			],
+		});
+
+		const result = standardDocOps.routeConnectors(doc, undefined);
+
+		expect(result.connectorIds).toEqual(["box-brace"]);
+		expect(result.keptConnectorIdsByReason).toEqual({});
+		const connector = findObject(doc, "box-brace") as RoutedConnector;
+		expect(connector.target.anchor).toEqual({
+			kind: "connectPoint",
+			id: "tip",
+		});
+		// It comes in level with the tip, from the left.
+		const lastCorner = connector.points[connector.points.length - 1];
+		expect(lastCorner.y).toBe(80);
+		expect(lastCorner.x).toBeLessThan(0);
+	});
 });
 
 /** The entity's box on the canvas, as its type measures it. */

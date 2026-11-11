@@ -2,7 +2,6 @@ import {
 	convertRectToBoundingBox,
 	doRectsOverlap,
 	type Point,
-	type Rect,
 } from "@jiscribe/geometry";
 
 import { EDGE_ROUTE_MARGIN } from "./edgeRoutingCosts";
@@ -62,11 +61,7 @@ const toRouteEnd = (
 	);
 	const ownWallIndices: number[] = [];
 	walls.forEach((wall, index) => {
-		if (
-			isOwnWall(wall, node, side) ||
-			// What stands in a hollow node lies behind its ends, as its own box does.
-			(node.isHollow === true && isRectWithin(wall.rect, node.bounds))
-		) {
+		if (isOwnWall(wall, node, side)) {
 			ownWallIndices.push(index);
 		}
 	});
@@ -93,13 +88,6 @@ const toRouteEnd = (
 		ownWallIndices,
 	};
 };
-
-/** Whether `rect` lies wholly inside `outer`, their sides touching included. */
-const isRectWithin = (rect: Rect, outer: Rect): boolean =>
-	rect.x >= outer.x &&
-	rect.y >= outer.y &&
-	rect.x + rect.width <= outer.x + outer.width &&
-	rect.y + rect.height <= outer.y + outer.height;
 
 /** Names the spot a pinned end is held to: the node's side and the place along it. */
 const toPinnedEndKey = (
@@ -132,8 +120,8 @@ const toNudgedAnchor = (
 /**
  * The obstacles an edge may run through: every hollow node's box but an end node's
  * own, and every other one covering or overlapping either end node's box, but for the
- * end nodes' own boxes and captions and for what lies wholly inside a hollow end node,
- * which that node does not let its edges through.
+ * end nodes' own boxes and captions. What stands in a hollow end node is among them:
+ * that node's own box already keeps its edges out.
  */
 const listExcludedObstacles = (
 	obstacles: readonly Obstacle[],
@@ -146,11 +134,8 @@ const listExcludedObstacles = (
 		}
 		return (
 			obstacle.isHollow === true ||
-			[source, target].some(
-				(node) =>
-					doRectsOverlap(obstacle.rect, node.bounds) &&
-					!(node.isHollow === true && isRectWithin(obstacle.rect, node.bounds)),
-			)
+			doRectsOverlap(obstacle.rect, source.bounds) ||
+			doRectsOverlap(obstacle.rect, target.bounds)
 		);
 	});
 };
@@ -195,8 +180,7 @@ const listExcludedObstacles = (
  *
  * A hollow node (`RoutableNode.isHollow`) is a frame: its box is an obstacle to the
  * edges ending on it alone, whose ends sit on its sides and leave outward, and every
- * other route runs through it. What lies wholly inside it stays an obstacle to its own
- * edges and lets their ends slide as its own box does; no label keeps off its box.
+ * other route runs through it; no label keeps off its box.
  *
  * A crossable band (`options.crossableBands`) is crossed straight over, top to bottom
  * or bottom to top: no route runs along it or bends in it, crossing its top and its
