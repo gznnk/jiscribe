@@ -2,6 +2,7 @@ import {
 	convertRectToBoundingBox,
 	doRectsOverlap,
 	type Point,
+	type Rect,
 } from "@jiscribe/geometry";
 
 import { EDGE_ROUTE_MARGIN } from "./edgeRoutingCosts";
@@ -61,7 +62,11 @@ const toRouteEnd = (
 	);
 	const ownWallIndices: number[] = [];
 	walls.forEach((wall, index) => {
-		if (isOwnWall(wall, node, side)) {
+		if (
+			isOwnWall(wall, node, side) ||
+			// What stands in a hollow node lies behind its ends, as its own box does.
+			(node.isHollow === true && isRectWithin(wall.rect, node.bounds))
+		) {
 			ownWallIndices.push(index);
 		}
 	});
@@ -88,6 +93,13 @@ const toRouteEnd = (
 		ownWallIndices,
 	};
 };
+
+/** Whether `rect` lies wholly inside `outer`, their sides touching included. */
+const isRectWithin = (rect: Rect, outer: Rect): boolean =>
+	rect.x >= outer.x &&
+	rect.y >= outer.y &&
+	rect.x + rect.width <= outer.x + outer.width &&
+	rect.y + rect.height <= outer.y + outer.height;
 
 /** Names the spot a pinned end is held to: the node's side and the place along it. */
 const toPinnedEndKey = (
@@ -118,25 +130,29 @@ const toNudgedAnchor = (
 };
 
 /**
- * The obstacles an edge may run through: every one covering or overlapping either end
- * node's box, but for the end nodes' own boxes and captions, and for what lies in a
- * hollow end node, which that node does not let the edge through.
+ * The obstacles an edge may run through: every hollow node's box but an end node's
+ * own, and every other one covering or overlapping either end node's box, but for the
+ * end nodes' own boxes and captions and for what lies wholly inside a hollow end node,
+ * which that node does not let its edges through.
  */
 const listExcludedObstacles = (
 	obstacles: readonly Obstacle[],
 	source: RoutableNode,
 	target: RoutableNode,
 ): Obstacle[] => {
-	return obstacles.filter(
-		(obstacle) =>
-			obstacle.ownerId !== source.id &&
-			obstacle.ownerId !== target.id &&
+	return obstacles.filter((obstacle) => {
+		if (obstacle.ownerId === source.id || obstacle.ownerId === target.id) {
+			return false;
+		}
+		return (
+			obstacle.isHollow === true ||
 			[source, target].some(
 				(node) =>
-					node.isHollow !== true &&
-					doRectsOverlap(obstacle.rect, node.bounds),
-			),
-	);
+					doRectsOverlap(obstacle.rect, node.bounds) &&
+					!(node.isHollow === true && isRectWithin(obstacle.rect, node.bounds)),
+			)
+		);
+	});
 };
 
 /**
@@ -229,15 +245,12 @@ export const routeEdgesAroundNodes = (
 	};
 	const obstacleRects = [
 		...nodes.flatMap((node) => [
-			...(node.isHollow === true
-				? []
-				: [
-						{
-							rect: node.bounds,
-							ownerId: node.id,
-							isLabel: false,
-						},
-					]),
+			{
+				rect: node.bounds,
+				ownerId: node.id,
+				isLabel: false,
+				...(node.isHollow === true ? { isHollow: true as const } : {}),
+			},
 			...(node.labelBounds === undefined
 				? []
 				: [
@@ -392,7 +405,9 @@ export const routeEdgesAroundNodes = (
 				label: edge.label,
 			})),
 			[
-				...obstacleRects.map(({ rect }) => rect),
+				...obstacles
+					.filter(({ isHollow }) => isHollow !== true)
+					.map(({ rect }) => rect),
 				...(options.crossableBands ?? []),
 			],
 			options.borders ?? [],

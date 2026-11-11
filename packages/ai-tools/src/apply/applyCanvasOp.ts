@@ -36,7 +36,8 @@ const KEPT_CONNECTOR_REASON_TEXTS: Record<ConnectorRouteKeptReason, string> = {
 	selfLoop: "a self loop",
 	declaredConnectPoint:
 		"an end on a connect point the shape's type places on no side of its box",
-	containerEnd: "an end on a container shape",
+	containerEnd:
+		"an end on a container shape the other end stands in or around",
 	transformedEnd: "an end on a rotated or flipped shape",
 	unmeasurableEnd: "an end on an object with no box of its own",
 	overlappingEnds: "the two ends' shapes overlap",

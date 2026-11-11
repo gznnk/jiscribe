@@ -254,6 +254,8 @@ export const listEndCandidates = (
 					obstacle.ownerId === other.id ||
 					isOffStrip(obstacle.box),
 			) &&
+			// No route runs along a crossable band, a horizontal run inside one included.
+			(isVertical || crossableBands.every(isOffStrip)) &&
 			[...borders, ...crossableBands].every(
 				(fence) =>
 					isOffStrip(fence) ||

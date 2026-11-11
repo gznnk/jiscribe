@@ -26,12 +26,14 @@ covers that.
   of the other labels and of the lines redrawn in the same call, as it can. An
   end on an ER entity's column is redrawn from that column, from whichever end
   of its row gives the cheaper route, and the lines to one column gather into
-  one trunk. It runs once, so run it again after moving shapes. Give it
+  one trunk; a line to the tip of a brace or a bracket stays on the tip, and
+  one ending on a container is drawn to the container's side. It runs once, so run it again after moving shapes. Give it
   lines, or shapes (a group or a container counting its contents) to redraw the
   lines among them, or nothing for every line. The reply names the lines it
-  redrew, the ones it left as they were and why (a self loop, an end on a
-  container or a rotated shape, an end on a declared connect point that lies on
-  no side of its shape, overlapping shapes, no way through),
+  redrew, the ones it left as they were and why (a self loop, a line between
+  a container and a shape inside it, an end on a rotated shape, an end on a
+  declared connect point that lies on no side of its shape, overlapping shapes,
+  no way through),
   and the ones it moved beneath a shape whose label they leave through.
 
 - **`layout_objects` makes room for the label below an icon or a pictogram.**

@@ -54,11 +54,11 @@ import type { ObjectDocConnectPointEdgeAnchor } from "../plugin/ObjectDocConnect
  * - `declaredConnectPoint`: an end on a connect point its owner's type declares and
  *   places on no side of its box (it answers no edge anchor for it, see
  *   `ObjectDocDefinition.extraConnectPointEdgeAnchors`)
- * - `containerEnd`: an end on a shape whose type declares `container`, the other end's
- *   box overlapping it (a shape inside it, a container around it)
  * - `transformedEnd`: an end on a shape that is rotated or flipped
  * - `unmeasurableEnd`: an end on an object with no box to route around (a group, an
  *   unknown type)
+ * - `containerEnd`: an end on a shape whose type declares `container`, the other end's
+ *   box overlapping it (a shape inside it, a container around it)
  * - `overlappingEnds`: the two ends' boxes overlap
  * - `unroutable`: no way found between them
  */
@@ -66,9 +66,9 @@ export const ConnectorRouteKeptReasons = [
 	"freeEnd",
 	"selfLoop",
 	"declaredConnectPoint",
-	"containerEnd",
 	"transformedEnd",
 	"unmeasurableEnd",
+	"containerEnd",
 	"overlappingEnds",
 	"unroutable",
 ] as const;
@@ -214,12 +214,26 @@ const collectRoutingScene = (
 	const shapeBounds = [...scene.shapeById.values()].map(
 		({ node }) => node.bounds,
 	);
+	const containerBounds = [...scene.containerById.values()].map(
+		({ bounds }) => bounds,
+	);
 	for (const { band, titleRegion, centreX } of titleBands) {
 		// A shape standing in the band could not leave it were the band crossable only
-		// straight over, so such a band stays an obstacle, left out for that shape's edges.
+		// straight over, so such a band stays an obstacle, left out for that shape's
+		// edges; so does one a container shape other than those around it stands in.
 		if (
 			titleRegion === undefined ||
-			shapeBounds.some((bounds) => doRectsOverlap(bounds, band))
+			shapeBounds.some((bounds) => doRectsOverlap(bounds, band)) ||
+			containerBounds.some(
+				(bounds) =>
+					doRectsOverlap(bounds, band) &&
+					!(
+						bounds.x <= band.x &&
+						bounds.y <= band.y &&
+						bounds.x + bounds.width >= band.x + band.width &&
+						bounds.y + bounds.height >= band.y + band.height
+					),
+			)
 		) {
 			scene.titleObstacles.push(band);
 			continue;
@@ -357,7 +371,7 @@ const listPinnedEnds = (
 ): PinnedEnd[] | undefined => {
 	const ownerId = readOwnerId(endpoint);
 	const shape =
-		ownerId === undefined ? undefined : scene.shapeById.get(ownerId);
+		ownerId === undefined ? undefined : findEndShape(scene, ownerId);
 	if (
 		ownerId === undefined ||
 		shape === undefined ||

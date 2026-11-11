@@ -40,6 +40,8 @@ export type Obstacle = {
 	/** The node whose box or caption it is; undefined for one of `options.obstacles`. */
 	ownerId?: string;
 	isLabel: boolean;
+	/** Set for a hollow node's box, which only the edges ending on that node keep out of. */
+	isHollow?: true;
 };
 
 /** One place an edge may end at, with the stub it runs out along. */

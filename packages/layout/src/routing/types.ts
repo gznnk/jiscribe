@@ -31,11 +31,13 @@ export type RoutableNode = {
 	 */
 	anchorBodyRanges?: LayoutSideAnchorRanges;
 	/**
-	 * Set for a node that is a frame around others and no body (a container): edges
-	 * end on its sides and leave outward as on any node, but its box is no obstacle to
-	 * any route, and what stands inside it stays one to the edges ending on it. Give
-	 * its outline among `EdgeRoutingOptions.borders` as well for routes to keep off it.
-	 * An edge between it and a node inside it is routed from outside, round the frame.
+	 * Set for a node that is a frame around others and no body (a container): its box
+	 * is an obstacle to the edges ending on it alone, which end on its sides and leave
+	 * outward as on any node; every other route runs through it freely. What lies
+	 * wholly inside it stays an obstacle to its own edges, and what covers or straddles
+	 * it is left out for them as for any end node. Give its outline among
+	 * `EdgeRoutingOptions.borders` as well for routes to keep off it. An edge between
+	 * it and a node inside it finds no route.
 	 */
 	isHollow?: true;
 };

@@ -36,8 +36,13 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   which `erEntity` declares for its columns) is redrawn from that point, or
   from another point of the same `alternateGroup` (the other end of an ER
   column's row) when that gives the cheaper route, and the routes to one such
-  point gather into one trunk. A self loop, an end that is free, on a container
-  shape or on a rotated or flipped shape, an end on a declared connect point its
+  point gather into one trunk; the group markers (`brace`, `bracket`,
+  `bracketWithStem`) declare their tip so. An end on a container shape sits on
+  the container's side and leaves outward (the new `RoutableNode.isHollow` of
+  `@jiscribe/layout`). Two connectors between facing shapes run straight side
+  by side where the gap between the shapes is clear. A self loop, an end that
+  is free or on a rotated or flipped shape, a connector between a container
+  shape and a shape standing in it, an end on a declared connect point its
   type places on no side of its box, ends whose boxes overlap and a connector no
   way is found for are left as they are and reported by reason
   (`ConnectorRouteKeptReasons`). A connector leaving
