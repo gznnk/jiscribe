@@ -443,6 +443,45 @@ describe("computeLayeredLayout", () => {
 		).toBeCloseTo(20, 6);
 	});
 
+	it("keeps a bundle's ends on a side with no extent free of NaN", () => {
+		const result = computeLayeredLayout(
+			[
+				{ id: "a", width: 0, height: 1 },
+				{ id: "b", width: 45, height: 80 },
+			],
+			[
+				{ id: "e1", sourceId: "a", targetId: "b" },
+				{ id: "e2", sourceId: "a", targetId: "b" },
+			],
+		);
+
+		for (const { source, target, points } of result.edges) {
+			expect(Number.isFinite(source.t)).toBe(true);
+			expect(Number.isFinite(target.t)).toBe(true);
+			for (const { x, y } of points) {
+				expect(Number.isFinite(x) && Number.isFinite(y)).toBe(true);
+			}
+		}
+	});
+
+	it("lays out boxes with no extent without dagre refusing them", () => {
+		const result = computeLayeredLayout(
+			[
+				{ id: "n0", width: 1, height: 80 },
+				{ id: "n19", width: 160, height: 40, parentId: "c0" },
+				{ id: "n21", width: 0, height: 0 },
+			],
+			[{ id: "e", sourceId: "n0", targetId: "n21" }],
+			{ direction: "RL", rankSpacing: 0 },
+			[{ id: "c0" }],
+		);
+
+		expect(result.nodes.find(({ id }) => id === "n21")?.bounds).toMatchObject({
+			width: 0,
+			height: 0,
+		});
+	});
+
 	it("fits a labelled bundle on its side and staggers the labels", () => {
 		const label = { width: 120, height: 24 };
 		const result = computeLayeredLayout(

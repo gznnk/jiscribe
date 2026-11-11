@@ -537,13 +537,17 @@ const spreadBundles = (
 				anchor: LayoutEdgeAnchor,
 				bounds: Rect,
 				anchorRanges: LayoutGraphNode["anchorRanges"],
-			): LayoutEdgeAnchor => ({
-				side: anchor.side,
-				t: clampRatio(
-					anchor.t + shift / axis.acrossExtent(bounds),
-					readAnchorRange(anchorRanges, anchor.side),
-				),
-			});
+			): LayoutEdgeAnchor => {
+				const extent = axis.acrossExtent(bounds);
+				// A side with no extent has nowhere to shift an end to.
+				return {
+					side: anchor.side,
+					t: clampRatio(
+						extent === 0 ? anchor.t : anchor.t + shift / extent,
+						readAnchorRange(anchorRanges, anchor.side),
+					),
+				};
+			};
 			working.source = shiftAnchor(
 				working.source,
 				working.sourceBounds,

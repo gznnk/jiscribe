@@ -695,6 +695,16 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   shapes' ends are centred and fanned out on the body the anchor region covers,
   rotated or flipped as well, as they were before: `LayoutGraphNode` takes that
   stretch per side as `anchorBodyRanges`, and `TakenEnds.place` takes one too.
+- **Automatic layout no longer drifts, fails or writes stray fractions on some
+  drawings.** With a group among the objects, every run moved the drawing down
+  and right by the group's padding; the top-left of the objects' boxes now stays
+  where it was and a second run changes nothing, in `docOps.layoutObjects` and the
+  canvas's layout commands alike. A box with no width or no height no longer makes
+  the layout throw, nor writes `NaN` into the ends of two connectors sharing its
+  side. Two container shapes with the same box no longer throw on a parent cycle:
+  the first of the two (in the ids given, or in the stacking order) holds the
+  other. A `text` no longer gets a float's tail on `x` / `y` from its measured
+  box.
 - **A connector label with no `fill` masks the line in the document's
   `background`.** It drew in the theme's canvas colour, so on a document with its
   own opaque `background` every default label was a box of another colour, in the

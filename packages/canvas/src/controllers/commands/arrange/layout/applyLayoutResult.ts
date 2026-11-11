@@ -206,9 +206,20 @@ const layOutGraph = (
 	);
 	const containerShapes = graph.containers.filter(({ isShape }) => isShape);
 	const boxes = [...graph.nodes, ...containerShapes];
+	// The same boxes as laid out: a group has none of its own, so the laid-out drawing
+	// can start at its padding rather than at (0, 0).
+	const containerShapeIds = new Set(containerShapes.map(({ id }) => id));
+	const laidOutBoxes = [
+		...laidOut.nodes,
+		...laidOut.containers.filter(({ id }) => containerShapeIds.has(id)),
+	];
 	const origin = {
-		x: Math.min(...boxes.map(({ bounds }) => bounds.x)),
-		y: Math.min(...boxes.map(({ bounds }) => bounds.y)),
+		x:
+			Math.min(...boxes.map(({ bounds }) => bounds.x)) -
+			Math.min(...laidOutBoxes.map(({ bounds }) => bounds.x)),
+		y:
+			Math.min(...boxes.map(({ bounds }) => bounds.y)) -
+			Math.min(...laidOutBoxes.map(({ bounds }) => bounds.y)),
 	};
 	const toCanvasPoint = ({ x, y }: Point): Point => ({
 		x: Math.round(origin.x + x),

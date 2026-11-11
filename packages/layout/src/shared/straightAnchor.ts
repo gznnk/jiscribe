@@ -12,12 +12,18 @@ import type { LayoutAnchorRange } from "./types";
  */
 export const EDGE_ANCHOR_STRAIGHT_RANGE = { min: 0.05, max: 0.95 } as const;
 
-/** Where `column` (a coordinate on the axis the side runs along) falls along the box's side, 0..1. */
+/**
+ * Where `column` (a coordinate on the axis the side runs along) falls along the box's
+ * side, 0..1; the midpoint on a side with no extent.
+ */
 export const calcSideRatio = (
 	bounds: Rect,
 	column: number,
 	axis: SideAxis,
-): number => (column - axis.acrossStart(bounds)) / axis.acrossExtent(bounds);
+): number => {
+	const extent = axis.acrossExtent(bounds);
+	return extent === 0 ? 0.5 : (column - axis.acrossStart(bounds)) / extent;
+};
 
 /** The column (a coordinate on the axis the side runs along) at `ratio` along the box's side. */
 export const columnAt = (bounds: Rect, ratio: number, axis: SideAxis): number =>
