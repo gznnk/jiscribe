@@ -377,6 +377,21 @@ export const buildUnroundedCornerDoc = (): CanvasDoc => {
 };
 
 /**
+ * rect-1 and rect-2 side by side in group-1 at the top-left (0, 0), with rect-3 below
+ * them and a line rect-1 → rect-3: in the layout's own coordinates, a group's members
+ * start at its padding.
+ */
+export const buildGroupedDoc = (): CanvasDoc => {
+	const doc = emptyDoc();
+	layoutDocOps.addObject(doc, "rect", { x: 0, y: 0, width: 100, height: 60 });
+	layoutDocOps.addObject(doc, "rect", { x: 300, y: 0, width: 100, height: 60 });
+	layoutDocOps.addObject(doc, "rect", { x: 0, y: 300, width: 100, height: 60 });
+	layoutDocOps.groupObjects(doc, ["rect-1", "rect-2"]);
+	layoutDocOps.connect(doc, { sourceId: "rect-1", targetId: "rect-3" });
+	return doc;
+};
+
+/**
  * A rect fanning out to two ellipses and a rect, one ellipse of odd size (its
  * drawn ends land on half pixels, which the reducer's vertex pass then writes into
  * the corners), plus a 3-corner polygon with no line (a polygon is not

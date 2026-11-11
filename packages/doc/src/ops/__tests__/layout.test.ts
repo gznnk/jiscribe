@@ -149,6 +149,44 @@ describe("layoutObjects", () => {
 		expectValid(doc);
 	});
 
+	it("keeps the boxes' top-left with a group in the layout, and a second run changes nothing", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "rect", { x: 0, y: 0, width: 100, height: 60 });
+		docOps.addObject(doc, "rect", { x: 300, y: 0, width: 100, height: 60 });
+		docOps.addObject(doc, "rect", { x: 0, y: 300, width: 100, height: 60 });
+		docOps.groupObjects(doc, ["rect-1", "rect-2"]);
+		docOps.connect(doc, { sourceId: "rect-1", targetId: "rect-3" });
+		const readTopLeft = (): { x: number; y: number } => {
+			const boxes = ["rect-1", "rect-2", "rect-3"].map(
+				(id) => readObject(doc, id) as { x: number; y: number },
+			);
+			return {
+				x: Math.min(...boxes.map(({ x }) => x)),
+				y: Math.min(...boxes.map(({ y }) => y)),
+			};
+		};
+
+		docOps.layoutObjects(doc, undefined);
+		const once = structuredClone(doc.root);
+		expect(readTopLeft()).toEqual({ x: 0, y: 0 });
+
+		docOps.layoutObjects(doc, undefined);
+		expect(doc.root).toEqual(once);
+	});
+
+	it("puts a text, whose box is measured, on a whole pixel", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "text", { x: 101, y: 0, text: "a longer text here" });
+		docOps.addObject(doc, "rect", { x: 0, y: 300, width: 100, height: 60 });
+		docOps.connect(doc, { sourceId: "text-1", targetId: "rect-1" });
+
+		docOps.layoutObjects(doc, undefined);
+
+		const { x, y } = readObject(doc, "text-1") as { x: number; y: number };
+		expect(Number.isInteger(x)).toBe(true);
+		expect(Number.isInteger(y)).toBe(true);
+	});
+
 	it("needs two placeable objects and names a missing id", () => {
 		const doc = scatteredChain();
 
@@ -237,6 +275,41 @@ describe("layoutObjects with container shapes and declared connect points", () =
 		expect(isInside(region, box(doc, "rect-3"))).toBe(false);
 		expect(box(doc, "rect-1").y - region.y).toBeGreaterThanOrEqual(20);
 		expect(region).not.toMatchObject({ width: 400, height: 300 });
+		expectValid(doc);
+	});
+
+	it("nests two container shapes with the same box, the earlier one around the later", () => {
+		const doc = emptyDoc();
+		for (let index = 0; index < 2; index++) {
+			regionDocOps.addObject(doc, "region", {
+				x: 0,
+				y: 0,
+				width: 400,
+				height: 300,
+			});
+		}
+		regionDocOps.addObject(doc, "rect", {
+			x: 20,
+			y: 40,
+			width: 100,
+			height: 50,
+		});
+		regionDocOps.addObject(doc, "rect", {
+			x: 600,
+			y: 600,
+			width: 100,
+			height: 50,
+		});
+		regionDocOps.connect(doc, { sourceId: "rect-1", targetId: "rect-2" });
+
+		const result = regionDocOps.layoutObjects(doc, undefined);
+
+		expect(result.containerIds).toEqual(["region-1", "region-2"]);
+		const outer = box(doc, "region-1");
+		const inner = box(doc, "region-2");
+		expect(isInside(outer, inner)).toBe(true);
+		expect(isInside(inner, box(doc, "rect-1"))).toBe(true);
+		expect(isInside(outer, box(doc, "rect-2"))).toBe(false);
 		expectValid(doc);
 	});
 

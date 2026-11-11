@@ -7,6 +7,7 @@ import {
 	buildCaptionedFanDoc,
 	buildCaptionedKeptEndDoc,
 	buildChainDoc,
+	buildGroupedDoc,
 	buildKeptEndsDoc,
 	buildMixedDoc,
 	buildOutlinedDoc,
@@ -179,6 +180,47 @@ describe("the layout commands write what the doc op writes", () => {
 			LayoutLeftToRightCommand.id,
 			"LR",
 		);
+	});
+
+	it("for a group among the nodes", () => {
+		expectSameAsDocOps(
+			buildGroupedDoc(),
+			["group-1", "rect-3"],
+			LayoutTopToBottomCommand.id,
+			"TB",
+		);
+	});
+
+	it("for a text, whose box is measured, on a whole pixel", () => {
+		const doc: CanvasDoc = { version: 1, root: [] };
+		layoutDocOps.addObject(doc, "text", {
+			x: 101,
+			y: 0,
+			text: "a longer text here",
+		});
+		layoutDocOps.addObject(doc, "rect", {
+			x: 0,
+			y: 300,
+			width: 100,
+			height: 60,
+		});
+		layoutDocOps.connect(doc, { sourceId: "text-1", targetId: "rect-1" });
+
+		const result = expectSameAsDocOps(
+			doc,
+			["text-1", "rect-1"],
+			LayoutTopToBottomCommand.id,
+			"TB",
+		);
+
+		const { x, y } = canvasToDoc(
+			result,
+			layoutRegistries.objectMapper,
+		).root.find(({ id }) => id === "text-1") as ObjectDoc & {
+			x: number;
+			y: number;
+		};
+		expect(Number.isInteger(x) && Number.isInteger(y)).toBe(true);
 	});
 
 	it("for shapes whose outline is not their box", () => {

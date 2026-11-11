@@ -5,6 +5,7 @@ import {
 	buildCaptionedDoc,
 	buildCaptionedFanDoc,
 	buildChainDoc,
+	buildGroupedDoc,
 	buildKeptEndsDoc,
 	buildMixedDoc,
 	buildOvalRegionDoc,
@@ -285,6 +286,7 @@ describe("layout commands", () => {
 			buildRegionDoc(),
 			buildCaptionedDoc(),
 			buildCaptionedFanDoc(),
+			buildGroupedDoc(),
 		]) {
 			const once = runLayout(createState(doc));
 
@@ -295,6 +297,16 @@ describe("layout commands", () => {
 			expect(twice.commitVersion).toBe(once.commitVersion);
 			expect(twice.history.past).toHaveLength(once.history.past.length);
 		}
+	});
+
+	it("keeps the boxes' top-left with a group in the layout", () => {
+		const result = runLayout(createState(buildGroupedDoc()));
+
+		const corners = ["rect-1", "rect-2", "rect-3"].map((id) =>
+			topLeftOf(result, id),
+		);
+		expect(Math.min(...corners.map(({ x }) => x))).toBe(0);
+		expect(Math.min(...corners.map(({ y }) => y))).toBe(0);
 	});
 
 	it("leaves an end on a declared connect point where it is, and the route to the engine", () => {

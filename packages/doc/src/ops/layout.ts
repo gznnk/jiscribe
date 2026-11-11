@@ -61,6 +61,7 @@ import {
 	isOnDeclaredConnectPoint,
 	listEdgeAnchoredEnds,
 } from "../model/objects/types/EndpointRef";
+import { roundDocCoordinate } from "../model/objects/utils/roundDocNumbers";
 import { sortEdgesByEndOrder } from "../model/objects/utils/sortEdgesByEndOrder";
 
 export type { LayoutDirection } from "@jiscribe/layout";
@@ -183,7 +184,8 @@ const buildGraph = (
  * drew around its members, resized when its geometry is a rect's and moved whole
  * otherwise; a group has no box of its own and simply follows its children.
  *
- * @param origin - The top-left the objects occupied together, which the drawing keeps
+ * @param origin - Offset from the layout's coordinates to the canvas's, which puts the
+ *   laid-out boxes' top-left on the one they occupied together
  */
 const writePlacements = (
 	laidOut: LayeredLayoutResult,
@@ -203,6 +205,12 @@ const writePlacements = (
 			Math.round(origin.y + bounds.y) - before.y,
 			definitions,
 		);
+		// A point shape's measured box differs from its stored corner by a float's tail;
+		// rounded as its mapper rounds it (see roundDocCoordinate).
+		if (definitions.get(object.type)?.features.geometry === "point") {
+			object.x = roundDocCoordinate(object.x as number);
+			object.y = roundDocCoordinate(object.y as number);
+		}
 	}
 	for (const { id, bounds } of laidOut.containers) {
 		const placed = placedById.get(id);
@@ -499,10 +507,25 @@ export const layoutObjects = (
 	);
 
 	const containerShapes = containers.filter(({ isShape }) => isShape);
-	const everyBox = [...nodes, ...containerShapes].map(({ bounds }) => bounds);
+	const beforeBoxes = [...nodes, ...containerShapes].map(
+		({ bounds }) => bounds,
+	);
+	// The same boxes as laid out: a group has none of its own, so the laid-out drawing
+	// can start at its padding rather than at (0, 0).
+	const containerShapeIds = new Set(
+		containerShapes.map(({ object }) => object.id),
+	);
+	const laidOutBoxes = [
+		...laidOut.nodes,
+		...laidOut.containers.filter(({ id }) => containerShapeIds.has(id)),
+	].map(({ bounds }) => bounds);
 	const origin = {
-		x: Math.min(...everyBox.map((bounds) => bounds.x)),
-		y: Math.min(...everyBox.map((bounds) => bounds.y)),
+		x:
+			Math.min(...beforeBoxes.map((bounds) => bounds.x)) -
+			Math.min(...laidOutBoxes.map((bounds) => bounds.x)),
+		y:
+			Math.min(...beforeBoxes.map((bounds) => bounds.y)) -
+			Math.min(...laidOutBoxes.map((bounds) => bounds.y)),
 	};
 	// The routes' ends are resolved before any write (see writeRoutes), and come first
 	// so a failure leaves the nodes where they were as well.
