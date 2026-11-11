@@ -465,14 +465,16 @@ const readKeptReason = (
  * (none when it runs straight); `routing` is dropped. A container's title band is
  * crossed straight over beside its title, where the container's type says how much of
  * the band the title covers (`ObjectDocDefinition.layoutContainerTitleRegion`), the
- * container is neither rotated nor flipped and no shape stands in the band; any other
- * band is gone around whole. An end on a declared connect point its owner's type
- * places on a side of its box (`ObjectDocDefinition.extraConnectPointEdgeAnchors`)
- * stays on that point or moves to another of the same `alternateGroup`, whichever
- * gives the cheaper route, and the routes to one such point gather into one trunk. The routes are drawn one by one
- * in the order of their ends in the stacking order (sortEdgesByEndOrder), each keeping
- * off the ones drawn before it in this call; the connectors not redrawn are not kept
- * off. A label is moved (its `position` and `offset`) to where it covers as little of
+ * container is neither rotated nor flipped and neither a shape nor a container shape
+ * inside it stands in the band; any other band is gone around whole. An end on a
+ * declared connect point its owner's type places on a side of its box
+ * (`ObjectDocDefinition.extraConnectPointEdgeAnchors`) stays on that point or moves
+ * to another of the same `alternateGroup`, whichever gives the cheaper route, and the
+ * routes to one such point gather into one trunk. An end on a container shape sits
+ * on a side of the container's box and leaves outward, the route keeping out of the
+ * container (`RoutableNode.isHollow`). The routes are drawn one by one in the order
+ * of their ends in the stacking order (sortEdgesByEndOrder), each keeping off the ones
+ * drawn before it in this call; the connectors not redrawn are not kept off. A label is moved (its `position` and `offset`) to where it covers as little of
  * any shape, and as few of the other labels and of the lines redrawn in the same call,
  * as it can; the connectors not redrawn, and their labels, are not taken into
  * account. A connector whose route runs under its own

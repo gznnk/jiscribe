@@ -147,7 +147,10 @@ const offsetPoint = (
  * The places one end of an edge may sit: on each side, the side's centre (as a side's
  * only end sits in a layered layout) and, when the other node lies wholly beyond the
  * side, the spot that runs straight to the other node's centred end (see
- * calcStraightAnchorRatio). A spot whose stub is blocked is left out.
+ * calcStraightAnchorRatio); and, when both ends are free, the spots GAP_LANE_SPACING
+ * either side of this node's and the other node's centred end that run straight
+ * between the two boxes with a margin clear alongside (see routeEdgesAroundNodes),
+ * each a little dearer than the others. A spot whose stub is blocked is left out.
  *
  * @param crossableBands - What stops a stub besides the obstacles (see calcStubLength)
  * @param borders - Rects whose sides a spot beside the centre keeps a margin off
