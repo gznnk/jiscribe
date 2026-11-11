@@ -479,7 +479,7 @@ describe("routeConnectors", () => {
 		).toEqual(keptBefore);
 	});
 
-	it("gives of the reasons a connector is kept for the one asked first", () => {
+	it("reports the first reason in the order they are asked, a container end after a turned end and a declared connect point", () => {
 		const doc = emptyDoc();
 		routingDocOps.addObject(doc, "region", { x: 0, y: 0 });
 		addRect(doc, 100, 100);

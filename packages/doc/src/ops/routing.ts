@@ -102,7 +102,10 @@ type SceneShape = {
 	node: RoutableNode;
 };
 
-/** Everything the routes go around: the shapes, and the containers' title bands and frames. */
+/**
+ * Everything the routes go around (the shapes, and the containers' title bands and
+ * frames) and the container shapes a route may end on.
+ */
 type RoutingScene = {
 	shapeById: Map<string, SceneShape>;
 	/** The container shapes with a box, which a route may end on but goes around nothing of. */
@@ -118,8 +121,9 @@ type RoutingScene = {
 /**
  * Every object a route goes around, wherever it sits in the tree: each shape with a
  * box, as the box it fills once turned (and its caption, likewise), and each container
- * shape's title band and frame. A connector, a group and a container shape are no
- * shapes of their own here.
+ * shape's title band and frame. A container shape with a box is recorded apart
+ * (`containerById`) as a hollow node a route may end on and never goes around. A
+ * connector and a group are nothing here.
  */
 const collectRoutingScene = (
 	doc: CanvasDoc,
@@ -474,8 +478,8 @@ const readKeptReason = (
  * on a side of the container's box and leaves outward, the route keeping out of the
  * container (`RoutableNode.isHollow`). The routes are drawn one by one in the order
  * of their ends in the stacking order (sortEdgesByEndOrder), each keeping off the ones
- * drawn before it in this call; the connectors not redrawn are not kept off. A label is moved (its `position` and `offset`) to where it covers as little of
- * any shape, and as few of the other labels and of the lines redrawn in the same call,
+ * drawn before it in this call; the connectors not redrawn are not kept off. A label
+ * is moved (its `position` and `offset`) to where it covers as little of any shape, and as few of the other labels and of the lines redrawn in the same call,
  * as it can; the connectors not redrawn, and their labels, are not taken into
  * account. A connector whose route runs under its own
  * end's caption is moved to just beneath that shape in the stacking order, as

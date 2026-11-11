@@ -27,7 +27,8 @@ covers that.
   end on an ER entity's column is redrawn from that column, from whichever end
   of its row gives the cheaper route, and the lines to one column gather into
   one trunk; a line to the tip of a brace or a bracket stays on the tip, and
-  one ending on a container is drawn to the container's side. It runs once, so run it again after moving shapes. Give it
+  one ending on a container is drawn to the container's side. It runs once, so
+  run it again after moving shapes. Give it
   lines, or shapes (a group or a container counting its contents) to redraw the
   lines among them, or nothing for every line. The reply names the lines it
   redrew, the ones it left as they were and why (a self loop, a line between
