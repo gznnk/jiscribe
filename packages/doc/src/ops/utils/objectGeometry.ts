@@ -1,5 +1,9 @@
 import {
+	calcAffineTransformedPoint,
+	calcBoundingBox,
 	calcPolyBoundingBox,
+	convertBoundingBoxToRect,
+	degreesToRadians,
 	type Dimensions,
 	type Point,
 	type Rect,
@@ -195,6 +199,43 @@ export const unionBounds = (boxes: readonly Rect[]): Rect | null => {
 	const right = Math.max(...boxes.map((box) => box.x + box.width));
 	const bottom = Math.max(...boxes.map((box) => box.y + box.height));
 	return { x: left, y: top, width: right - left, height: bottom - top };
+};
+
+/**
+ * The box a rect in a shape's local coordinates (its centre the origin) fills in the
+ * world, turned and flipped with the shape; an untransformed shape only moves it.
+ *
+ * @param centre - The shape's centre in world coordinates
+ * @param object - The shape, whose `rotation`, `flipX` and `flipY` are read; a field left out counts as no turn
+ */
+export const calcWorldBoundsOfLocalRect = (
+	localRect: Rect,
+	centre: Point,
+	object: ObjectRecord,
+): Rect => {
+	const rotation = typeof object.rotation === "number" ? object.rotation : 0;
+	const scaleX = object.flipX === true ? -1 : 1;
+	const scaleY = object.flipY === true ? -1 : 1;
+	const rectCentre = calcAffineTransformedPoint(
+		localRect.x + localRect.width / 2,
+		localRect.y + localRect.height / 2,
+		scaleX,
+		scaleY,
+		degreesToRadians(rotation),
+		centre.x,
+		centre.y,
+	);
+	return convertBoundingBoxToRect(
+		calcBoundingBox({
+			cx: rectCentre.x,
+			cy: rectCentre.y,
+			width: localRect.width,
+			height: localRect.height,
+			rotation,
+			scaleX,
+			scaleY,
+		}),
+	);
 };
 
 /**

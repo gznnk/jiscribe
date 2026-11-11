@@ -27,6 +27,7 @@ import {
 	MetaNameItem,
 	MetaOpenReferenceItem,
 } from "./items/MetaItems";
+import { RouteConnectorsItem } from "./items/RouteConnectorsItem";
 import {
 	FillItem,
 	FillOpacityItem,
@@ -115,9 +116,10 @@ const CANVAS_SECTION_ID = "canvas";
 const CANVAS_SECTION_LABEL = "Canvas";
 
 /**
- * Identity and English wording of the Arrange section: the stacking-order and
- * grouping commands, which belong to the selection rather than to any type, so
- * the panel adds the section itself after the per-type ones.
+ * Identity and English wording of the Arrange section: the stacking-order,
+ * grouping, automatic layout and line-redrawing commands, which belong to the
+ * selection rather than to any type, so the panel adds the section itself after
+ * the per-type ones.
  */
 const ARRANGE_SECTION_ID = "arrange";
 const ARRANGE_SECTION_LABEL = "Arrange";
@@ -293,6 +295,7 @@ const PropertyPanelComponent: React.FC<PropertyPanelProps> = ({
 								<ViewOpenItem view={canvasState.view} />
 								<ViewScrollItem view={canvasState.view} />
 								<AutoLayoutItem canvasState={canvasState} />
+								<RouteConnectorsItem canvasState={canvasState} />
 							</PropertyPanelAccordion>
 						)}
 						{!showsCanvasSection &&
@@ -354,6 +357,7 @@ const PropertyPanelComponent: React.FC<PropertyPanelProps> = ({
 									<GroupingItem canvasState={canvasState} />
 								)}
 								<AutoLayoutItem canvasState={canvasState} />
+								<RouteConnectorsItem canvasState={canvasState} />
 							</PropertyPanelAccordion>
 						)}
 						{showsMetaSection && (

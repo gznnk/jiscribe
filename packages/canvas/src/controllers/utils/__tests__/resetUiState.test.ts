@@ -15,6 +15,7 @@ describe("resetUiState", () => {
 			objectMenuOpenId: null,
 			stencilLibraryOpenCategory: null,
 			isOtherShapesPopoverOpen: false,
+			pendingBusyCommandId: null,
 			multiSelectGroup: null,
 			mode: { kind: "normal" },
 			lastDuplicate: null,

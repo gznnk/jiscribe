@@ -1171,6 +1171,26 @@ export const createCanvasToolDescriptors = (
 		{ drives: ["docOps.layoutObjects"] },
 	);
 
+	const routeConnectorsTool = defineCanvasTool(
+		"route_connectors",
+		[
+			"Redraw connectors without moving any shape: each gets the sides and the right-angled route that go around other shapes, the captions below them and container title bands, crossing and overlapping the others as little as it can, and its label is moved to where it covers as little of any shape, and as few of the other labels and of the lines redrawn in the same call, as it can.",
+			"Once only: a shape moved later is not followed, so run it again. On shapes you placed yourself use this; on a flow you want arranged use layout_objects instead.",
+			"Omit ids for every connector; name connectors, or shapes (a group or container shape counts its contents) to redraw the connectors between them. A self loop, an end on a declared connect point, a container shape or a rotated shape, and ends whose boxes overlap are left as they are.",
+		].join(" "),
+		{
+			ids: z
+				.array(z.string())
+				.min(1)
+				.optional()
+				.describe(
+					"Connectors, or shapes whose connectors among them to redraw; omit for every connector.",
+				),
+		},
+		(args) => ({ kind: "routeConnectors", ...args }),
+		{ drives: ["docOps.routeConnectors"] },
+	);
+
 	const groupObjectsTool = defineCanvasTool(
 		"group_objects",
 		"Wrap objects in a new group. They must share one parent (not sit in different groups); connectors cannot be grouped.",
@@ -1543,6 +1563,7 @@ export const createCanvasToolDescriptors = (
 		alignObjectsTool,
 		distributeObjectsTool,
 		layoutObjectsTool,
+		routeConnectorsTool,
 		groupObjectsTool,
 		dissolveGroupsTool,
 		addToGroupTool,

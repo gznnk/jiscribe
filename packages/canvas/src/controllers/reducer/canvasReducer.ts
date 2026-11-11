@@ -11,7 +11,10 @@ import {
 } from "./handlers/handleMetaPropertyUpdate";
 import type { CanvasState } from "../../states/canvas/CanvasState";
 import type { CanvasControllerState, DocSnapshot } from "../CanvasTypes";
-import { handleCommand } from "../commands/handlers/handleCommand";
+import {
+	executeCommand,
+	handleCommand,
+} from "../commands/handlers/handleCommand";
 import { StartTextEditCommand } from "../commands/text/StartTextEditCommand";
 import { calcViewportToRevealActivePart } from "../utils/calcViewportToRevealActivePart";
 import { extendPastLastTextSlot } from "../utils/extendPastLastTextSlot";
@@ -88,26 +91,25 @@ export const createCanvasReducer =
 			}
 
 			case "COMMAND": {
-				const executed = handleCommand(state, action.commandId, registries);
-				// A command may write through a view (applyStyleIntent, a nudge) and this
-				// path bypasses handleGesture, so the settling flattens it (#213).
-				const selectionResult = settleTransition(executed, state, registries, {
-					flattensObjects: true,
-				});
-				// Pointer gestures pick what is already under the pointer; a command
-				// moving the pick (an arrow key, Tab) may land it off screen.
-				const revealedViewport = calcViewportToRevealActivePart(
-					selectionResult.viewport,
-					state.selection,
-					selectionResult.selection,
-					selectionResult.objects,
-					registries.objectPartKind,
-				);
-				return recordHistoryIfNeeded(
-					revealedViewport === selectionResult.viewport
-						? selectionResult
-						: { ...selectionResult, viewport: revealedViewport },
+				return settleCommand(
+					handleCommand(state, action.commandId, registries),
 					state,
+					registries,
+				);
+			}
+
+			case "RUN_PENDING_COMMAND": {
+				// An undo or a document swap got there first, and cancelled it.
+				if (state.pendingBusyCommandId === null) {
+					return state;
+				}
+				// Cleared before the command, so every way out of it carries the
+				// cleared id, the ones returning the state they were given included.
+				const clearedState = { ...state, pendingBusyCommandId: null };
+				return settleCommand(
+					executeCommand(clearedState, state.pendingBusyCommandId, registries),
+					clearedState,
+					registries,
 				);
 			}
 
@@ -785,6 +787,37 @@ const commitPropertyUpdate = (
 		registries,
 	);
 	return recordHistoryIfNeeded(reconciledResult, previousState);
+};
+
+/**
+ * Settles and records what a command did, against the state it ran on: the
+ * tail of COMMAND and RUN_PENDING_COMMAND.
+ */
+const settleCommand = (
+	executed: CanvasControllerState,
+	state: CanvasControllerState,
+	registries: CanvasRegistries,
+): CanvasControllerState => {
+	// A command may write through a view (applyStyleIntent, a nudge) and this
+	// path bypasses handleGesture, so the settling flattens it (#213).
+	const selectionResult = settleTransition(executed, state, registries, {
+		flattensObjects: true,
+	});
+	// Pointer gestures pick what is already under the pointer; a command
+	// moving the pick (an arrow key, Tab) may land it off screen.
+	const revealedViewport = calcViewportToRevealActivePart(
+		selectionResult.viewport,
+		state.selection,
+		selectionResult.selection,
+		selectionResult.objects,
+		registries.objectPartKind,
+	);
+	return recordHistoryIfNeeded(
+		revealedViewport === selectionResult.viewport
+			? selectionResult
+			: { ...selectionResult, viewport: revealedViewport },
+		state,
+	);
 };
 
 /**

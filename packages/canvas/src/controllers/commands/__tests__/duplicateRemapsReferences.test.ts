@@ -14,7 +14,7 @@ import { selectionOf } from "../../selection/__tests__/support/selectionOf";
  * fresh IDs, never back at the source objects. A single missed remap silently
  * aliases the copy to the original (moving one moves "both" ends of the other).
  * Spans DuplicateCommand, cloneObjects, and
- * collectConnectorsAttachedToSelection through the real handleCommand path.
+ * collectConnectorsAttachedToSelection through the real executeCommand path.
  */
 describe("duplicate deep-clones with all references remapped", () => {
 	it("a duplicated connector points at the duplicated shapes, never at the originals", () => {

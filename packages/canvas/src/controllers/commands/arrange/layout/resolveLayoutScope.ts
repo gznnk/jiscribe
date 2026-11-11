@@ -34,7 +34,7 @@ export type LayoutScopeGraph = {
 type SelfLoop = { connectorId: string; ownerId: string };
 
 /** Fewest nodes a graph needs before arranging it means anything. */
-const MIN_LAYOUT_NODES = 2;
+export const MIN_LAYOUT_NODES = 2;
 
 /**
  * Every connector of the canvas, the root's first and then each group's children,

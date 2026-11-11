@@ -21,6 +21,10 @@ describe("resolveCanvasMessages", () => {
 		);
 	});
 
+	it("names the Arrange section 整列 in Japanese, not after one of its rows", () => {
+		expect(jaCanvasMessages.propertyPanelSectionArrange).toBe("整列");
+	});
+
 	it("language subtag fallback -> ja-JP resolves to the ja dictionary", () => {
 		expect(resolveCanvasMessages("ja-JP").toolbarZoomIn).toBe(
 			jaCanvasMessages.toolbarZoomIn,

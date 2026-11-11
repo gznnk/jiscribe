@@ -1,6 +1,6 @@
 import type { Dimensions } from "@jiscribe/geometry";
 import type {
-	LaidOutEdge,
+	LayoutEdgeAnchor,
 	LayoutGraphEdge,
 	LayoutSide,
 	LayoutVisualMargin,
@@ -69,14 +69,18 @@ export type ConnectorUnderLabelText = {
  * shape given a margin by {@link calcLabelTextLayoutMargin}, where its caption hangs. A
  * side the caption reaches past only by being wider than the box does not count.
  *
- * @param laidOutEdges - The layout's edges, each id a connector's
+ * @param laidOutEdges - The edges as routed (a layered layout's, or routeConnectors'), each id a connector's, with the side each end was put on
  * @param graphEdges - The edges the layout was given, which name the owners of each one's ends
  * @param marginById - The margin each node was laid out with; a node absent has none
  * @param isRouteWritten - Whether the layout's route is written for the connector; one whose route is left to the engine (an end kept on a declared connect point) runs wherever the engine draws it, and is left out
  * @returns The connectors in the order of `laidOutEdges`
  */
 export const listConnectorsUnderLabelText = (
-	laidOutEdges: readonly LaidOutEdge[],
+	laidOutEdges: readonly {
+		id: string;
+		source: LayoutEdgeAnchor;
+		target: LayoutEdgeAnchor;
+	}[],
 	graphEdges: readonly LayoutGraphEdge[],
 	marginById: ReadonlyMap<string, LayoutVisualMargin>,
 	isRouteWritten: (connectorId: string) => boolean,

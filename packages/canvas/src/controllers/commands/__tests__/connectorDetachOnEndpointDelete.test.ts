@@ -22,7 +22,7 @@ const connectorOf = (
  * either the deleted side detaches to a free anchor at its former visual position,
  * or — when no owned endpoint would remain — the connector is deleted along with
  * the shape. Spans DeleteCommand's descendant collection (groups) and
- * cleanupConnectorsOnDelete, driven through the real handleCommand path.
+ * cleanupConnectorsOnDelete, driven through the real executeCommand path.
  */
 describe("connectors never dangle after endpoint deletion", () => {
 	it("deleting one endpoint shape detaches that side to a free anchor at the former outline point", () => {

@@ -47,6 +47,19 @@ export const calcLabelTextRegion = (
 };
 
 /**
+ * Whether a `features.text: "label"` type's caption draws anything: a body whose text
+ * has characters. An empty caption still has a box (calcLabelTextRegion) but draws
+ * nothing in it.
+ *
+ * @param body - The caption's content (see calcLabelTextBoxSize); undefined and one with no `text` draw nothing
+ */
+export const isLabelTextDrawn = (
+	body: Partial<TextSlot> | undefined,
+): boolean =>
+	body?.text !== undefined &&
+	richTextToPlain(readTextSlotContent(body.text)) !== "";
+
+/**
  * The drawn extent of a `features.text: "label"` type: its box, widened by the
  * caption (calcLabelTextRegion). An empty caption draws nothing and so adds no
  * extent, or every such shape would reserve a band of empty space below itself.
@@ -67,10 +80,7 @@ export const calcLabelTextVisualBounds = (
 		width: box.width,
 		height: box.height,
 	};
-	if (
-		body?.text === undefined ||
-		richTextToPlain(readTextSlotContent(body.text)) === ""
-	) {
+	if (!isLabelTextDrawn(body)) {
 		return figure;
 	}
 	const extent = unionBoundingBoxes([

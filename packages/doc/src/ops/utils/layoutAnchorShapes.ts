@@ -60,3 +60,19 @@ export const readLayoutAnchorBodyRanges = (
 	shape.anchorRegion === undefined
 		? undefined
 		: calcAnchorRegionBodyRanges(shape);
+
+/**
+ * The anchor stretches of a node given to the layout or the router, each key present
+ * only when it has one (see readLayoutAnchorRanges, readLayoutAnchorBodyRanges).
+ */
+export const readLayoutNodeAnchorFields = (
+	object: ObjectRecord,
+	shape: EdgeAnchorOutlineShape,
+): Pick<LayoutGraphNode, "anchorRanges" | "anchorBodyRanges"> => {
+	const anchorRanges = readLayoutAnchorRanges(object, shape);
+	const anchorBodyRanges = readLayoutAnchorBodyRanges(shape);
+	return {
+		...(anchorRanges !== undefined ? { anchorRanges } : {}),
+		...(anchorBodyRanges !== undefined ? { anchorBodyRanges } : {}),
+	};
+};
