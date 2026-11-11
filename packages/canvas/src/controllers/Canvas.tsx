@@ -659,8 +659,8 @@ const CanvasComponent = ({
 				selection: state.selection,
 				mode: state.mode,
 			}),
-		// Keyed on the draft's text and placement rather than on `mode`, which
-		// moves with the caret too.
+		// Keyed on the draft's text and placement rather than on `mode`, which a
+		// shape's text edit also moves with the caret.
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[
 			draftObjects,

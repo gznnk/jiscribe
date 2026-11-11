@@ -9,6 +9,7 @@ import type { LabelBackdropLayer } from "../../../../../rendering/objects/LabelB
 import { LabelBackdropStoreContext } from "../../../../../rendering/objects/LabelBackdropStoreContext";
 import { createLabelBackdropStore } from "../../../../hooks/utils/createLabelBackdropStore";
 import { ConnectorLabelEditor } from "../ConnectorLabelEditor";
+import { LABEL_EDITOR_BORDER_WIDTH_VAR } from "../ConnectorLabelEditorStyled";
 
 // Without this React treats every `act` below as unsupported and warns, the
 // flushes being correct all the same.
@@ -72,9 +73,9 @@ describe("ConnectorLabelEditor backdrop", () => {
 	it("draws the knockout and the layers behind the text, the box itself transparent", () => {
 		const wrapper = renderEditor({ layers: LAYERS, strokeWidth: 2 });
 		expect(wrapper.style.background).toBe("transparent");
-		expect(
-			wrapper.style.getPropertyValue("--jiscribe-label-editor-border-width"),
-		).toBe("2px");
+		expect(wrapper.style.getPropertyValue(LABEL_EDITOR_BORDER_WIDTH_VAR)).toBe(
+			"2px",
+		);
 
 		const [backdrop, textArea] = [...wrapper.children];
 		expect(backdrop.tagName).toBe("svg");
@@ -91,15 +92,15 @@ describe("ConnectorLabelEditor backdrop", () => {
 		expect(layer.style.fill).toBe("rgb(255, 0, 0)");
 	});
 
-	it("keeps today's box with no layers for its id", () => {
+	it("keeps its own background with no layers for its id", () => {
 		const wrapper = renderEditor({ layers: null });
 		expect(wrapper.style.background).toBe(SURFACE);
 		expect([...wrapper.children].map((child) => child.tagName)).toEqual([
 			"TEXTAREA",
 		]);
-		expect(
-			wrapper.style.getPropertyValue("--jiscribe-label-editor-border-width"),
-		).toBe("");
+		expect(wrapper.style.getPropertyValue(LABEL_EDITOR_BORDER_WIDTH_VAR)).toBe(
+			"",
+		);
 	});
 
 	it("ignores the backdrop for a label with a background of its own", () => {

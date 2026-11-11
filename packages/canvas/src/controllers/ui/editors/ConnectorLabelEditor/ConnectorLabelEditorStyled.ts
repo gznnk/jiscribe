@@ -19,12 +19,20 @@ import { LABEL_BOX_CORNER_RADIUS } from "../../../../rendering/objects/connector
  * keystroke via text measurement, so they are passed via the `style` prop
  * instead of emotion interpolation (see #131).
  */
+/**
+ * The custom property carrying the box's border width to the backdrop and the
+ * redrawn border, which reach past the padding box by that much. Set inline by
+ * ConnectorLabelEditor whenever `hasBackdrop` is, so it is read with no fallback.
+ */
+export const LABEL_EDITOR_BORDER_WIDTH_VAR =
+	"--jiscribe-label-editor-border-width";
+
 export const ConnectorLabelEditorWrapper = styled.div<{
 	/**
 	 * True while the box lies on a frame's backdrop (ConnectorLabelEditorBackdrop
 	 * under the text): the border is drawn again over it, since what a box's
 	 * children paint covers its own border. Reads the border width from
-	 * `--jiscribe-label-editor-border-width`, set inline beside the border.
+	 * LABEL_EDITOR_BORDER_WIDTH_VAR, which has to be set inline with it.
 	 */
 	hasBackdrop: boolean;
 }>`
@@ -39,7 +47,7 @@ export const ConnectorLabelEditorWrapper = styled.div<{
 			&::after {
 				content: "";
 				position: absolute;
-				inset: calc(-1 * var(--jiscribe-label-editor-border-width, 0px));
+				inset: calc(-1 * var(${LABEL_EDITOR_BORDER_WIDTH_VAR}));
 				box-sizing: border-box;
 				border: inherit;
 				border-radius: inherit;
@@ -54,10 +62,10 @@ export const ConnectorLabelEditorWrapper = styled.div<{
  */
 export const ConnectorLabelEditorBackdrop = styled.svg`
 	position: absolute;
-	top: calc(-1 * var(--jiscribe-label-editor-border-width, 0px));
-	left: calc(-1 * var(--jiscribe-label-editor-border-width, 0px));
-	width: calc(100% + 2 * var(--jiscribe-label-editor-border-width, 0px));
-	height: calc(100% + 2 * var(--jiscribe-label-editor-border-width, 0px));
+	top: calc(-1 * var(${LABEL_EDITOR_BORDER_WIDTH_VAR}));
+	left: calc(-1 * var(${LABEL_EDITOR_BORDER_WIDTH_VAR}));
+	width: calc(100% + 2 * var(${LABEL_EDITOR_BORDER_WIDTH_VAR}));
+	height: calc(100% + 2 * var(${LABEL_EDITOR_BORDER_WIDTH_VAR}));
 	overflow: hidden;
 	pointer-events: none;
 `;

@@ -7,6 +7,7 @@ import {
 	ConnectorLabelEditorBackdrop,
 	ConnectorLabelEditorWrapper,
 	ConnectorLabelTextArea,
+	LABEL_EDITOR_BORDER_WIDTH_VAR,
 } from "./ConnectorLabelEditorStyled";
 import { LabelBackdropLayers } from "../../../../rendering/objects/base/LabelBackdropLayers";
 import { LABEL_BOX_CORNER_RADIUS } from "../../../../rendering/objects/connector/ConnectorLabel/ConnectorLabelStyled";
@@ -199,7 +200,7 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 						? `${strokeWidth}px ${strokeDashType} ${borderColor}`
 						: "none",
 				...(hasLayers && {
-					"--jiscribe-label-editor-border-width": `${strokeWidth}px`,
+					[LABEL_EDITOR_BORDER_WIDTH_VAR]: `${strokeWidth}px`,
 				}),
 			}}
 			onPointerDown={handleWrapperPointerDown}

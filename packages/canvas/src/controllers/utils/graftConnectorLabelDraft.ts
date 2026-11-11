@@ -1,4 +1,5 @@
 import { readOpenTextEdit } from "./readOpenTextEdit";
+import type { ConnectorLabelPlacement } from "../../rendering/objects/connector/geometry/label/calcConnectorLabelPlacement";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../CanvasTypes";
@@ -10,6 +11,24 @@ export type ConnectorLabelDraftObjects = {
 	/** The connector whose label is open in the editor; null when none is. */
 	labelEditOwnerId: string | null;
 };
+
+/**
+ * Where a connector label open in the editor sits: the pending placement of a
+ * label being created, else the label's own. The one rule the editor's anchor
+ * (TextEditorLayer) and the box its backdrop is cut for
+ * ({@link graftConnectorLabelDraft}) both follow, so the two cannot part.
+ *
+ * @param connector - The connector whose label is edited; its `label` may be absent for a label being created
+ * @param pendingPlacement - The draft's placement (`TextEditDraft.placement`), set only while a label is being created; it wins over leftovers of a deleted label
+ * @returns `position` / `offset` as the label is drawn with them; either undefined means CONNECTOR_LABEL_DEFAULTS
+ */
+export const resolveLabelDraftPlacement = (
+	connector: ConnectorState,
+	pendingPlacement: ConnectorLabelPlacement | undefined,
+): { position: number | undefined; offset: number | undefined } => ({
+	position: pendingPlacement?.position ?? connector.label?.position,
+	offset: pendingPlacement?.offset ?? connector.label?.offset,
+});
 
 /**
  * Grafts the connector label being edited onto its connector, for the label
@@ -37,8 +56,7 @@ export const graftConnectorLabelDraft = (
 		label: {
 			...connector.label,
 			text,
-			position: placement?.position ?? connector.label?.position,
-			offset: placement?.offset ?? connector.label?.offset,
+			...resolveLabelDraftPlacement(connector, placement),
 		},
 	};
 	return {

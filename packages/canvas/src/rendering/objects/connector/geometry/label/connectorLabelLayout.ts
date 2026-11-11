@@ -102,7 +102,7 @@ export const resolveConnectorLabelAnchor = (
  * The label's box placed on its anchor: centered on it and never rotated, the
  * way ConnectorLabel draws it.
  *
- * @param anchor - The anchor in world coordinates (resolveConnectorLabelAnchor)
+ * @param anchor - The anchor in world coordinates (resolveConnectorLabelAnchor, or calcConnectorLabelAnchor directly)
  * @param box - The box's size (resolveConnectorLabelBox)
  * @returns The box in world coordinates, top-left based
  */
