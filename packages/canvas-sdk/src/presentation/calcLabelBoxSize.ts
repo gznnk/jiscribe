@@ -4,8 +4,9 @@ import { calcLabelTextBoxSize, LABEL_TEXT_STYLE_DEFAULTS } from "@jiscribe/doc";
 import type { Dimensions } from "@jiscribe/geometry";
 
 /**
- * Size of the caption box a `features.text: "label"` shape that places its
- * caption itself (a group marker's beyond its tip, an AWS group's band) sizes
+ * Size of the caption box a `features.text: "label"` or `"innerLabel"` shape
+ * that places its caption itself (a `"label"` group marker's beyond its tip, an
+ * `"innerLabel"` AWS group's band) sizes
  * from its own text: the measurement the core sizes a caption under the box
  * with (calcLabelTextBoxSize), so the box grows sideways with the longest line
  * and breaks only where the author typed a newline.

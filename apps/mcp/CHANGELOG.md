@@ -17,6 +17,19 @@ covers that.
 
 ### Added
 
+- **`route_connectors` redraws the lines without moving a shape.** For a
+  drawing whose shapes you placed yourself: each line gets the sides and the
+  right-angled route that go around the other shapes, the labels below icons
+  and the container title bands without hugging their edges or a container's
+  frame, crossing and running along the other lines as little as it can; each
+  line's label is moved to where it covers as little of any shape, and as few
+  of the other labels and of the lines redrawn in the same call, as it can. It runs once, so run it again after moving shapes. Give it
+  lines, or shapes (a group or a container counting its contents) to redraw the
+  lines among them, or nothing for every line. The reply names the lines it
+  redrew, the ones it left as they were and why (a self loop, an end on a
+  column, a container or a rotated shape, overlapping shapes, no way through),
+  and the ones it moved beneath a shape whose label they leave through.
+
 - **`layout_objects` makes room for the label below an icon or a pictogram.**
   The AWS / Azure / Google Cloud icons, the pictograms and the flowchart markers
   that draw their text below the box are laid out with that label as part of
@@ -166,6 +179,11 @@ covers that.
 
 ### Fixed
 
+- **The package ships `THIRD-PARTY-NOTICES.txt`.** It bundles third-party code
+  into the server and the viewer, the viewer's fonts, and the drawings of the
+  AWS, Azure and Google Cloud icons, yet carried only its own MIT license. The
+  notices now reproduce each bundled package's license and the terms the icons
+  are redistributed under, which the MIT license does not cover.
 - **`list_types` answers before the file exists.** It lists the shape set, not
   the drawing, yet it read the file it was given and failed with `ENOENT` when
   `open_canvas` had not created it yet. Now it answers without reading the file

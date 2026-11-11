@@ -1,7 +1,10 @@
 import { builtinObjectDocDefinitions } from "./builtinObjectDocDefinitions";
 import type { CanvasDocPlugin } from "./CanvasDocPlugin";
 import type { ObjectDocDefinition } from "./ObjectDocDefinition";
-import { isSingleBodyText } from "../model/objects/types/text/TextType";
+import {
+	isCaptionText,
+	isSingleBodyText,
+} from "../model/objects/types/text/TextType";
 
 export type DocDefinitionsConfig = {
 	presetDefinitions?: Readonly<Partial<Record<string, ObjectDocDefinition>>>;
@@ -54,9 +57,11 @@ const checkBodyTextRegion = (
 };
 
 /**
- * Refuses a `features.text: "label"` type declaring what the label already
- * settles or cannot work with. The caption is placed on the canvas side (under
- * the box by the core, calcLabelTextRegion, unless the UI definition places it),
+ * Refuses a caption type (`features.text: "label"` / `"innerLabel"`,
+ * isCaptionText) declaring what the caption already settles or cannot work with.
+ * The caption is placed on the canvas side (a `"label"` one under the box by the
+ * core, calcLabelTextRegion, unless the UI definition places it; an
+ * `"innerLabel"` one always by the UI definition),
  * so a `textRegion` of its own would leave two answers for where the text is; it
  * takes no `verticalAlign`, so a `textVerticalBasis` would have nothing to
  * measure; and the placement reads a stored width and height, which only a
@@ -70,22 +75,23 @@ const checkLabelTextFeature = (
 	definition: ObjectDocDefinition,
 ): void => {
 	const { features } = definition;
-	if (features.text !== "label") {
+	if (!isCaptionText(features.text)) {
 		return;
 	}
+	const textType = features.text;
 	if (features.geometry !== "rect") {
 		throw new Error(
-			`ObjectDocDefinition "${type}": features.text "label" needs geometry "rect", the caption being placed under a stored width and height (declares "${features.geometry}")`,
+			`ObjectDocDefinition "${type}": features.text "${textType}" needs geometry "rect", the caption being placed under a stored width and height (declares "${features.geometry}")`,
 		);
 	}
 	if (features.textVerticalBasis === true) {
 		throw new Error(
-			`ObjectDocDefinition "${type}": features.text "label" takes no verticalAlign, so textVerticalBasis has nothing to measure`,
+			`ObjectDocDefinition "${type}": features.text "${textType}" takes no verticalAlign, so textVerticalBasis has nothing to measure`,
 		);
 	}
 	if (definition.textRegion !== undefined) {
 		throw new Error(
-			`ObjectDocDefinition "${type}": features.text "label" has its caption placed on the canvas side (under the box by the core, calcLabelTextRegion, unless the UI definition places it); declare no textRegion`,
+			`ObjectDocDefinition "${type}": features.text "${textType}" has its caption placed on the canvas side (${textType === "label" ? "under the box by the core, calcLabelTextRegion, unless the UI definition places it" : "by the UI definition's textSlot part kind"}); declare no textRegion`,
 		);
 	}
 };

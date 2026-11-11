@@ -12,6 +12,7 @@ import {
 	isTextVerticalBasis,
 	listConnectPointIds,
 	readTextSlotStyleDefaults,
+	isCaptionText,
 	richTextToPlain,
 	supportsAutoHeight,
 } from "@jiscribe/doc";
@@ -457,7 +458,7 @@ const diagnoseMeasuredSourceText = (
 
 /**
  * {@link diagnoseObjectTextLineStarts} for a body nothing wraps — a `text` in its
- * label layout, a `features.text: "label"` caption, a label its type hangs
+ * label layout, a caption (`features.text: "label"` / `"innerLabel"`), a label its type hangs
  * outside the box — laid out as authored, so the lines it looks at open after the
  * author's own newlines (`calcLabelTextBoxSize` sizes a caption the same way,
  * with no width to wrap at).
@@ -506,10 +507,10 @@ const diagnoseUncheckedSourceText = (
 
 /**
  * Every finding about one object's text, empty when it fits and breaks well.
- * Only a `"body"` and a `"label"` type are measured: a `"source"` body is drawn by
+ * Only a `"body"` type and a caption (`"label"` / `"innerLabel"`, isCaptionText) are measured: a `"source"` body is drawn by
  * the shape's own renderer rather than by the shared typesetting these metrics
  * come from, and a `"slots"` type holds no single body to place against the
- * shape. A `"label"` caption is sized from its own text, so it cannot overflow
+ * shape. A caption is sized from its own text, so it cannot overflow
  * and is only looked at for where its lines start.
  */
 const diagnoseObjectText = (object: ObjectDoc): Diagnostic[] => {
@@ -517,7 +518,7 @@ const diagnoseObjectText = (object: ObjectDoc): Diagnostic[] => {
 	const textType = definition?.features.text;
 	if (
 		definition === undefined ||
-		(textType !== "body" && textType !== "label")
+		(textType !== "body" && !isCaptionText(textType))
 	) {
 		return [];
 	}
@@ -528,7 +529,7 @@ const diagnoseObjectText = (object: ObjectDoc): Diagnostic[] => {
 	}
 	const typeDefaults = resolveBodyStyleDefaults(definition);
 	const font = resolveBodyFont(body, typeDefaults);
-	if (textType === "label") {
+	if (isCaptionText(textType)) {
 		return diagnoseUnwrappedTextLineStarts(object, text, font);
 	}
 	const boxWidth = resolveWrapBoxWidth(body, definition);
@@ -814,11 +815,11 @@ const readFinding = (
  * the document rather than a matter of taste.
  *
  * Objects the text checks pass over: types whose text the box does not hold (a
- * `features.text: "label"` caption sized from its own text — whose line heads
+ * caption (`features.text: "label"` / `"innerLabel"`) sized from its own text — whose line heads
  * are still looked at — a `record`'s text-sized bands, a shape with no text), objects with no text, a
  * shape storing no width to wrap at (an `ellipse`), and types outside the
  * shipped set. Text nothing wraps (a `text` in its label layout and a
- * `features.text: "label"` caption, whose boxes are measured from the text
+ * caption (`"label"` / `"innerLabel"`), whose boxes are measured from the text
  * itself) cannot overflow, and only its line heads are looked at. The overflow check additionally passes over an object with no stored `height`,
  * which is sized from its text on every read — but where its lines fall is still
  * looked at, the width being the author's. A `geometry: "point"` object whose

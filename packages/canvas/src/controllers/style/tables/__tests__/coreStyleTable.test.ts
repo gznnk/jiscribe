@@ -65,6 +65,13 @@ describe("coreStyleTable", () => {
 		expect(kindsOf({ text: "body" })).not.toContain("labelFill");
 	});
 
+	it("an innerLabel text brings no caption background, and no vertical placement", () => {
+		const kinds = kindsOf({ text: "innerLabel" });
+		expect(kinds).not.toContain("labelFill");
+		expect(kinds).toContain("fontWeight");
+		expect(kinds).not.toContain("verticalAlign");
+	});
+
 	// Which text intents a body brings is textStyleTable's own business; what this
 	// pins is that the shape groups and the text one land in the same table.
 	it("a type declaring a shape group and a body answers for both", () => {

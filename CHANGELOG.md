@@ -15,6 +15,46 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Added
 
+- **`routeConnectors`: redraw the connectors without moving a shape.** The
+  doc-op (`DocOps.routeConnectors`, the ai-tools `route_connectors`) gives each
+  connector between two shapes the sides and the right-angled route that go
+  around every other shape, the caption hung below a `"label"` type and a
+  container's title band, running flush along none of their edges, paying for
+  running within its margin (`EDGE_ROUTE_MARGIN`) of them or of a container's
+  frame (the nearer, the dearer) and crossing and running along the routes drawn
+  before it as little as it can; the corners are written as `points` and
+  `routing` is dropped. It runs once: a shape moved
+  afterwards is not followed. Omitted ids redraw every connector; named shapes
+  (a group or a container shape standing for its contents) redraw the
+  connectors among them. A self loop, an end that is free, on a declared
+  connect point, on a container shape or on a rotated or flipped shape, ends
+  whose boxes overlap and a connector no way is found for are left as they are
+  and reported by reason (`ConnectorRouteKeptReasons`). A connector leaving
+  through its own end's caption is moved to just beneath that shape, as
+  `layoutObjects` does. The routing itself is `routeEdgesAroundNodes`
+  (`@jiscribe/layout`): edge by edge in the order given, an A* search over an
+  orthogonal visibility graph run from the obstacles' corners, their margins and
+  the ends' stubs, first close around the two ends and further out only when
+  no route is found there. Then the routes running together are spread
+  `GAP_LANE_SPACING` apart (less in a tight channel, and a pair that has no room
+  to part at all is left as it stands) in an order that keeps them from crossing
+  where they need not, which can bring a run within half that of a shape,
+  caption or frame, but never nearer than it already was. A route's first and
+  last segments are spread too, each end sliding along its side within the
+  stretch a layered layout fans a side's ends over (`EDGE_ANCHOR_FAN_RANGE`), so
+  the ends sharing a side stand up to `EDGE_END_SPACING` apart (closer on a side
+  too short for that, before any run is drawn closer); an end that slides gets
+  its `t` rewritten. A jog, however long, is then straightened out where one of
+  the segments either side of it can move onto the other's line without coming
+  within `GAP_LANE_SPACING` of a shape, frame or other run, unless already
+  nearer, or crossing more lines. Last, a connector's label is moved
+  (`position` and `offset`) to where it covers as little of any shape, and as few
+  of the other labels and of the lines redrawn in the same call, as it can: an
+  edge given a `label` box (`RoutableEdge.label`) comes back with `labelPosition`
+  and `labelOffset` (`RoutedEdge`).
+  The canvas's `DEFAULT_CONNECTOR_MARGIN` now reads `EDGE_ROUTE_MARGIN`, and
+  `doRectsOverlap` (`@jiscribe/geometry`) tells whether two rects share area.
+
 - **`features.text: "label"`: a body drawn as a caption sized from its own
   text.** A type whose drawing fills its box, or that places its label off the
   box itself, declares it. By default the caption is centred under the box, 4px
@@ -32,11 +72,23 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   `createFrameObjectDefinition` refuses a `textRegion` or `visualBounds` passed
   alone. Its doc takes the `"body"` typography less `verticalAlign`
   (`LabelTextStyleDoc`, `textStyleKeysOf("label")`); `LABEL_TEXT_STYLE_DEFAULTS`
-  is the creation typography to spread into its defaults. The sixteen shapes
-  whose label is sized from its own text are `"label"` types now: actor,
-  server, package, envelope, queue, gear and lock (general), extract and cross
-  (flowchart), brace, bracket and bracketWithStem (annotation), and awsIcon,
-  awsGroup, azureIcon and gcpIcon.
+  is the creation typography to spread into its defaults. The fifteen shapes
+  whose label is sized from its own text and stands off their drawing are
+  `"label"` types now: actor, server, package, envelope, queue, gear and lock
+  (general), extract and cross (flowchart), brace, bracket and bracketWithStem
+  (annotation), and awsIcon, azureIcon and gcpIcon.
+- **`features.text: "innerLabel"`: a caption sized from its own text that the
+  shape places on itself.** It is a `"label"` caption in every rule above —
+  one body, no `verticalAlign` or `textVerticalBasis`, geometry `"rect"`, no
+  doc `textRegion` — but has no default place and no `labelFill`: its UI
+  definition always declares a `"textSlot"` part kind and `visualBounds`
+  (`createFrameObjectDefinition`'s `textRegion` and `visualBounds`), and
+  `applyObjectDefinition` and `createFrameObjectDefinition` refuse it with
+  either missing. Its doc is `InnerLabelTextStyleDoc` (`@jiscribe/doc`), the
+  form `LabelTextStyleDoc` now extends with `labelFill`. awsGroup, whose title
+  sits inside the frame on its own fill, is the one shipped `"innerLabel"`
+  type. `isCaptionText` (true for both) and `hasLabelFill` (`"label"` alone),
+  from `@jiscribe/doc`, are the two questions the core asks of a text type.
 - **`labelFill`: the background of a `"label"` caption.** The caption is drawn
   over a box painted in `labelFill`, which `set_style` / `add_objects`, the
   ObjectMenu and the properties sidebar (a `label-style` section, built-in item
@@ -138,6 +190,21 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   pure steps the doc op and the canvas share: `resolvePlacements` (which objects
   are nodes and which are containers), `splitLayoutGraph` (connected parts),
   `isRectInside`, `calcFacingSides` and `createTakenEnds`.
+- **Redraw the lines only, from the canvas.** A new command, `routeConnectors`,
+  runs the doc-op `routeConnectors` from the properties sidebar (a row of its own
+  after auto layout, in the Canvas section with nothing selected and the Arrange
+  section for a selection) and the context menu. What it redraws is what the
+  op's `ids` means: every connector with nothing selected; a selected connector,
+  or the connectors joining the shapes the selection stands for. Shapes do not
+  move, hand-shaped routes and moved labels in scope are redrawn, one run is one
+  undo step, and a run that changes nothing records nothing. A command, a
+  plugin's included, may now declare `busyLabel`: a press from any entry paints
+  a small indicator with that text at the top centre of the canvas before the
+  run blocks the main thread, fading in after 300 ms so a quick run shows
+  nothing, its ring turning through the block. The redraw declares one,
+  "Redrawing lines…". The auto layout buttons' tooltip now also says they redraw
+  the lines, and the Japanese label of the Arrange section is 「整列」 instead of
+  「重ね順」.
 - **A stencil bar floats over the canvas.** `<Canvas stencilBar>` draws a
   column of buttons over the viewport's left edge, centred top to bottom below
   the top-left pill and scrolling when the room there is shorter, over the
@@ -297,15 +364,19 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   box draw a box in `labelFill` behind it, so a connector or a shape lying under
   it is hidden where the label is, in images exported too. Set `labelFill` to
   `"transparent"` for the old look, or reorder the objects. The group markers
-  and awsGroup create with `labelFill: "transparent"`, and look as they did.
-- **The group markers (brace, bracket, bracketWithStem) and awsGroup are
-  `"label"` types.** Their label is sized from its own text as before; they now
-  take `labelFill` and no `verticalAlign` (a `verticalAlign` in an existing
-  document is dropped on open with a warning), and awsGroup's menu offers the
-  label's background and no vertical alignment.
+  create with `labelFill: "transparent"`, and look as they did; one saved
+  before this release carries no `labelFill`, so its label is painted on the
+  page's color too. Set its `labelFill` to `"transparent"` for the old look.
+- **The group markers (brace, bracket, bracketWithStem) are `"label"` types,
+  and awsGroup an `"innerLabel"` one.** Their label is sized from its own text
+  as before; they now take no `verticalAlign` (a `verticalAlign` in an existing
+  document is dropped on open with a warning), and awsGroup's menu offers no
+  vertical alignment. The group markers take `labelFill`; awsGroup's title,
+  drawn on the frame's own fill, takes none, and neither its menu nor the
+  properties sidebar offers the label's background.
 - **Breaking: `ObjectDocTextRegionCalculator` answers a rectangle, never
   `null`.** A shape whose label is not laid out inside its box is a `"label"`
-  type instead; one that places that label itself declares a `"textSlot"` part
+  or `"innerLabel"` type instead; one that places that label itself declares a `"textSlot"` part
   kind and `visualBounds` together on its UI definition. A `"body"` /
   `"source"` type has to declare one: `resolveDocDefinitions` refuses it
   otherwise (`calcFullBoxTextRegion` for the whole box). `supportsAutoHeight` reads `features` and `autoHeight` alone
@@ -313,13 +384,14 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   `createFrameDocValidator`'s third argument), so a `geometry: "rect"`,
   `text: "body"` type may leave `height` out unless it declares
   `autoHeight: false`.
-- **A `verticalAlign` on a `"label"` shape is dropped on open.** It never
+- **A `verticalAlign` on a `"label"` or `"innerLabel"` shape is dropped on open.** It never
   moved the label, whose box is sized from its text; the parser's migration
   removes it with a warning, and the next save writes the object without it.
-- **`calcLabelBoxSize` (`@jiscribe/canvas-sdk`) is for a `"label"` shape that
-  places its caption itself** (the group markers, awsGroup). It measures through
-  `calcLabelTextBoxSize` over `LABEL_TEXT_STYLE_DEFAULTS`, or over the type's own
-  text defaults handed as its new third argument (awsGroup's 14px bold).
+- **`calcLabelBoxSize` (`@jiscribe/canvas-sdk`) is for a `"label"` or
+  `"innerLabel"` shape that places its caption itself** (the group markers,
+  awsGroup). It measures through `calcLabelTextBoxSize` over
+  `LABEL_TEXT_STYLE_DEFAULTS`, or over the type's own text defaults handed as
+  its new third argument (as awsGroup does with its 14px bold).
   `BelowLabelHitArea` places its grab area with `calcLabelTextRegion` from the
   shape's `type`, which its `state` now has to carry; it serves a type on the
   core's placement under the box. `resolveLabelFill` resolves a caption's `labelFill` as well as a
@@ -372,6 +444,13 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   as well as many; see Removed for the tools that went. Each batch tool's
   description now states on its own every rule the single form's carried.
 
+- **The ends sharing a side fan out over its middle 80%, up from 60%.**
+  `EDGE_ANCHOR_FAN_RANGE` (`@jiscribe/layout`) is 0.1..0.9 of the side, was
+  0.2..0.8, so `docOps.layoutObjects` and the canvas's auto layout commands
+  spread several connectors leaving one side further apart, and
+  `routeConnectors` lets their ends slide over that wider stretch: four ends on
+  a side of a 64px icon stand 16px apart there, up from 12 (`EDGE_END_SPACING`
+  is 20).
 - **A line's drawn extent takes its arrowheads in.** Zoom-to-fit, the export
   viewBox, viewport culling, zoom-to-selection, the object menu's placement and
   `measure.visualBounds` (with the AI's `measure_visual_bounds`) now count each

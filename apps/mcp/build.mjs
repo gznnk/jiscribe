@@ -4,6 +4,8 @@
 //   1. vite が出したビューアの JS と CSS を index.html の中へ畳む（単一 HTML 化）。
 //      フォントだけは畳まない（全部で 50MB あり、しかも unicode-range 分割なので
 //      ブラウザは実際に描く範囲しか取りに来ない）。
+//      The JS source map moves to dist/viewer-sourcemaps/, read by
+//      scripts/generateNotices.mjs and never shipped.
 //   2. 実行時に node の解決規則で読むもの（ガイド 2 枚・計測用フォント）を
 //      dist/node_modules へ写し、写し漏れが無いか検証する。
 //   3. esbuild で src/index.ts を単一ファイル dist/index.mjs にバンドルする（Node・ESM）。
@@ -19,7 +21,7 @@
 import { spawn } from "child_process";
 import { cp, mkdir, readdir, readFile, rm, writeFile } from "fs/promises";
 import { createRequire } from "module";
-import { dirname, join } from "path";
+import { dirname, join, relative } from "path";
 import { fileURLToPath } from "url";
 
 import * as esbuild from "esbuild";
@@ -27,6 +29,7 @@ import * as esbuild from "esbuild";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const isWatch = process.argv.includes("--watch");
 const clientDir = join(__dirname, "dist", "client");
+const viewerSourcemapsDir = join(__dirname, "dist", "viewer-sourcemaps");
 
 /**
  * インラインする中身が、埋め込み先のタグを閉じてしまわないようにする。
@@ -48,11 +51,30 @@ const escapeForInlineTag = (source, tagName) => {
 		: withEscapedClosingTag;
 };
 
+/**
+ * Moves an inlined script's source map out of dist/client, which apps/desktop
+ * copies whole. Its sources stay relative to where vite wrote it, so sourceRoot
+ * points back there.
+ */
+const moveViewerSourcemap = async (fileName) => {
+	const sourcePath = join(clientDir, "assets", `${fileName}.map`);
+	const map = JSON.parse(await readFile(sourcePath, "utf8"));
+	map.sourceRoot = `${relative(viewerSourcemapsDir, join(clientDir, "assets"))}/`;
+	await mkdir(viewerSourcemapsDir, { recursive: true });
+	await writeFile(
+		join(viewerSourcemapsDir, `${fileName}.map`),
+		JSON.stringify(map),
+		"utf8",
+	);
+	await rm(sourcePath);
+};
+
 /** vite が出した index.html へ、参照している JS と CSS を畳み込む */
 const inlineViewerHtml = async () => {
 	const htmlPath = join(clientDir, "index.html");
 	let html = await readFile(htmlPath, "utf8");
 	const inlinedFiles = [];
+	await rm(viewerSourcemapsDir, { recursive: true, force: true });
 
 	const scriptPattern =
 		/<script\b[^>]*\bsrc="\/assets\/([^"]+)"[^>]*><\/script>/g;
@@ -66,6 +88,7 @@ const inlineViewerHtml = async () => {
 				`<script type="module">${escapeForInlineTag(code, "script")}</script>`,
 		);
 		inlinedFiles.push(fileName);
+		await moveViewerSourcemap(fileName);
 	}
 
 	const stylePattern = /<link\b[^>]*\bhref="\/assets\/([^"]+\.css)"[^>]*>/g;
@@ -368,8 +391,42 @@ const config = {
 			"const require = __createRequire(import.meta.url);",
 		].join("\n"),
 	},
-	sourcemap: true,
+	// "external" writes the map (scripts/generateNotices.mjs reads it) without
+	// the sourceMappingURL comment: package.json's files leave the map out
+	sourcemap: "external",
 	minify: !isWatch,
+};
+
+/**
+ * Fails the build when what ships names a source map that does not ship:
+ * package.json's files leave out every *.map, and apps/desktop copies
+ * dist/client whole. Covers a later chunk whose map nobody moved as well.
+ */
+const assertNoShippedSourcemapReference = async () => {
+	const problems = [];
+	for (const shippedPath of [
+		join(clientDir, "index.html"),
+		join(__dirname, "dist", "index.mjs"),
+	]) {
+		if ((await readFile(shippedPath, "utf8")).includes("sourceMappingURL")) {
+			problems.push(`${shippedPath} names a sourceMappingURL`);
+		}
+	}
+	const clientMaps = (await readdir(clientDir, { recursive: true })).filter(
+		(entry) => entry.endsWith(".map"),
+	);
+	for (const entry of clientMaps) {
+		problems.push(`dist/client/${entry} is a source map left in the viewer`);
+	}
+	if (problems.length > 0) {
+		throw new Error(
+			[
+				"The build leaves a source map reference that the package does not ship:",
+				...problems.map((problem) => `  - ${problem}`),
+				'Keep sourcemap "hidden" in vite.config.ts and "external" here.',
+			].join("\n"),
+		);
+	}
 };
 
 // ツール定義は AI のコンテキストに載る。deferred loading を持つクライアントなら
@@ -469,6 +526,7 @@ if (isWatch) {
 	await inlineViewerHtml();
 	await stageRuntimeDependencies();
 	await esbuild.build(config);
+	await assertNoShippedSourcemapReference();
 	console.log("Build completed: dist/index.mjs");
 	await reportToolPayload();
 }

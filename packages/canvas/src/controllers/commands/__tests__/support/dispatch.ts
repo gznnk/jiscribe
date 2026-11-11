@@ -2,11 +2,12 @@ import { deepFreezeState } from "../../../__tests__/support/deepFreezeState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { CanvasRegistries } from "../../../registries/CanvasRegistries";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
-import { handleCommand } from "../../handlers/handleCommand";
+import { executeCommand } from "../../handlers/handleCommand";
 
 /**
- * Run one command through handleCommand, the same entry the ObjectMenu and keyboard use, so
- * the real path — CommandRegistry resolution, the canExecute gate and execute — is covered.
+ * Run one command through executeCommand, the path every press ends in, so the real path —
+ * CommandRegistry resolution, the canExecute gate and execute — is covered. A command declaring a
+ * `busyLabel` runs at once too, where handleCommand would only record it as pending.
  * The input state is frozen first, so an in-place mutation by the command is detected.
  *
  * @param state - Frozen before dispatch, so it must not be reused expecting mutation
@@ -22,4 +23,4 @@ export const runCommand = (
 	commandId: string,
 	registries: CanvasRegistries = createTestRegistries(),
 ): CanvasControllerState =>
-	handleCommand(deepFreezeState(state), commandId, registries);
+	executeCommand(deepFreezeState(state), commandId, registries);

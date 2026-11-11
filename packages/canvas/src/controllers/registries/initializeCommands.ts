@@ -6,6 +6,7 @@ import {
 	LayoutLeftToRightCommand,
 	LayoutTopToBottomCommand,
 } from "../commands/arrange/layout/LayoutCommands";
+import { createRouteConnectorsCommand } from "../commands/arrange/layout/RouteConnectorsCommand";
 import { moveCommands } from "../commands/arrange/MoveCommands";
 import { SendBackwardCommand } from "../commands/arrange/SendBackwardCommand";
 import { SendToBackCommand } from "../commands/arrange/SendToBackCommand";
@@ -49,7 +50,7 @@ import { ZoomToFitCommand } from "../commands/view/ZoomToFitCommand";
 import { ZoomToSelectionCommand } from "../commands/view/ZoomToSelectionCommand";
 
 /**
- * Every command available to a canvas, in registration order.
+ * Every command available to a canvas whatever its registries, in registration order.
  * `createCanvasRegistries` registers all of these by default, or a filtered
  * subset when `config.commands` restricts the enabled command ids.
  */
@@ -117,7 +118,7 @@ export const ALL_COMMANDS: Command[] = [
  *
  * Clears first so re-running it — tests, partial init, hot reload — never leaves
  * stale commands behind: the registry always ends up with exactly the listed
- * command ids.
+ * command ids. `routeConnectors` is built here, per canvas, after `ALL_COMMANDS`.
  *
  * @param registries Target bundle to populate.
  * @param commandIds When provided, only commands whose id is included are
@@ -144,5 +145,8 @@ export const initializeCommands = (
 		enabled === undefined || enabled.has(command.id);
 	registries.command
 		.registerAll(ALL_COMMANDS.filter(isEnabled))
+		.registerAll(
+			[createRouteConnectorsCommand(registries, plugins)].filter(isEnabled),
+		)
 		.registerAll(contributed.filter(isEnabled), "contributed");
 };

@@ -153,6 +153,15 @@ export const visitObjects = (
 	}
 };
 
+/** Every object's id, in the order {@link visitObjects} walks the tree. */
+export const listObjectIdsInTreeOrder = (doc: CanvasDoc): string[] => {
+	const treeOrderIds: string[] = [];
+	visitObjects(doc.root, ({ id }) => {
+		treeOrderIds.push(id);
+	});
+	return treeOrderIds;
+};
+
 /**
  * Ids of `object` and of every descendant reachable through `children`. Unlike
  * {@link readChildren} this goes inside an opaque object too, since a connector may be

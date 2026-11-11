@@ -22,8 +22,9 @@ export { BelowLabelHitArea } from "./presentation/BelowLabelHitArea";
 // unstable surface re-exported above: createFrameObject draws it, and a caption
 // shape whose component is written without createFrameObject draws it itself.
 
-// The measurement of a caption, for a `features.text: "label"` shape that places
-// its caption somewhere of its own (a group marker's, set beyond its tip) and so
+// The measurement of a caption, for a `features.text: "label"` / `"innerLabel"`
+// shape that places its caption somewhere of its own (a group marker's, set
+// beyond its tip; an AWS group's, in its band) and so
 // sizes the box itself. Everything but where the box goes is already decided
 // here; it measures with `@jiscribe/doc`'s LABEL_TEXT_STYLE_DEFAULTS unless the
 // type hands its own.

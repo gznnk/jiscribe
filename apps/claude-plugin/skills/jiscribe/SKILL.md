@@ -3,7 +3,7 @@ name: jiscribe
 description: Use when creating or editing a Jiscribe canvas diagram — a .jis / .jiscribe file, or a flowchart, architecture diagram, sticky-note board or chart the user wants drawn on a Jiscribe canvas.
 ---
 
-<!-- jiscribe guide 0.12.2+0664995f -->
+<!-- jiscribe guide 0.12.2+b8bcdfa9 -->
 
 # Drawing on a Jiscribe canvas
 
@@ -378,6 +378,15 @@ but not the connect points, guide the adjustments after `layout_objects`.
 - Choose connect points to match the connection direction (for left→right, source = `rightCenter`, target = `leftCenter`).
 - Do not overlap objects that are already there.
 
+Once the shapes stand where they belong, call `route_connectors` instead of
+choosing connect points and corners yourself: it keeps every shape where it is
+and gives each connector the sides and the right-angled route around the other
+shapes, the labels below icons and the container title bands, and moves each
+connector's label to where it covers as little of any shape, and as few of the
+other labels and of the lines redrawn in the same call, as it can. It runs once, so
+call it again after moving shapes. `layout_objects` moves the shapes as well;
+keep it for a diagram the connectors structure.
+
 ## Choosing what to draw with
 
 - Prefer flowchart types (`diamond` for decisions, `stadium` for start/end, `rect` for steps) when the user asks for a flowchart. The same goes for the other families: pick the type whose meaning is already the thing you are drawing (see "Object quick reference").
@@ -400,7 +409,7 @@ Add the nodes first, then draw the connectors between them.
 Everything you draw stays editable:
 
 - **Wrong shape, wrong label, wrong color**: delete or restyle the object itself. Never leave a mistake standing and put a second object beside it.
-- **A line that crosses a shape**: on a diagram the connectors structure, run `layout_objects` again first. Otherwise fix the connector — pin both ends to the edges that face each other, or give the corners as route points. Do not redraw the diagram to dodge it.
+- **A line that crosses a shape**: run `route_connectors` on it (or on the drawing), which reroutes it around the shapes without moving any; on a diagram the connectors structure, `layout_objects` again rearranges it all instead. Do not redraw the diagram to dodge it.
 - **A layout that got tight**: on a diagram the connectors structure, run `layout_objects` again first. Otherwise move shapes to open space up, align and distribute to tidy rows and columns, resize a shape when a label no longer fits.
 - **Text on a line belongs to the line**: it is the connector's own label. Never place a text shape next to a connector to fake a label.
 - **A free path** — a chart line, a bracket, a detour around a shape — is one connector: `routing` `"straight"` plus every corner in `points`, as many as it takes. Never put an invisible shape at each bend, and never stack narrow rectangles to fake a line or a filled area.

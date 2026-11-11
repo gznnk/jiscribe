@@ -28,7 +28,8 @@
 		"dist",
 		"!dist/**/*.map",
 		"CHANGELOG.md",
-		"LICENSE"
+		"LICENSE",
+		"THIRD-PARTY-NOTICES.txt"
 	],
 	"bin": {
 		"jiscribe-mcp": "dist/index.mjs"
@@ -50,7 +51,9 @@
 		"typecheck": "tsc --noEmit",
 		"test": "vitest run",
 		"test:e2e": "playwright test",
-		"dev:viewer": "vite"
+		"dev:viewer": "vite",
+		"generate:notices": "node scripts/generateNotices.mjs",
+		"check:notices": "node scripts/generateNotices.mjs --check"
 	},
 	"comments": {
 		"exports": "./server は同じ workspace の apps/desktop が src/server.ts を直接読むための入口。dist には無いので、公開する tarball では publishConfig が ./package.json だけに差し替える。",

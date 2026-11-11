@@ -27,6 +27,7 @@
 このほか、カメラや選択の設定・テキスト編集中の下書きの更新のように、reducer の中で state を差し替えるだけの
 アクションもある。たとえば `UPDATE_TEXT_EDIT` は下書きを差し替えるだけで、doc へのコミットは `END_TEXT_EDIT` の確定か、
 エディタの Ctrl/Cmd+Enter が走らせる `commitTextEdit` コマンドで起きる（両者は同じ state・同じ undo 1 件に行き着く）。
+`RUN_PENDING_COMMAND` は例外で、どの入口からの押下でも保留になったコマンドを、`handleCommand` ではなく `executeCommand` で走らせる（再び保留にしないため）。
 
 各ハンドラ（`handleGesture` / `handleCommand` / `handlePaste` …）は、state と入力（とキャンバスのレジストリ束）から
 新しい state を返す**純粋関数**として実装され、副作用を持たない。

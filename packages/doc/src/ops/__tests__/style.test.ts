@@ -319,6 +319,44 @@ describe("setStyle on a label-text type", () => {
 	});
 });
 
+describe("setStyle on an innerLabel-text type", () => {
+	const innerLabelOps = createDocOps({
+		plugins: [
+			{
+				id: "caption-plugin",
+				objects: {
+					captioned: {
+						...captionedDefinition,
+						features: { ...captionedDefinition.features, text: "innerLabel" },
+					},
+				},
+			},
+		],
+	});
+
+	it("writes the caption's typography and reports its background and vertical placement as ignored", () => {
+		const doc = emptyDoc();
+		innerLabelOps.addObject(doc, "captioned", { x: 0, y: 0, text: "VPC" });
+
+		const result = innerLabelOps.setStyle(doc, ["captioned-1"], {
+			labelFill: "#ffffff",
+			fontWeight: "bold",
+			verticalAlign: "top",
+		});
+
+		expect(result).toEqual({
+			styledIds: ["captioned-1"],
+			ignored: [
+				{ id: "captioned-1", properties: ["verticalAlign", "labelFill"] },
+			],
+		});
+		const captioned = readObject(doc, "captioned-1");
+		expect(captioned).toMatchObject({ fontWeight: "bold" });
+		expect(captioned).not.toHaveProperty("labelFill");
+		expect(captioned).not.toHaveProperty("verticalAlign");
+	});
+});
+
 describe("setStyle on a slots type", () => {
 	const slotsOps = createDocOps({
 		plugins: [

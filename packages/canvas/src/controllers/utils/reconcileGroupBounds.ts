@@ -20,7 +20,7 @@ import type { CanvasControllerState } from "../CanvasTypes";
  *   empties or leaves with one child (`cleanupGroups`). Deleting one of them as
  *   "now redundant" reopens that case.
  * - A writer core hands the map to and gets an object back has nothing to name,
- *   and that is what this covers (`handleCommand`, the selection-control
+ *   and that is what this covers (`executeCommand`, the selection-control
  *   write-back). It is the half a plugin reaches, so it settles without the
  *   plugin naming anything — which is the point: there is no call for a plugin
  *   author to forget. A group whose `childIds` the transition replaced is

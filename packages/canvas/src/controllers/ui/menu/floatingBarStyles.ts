@@ -9,10 +9,9 @@ export const FLOATING_BAR_PADDING = 4;
 export const FLOATING_BAR_BORDER_WIDTH = 1;
 
 /**
- * The look shared by every bar that floats over the canvas instead of taking
- * layout space beside it: the stencil bar and the two pills the top bar
- * collapses into. Only the surface and the row of items; where the bar sits,
- * and which way its items run, is each container's own.
+ * The look shared by every bar or pill that floats over the canvas instead of
+ * taking layout space beside it. Only the surface and the row of items; where
+ * it sits, and which way its items run, is each container's own.
  */
 export const floatingBarStyles = css`
 	box-sizing: border-box;

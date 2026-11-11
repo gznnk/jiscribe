@@ -46,7 +46,7 @@ type GeometryState<T extends ObjectFeatures> =
  * - Uses TransformState instead of TransformDoc (pre-computed transform with UI properties)
  * - Includes Brand to prevent direct assignment from/to Doc types
  * - Mixes in the same TextStyleState for the text shapes ("body" / "label" /
- *   "slots"), the state having one normal form regardless of how the doc spells
+ *   "innerLabel" / "slots"), the state having one normal form regardless of how the doc spells
  *   its text; a "label" type carries its caption's own fields beside it
  *   (LabelTextStyleState)
  *
@@ -82,7 +82,9 @@ export type CreateObjectState<
 		(T["fill"] extends true ? FillStyleState : object) &
 		(T["radius"] extends true ? RadiusStyleState : object) &
 		(T["arrow"] extends true ? ArrowStyleState : object) &
-		(T["text"] extends "body" | "label" | "slots" ? TextStyleState : object) &
+		(T["text"] extends "body" | "label" | "innerLabel" | "slots"
+			? TextStyleState
+			: object) &
 		(T["text"] extends "label" ? LabelTextStyleState : object) &
 		Brand<S> &
 		P

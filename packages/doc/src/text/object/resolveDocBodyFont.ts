@@ -8,7 +8,7 @@ import { TEXT_STYLE_FALLBACK } from "../style/textStyleFallback";
 
 /**
  * Font the body of a root-form doc is drawn — and so measured — with: the flat
- * `font*` fields such a doc (`text: "body"` / `"source"` / `"label"`) spells its
+ * `font*` fields such a doc (`text: "body"` / `"source"` / `"label"` / `"innerLabel"`) spells its
  * styling out in, over the type's own body defaults, over the shared last resort.
  * A text slot carries the same fields under the same names, so a caption measured
  * from a state's body slot resolves through here too (calcLabelTextBoxSize). A separate

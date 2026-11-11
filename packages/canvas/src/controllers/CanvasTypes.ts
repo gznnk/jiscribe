@@ -755,6 +755,16 @@ export type CanvasControllerState = CanvasState & {
 	isOtherShapesPopoverOpen: boolean;
 
 	/**
+	 * Id of the command a press from any entry left pending while its busy
+	 * indicator is painted (`Command.busyLabel`; handleCommand,
+	 * useRunPendingCommand). Set only between that press and the
+	 * RUN_PENDING_COMMAND it leads to; resetUiState drops it, which cancels the
+	 * run. Not part of CanvasDoc, carries no history. A command without a
+	 * `busyLabel` runs regardless of it.
+	 */
+	pendingBusyCommandId: string | null;
+
+	/**
 	 * Which form the chrome is in (`CanvasSidebarsState.isExpanded`, as a host
 	 * sees it): true for the full-width top bar with the open sidebars beside
 	 * the viewport, false for the top bar's corner pills, the stencil bar

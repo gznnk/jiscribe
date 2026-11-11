@@ -124,6 +124,17 @@ export type CommandAction = {
 };
 
 /**
+ * Runs the command a press from any entry left pending (`pendingBusyCommandId`),
+ * once its busy indicator is on screen (useRunPendingCommand), through
+ * executeCommand so it is not deferred again. Carries no id: dropped when
+ * nothing is pending any more, and clears the pending id on every other exit, a
+ * refused or empty run included.
+ */
+export type RunPendingCommandAction = {
+	type: "RUN_PENDING_COMMAND";
+};
+
+/**
  * Undoes back to one specific history entry in a single step, however many
  * entries lie in between (`ref.current.history.revertTo`).
  *
@@ -419,6 +430,7 @@ export type CanvasAction =
 	| SetViewportAction
 	| SetSelectionAction
 	| CommandAction
+	| RunPendingCommandAction
 	| RevertHistoryAction
 	| UpdateTextEditAction
 	| UpdateTextEditSelectionAction

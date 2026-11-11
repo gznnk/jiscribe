@@ -163,10 +163,19 @@ describe("createFrameStateValidator label text", () => {
 		expect(isValid({ ...captioned, labelFill: 3 })).toBe(false);
 	});
 
-	it("leaves the field alone on a type that holds no caption", () => {
+	it("leaves the field alone on a type whose text carries no caption background", () => {
 		const isBodyValid = createFrameStateValidator(features({ text: "body" }));
 		expect(
 			isBodyValid({ ...captioned, labelFill: "url(javascript:alert(1))" }),
+		).toBe(true);
+		const isInnerLabelValid = createFrameStateValidator(
+			features({ text: "innerLabel" }),
+		);
+		expect(
+			isInnerLabelValid({
+				...captioned,
+				labelFill: "url(javascript:alert(1))",
+			}),
 		).toBe(true);
 	});
 });

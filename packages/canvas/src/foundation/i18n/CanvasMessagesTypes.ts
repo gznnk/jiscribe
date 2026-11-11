@@ -73,7 +73,7 @@ export type CanvasMessageStrings = {
 	propertyPanelSectionLabel: string;
 	/** Heading of the section stating a connector label's border, shown only once the label has text */
 	propertyPanelSectionLabelBorder: string;
-	/** Heading of the section holding the stacking-order commands, shown for any selection they apply to */
+	/** Heading of the section holding the stacking-order, grouping, automatic layout and line-redrawing commands, shown for any selection the stacking or grouping apply to */
 	propertyPanelSectionArrange: string;
 	/** Heading of the section stating the note a single selected object carries in the document */
 	propertyPanelSectionMeta: string;
@@ -107,10 +107,18 @@ export type CanvasMessageStrings = {
 	propertyPanelViewScrollContent: string;
 	/** Label of the row holding the two automatic layout buttons */
 	propertyPanelAutoLayout: string;
-	/** Button running the top-to-bottom automatic layout; drawn in half the row after an arrow the panel draws itself, so keep it short and leave the arrow out (the command's label is its tooltip) */
+	/** Second line of both automatic layout buttons' tooltip, after the command's label: says the shapes move as well as the lines */
+	propertyPanelAutoLayoutTitle: string;
+	/** Button running the top-to-bottom automatic layout; drawn in half the row after an arrow the panel draws itself, so keep it short and leave the arrow out (the command's label is the start of its tooltip) */
 	propertyPanelAutoLayoutTopToBottom: string;
-	/** Button running the left-to-right automatic layout; drawn in half the row after an arrow the panel draws itself, so keep it short and leave the arrow out (the command's label is its tooltip) */
+	/** Button running the left-to-right automatic layout; drawn in half the row after an arrow the panel draws itself, so keep it short and leave the arrow out (the command's label is the start of its tooltip) */
 	propertyPanelAutoLayoutLeftToRight: string;
+	/** Label of the row redrawing connectors without moving a shape */
+	propertyPanelRouteConnectors: string;
+	/** The one button of the {@link propertyPanelRouteConnectors} row */
+	propertyPanelRouteConnectorsButton: string;
+	/** Tooltip of {@link propertyPanelRouteConnectorsButton}: says the shapes stay where they are */
+	propertyPanelRouteConnectorsButtonTitle: string;
 	/** Label of the color row (fill, stroke, font color) */
 	propertyPanelRowColor: string;
 	/** Label of the stroke-thickness row */

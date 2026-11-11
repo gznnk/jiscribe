@@ -112,10 +112,11 @@ export {
 // these beside the slot's own keys.
 export { TEXT_BODY_KEYS } from "./model/objects/base/TextStyleDoc";
 // The narrower single-body doc forms: one for a type that renders its text from a
-// source language of its own (features.text: "source"), one for a type drawing
-// its text as a caption sized from itself (features.text: "label"), with the fields
-// that caption carries beyond its slot's styling.
+// source language of its own (features.text: "source"), and the caption sized from
+// itself: the form both caption types share (features.text: "innerLabel" is it
+// alone), and a `"label"` one with the fields it carries beyond its slot's styling.
 export type {
+	InnerLabelTextStyleDoc,
 	LabelTextStyleDoc,
 	SourceTextStyleDoc,
 } from "./model/objects/base/TextStyleDoc";
@@ -159,6 +160,8 @@ export {
 export type { TextType } from "./model/objects/types/text/TextType";
 export {
 	acceptsTextEmphasisStyle,
+	hasLabelFill,
+	isCaptionText,
 	isSingleBodyText,
 	textStyleKeysOf,
 } from "./model/objects/types/text/TextType";
@@ -229,6 +232,8 @@ export {
 	type AddObjectParams,
 	type AlignEdge,
 	type AnchorHandleId,
+	ConnectorRouteKeptReasons,
+	type ConnectorRouteKeptReason,
 	type ConnectParams,
 	type DeleteObjectsResult,
 	type DistributeAxis,
@@ -251,6 +256,7 @@ export {
 	type RemoveObjectsFromGroupResult,
 	type ResizeObjectEntry,
 	type ResizeObjectParams,
+	type RouteConnectorsResult,
 	type SetHeightModeParams,
 	type SetInlineTextStyleEntry,
 	type SetPointsEntry,

@@ -79,7 +79,7 @@ headless 半分である。パース層がその型を知り、doc を検証し�
 **構造的に代入できる** — 同じ `plugins` 配列が `<Canvas>` にもパーサーにも渡せる。
 
 doc の `textRegion` は headless の答え（はみ出し検査・高さ自動の計測）で、キャンバスが
-文字を描く位置ではない。`"body"` / `"source"` の型は宣言が必須で、`"label"` の型は宣言しない。
+文字を描く位置ではない。`"body"` / `"source"` の型は宣言が必須で、`"label"` / `"innerLabel"` の型は宣言しない。
 キャンバス上の置き場所は `"textSlot"` 部分種別の `region`（`(state, slotId) => Rect`。
 1 スロットずつ）か `regions`（`(state) => Record<slotId, Rect>`。全スロットを 1 回で）
 で宣言する。`createTextSlotPartKindDefinition({ region })` /
@@ -283,7 +283,7 @@ mixed になれる（[スタイルシステム](./10-style-properties.ja.md) 参
   含む — サイドバーに残るのは、扱う種別がすべてその中にある組み込みの行だけ。カスタム行は
   何を書くかを申告できないので落ちる。部分選択に向けたカスタム行は、残る部分の
   種別を `pickedPartKinds` に並べる（表の挿入行なら `row` / `column` / `textSlot`）。
-  ボタンでコマンドを走らせるなら、組み込みの「重ね順」セクションと同じく
+  ボタンでコマンドを走らせるなら、組み込みの「整列」セクションと同じく
   `PropertyCommandGrid` / `PropertyCommandButton`・`resolveCommandLabel`・
   `commandAction` で組む。ObjectMenu も項目を同じ規則で絞る
 

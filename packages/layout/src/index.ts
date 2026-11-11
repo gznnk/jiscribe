@@ -1,41 +1,55 @@
-export {
-	EDGE_ANCHOR_FAN_RANGE,
-	EDGE_ANCHOR_STRAIGHT_RANGE,
-	EDGE_BUNDLE_SPACING,
-	EDGE_END_SPACING,
-} from "./chooseEdgeAnchors";
-export { calcFacingSides } from "./calcFacingSides";
-export { computeLayeredLayout } from "./computeLayeredLayout";
+export { EDGE_BUNDLE_SPACING } from "./layered/chooseEdgeAnchors";
+export { calcFacingSides } from "./layered/calcFacingSides";
+export { computeLayeredLayout } from "./layered/computeLayeredLayout";
 export {
 	createTakenEnds,
 	type TakenEnd,
 	type TakenEnds,
-} from "./createTakenEnds";
-export { isRectInside } from "./isRectInside";
-export { LayoutDirections, type LayoutDirection } from "./LayoutDirection";
+} from "./layered/createTakenEnds";
+export { isRectInside } from "./shared/isRectInside";
+export {
+	EDGE_ANCHOR_FAN_RANGE,
+	EDGE_END_SPACING,
+	GAP_LANE_SPACING,
+} from "./shared/edgeSpacing";
+export {
+	LayoutDirections,
+	type LayoutDirection,
+} from "./shared/LayoutDirection";
 export {
 	resolvePlacements,
 	type PlacementCandidate,
 	type ResolvedContainer,
 	type ResolvedNode,
-} from "./resolvePlacements";
+} from "./shared/resolvePlacements";
+export { EDGE_ROUTE_MARGIN } from "./routing/edgeRoutingCosts";
+export { routeEdgesAroundNodes } from "./routing/routeEdgesAroundNodes";
 export {
 	splitLayoutGraph,
 	type SplittableLayoutGraph,
-} from "./splitLayoutGraph";
-export { GAP_LANE_SPACING } from "./spreadGapLanes";
+} from "./layered/splitLayoutGraph";
+export { EDGE_ANCHOR_STRAIGHT_RANGE } from "./shared/straightAnchor";
 export {
 	LAYERED_LAYOUT_DEFAULTS,
 	type LaidOutContainer,
 	type LaidOutEdge,
 	type LaidOutNode,
-	type LayoutAnchorRange,
 	type LayeredLayoutOptions,
 	type LayeredLayoutResult,
-	type LayoutEdgeAnchor,
 	type LayoutGraphContainer,
 	type LayoutGraphEdge,
 	type LayoutGraphNode,
-	type LayoutSide,
-	type LayoutVisualMargin,
-} from "./types";
+} from "./layered/types";
+export type {
+	LayoutAnchorRange,
+	LayoutEdgeAnchor,
+	LayoutSide,
+	LayoutVisualMargin,
+} from "./shared/types";
+export type {
+	EdgeRoutingOptions,
+	EdgeRoutingResult,
+	RoutableEdge,
+	RoutableNode,
+	RoutedEdge,
+} from "./routing/types";

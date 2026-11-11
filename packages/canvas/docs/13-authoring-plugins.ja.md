@@ -152,7 +152,7 @@ canvas に残して SDK が再エクスポートする。物理的に移すと c
 `visualBounds` も渡さない。doc の既定には `LABEL_TEXT_STYLE_DEFAULTS`
 （`@jiscribe/doc`）を spread し、`BelowLabelHitArea` を図形自身の `data-kind="object"`
 グループの中に置いてラベルを掴めるようにする。箱の下以外に置くラベル（group marker の
-先端の先、AWS グループの角のバッジの横）も `"label"` の型で、UI 定義に `textRegion` と
+先端の先）も `"label"` の型で、UI 定義に `textRegion` と
 `visualBounds` を揃えて渡す（大きさは `calcLabelBoxSize` で測り、型の文字の既定が
 `LABEL_TEXT_STYLE_DEFAULTS` でなければそれを渡す）。core は自分の置き場所の代わりに
 それを登録する。片方だけ、または何も置かない `"textSlot"` の部分種別は登録時に
@@ -161,6 +161,11 @@ component は、文字と同じく `LabelTextFill`（キットが再エクスポ
 ラベルの背景色を `label-style` セクションに出す。`menu` を自分で書く型もそこに
 `{ type: "labelBackgroundColor" }` を置く。別のラベル型と一緒に選んでも項目が残るように
 するためである。
+
+自分の箱の内側、自分の塗りの上に見出しを置く図形（角のバッジの横に置く AWS グループの
+見出し）は `features.text: "innerLabel"` を宣言する。同じ見出しだが、既定の置き場所と
+`labelFill` を持たない。UI 定義は必ず `textRegion` と `visualBounds` を渡し（無ければ
+登録時に拒否される）、背景の四角は描かれず、既定のメニューも背景色を出さない。
 
 スロット同士を並べてレイアウトする型（表のセル、record の区画）は、`"textSlot"` の
 部分種別を自分で宣言し、`createTextSlotPartKindDefinition({ regions })` を

@@ -156,8 +156,7 @@ doc definition (refused by the parser and at registration), and leaves the UI
 definition's `textRegion` and `visualBounds` out. Spread `LABEL_TEXT_STYLE_DEFAULTS`
 (`@jiscribe/doc`) into its doc defaults, and place `BelowLabelHitArea` inside the
 shape's own `data-kind="object"` group so the caption can be grabbed. A caption
-placed anywhere else — beyond a group marker's tip, beside an AWS group's corner
-badge — is still a `"label"` type: its UI definition passes `textRegion` and
+placed anywhere else — beyond a group marker's tip — is still a `"label"` type: its UI definition passes `textRegion` and
 `visualBounds` together (sized with `calcLabelBoxSize`, handed the type's own text
 defaults where they are not `LABEL_TEXT_STYLE_DEFAULTS`), and the core registers
 them in place of its own; one without the other, or a `"textSlot"` part kind
@@ -168,6 +167,12 @@ text, as it draws the text. The default menus offer the caption's background und
 the `label-style` section; a type stating its own `menu` puts
 `{ type: "labelBackgroundColor" }` there too, so the item survives a selection
 mixing it with another label type.
+
+A shape titling itself inside its own box, over its own fill — an AWS group's
+title beside its corner badge — declares `features.text: "innerLabel"`. It is the
+same caption with no default place and no `labelFill`: its UI definition always
+passes `textRegion` and `visualBounds` (refused at registration otherwise), no box
+is painted behind it, and the default menus offer no background for it.
 
 A type whose slots are laid out against each other (a table's cells, a record's
 compartments) declares the `"textSlot"` part kind itself, with

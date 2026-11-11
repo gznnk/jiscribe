@@ -4,6 +4,8 @@
 // host (given the same object, Canvas never decides it has to sync).
 
 import {
+	type ConnectorRouteKeptReason,
+	ConnectorRouteKeptReasons,
 	DocOperationError,
 	type CanvasDoc,
 	type DocOps,
@@ -27,6 +29,18 @@ import type { CanvasOpHistory } from "./canvasOpHistory";
 import type { CanvasToolSet } from "../canvasToolSet";
 import { describeRectEdges, formatNumber, quoteIds } from "../resultText";
 import type { AiDocBridge } from "./docBridge";
+
+/** Why routeConnectors left a connector alone, as the result sentence says it */
+const KEPT_CONNECTOR_REASON_TEXTS: Record<ConnectorRouteKeptReason, string> = {
+	freeEnd: "an end attached to no shape",
+	selfLoop: "a self loop",
+	declaredConnectPoint: "an end on a connect point the shape declares",
+	containerEnd: "an end on a container shape",
+	transformedEnd: "an end on a rotated or flipped shape",
+	unmeasurableEnd: "an end on an object with no box of its own",
+	overlappingEnds: "the two ends' shapes overlap",
+	unroutable: "no way around the shapes between",
+};
 
 const describeCanvas = (doc: CanvasDoc): string => {
 	// The document's own fields ahead of root whatever order the file holds them
@@ -523,6 +537,25 @@ const applyDocChange = (
 			return restackedConnectorIds.length === 0
 				? laidOut
 				: `${laidOut}; sent ${quoteIds(restackedConnectorIds)} back to just beneath the shape whose caption each runs under`;
+		}
+		case "routeConnectors": {
+			const { connectorIds, keptConnectorIdsByReason, restackedConnectorIds } =
+				docOps.routeConnectors(draftDoc, op.ids);
+			const routed =
+				connectorIds.length === 0
+					? "redrew no connector"
+					: `redrew ${quoteIds(connectorIds)}`;
+			const kept = ConnectorRouteKeptReasons.flatMap((reason) => {
+				const keptIds = keptConnectorIdsByReason[reason];
+				return keptIds === undefined
+					? []
+					: [`${quoteIds(keptIds)} (${KEPT_CONNECTOR_REASON_TEXTS[reason]})`];
+			});
+			const restacked =
+				restackedConnectorIds.length === 0
+					? ""
+					: `; sent ${quoteIds(restackedConnectorIds)} back to just beneath the shape whose caption each runs under`;
+			return `${routed}${kept.length === 0 ? "" : `; left as they were: ${kept.join(", ")}`}${restacked}`;
 		}
 		case "dissolveGroups": {
 			const releasedIds = docOps.dissolveGroups(draftDoc, op.ids);

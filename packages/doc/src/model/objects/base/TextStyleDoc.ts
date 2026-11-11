@@ -59,15 +59,21 @@ export const TEXT_BODY_KEYS = exhaustiveKeysOf<
 
 /**
  * The doc form of a body drawn as a caption sized from its own text
- * (features.text: "label"): the single-body form less what has no meaning for a box sized from
- * its own text — `verticalAlign` and the basis it is measured against — plus the
- * color painted behind the caption. Derived from {@link TextStyleDoc} rather than
- * copied, like {@link SourceTextStyleDoc}.
+ * (features.text: "label" / "innerLabel", isCaptionText): the single-body form less
+ * what has no meaning for a box sized from its own text — `verticalAlign` and the
+ * basis it is measured against. Derived from {@link TextStyleDoc} rather than
+ * copied, like {@link SourceTextStyleDoc}. An `"innerLabel"` caption is this alone.
  */
-export type LabelTextStyleDoc = Omit<
+export type InnerLabelTextStyleDoc = Omit<
 	TextStyleDoc,
 	"verticalAlign" | "textVerticalBasis"
-> & {
+>;
+
+/**
+ * The doc form of a `features.text: "label"` caption: {@link InnerLabelTextStyleDoc}
+ * plus the color painted behind the caption.
+ */
+export type LabelTextStyleDoc = InnerLabelTextStyleDoc & {
 	/**
 	 * Color painted behind the caption, any CSS color. Omitted or `"auto"`
 	 * (AUTO_COLOR) knocks out what lies behind it in the page's color — the

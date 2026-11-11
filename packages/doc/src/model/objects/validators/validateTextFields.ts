@@ -80,7 +80,7 @@ const sourceTextStyleValidators = {
  * The styling a caption body accepts: the slot's set less `verticalAlign`
  * (`textStyleKeysOf`), in the same order.
  */
-const labelTextStyleValidators = {
+const captionTextStyleValidators = {
 	textAlign: textBlockStyleValidators.textAlign,
 	...inlineTextStyleValidators,
 } as const satisfies Record<
@@ -198,7 +198,7 @@ export function validateRichTextContent(
 /**
  * Validate the placement a single-body doc carries on the object itself
  * (`TEXT_BODY_KEYS`), which the `"body"` and `"source"` text types hold alike (a
- * `"label"` caption has no `verticalAlign` for it to place).
+ * caption, isCaptionText, has no `verticalAlign` for it to place).
  */
 function validateTextBodyFields(
 	o: Record<string, unknown>,
@@ -277,7 +277,7 @@ export function validateSourceTextStyleFields(
 }
 
 /**
- * Validate the fields a caption carries beyond its slot's styling
+ * Validate the fields a `"label"` caption carries beyond its slot's styling
  * (`LABEL_TEXT_KEYS`): `labelFill` as a safe CSS color, `"auto"` included.
  *
  * @param o - The doc to check, or a style about to be written onto one
@@ -292,23 +292,23 @@ export function validateLabelTextFields(
 }
 
 /**
- * Validate the text group of a caption doc (features.text: "label"): the group
+ * Validate the text group of a caption doc (features.text: "label" /
+ * "innerLabel", isCaptionText): the body and the group
  * {@link validateTextStyleFields} checks less `verticalAlign` and the body's
- * placement (`textStyleKeysOf`), plus the caption's own fields
- * ({@link validateLabelTextFields}). A field the type cannot hold goes unreported
+ * placement (`textStyleKeysOf`). A `"label"` caption's own fields are
+ * {@link validateLabelTextFields}'s. A field the type cannot hold goes unreported
  * here, as every other field the type's features do not imply does.
  *
  * @param o - The doc to check; a missing `text` is valid (it reads as empty)
  * @param path - Diagnostic path of `o`, which each field name is appended to
  * @returns One diagnostic per malformed field; empty when the whole group is valid
  */
-export function validateLabelTextStyleFields(
+export function validateCaptionTextStyleFields(
 	o: Record<string, unknown>,
 	path: string,
 ): SemanticDiagnostic[] {
 	return [
 		...("text" in o ? validateRichTextContent(o.text, `${path}.text`) : []),
-		...validateFields(o, path, labelTextStyleValidators),
-		...validateLabelTextFields(o, path),
+		...validateFields(o, path, captionTextStyleValidators),
 	];
 }

@@ -210,3 +210,64 @@ describe("applyObjectDefinition: a label text type", () => {
 		).not.toThrow();
 	});
 });
+
+describe("applyObjectDefinition: an innerLabel text type", () => {
+	const innerLabelDefinition = (): ObjectTypeDefinition => ({
+		...buildLabelDefinition(),
+		features: { ...labelFeatures, text: "innerLabel" },
+	});
+	const inTheBand = () => ({ x: -20, y: -30, width: 40, height: 16 });
+	const declaredBounds = () => ({ x: -32, y: -32, width: 64, height: 64 });
+
+	it.each([
+		['a "textSlot" part kind and visualBounds', {}],
+		[
+			"visualBounds",
+			{
+				partKinds: [createTextSlotPartKindDefinition({ region: inTheBand })],
+			},
+		],
+		['a "textSlot" part kind', { visualBounds: declaredBounds }],
+	])(
+		"refuses a type declaring no %s, its caption having no default place",
+		(missing, extra) => {
+			expect(() =>
+				applyObjectDefinition(createTestRegistries(), "captioned", {
+					...innerLabelDefinition(),
+					...extra,
+				} as ObjectTypeDefinition),
+			).toThrow(
+				`ObjectTypeDefinition "captioned": features.text "innerLabel" has no default place for its caption, so it declares both a "textSlot" part kind and visualBounds; declares no ${missing}`,
+			);
+		},
+	);
+
+	it("registers the text slot kind and visual bounds it declares together, as they are", () => {
+		const registries = createTestRegistries();
+		applyObjectDefinition(registries, "captioned", {
+			...innerLabelDefinition(),
+			partKinds: [createTextSlotPartKindDefinition({ region: inTheBand })],
+			visualBounds: declaredBounds,
+		});
+
+		expect(
+			registries.objectPartKind
+				.get("captioned", TEXT_SLOT_PART_KIND)
+				?.region?.(captionedObject("VPC"), "body"),
+		).toEqual(inTheBand());
+		expect(registries.objectVisualBounds.get("captioned")).toBe(declaredBounds);
+	});
+
+	it("refuses a doc textRegion of its own", () => {
+		expect(() =>
+			applyObjectDefinition(createTestRegistries(), "captioned", {
+				...innerLabelDefinition(),
+				partKinds: [createTextSlotPartKindDefinition({ region: inTheBand })],
+				visualBounds: declaredBounds,
+				textRegion: calcFullBoxTextRegion,
+			}),
+		).toThrow(
+			'ObjectTypeDefinition "captioned": features.text "innerLabel" has its caption placed on the canvas side (by a declared "textSlot" part kind); remove its doc textRegion',
+		);
+	});
+});
