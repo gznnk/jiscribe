@@ -28,6 +28,12 @@ type LabelBackdropLayersProps = {
 	cornerRadius?: number;
 	/** False hides the layers, kept mounted, along with the label they lie under. */
 	isShown: boolean;
+	/**
+	 * The page's color (resolveLabelFill), for a label drawing its knockout here
+	 * rather than on its own box: painted over the whole box, rounded by
+	 * `cornerRadius`, under the layers. Omitted = the layers alone.
+	 */
+	knockout?: string;
 };
 
 /**
@@ -91,48 +97,68 @@ const LabelBackdropLayersComponent: React.FC<LabelBackdropLayersProps> = ({
 	layers,
 	cornerRadius,
 	isShown,
+	knockout,
 }) => (
-	<g
-		pointerEvents="none"
-		display={isShown ? undefined : "none"}
-		shapeRendering={LABEL_BACKDROP_SHAPE_RENDERING}
-	>
-		{layers.map((layer, index) => {
-			const layerRect: Rect = {
-				x: box.x + layer.rect.x,
-				y: box.y + layer.rect.y,
-				width: layer.rect.width,
-				height: layer.rect.height,
-			};
-			// A style rather than attributes: the color may be a theme token, and a
-			// CSS variable does not resolve in a presentation attribute.
-			const paint = { fill: layer.fill, fillOpacity: layer.fillOpacity };
-			return cornerRadius !== undefined &&
-				cornerRadius > 0 &&
-				reachesBoxCorner(layerRect, box) ? (
-				<path
-					key={index}
-					d={buildRoundedLayerPath(layerRect, box, cornerRadius)}
-					style={paint}
-				/>
-			) : (
-				<rect
-					key={index}
-					x={layerRect.x}
-					y={layerRect.y}
-					width={layerRect.width}
-					height={layerRect.height}
-					style={paint}
-				/>
-			);
-		})}
-	</g>
+	<>
+		{knockout !== undefined && (
+			<rect
+				x={box.x}
+				y={box.y}
+				width={box.width}
+				height={box.height}
+				rx={cornerRadius}
+				ry={cornerRadius}
+				pointerEvents="none"
+				display={isShown ? undefined : "none"}
+				shapeRendering={LABEL_BACKDROP_SHAPE_RENDERING}
+				// A style rather than the attribute: a CSS variable does not resolve
+				// in a presentation attribute.
+				style={{ fill: knockout }}
+			/>
+		)}
+		<g
+			pointerEvents="none"
+			display={isShown ? undefined : "none"}
+			shapeRendering={LABEL_BACKDROP_SHAPE_RENDERING}
+		>
+			{layers.map((layer, index) => {
+				const layerRect: Rect = {
+					x: box.x + layer.rect.x,
+					y: box.y + layer.rect.y,
+					width: layer.rect.width,
+					height: layer.rect.height,
+				};
+				// A style rather than attributes: the color may be a theme token, and a
+				// CSS variable does not resolve in a presentation attribute.
+				const paint = { fill: layer.fill, fillOpacity: layer.fillOpacity };
+				return cornerRadius !== undefined &&
+					cornerRadius > 0 &&
+					reachesBoxCorner(layerRect, box) ? (
+					<path
+						key={index}
+						d={buildRoundedLayerPath(layerRect, box, cornerRadius)}
+						style={paint}
+					/>
+				) : (
+					<rect
+						key={index}
+						x={layerRect.x}
+						y={layerRect.y}
+						width={layerRect.width}
+						height={layerRect.height}
+						style={paint}
+					/>
+				);
+			})}
+		</g>
+	</>
 );
 
 /**
  * The frames' fills lying under a label, painted over the page's color behind
  * it so an `"auto"` label blends into the frame it sits on: one shape per
- * layer, in one group, taking no pointer and carrying no `data-kind`. Shared
- * by a caption's LabelTextFill and a connector's label.
+ * layer, in one group, taking no pointer and carrying no `data-kind`, after
+ * the knockout when one is given. Shared by a caption's LabelTextFill, a
+ * connector's label and that label's editor.
  */
 export const LabelBackdropLayers = memo(LabelBackdropLayersComponent);

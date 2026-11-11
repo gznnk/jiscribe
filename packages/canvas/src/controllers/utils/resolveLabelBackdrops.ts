@@ -25,9 +25,9 @@ import {
 	resolveConnectorPointsCached,
 	resolveEndpointOwner,
 } from "../../rendering/objects/connector/geometry/endpoints";
+import { calcConnectorLabelAnchor } from "../../rendering/objects/connector/geometry/label/calcConnectorLabelAnchor";
 import {
 	placeConnectorLabelBox,
-	resolveConnectorLabelAnchor,
 	resolveConnectorLabelBox,
 } from "../../rendering/objects/connector/geometry/label/connectorLabelLayout";
 import type { ConnectorLabelBox } from "../../rendering/objects/connector/geometry/label/connectorLabelLayout";
@@ -219,11 +219,16 @@ const measureConnectorLabel = (label: ConnectorLabel): ConnectorLabelBox => {
 	return size;
 };
 
-/** Where a connector's label lies, for an `"auto"` label with some text on a resolvable path, else null. */
+/**
+ * Where a connector's label lies, for an `"auto"` label on a resolvable path,
+ * else null. An empty label counts only while it is open in the editor
+ * (`isLabelEdited`), whose box is drawn at its minimum size as it waits for text.
+ */
 const resolveConnectorLabelPlacement = (
 	obj: ObjectState,
 	objects: Record<string, ObjectState>,
 	registries: LabelBackdropRegistries,
+	isLabelEdited: boolean,
 ): LabelBoxPlacement | null => {
 	if (!isConnectorState(obj)) {
 		return null;
@@ -231,7 +236,7 @@ const resolveConnectorLabelPlacement = (
 	const label = obj.label;
 	if (
 		label === undefined ||
-		label.text === "" ||
+		(label.text === "" && !isLabelEdited) ||
 		!isAutoLabelFill(label.fill)
 	) {
 		return null;
@@ -248,9 +253,10 @@ const resolveConnectorLabelPlacement = (
 	if (!resolved) {
 		return null;
 	}
-	const anchor = resolveConnectorLabelAnchor(
+	const anchor = calcConnectorLabelAnchor(
 		listConnectorPathPoints(resolved),
-		label,
+		label.position,
+		label.offset,
 	);
 	if (anchor === null) {
 		return null;
@@ -368,8 +374,8 @@ const cutLayers = (
  * (readTextMeasurementGeneration): a pass re-measures only what changed.
  *
  * Labels taken: a `features.text: "label"` caption with text and an `"auto"`
- * (or omitted) `labelFill`, and a connector label with text and an `"auto"`
- * (or omitted) `fill`.
+ * (or omitted) `labelFill`, and a connector label with text (or open in the
+ * editor) and an `"auto"` (or omitted) `fill`.
  *
  * @param objects - The flat object map to draw, the text editor's draft
  *   included
@@ -381,6 +387,10 @@ const cutLayers = (
  *   scope, which holds every group above them; buildIdsWithAncestors): an id
  *   outside it is skipped with its subtree, as ObjectsRenderer skips it, so a
  *   frame not drawn paints under no label. Omitted = the whole tree
+ * @param labelEditOwnerId - The connector whose label is open in the editor,
+ *   its draft already in `objects` (graftConnectorLabelDraft): its label is
+ *   taken even while empty, the editor drawing a box for it all the same.
+ *   Omitted = an empty label is taken for no connector
  * @returns The layers by the id of the object owning the label, bottom first,
  *   each with the label box's top-left corner as its origin; a label on no
  *   backdrop has no entry
@@ -390,6 +400,7 @@ export const resolveLabelBackdrops = (
 	rootIds: readonly string[],
 	registries: LabelBackdropRegistries,
 	renderScope?: ReadonlySet<string>,
+	labelEditOwnerId?: string,
 ): ReadonlyMap<string, readonly LabelBackdropLayer[]> => {
 	const layersByOwnerId = new Map<string, readonly LabelBackdropLayer[]>();
 	const paintedRegions: PaintedRegion[] = [];
@@ -407,7 +418,12 @@ export const resolveLabelBackdrops = (
 			return;
 		}
 		const labelBox = isConnectorState(obj)
-			? resolveConnectorLabelPlacement(obj, objects, registries)
+			? resolveConnectorLabelPlacement(
+					obj,
+					objects,
+					registries,
+					id === labelEditOwnerId,
+				)
 			: resolveCaptionPlacement(obj, registries);
 		if (labelBox !== null && paintedRegions.length > 0) {
 			const layers = cutLayers(labelBox, paintedRegions);

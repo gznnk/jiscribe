@@ -3,10 +3,7 @@ import type React from "react";
 import { memo, useMemo } from "react";
 
 import { LABEL_BOX_CORNER_RADIUS, LabelBox } from "./ConnectorLabelStyled";
-import {
-	LABEL_BACKDROP_SHAPE_RENDERING,
-	LabelBackdropLayers,
-} from "../../base/LabelBackdropLayers";
+import { LabelBackdropLayers } from "../../base/LabelBackdropLayers";
 import { useDocumentSurface } from "../../DocumentSurfaceContext";
 import { useFontsLoadedNonceContext } from "../../FontsLoadedNonceContext";
 import { useIsTextLegible } from "../../useIsTextLegible";
@@ -116,28 +113,13 @@ const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
 	return (
 		<>
 			{hasLayers && (
-				<>
-					<rect
-						x={box.x}
-						y={box.y}
-						width={box.width}
-						height={box.height}
-						rx={LABEL_BOX_CORNER_RADIUS}
-						ry={LABEL_BOX_CORNER_RADIUS}
-						pointerEvents="none"
-						display={display}
-						shapeRendering={LABEL_BACKDROP_SHAPE_RENDERING}
-						// A style rather than the attribute: a CSS variable does not
-						// resolve in a presentation attribute.
-						style={{ fill: knockout }}
-					/>
-					<LabelBackdropLayers
-						box={box}
-						layers={layers}
-						cornerRadius={LABEL_BOX_CORNER_RADIUS}
-						isShown={isLegible}
-					/>
-				</>
+				<LabelBackdropLayers
+					box={box}
+					layers={layers}
+					cornerRadius={LABEL_BOX_CORNER_RADIUS}
+					isShown={isLegible}
+					knockout={knockout}
+				/>
 			)}
 			<foreignObject
 				x={box.x}

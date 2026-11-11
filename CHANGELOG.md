@@ -117,7 +117,8 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   previous result until it ends (an export taken mid-drag is worked out all
   the same); an export of a subset counts only the frames in it. container and
   awsGroup declare one; a filled rectangle is no backdrop. A connector label
-  being edited stays on the page's color.
+  being edited is painted the same way, cut for the text as typed so far, an
+  empty one being created included.
 - **`@jiscribe/geometry` exports `calcBoundingBoxIntersection` and
   `isPointInBoundingBox`.** The first is the part two bounding boxes share,
   `null` when they share no area (apart, or only touching along an edge or at a

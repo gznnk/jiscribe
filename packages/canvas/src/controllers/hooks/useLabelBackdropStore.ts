@@ -10,8 +10,13 @@ import type { LabelBackdropRegistries } from "../utils/resolveLabelBackdrops";
 import type { SnapshotRenderScope } from "../utils/SnapshotRenderScope";
 
 type UseLabelBackdropStoreParams = {
-	/** The objects as drawn, the text editor's draft included (useTextEditSession). */
+	/**
+	 * The objects as drawn, the text editor's draft included (useTextEditSession),
+	 * and a connector label's draft too (graftConnectorLabelDraft).
+	 */
 	objects: Record<string, ObjectState>;
+	/** The connector whose label is open in the editor, null when none is: its label is taken even while empty. */
+	labelEditOwnerId: string | null;
 	rootIds: readonly string[];
 	/** The counter from `useDocFonts`: a face landing re-sizes the labels, and so their backdrops. */
 	fontsNonce: number;
@@ -27,6 +32,7 @@ type BackdropInputs = {
 	objects: Record<string, ObjectState>;
 	rootIds: readonly string[];
 	fontsNonce: number;
+	labelEditOwnerId: string | null;
 	/** The export's set, or null for the whole tree (no export, or one drawing `"all"`). */
 	renderScope: ReadonlySet<string> | null;
 };
@@ -38,6 +44,7 @@ const isSameInputs = (
 	inputs.objects === otherInputs.objects &&
 	inputs.rootIds === otherInputs.rootIds &&
 	inputs.fontsNonce === otherInputs.fontsNonce &&
+	inputs.labelEditOwnerId === otherInputs.labelEditOwnerId &&
 	inputs.renderScope === otherInputs.renderScope;
 
 /**
@@ -61,6 +68,7 @@ const isSameInputs = (
  */
 export const useLabelBackdropStore = ({
 	objects,
+	labelEditOwnerId,
 	rootIds,
 	fontsNonce,
 	snapshotRenderScope,
@@ -77,7 +85,13 @@ export const useLabelBackdropStore = ({
 		snapshotRenderScope === null || snapshotRenderScope === "all"
 			? null
 			: snapshotRenderScope;
-	const inputs: BackdropInputs = { objects, rootIds, fontsNonce, renderScope };
+	const inputs: BackdropInputs = {
+		objects,
+		rootIds,
+		fontsNonce,
+		labelEditOwnerId,
+		renderScope,
+	};
 	const isHeldByDrag = isDragging && renderScope === null;
 	if (
 		!isHeldByDrag &&
@@ -91,6 +105,7 @@ export const useLabelBackdropStore = ({
 				rootIds,
 				registries,
 				renderScope ?? undefined,
+				labelEditOwnerId ?? undefined,
 			),
 		);
 		if (hasChanged) {

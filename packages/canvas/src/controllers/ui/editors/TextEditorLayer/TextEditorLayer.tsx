@@ -104,6 +104,7 @@ function renderConnectorLabelEditor(
 
 	return (
 		<ConnectorLabelEditor
+			id={connector.id}
 			anchor={anchor}
 			text={text}
 			fontColor={connector.label?.fontColor}

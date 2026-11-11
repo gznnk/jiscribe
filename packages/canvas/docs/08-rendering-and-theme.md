@@ -160,7 +160,10 @@ region's own color and opacity, so a translucent fill or a theme token looks the
 While it has layers, the page's color and the layers are drawn with `shape-rendering="crispEdges"`, so their
 edges land on the same pixels and no rim of the page's color shows around the box. A
 frame or a label owner that is rotated or flipped is judged by the box's center alone, the region then
-covering the whole box. A connector label's inline editor stays on the page's color.
+covering the whole box. A connector label's inline editor is painted the same way: the backdrops are
+worked out with its draft grafted onto the connector (`controllers/utils/graftConnectorLabelDraft.ts`, an
+empty label being created included), and the editor draws them through the same part in an SVG behind
+its text, with its border drawn again on top.
 
 **Single rule**: "auto resolves to the role's theme token, and color is applied via CSS." Because
 `var(--jiscribe-*)` is not resolved by SVG presentation attributes, **color is never applied via attributes**,

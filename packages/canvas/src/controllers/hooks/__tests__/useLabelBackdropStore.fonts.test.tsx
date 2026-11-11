@@ -122,6 +122,7 @@ const Host = () => {
 	const { fontsNonce } = useDocFonts({ collectRequests: () => [] });
 	const store = useLabelBackdropStore({
 		objects,
+		labelEditOwnerId: null,
 		rootIds,
 		fontsNonce,
 		snapshotRenderScope: null,

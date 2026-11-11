@@ -91,6 +91,8 @@ type HostProps = {
 	fontsNonce?: number;
 	/** The labels mounted under the store, each reading its own layers. */
 	probeIds: string[];
+	/** The connector whose label is open in the editor. */
+	labelEditOwnerId?: string | null;
 };
 
 /** What each probe answered, every render recorded in order. */
@@ -110,11 +112,13 @@ const Host = ({
 	rootIds,
 	isDragging = false,
 	snapshotRenderScope = null,
+	labelEditOwnerId = null,
 	fontsNonce = 0,
 	probeIds,
 }: HostProps) => {
 	const store = useLabelBackdropStore({
 		objects,
+		labelEditOwnerId,
 		rootIds,
 		fontsNonce,
 		snapshotRenderScope,
@@ -301,6 +305,35 @@ describe("useLabelBackdropStore", () => {
 		advanceTextMeasurementGeneration();
 		render({ objects, rootIds: ROOT_IDS, fontsNonce: 1, probeIds: ["shape"] });
 		expect(latestLayers("shape")[0].rect.width).toBe(24);
+	});
+
+	it("works the layers out again when a connector label's editor opens, the objects unchanged", () => {
+		const objects = toObjects(frame("frame", 100), {
+			id: "connector",
+			type: "connector",
+			points: [],
+			routing: "straight",
+			source: { anchor: { kind: "free", point: { x: 0, y: 100 } } },
+			target: { anchor: { kind: "free", point: { x: 200, y: 100 } } },
+			label: { text: "" },
+		} as unknown as ObjectState);
+		// One array for both renders, so only the edited label's owner differs.
+		const connectorRootIds = ["frame", "connector"];
+		const render = mountHost();
+		render({
+			objects,
+			rootIds: connectorRootIds,
+			probeIds: ["connector"],
+		});
+		expect(latestLayers("connector")).toBe(NO_LABEL_BACKDROP_LAYERS);
+
+		render({
+			objects,
+			rootIds: connectorRootIds,
+			labelEditOwnerId: "connector",
+			probeIds: ["connector"],
+		});
+		expect(latestLayers("connector")).toHaveLength(1);
 	});
 
 	it("works out an export's scope when only the scope changes, and the whole tree after it", () => {

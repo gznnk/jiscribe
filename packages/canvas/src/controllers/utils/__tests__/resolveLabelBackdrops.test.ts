@@ -322,6 +322,34 @@ describe("resolveLabelBackdrops", () => {
 		expect(colored.has("connector")).toBe(false);
 	});
 
+	it("takes an empty connector label only while it is open in the editor", () => {
+		const objects = [
+			frame("frame", 50, 100, 300, 200),
+			labelledConnector(
+				"connector",
+				{ x: 0, y: 100 },
+				{ x: 200, y: 100 },
+				{ text: "" },
+			),
+		];
+		expect(resolve(objects).has("connector")).toBe(false);
+		const edited = resolveLabelBackdrops(
+			Object.fromEntries(objects.map((obj) => [obj.id, obj])),
+			objects.map((obj) => obj.id),
+			registries,
+			undefined,
+			"connector",
+		);
+		const box = resolveConnectorLabelBox({ text: "" });
+		expect(edited.get("connector")).toEqual([
+			{
+				rect: { x: 0, y: 0, width: box.width, height: box.height },
+				fill: "#ff0000",
+				fillOpacity: 0.5,
+			},
+		]);
+	});
+
 	it("counts only the frames inside the render scope", () => {
 		const objects = [
 			frame("frame", 100, 100, 200, 200),
