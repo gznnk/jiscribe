@@ -137,7 +137,7 @@ const collectInvariantViolations = (state: CanvasControllerState): string[] => {
 
 /**
  * Every registered command is executed from each representative starting state
- * through the real handleCommand path (canExecute gate included), and the
+ * through the real executeCommand path (canExecute gate included), and the
  * resulting state is checked against the full invariant set. This is the
  * cross-cutting net that catches a command forgetting to clear a mutually
  * exclusive selection channel, leaving dangling IDs, or breaking group

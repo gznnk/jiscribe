@@ -20,7 +20,7 @@ Even a test that bundles several real collaborators (Command / Registry / `canva
 
 - **solitary** … verifies a single pure function in isolation (Mapper round-trips, `validateXxxDoc`, etc.)
 - **sociable** … bundles real collaborators to verify behavior through an entry point
-  (Undo/Redo via `canvasReducer`, the real command path via `handleCommand`, etc.)
+  (Undo/Redo via `canvasReducer`, the real command path via `executeCommand`, etc.)
 
 Both solitary and sociable tests belong to the **same unit layer**, and we do not separate them by folder (both live under `__tests__/`).
 
@@ -55,9 +55,9 @@ and sociable behavior tests are placed right next to the files they target
   **Do not use facet naming for solitary pure-function tests** (facet splitting is limited to sociable / large SUTs)
 - Choosing between `<SUT>` naming and `<scenario>` naming is decided **not by whether an entry point exists, but by what the file name refers to**.
   If the file name refers to a single SUT's contract, use `<SUT>(.<facet>)`; if it refers to an invariant spanning multiple modules, use `<scenario>`.
-  Even when a scenario test goes through a specific entry point (`handleCommand`, etc.), do not prefix the file name with the entry point
+  Even when a scenario test goes through a specific entry point (`executeCommand`, etc.), do not prefix the file name with the entry point
   — when the test fails, the place to open is the code implementing the invariant, not the entry point, and there may be more than one entry point
-  (e.g. `copyPasteDuplicateOrder` drives both `handleCommand` and `handlePaste`).
+  (e.g. `copyPasteDuplicateOrder` drives both `executeCommand` and `handlePaste`).
   The entry point is conveyed by the folder location (table below) and the doc comment at the top of the test
 - Tests of an entry point's own contract (for `handleCommand`: Registry resolution, the `canExecute` gate, etc.) use normal SUT naming
   with the entry point as the SUT, not scenario naming (e.g. `canvasReducer`'s contract lives in `canvasReducer.<facet>.test.ts`)
@@ -67,10 +67,10 @@ and sociable behavior tests are placed right next to the files they target
 
 #### Main sociable tests
 
-| Location                          | Entry point     | Aspects verified                                                                                                                                                 |
-| --------------------------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `controllers/reducer/__tests__/`  | `canvasReducer` | `coalescing` (history aggregation) / `commitSources` (history record sources) / `externalSync` ([External Sync](./07-external-sync.md)) / `undoRedo` (Undo/Redo) |
-| `controllers/commands/__tests__/` | `handleCommand` | The real command path (CommandRegistry resolution + `canExecute` + `execute`). Example: StackOrder when a connector is selected                                  |
+| Location                          | Entry point      | Aspects verified                                                                                                                                                                        |
+| --------------------------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `controllers/reducer/__tests__/`  | `canvasReducer`  | `coalescing` (history aggregation) / `commitSources` (history record sources) / `externalSync` ([External Sync](./07-external-sync.md)) / `undoRedo` (Undo/Redo)                        |
+| `controllers/commands/__tests__/` | `executeCommand` | The real command path (CommandRegistry resolution + `canExecute` + `execute`), a `busyLabel` command run at once rather than deferred. Example: StackOrder when a connector is selected |
 
 ## E2E (Playwright)
 

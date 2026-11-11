@@ -21,7 +21,7 @@ const ARROW_ICON_SIZE = 12;
 
 /**
  * Each layout command with the arrow and the short text its button shows; the
- * command's label is the tooltip.
+ * tooltip is the command's label, then what the run moves.
  */
 const AUTO_LAYOUT_BUTTONS: readonly {
 	commandId: string;
@@ -65,7 +65,7 @@ const AutoLayoutItemComponent: React.FC<
 							key={commandId}
 							type="button"
 							disabled={!resolved.enabled}
-							title={resolveCommandLabel(resolved.command, messages, locale)}
+							title={`${resolveCommandLabel(resolved.command, messages, locale)}\n${messages.propertyPanelAutoLayoutTitle}`}
 							data-action={commandAction(commandId)}
 						>
 							<PropertyCommandButtonContent>

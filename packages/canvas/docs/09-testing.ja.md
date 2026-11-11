@@ -22,7 +22,7 @@ canvas のテストは **ユニット（vitest）→ E2E（Playwright）の 2 �
 
 - **solitary（単体）** … 1 つの純粋関数を単独で検証する（Mapper の往復、`validateXxxDoc` など）
 - **sociable（社交的）** … 本物のコラボレータを束ねて入口経由の振る舞いを検証する
-  （`canvasReducer` 経由の Undo/Redo、`handleCommand` 経由のコマンド実経路など）
+  （`canvasReducer` 経由の Undo/Redo、`executeCommand` 経由のコマンド実経路など）
 
 solitary も sociable も**同じユニット層**であり、フォルダでは区別しない（どちらも `__tests__/`）。
 
@@ -57,9 +57,9 @@ solitary も sociable も**同じユニット層**であり、フォルダでは
   **solitary な純粋関数テストでは facet 命名を使わない**（観点分割は sociable / 大きい SUT に限る）
 - `<SUT>` 命名と `<scenario>` 命名の使い分けは**入口の有無ではなく、ファイル名が指す主語**で決める。
   ファイル名が単一 SUT の契約を指すなら `<SUT>(.<facet>)`、複数モジュールに跨る不変条件を指すなら `<scenario>`。
-  scenario テストが特定の入口（`handleCommand` 等）を通っていてもファイル名に入口は冠しない
+  scenario テストが特定の入口（`executeCommand` 等）を通っていてもファイル名に入口は冠しない
   — 落ちたとき開くべきは入口ではなく不変条件を実装する側であり、入口が複数のこともある
-  （例: `copyPasteDuplicateOrder` は `handleCommand` と `handlePaste` の両方を叩く）。
+  （例: `copyPasteDuplicateOrder` は `executeCommand` と `handlePaste` の両方を叩く）。
   入口はフォルダ位置（下表）とテスト先頭の doc コメントで示す
 - 入口そのものの契約（`handleCommand` なら Registry 解決・`canExecute` ゲートなど）をテストする場合は、
   scenario 命名にせず、通常どおり入口を SUT とする命名に乗せる
@@ -70,10 +70,10 @@ solitary も sociable も**同じユニット層**であり、フォルダでは
 
 #### 主な sociable テスト
 
-| 置き場所                          | 入口            | 検証する観点                                                                                                                             |
-| --------------------------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `controllers/reducer/__tests__/`  | `canvasReducer` | `coalescing`（履歴集約）/ `commitSources`（履歴記録源）/ `externalSync`（[外部同期](./07-external-sync.ja.md)）/ `undoRedo`（Undo/Redo） |
-| `controllers/commands/__tests__/` | `handleCommand` | コマンドの実経路（CommandRegistry 解決 + `canExecute` + `execute`）。例: コネクター選択時の StackOrder                                   |
+| 置き場所                          | 入口             | 検証する観点                                                                                                                                               |
+| --------------------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `controllers/reducer/__tests__/`  | `canvasReducer`  | `coalescing`（履歴集約）/ `commitSources`（履歴記録源）/ `externalSync`（[外部同期](./07-external-sync.ja.md)）/ `undoRedo`（Undo/Redo）                   |
+| `controllers/commands/__tests__/` | `executeCommand` | コマンドの実経路（CommandRegistry 解決 + `canExecute` + `execute`）。`busyLabel` のコマンドも保留にせずその場で走らせる。例: コネクター選択時の StackOrder |
 
 ## E2E（Playwright）
 

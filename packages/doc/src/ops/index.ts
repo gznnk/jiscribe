@@ -21,6 +21,11 @@ export {
 export { LAYERED_LAYOUT_DEFAULTS, LayoutDirections } from "@jiscribe/layout";
 export { type GetZOrderResult, type ZOrderPlacement } from "./order";
 export {
+	ConnectorRouteKeptReasons,
+	type ConnectorRouteKeptReason,
+	type RouteConnectorsResult,
+} from "./routing";
+export {
 	type ResizeObjectEntry,
 	type ResizeObjectParams,
 	type SetHeightModeParams,

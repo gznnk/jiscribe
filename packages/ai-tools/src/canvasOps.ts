@@ -256,6 +256,8 @@ export type AiDocOp =
 			nodeSpacing?: number;
 			rankSpacing?: number;
 	  }
+	// Omitted ids redraw every connector
+	| { kind: "routeConnectors"; ids?: string[] }
 	| {
 			kind: "distributeObjects";
 			ids: string[];

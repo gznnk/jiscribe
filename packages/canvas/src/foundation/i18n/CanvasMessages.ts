@@ -58,8 +58,13 @@ export const defaultCanvasMessages: CanvasMessages = {
 	propertyPanelViewOpenFitAllTitle: "Fit all",
 	propertyPanelViewScrollContent: "Limit scrolling to the content",
 	propertyPanelAutoLayout: "Auto layout",
+	propertyPanelAutoLayoutTitle: "Rearranges the shapes and redraws the lines",
 	propertyPanelAutoLayoutTopToBottom: "Downward",
 	propertyPanelAutoLayoutLeftToRight: "Rightward",
+	propertyPanelRouteConnectors: "Lines only",
+	propertyPanelRouteConnectorsButton: "Redraw",
+	propertyPanelRouteConnectorsButtonTitle:
+		"Redraws the lines around the shapes without moving any shape",
 	propertyPanelRowColor: "Color",
 	propertyPanelRowWidth: "Width",
 	propertyPanelRowType: "Type",

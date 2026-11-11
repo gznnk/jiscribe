@@ -73,6 +73,7 @@ const ContextMenuBody: React.FC<ContextMenuBodyProps> = ({
 		{ type: "separator" },
 		{ type: "command", commandId: "layoutTopToBottom" },
 		{ type: "command", commandId: "layoutLeftToRight" },
+		{ type: "command", commandId: "routeConnectors" },
 		{ type: "separator" },
 		{ type: "command", commandId: "export" },
 	];

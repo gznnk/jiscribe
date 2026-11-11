@@ -27,7 +27,8 @@ what each action means is documented on its type in that file. The main actions 
 | `END_TEXT_EDIT`             | Committing / cancelling a text edit                                             | A commit goes to `commitTextEditIfNeeded`; a cancel just discards the edit state                                                                                                               |
 
 Other actions only swap a piece of state inside the reducer, such as setting the camera or the selection, or
-updating the draft during a text edit. `UPDATE_TEXT_EDIT`, for instance, only replaces the draft; the commit into
+updating the draft during a text edit; `RUN_PENDING_COMMAND` is the exception, running the command a press
+from any entry left pending through `executeCommand` rather than `handleCommand`, so it is not deferred again. `UPDATE_TEXT_EDIT`, for instance, only replaces the draft; the commit into
 the doc happens when `END_TEXT_EDIT` commits, or when the editor's Ctrl/Cmd+Enter runs the `commitTextEdit`
 command, which ends in the same state and the same undo entry.
 

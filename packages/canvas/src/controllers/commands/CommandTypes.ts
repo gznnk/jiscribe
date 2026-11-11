@@ -55,6 +55,14 @@ export type Command = {
 	 */
 	label: string | LocaleMessages<string>;
 	/**
+	 * Text of the busy indicator for a command that blocks the main thread long
+	 * enough to need one: a plain string or a per-locale dictionary, resolved like
+	 * `label` but with no host override. A press from any entry paints the
+	 * indicator before running the command, which shows after a short delay so a
+	 * quick run shows nothing. Ignored on a command without `execute`.
+	 */
+	busyLabel?: string | LocaleMessages<string>;
+	/**
 	 * Category of the command. Only a `"view"` command runs while a drag is under
 	 * way; any other, or one without a category, is refused until the drag ends
 	 * (see handleCommand).
