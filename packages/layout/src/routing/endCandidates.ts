@@ -17,6 +17,7 @@ import type { RoutableNode } from "./types";
 import { calcCentredAnchorRatio, readAnchorRange } from "../shared/anchorRange";
 import { calcAnchorPoint } from "../shared/calcAnchorPoint";
 import { isSameCoordinate } from "../shared/coordinate";
+import { GAP_LANE_SPACING } from "../shared/edgeSpacing";
 import { createSideAxis } from "../shared/LayoutAxis";
 import { LAYOUT_SIDES, toSideKey } from "../shared/layoutSides";
 import { calcStraightAnchorRatio, columnAt } from "../shared/straightAnchor";
@@ -149,6 +150,7 @@ const offsetPoint = (
  * calcStraightAnchorRatio). A spot whose stub is blocked is left out.
  *
  * @param crossableBands - What stops a stub besides the obstacles (see calcStubLength)
+ * @param borders - Rects whose sides a spot beside the centre keeps a margin off
  * @param pinnedEnds - The only places the end may sit (see RoutableEdge.sourceEnds),
  *   which are then its candidates; undefined for an end free to sit on any side
  * @param otherPinnedEnds - The only places the other node's end may sit; a free end
@@ -161,6 +163,7 @@ export const listEndCandidates = (
 	obstacles: readonly Obstacle[],
 	excluded: ReadonlySet<Obstacle>,
 	crossableBands: readonly BoundingBox[],
+	borders: readonly BoundingBox[],
 	pinnedEnds?: readonly LayoutEdgeAnchor[],
 	otherPinnedEnds?: readonly LayoutEdgeAnchor[],
 ): EndCandidate[] => {
@@ -168,6 +171,7 @@ export const listEndCandidates = (
 		side: LayoutSide,
 		t: number,
 		isPinned: boolean,
+		isBeside = false,
 	): EndCandidate | undefined => {
 		const anchor = calcAnchorPoint(node.bounds, { side, t });
 		const stubLength = calcStubLength(
@@ -197,9 +201,9 @@ export const listEndCandidates = (
 			tip,
 			outward,
 			sideCost:
-				side === "bottom" && node.labelBounds !== undefined
+				(side === "bottom" && node.labelBounds !== undefined
 					? ROUTE_COSTS.labelledBottom
-					: 0,
+					: 0) + (isBeside ? 1 : 0),
 			endKey: `${toSideKey(node.id, side)}\u0000${t}`,
 			isPinned,
 		};
@@ -218,6 +222,52 @@ export const listEndCandidates = (
 		bottom: otherBox.top >= box.bottom,
 		left: otherBox.right <= box.left,
 	};
+	/**
+	 * Whether a straight run at `column` from `side` to the other box keeps
+	 * EDGE_ROUTE_MARGIN off every obstacle but the two boxes' own.
+	 */
+	const isClearBetween = (column: number, side: LayoutSide): boolean => {
+		const isVertical = side === "top" || side === "bottom";
+		const strip: BoundingBox = isVertical
+			? {
+					left: column - EDGE_ROUTE_MARGIN,
+					right: column + EDGE_ROUTE_MARGIN,
+					top: Math.min(box.bottom, otherBox.bottom),
+					bottom: Math.max(box.top, otherBox.top),
+				}
+			: {
+					top: column - EDGE_ROUTE_MARGIN,
+					bottom: column + EDGE_ROUTE_MARGIN,
+					left: Math.min(box.right, otherBox.right),
+					right: Math.max(box.left, otherBox.left),
+				};
+		const isOffStrip = (rect: BoundingBox): boolean =>
+			rect.right <= strip.left ||
+			rect.left >= strip.right ||
+			rect.bottom <= strip.top ||
+			rect.top >= strip.bottom;
+		return (
+			obstacles.every(
+				(obstacle) =>
+					excluded.has(obstacle) ||
+					obstacle.ownerId === node.id ||
+					obstacle.ownerId === other.id ||
+					isOffStrip(obstacle.box),
+			) &&
+			[...borders, ...crossableBands].every(
+				(fence) =>
+					isOffStrip(fence) ||
+					(isVertical
+						? [fence.left, fence.right]
+						: [fence.top, fence.bottom]
+					).every(
+						(fenceSide) =>
+							fenceSide <= column - EDGE_ROUTE_MARGIN ||
+							fenceSide >= column + EDGE_ROUTE_MARGIN,
+					),
+			)
+		);
+	};
 	const candidates: EndCandidate[] = [];
 	for (const side of LAYOUT_SIDES) {
 		const usable = readAnchorRange(node.anchorRanges, side);
@@ -227,6 +277,7 @@ export const listEndCandidates = (
 				usable,
 			),
 		];
+		const besideRatios: number[] = [];
 		if (isBeyond[side]) {
 			const otherSide = OPPOSITE_SIDES[side];
 			const axis = createSideAxis(side);
@@ -262,8 +313,60 @@ export const listEndCandidates = (
 				}
 			}
 		}
+		if (isBeyond[side] && otherPinnedEnds === undefined) {
+			const otherSide = OPPOSITE_SIDES[side];
+			const axis = createSideAxis(side);
+			const centres = [
+				columnAt(node.bounds, ratios[0], axis),
+				columnAt(
+					other.bounds,
+					calcCentredAnchorRatio(
+						readAnchorRange(other.anchorBodyRanges, otherSide),
+						readAnchorRange(other.anchorRanges, otherSide),
+					),
+					axis,
+				),
+			];
+			for (const centre of centres) {
+				for (const offset of [-GAP_LANE_SPACING, GAP_LANE_SPACING]) {
+					const column = centre + offset;
+					const beside = calcStraightAnchorRatio(
+						node.bounds,
+						column,
+						usable,
+						axis,
+					);
+					const otherBeside = calcStraightAnchorRatio(
+						other.bounds,
+						column,
+						readAnchorRange(other.anchorRanges, otherSide),
+						axis,
+					);
+					if (
+						beside !== undefined &&
+						otherBeside !== undefined &&
+						isClearBetween(column, side) &&
+						[...ratios, ...besideRatios].every(
+							(ratio) =>
+								!isSameCoordinate(
+									columnAt(node.bounds, beside, axis),
+									columnAt(node.bounds, ratio, axis),
+								),
+						)
+					) {
+						besideRatios.push(beside);
+					}
+				}
+			}
+		}
 		for (const t of ratios) {
 			const candidate = toCandidate(side, t, false);
+			if (candidate !== undefined) {
+				candidates.push(candidate);
+			}
+		}
+		for (const t of besideRatios) {
+			const candidate = toCandidate(side, t, false, true);
 			if (candidate !== undefined) {
 				candidates.push(candidate);
 			}
