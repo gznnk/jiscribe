@@ -23,4 +23,10 @@ export const ROUTE_COSTS = {
 	borderCrossing: 60,
 	overlapPerPx: 4,
 	bandPerPx: 3,
+	/**
+	 * What a px costs along a route already drawn to the same pinned end (a bundle),
+	 * in place of the length's 1 and with no overlap paid: less than a px of its own
+	 * way, so the routes to one spot gather into one trunk.
+	 */
+	bundledPerPx: 0.5,
 } as const;

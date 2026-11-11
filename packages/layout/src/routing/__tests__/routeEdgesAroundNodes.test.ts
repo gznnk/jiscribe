@@ -2,6 +2,7 @@ import type { Point, Rect } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
 import { calcAnchorPoint } from "../../shared/calcAnchorPoint";
+import { GAP_LANE_SPACING } from "../../shared/edgeSpacing";
 import { EDGE_ROUTE_MARGIN } from "../edgeRoutingCosts";
 import { routeEdgesAroundNodes } from "../routeEdgesAroundNodes";
 import type { RoutableNode, RoutedEdge } from "../types";
@@ -58,6 +59,23 @@ const isRightAngled = (path: readonly Point[]): boolean =>
 		.every(
 			(point, index) => point.x === path[index].x || point.y === path[index].y,
 		);
+
+/** The path's segments, each from its start point to its end point. */
+const segmentsOf = (path: readonly Point[]): (readonly [Point, Point])[] =>
+	path.slice(1).map((point, index) => [path[index], point] as const);
+
+/** How long the stretch is that two parallel segments share; 0 or less when none. */
+const calcSharedStretch = (
+	[a, b]: readonly [Point, Point],
+	[c, d]: readonly [Point, Point],
+	isHorizontal: boolean,
+): number => {
+	const along = (point: Point): number => (isHorizontal ? point.x : point.y);
+	return (
+		Math.min(Math.max(along(a), along(b)), Math.max(along(c), along(d))) -
+		Math.max(Math.min(along(a), along(b)), Math.min(along(c), along(d)))
+	);
+};
 
 describe("routeEdgesAroundNodes", () => {
 	it("runs straight between two boxes facing each other", () => {
@@ -754,6 +772,496 @@ describe("routeEdgesAroundNodes", () => {
 			});
 
 			expect(listGapCrossings(result.edges)).toEqual([122, 138]);
+		});
+	});
+
+	describe("crossing a title band", () => {
+		/** Whether no horizontal run lies within the band's y-extent, edges included, nor any corner in the band. */
+		const keepsOffBand = (path: readonly Point[], band: Rect): boolean => {
+			const isWithinBandY = (y: number): boolean =>
+				y >= band.y && y <= band.y + band.height;
+			const isInBand = ({ x, y }: Point): boolean =>
+				x >= band.x && x <= band.x + band.width && isWithinBandY(y);
+			const runsAlong = segmentsOf(path).some(
+				([start, end]) =>
+					start.y === end.y &&
+					Math.max(start.x, end.x) > band.x &&
+					Math.min(start.x, end.x) < band.x + band.width &&
+					isWithinBandY(start.y),
+			);
+			return !runsAlong && !path.slice(1, -1).some(isInBand);
+		};
+
+		it("crosses a band straight over where the same rect as an obstacle forces a detour", () => {
+			const nodes = [box("a", 0, 0), box("b", 0, 300)];
+			const band = { x: -200, y: 140, width: 500, height: 30 };
+
+			const crossed = routeEdgesAroundNodes(nodes, [edge("e", "a", "b")], {
+				crossableBands: [band],
+			});
+			const avoided = routeEdgesAroundNodes(nodes, [edge("e", "a", "b")], {
+				obstacles: [band],
+			});
+
+			expect(crossed).toEqual({
+				edges: [
+					{
+						id: "e",
+						source: { side: "bottom", t: 0.5 },
+						target: { side: "top", t: 0.5 },
+						points: [],
+					},
+				],
+				unroutedEdgeIds: [],
+			});
+			expect(avoided.edges[0].points.length).toBeGreaterThan(0);
+		});
+
+		it("neither runs along nor bends inside a band lying where the cheapest way would", () => {
+			// a's caption makes its bottom side dearer, so without the band the route
+			// leaves a's right side along y 20 and turns down at x 330, both inside the
+			// band.
+			const nodes: RoutableNode[] = [
+				{
+					...box("a", 0, 0),
+					labelBounds: { x: 10, y: 44, width: 40, height: 20 },
+				},
+				box("b", 300, 300),
+			];
+			const band = { x: 100, y: 0, width: 400, height: 40 };
+
+			const plain = routeEdgesAroundNodes(nodes, [edge("e", "a", "b")]);
+			const result = routeEdgesAroundNodes(nodes, [edge("e", "a", "b")], {
+				crossableBands: [band],
+			});
+
+			expect(keepsOffBand(pathOf(plain.edges[0], nodes, "a", "b"), band)).toBe(
+				false,
+			);
+			expect(result.unroutedEdgeIds).toEqual([]);
+			const path = pathOf(result.edges[0], nodes, "a", "b");
+			expect(isRightAngled(path)).toBe(true);
+			expect(keepsOffBand(path, band)).toBe(true);
+		});
+
+		it("runs along no band's inside even where its sides lie beyond the margin", () => {
+			// The straight way along y 20 runs 50px off either side of the band.
+			const nodes = [box("a", 0, 0), box("b", 400, 0)];
+			const band = { x: 100, y: -30, width: 200, height: 100 };
+
+			const result = routeEdgesAroundNodes(nodes, [edge("e", "a", "b")], {
+				crossableBands: [band],
+			});
+
+			expect(result.unroutedEdgeIds).toEqual([]);
+			expect(keepsOffBand(pathOf(result.edges[0], nodes, "a", "b"), band)).toBe(
+				true,
+			);
+		});
+
+		it("stops a stub heading for a band nearer than two margins halfway to it", () => {
+			// Walls against a's other three sides leave its bottom, 40px above the band.
+			const walls = [
+				{ x: -40, y: -40, width: 140, height: 40 },
+				{ x: -40, y: -40, width: 40, height: 80 },
+				{ x: 60, y: -40, width: 40, height: 80 },
+			];
+			const band = { x: -100, y: 80, width: 200, height: 30 };
+			const nodes = [box("a", 0, 0), box("b", 300, 20)];
+
+			const result = routeEdgesAroundNodes(nodes, [edge("e", "a", "b")], {
+				obstacles: walls,
+				crossableBands: [band],
+			});
+
+			// It turns at y 60, before the band, and on up to b's left side.
+			const routed = result.edges[0];
+			expect(routed.source).toEqual({ side: "bottom", t: 0.5 });
+			expect(routed.points[0]).toEqual({ x: 30, y: 60 });
+			expect(keepsOffBand(pathOf(routed, nodes, "a", "b"), band)).toBe(true);
+		});
+
+		it("drops an end that would start inside a band, routing through another side", () => {
+			// The band runs across a's middle, so a's left and right ends would start in it.
+			const nodes = [box("a", 0, 0), box("b", 400, 0)];
+			const band = { x: -200, y: 10, width: 400, height: 20 };
+
+			const plain = routeEdgesAroundNodes(nodes, [edge("e", "a", "b")]);
+			const result = routeEdgesAroundNodes(nodes, [edge("e", "a", "b")], {
+				crossableBands: [band],
+			});
+
+			expect(plain.edges[0].source.side).toBe("right");
+			expect(result.unroutedEdgeIds).toEqual([]);
+			expect(["top", "bottom"]).toContain(result.edges[0].source.side);
+			expect(keepsOffBand(pathOf(result.edges[0], nodes, "a", "b"), band)).toBe(
+				true,
+			);
+		});
+
+		it("reports an edge unrouted when a band covering its box leaves no end, and routes the others", () => {
+			const result = routeEdgesAroundNodes(
+				[box("a", 0, 0), box("b", 400, 0), box("c", 0, 300)],
+				[edge("covered", "a", "b"), edge("open", "b", "c")],
+				{ crossableBands: [{ x: -200, y: -10, width: 400, height: 60 }] },
+			);
+
+			expect(result.unroutedEdgeIds).toEqual(["covered"]);
+			expect(result.edges.map(({ id }) => id)).toEqual(["open"]);
+		});
+
+		it("takes a band reaching far beyond every node as it takes one that does not", () => {
+			const band = { x: -100_000, y: 120, width: 200_000, height: 60 };
+			const below = [box("a", 0, 0), box("b", 0, 300)];
+			const aside = [box("a", 0, 0), box("b", 300, 300)];
+
+			const straight = routeEdgesAroundNodes(below, [edge("e", "a", "b")], {
+				crossableBands: [band],
+			});
+			const turning = routeEdgesAroundNodes(aside, [edge("e", "a", "b")], {
+				crossableBands: [band],
+			});
+
+			expect(straight.edges[0]).toMatchObject({
+				source: { side: "bottom" },
+				target: { side: "top" },
+				points: [],
+			});
+			expect(turning.unroutedEdgeIds).toEqual([]);
+			expect(
+				keepsOffBand(pathOf(turning.edges[0], aside, "a", "b"), band),
+			).toBe(true);
+		});
+
+		it("goes round a band reaching above and below every line the nodes give", () => {
+			const nodes = [box("a", 0, 0), box("b", 400, 0)];
+			const band = { x: 100, y: -100, width: 200, height: 240 };
+
+			const crossed = routeEdgesAroundNodes(nodes, [edge("e", "a", "b")], {
+				crossableBands: [band],
+			});
+			const avoided = routeEdgesAroundNodes(nodes, [edge("e", "a", "b")], {
+				obstacles: [band],
+			});
+
+			expect(avoided.unroutedEdgeIds).toEqual([]);
+			expect(crossed.unroutedEdgeIds).toEqual([]);
+			expect(
+				keepsOffBand(pathOf(crossed.edges[0], nodes, "a", "b"), band),
+			).toBe(true);
+		});
+
+		it("keeps an edge's label out of a band its route crosses", () => {
+			// Without the band the label sits at the route's middle, y 170.
+			const nodes = [box("a", 0, 0), box("b", 0, 300)];
+			const band = { x: -200, y: 150, width: 500, height: 40 };
+			const labelled = {
+				...edge("e", "a", "b"),
+				label: { width: 40, height: 20 },
+			};
+
+			const plain = routeEdgesAroundNodes(nodes, [labelled]);
+			const result = routeEdgesAroundNodes(nodes, [labelled], {
+				crossableBands: [band],
+			});
+
+			expect(plain.edges[0].labelPosition).toBe(0.5);
+			const routed = result.edges[0];
+			expect(routed.points).toEqual([]);
+			expect(routed.labelOffset).toBe(0);
+			const [start, end] = pathOf(routed, nodes, "a", "b");
+			const labelY =
+				start.y + (routed.labelPosition as number) * (end.y - start.y);
+			// Its box, 20 tall, clears the band's 150..190 on one side.
+			expect(labelY + 10 <= 150 || labelY - 10 >= 190).toBe(true);
+		});
+	});
+
+	describe("ends held to given places", () => {
+		it("starts at the place given, its t exactly as given, though another side is cheaper", () => {
+			const result = routeEdgesAroundNodes(
+				[box("a", 0, 0), box("b", 300, 0)],
+				[{ ...edge("e", "a", "b"), sourceEnds: [{ side: "top", t: 0.3 }] }],
+			);
+
+			const routed = result.edges[0];
+			expect(routed.source.side).toBe("top");
+			expect(routed.source.t).toBe(0.3);
+			expect(routed.points[0].x).toBe(18);
+		});
+
+		it("ends at the place given for the target too", () => {
+			const result = routeEdgesAroundNodes(
+				[box("a", 0, 0), box("b", 300, 0)],
+				[
+					{
+						...edge("e", "a", "b"),
+						targetEnds: [{ side: "bottom", t: 0.7 }],
+					},
+				],
+			);
+
+			const routed = result.edges[0];
+			expect(routed.target.side).toBe("bottom");
+			expect(routed.target.t).toBe(0.7);
+		});
+
+		it("takes, of two places given, the one that gives the cheaper way", () => {
+			const sides = [
+				{ side: "left", t: 0.5 },
+				{ side: "right", t: 0.5 },
+			] as const;
+			const toRight = routeEdgesAroundNodes(
+				[box("a", 0, 0), box("b", 300, 100)],
+				[{ ...edge("e", "a", "b"), sourceEnds: sides }],
+			);
+			const toLeft = routeEdgesAroundNodes(
+				[box("a", 0, 0), box("b", -300, 100)],
+				[{ ...edge("e", "a", "b"), sourceEnds: sides }],
+			);
+
+			expect(toRight.edges[0].source).toEqual({ side: "right", t: 0.5 });
+			expect(toLeft.edges[0].source).toEqual({ side: "left", t: 0.5 });
+		});
+
+		it("keeps pinned ends exactly where given while free ends on their side slide", () => {
+			// Walls against T's other three sides put every end on its left. The two
+			// pinned ends from above and the free ends from below all reach for its
+			// centre, y 40; free to slide, the pinned ends would give way upward.
+			const pinned = { targetEnds: [{ side: "left", t: 0.5 }] as const };
+			const result = routeEdgesAroundNodes(
+				[
+					box("p", 0, -200),
+					box("q", 100, -200),
+					box("f", 0, 300),
+					box("g", 100, 300),
+					box("T", 400, 0, 60, 80),
+				],
+				[
+					{ ...edge("p", "p", "T"), ...pinned },
+					{ ...edge("q", "q", "T"), ...pinned },
+					edge("f", "f", "T"),
+					edge("g", "g", "T"),
+				],
+				{
+					obstacles: [
+						{ x: 380, y: -40, width: 120, height: 40 },
+						{ x: 460, y: -40, width: 40, height: 160 },
+						{ x: 380, y: 80, width: 120, height: 40 },
+					],
+				},
+			);
+
+			const [p, q, f, g] = result.edges;
+			expect(p.target).toEqual({ side: "left", t: 0.5 });
+			expect(q.target).toEqual({ side: "left", t: 0.5 });
+			for (const free of [f, g]) {
+				expect(free.target.side).toBe("left");
+				expect(free.target.t).toBeGreaterThan(0.5);
+			}
+		});
+
+		it("drops a place whose stub is blocked and starts at another given", () => {
+			// A wall flush against a's right side blocks the right place.
+			const result = routeEdgesAroundNodes(
+				[box("a", 0, 0), box("b", 300, 0)],
+				[
+					{
+						...edge("e", "a", "b"),
+						sourceEnds: [
+							{ side: "right", t: 0.5 },
+							{ side: "top", t: 0.5 },
+						],
+					},
+				],
+				{ obstacles: [{ x: 60, y: -20, width: 20, height: 80 }] },
+			);
+
+			expect(result.unroutedEdgeIds).toEqual([]);
+			expect(result.edges[0].source).toEqual({ side: "top", t: 0.5 });
+		});
+
+		it("reports an edge unrouted when no place given is left, and routes the others", () => {
+			const nodes = [box("a", 0, 0), box("b", 300, 0), box("c", 0, 300)];
+			const blocked = routeEdgesAroundNodes(
+				nodes,
+				[
+					{
+						...edge("pinned", "a", "b"),
+						sourceEnds: [{ side: "right", t: 0.5 }],
+					},
+					edge("free", "a", "c"),
+				],
+				{ obstacles: [{ x: 60, y: -20, width: 20, height: 80 }] },
+			);
+			const none = routeEdgesAroundNodes(nodes, [
+				{ ...edge("pinned", "a", "b"), sourceEnds: [] },
+				edge("free", "a", "c"),
+			]);
+
+			for (const result of [blocked, none]) {
+				expect(result.unroutedEdgeIds).toEqual(["pinned"]);
+				expect(result.edges.map(({ id }) => id)).toEqual(["free"]);
+			}
+		});
+
+		it("runs the free end straight to a pinned place off the other box's centre", () => {
+			// T's left side is centred at y 100, out of a's reach; the pinned place at
+			// y 32 lies within a's right side, past the stretch its end slides over.
+			const result = routeEdgesAroundNodes(
+				[box("a", 0, 30), box("T", 300, 0, 60, 200)],
+				[
+					{
+						...edge("e", "a", "T"),
+						targetEnds: [{ side: "left", t: 0.16 }],
+					},
+				],
+			);
+
+			expect(result.edges[0]).toEqual({
+				id: "e",
+				source: { side: "right", t: 0.05 },
+				target: { side: "left", t: 0.16 },
+				points: [],
+			});
+		});
+
+		it("spreads the free ends of a side as it does without the pinned ends there", () => {
+			// Walls against T's other three sides put every end on its left, whose fan
+			// stretch 8..72 the three free ends share; counted in, the two pinned ends
+			// would shrink their gap.
+			const walls = [
+				{ x: 380, y: -40, width: 120, height: 40 },
+				{ x: 460, y: -40, width: 40, height: 160 },
+				{ x: 380, y: 80, width: 120, height: 40 },
+			];
+			const nodes = [
+				box("T", 400, 0, 60, 80),
+				box("f0", 0, -300),
+				box("f1", 0, 20),
+				box("f2", 0, 300),
+				box("p0", 0, -500),
+				box("p1", 200, -500),
+			];
+			const free = [
+				edge("f0", "f0", "T"),
+				edge("f1", "f1", "T"),
+				edge("f2", "f2", "T"),
+			];
+			const pinned = { targetEnds: [{ side: "left", t: 0 }] as const };
+
+			const withPinned = routeEdgesAroundNodes(
+				nodes,
+				[
+					...free,
+					{ ...edge("p0", "p0", "T"), ...pinned },
+					{ ...edge("p1", "p1", "T"), ...pinned },
+				],
+				{ obstacles: walls },
+			);
+			const withoutPinned = routeEdgesAroundNodes(nodes, free, {
+				obstacles: walls,
+			});
+
+			const freeTargets = (edges: readonly RoutedEdge[]) =>
+				edges
+					.filter(({ id }) => id.startsWith("f"))
+					.map(({ target }) => target);
+			expect(freeTargets(withPinned.edges)).toEqual(
+				freeTargets(withoutPinned.edges),
+			);
+			expect(
+				freeTargets(withoutPinned.edges).map((target) => [
+					target.side,
+					calcAnchorPoint(nodes[0].bounds, target).y,
+				]),
+			).toEqual([
+				["left", 20],
+				["left", 40],
+				["left", 60],
+			]);
+		});
+	});
+
+	describe("gathering the routes to one pinned place", () => {
+		// T's left side is pinned at y 150; the boxes on the left reach it from above
+		// and below.
+		const pinned = { targetEnds: [{ side: "left", t: 0.5 }] as const };
+		const target = box("T", 400, 0, 60, 300);
+		const pinnedAt = { x: 400, y: 150 };
+
+		it("runs the routes to one pinned place along one shared trunk into it", () => {
+			const nodes = [
+				box("s1", 0, -100),
+				box("s2", 0, 100),
+				box("s3", 0, 300),
+				target,
+			];
+			const result = routeEdgesAroundNodes(nodes, [
+				{ ...edge("p1", "s1", "T"), ...pinned },
+				{ ...edge("p2", "s2", "T"), ...pinned },
+				{ ...edge("p3", "s3", "T"), ...pinned },
+			]);
+
+			expect(result.unroutedEdgeIds).toEqual([]);
+			const lastSegments = result.edges.map((routed) => {
+				const path = pathOf(routed, nodes, routed.id.replace("p", "s"), "T");
+				return [path[path.length - 2], path[path.length - 1]] as const;
+			});
+			for (const [start, end] of lastSegments) {
+				expect(end).toEqual(pinnedAt);
+				expect(start.y).toBe(pinnedAt.y);
+			}
+			const sharedFrom = Math.max(...lastSegments.map(([start]) => start.x));
+			expect(pinnedAt.x - sharedFrom).toBeGreaterThan(EDGE_ROUTE_MARGIN);
+			// The two from the left side's boxes join before the trunk: their runs down
+			// to it share a stretch on one line.
+			const [p1, p2] = result.edges;
+			expect(p1.points[0].x).toBe(p1.points[1].x);
+			expect(p2.points[0].x).toBe(p1.points[0].x);
+			expect(p2.points[1]).toEqual(p1.points[1]);
+		});
+
+		it("keeps a free route the lane spacing off a trunk it runs alongside", () => {
+			// Routed first, the free edge runs straight from g into T's left side; the
+			// trunk then comes in beside it.
+			const nodes = [
+				box("s1", 0, -100),
+				box("s2", 0, 100),
+				box("g", -200, 130),
+				target,
+			];
+			const result = routeEdgesAroundNodes(nodes, [
+				edge("free", "g", "T"),
+				{ ...edge("p1", "s1", "T"), ...pinned },
+				{ ...edge("p2", "s2", "T"), ...pinned },
+			]);
+
+			expect(result.unroutedEdgeIds).toEqual([]);
+			const [free, ...bundle] = result.edges;
+			const freeSegments = segmentsOf(pathOf(free, nodes, "g", "T"));
+			const trunkSegments = bundle.flatMap((routed) =>
+				segmentsOf(pathOf(routed, nodes, routed.id.replace("p", "s"), "T")),
+			);
+			let alongsideCount = 0;
+			for (const freeSegment of freeSegments) {
+				for (const trunkSegment of trunkSegments) {
+					const isHorizontal = freeSegment[0].y === freeSegment[1].y;
+					if (
+						isHorizontal !== (trunkSegment[0].y === trunkSegment[1].y) ||
+						calcSharedStretch(freeSegment, trunkSegment, isHorizontal) <= 0
+					) {
+						continue;
+					}
+					alongsideCount += 1;
+					const across = (point: Point): number =>
+						isHorizontal ? point.y : point.x;
+					expect(
+						Math.abs(across(freeSegment[0]) - across(trunkSegment[0])),
+					).toBeGreaterThanOrEqual(GAP_LANE_SPACING);
+				}
+			}
+			expect(alongsideCount).toBeGreaterThan(0);
 		});
 	});
 });

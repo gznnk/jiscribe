@@ -12,11 +12,16 @@ import { EDGE_ROUTE_MARGIN } from "../edgeRoutingCosts";
  * anchor and stub tip; and the corners of a frame two margins around all of them.
  * The borders add their sides, and the lines a margin either side of them, as lines
  * alone.
+ *
+ * @param crossableBands - Bands no route runs along (among `borders` too, for their
+ *   lines): the frame reaches a margin above and below each, so a way over or under
+ *   one taller than everything else exists, while its width leaves the frame as it is
  */
 export const collectOrigins = (
 	obstacles: readonly Obstacle[],
 	borders: readonly BoundingBox[],
 	prepared: readonly PreparedEdge[],
+	crossableBands: readonly BoundingBox[],
 ): { origins: Point[]; xs: number[]; ys: number[] } => {
 	const origins: Point[] = [];
 	for (const { box } of obstacles) {
@@ -81,6 +86,17 @@ export const collectOrigins = (
 	for (const { sources, targets } of prepared) {
 		for (const { anchor, tip } of [...sources, ...targets]) {
 			origins.push(anchor, tip);
+		}
+	}
+	if (origins.length > 0) {
+		const originLeft = Math.min(...origins.map(({ x }) => x));
+		const originRight = Math.max(...origins.map(({ x }) => x));
+		for (const band of crossableBands) {
+			const x = Math.min(Math.max(band.left, originLeft), originRight);
+			origins.push(
+				{ x, y: band.top - EDGE_ROUTE_MARGIN },
+				{ x, y: band.bottom + EDGE_ROUTE_MARGIN },
+			);
 		}
 	}
 	const frame = growBox(

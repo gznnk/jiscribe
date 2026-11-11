@@ -4,6 +4,8 @@ import { EDGE_ROUTE_MARGIN, ROUTE_COSTS } from "../edgeRoutingCosts";
 import {
 	type GridSpan,
 	type RouteLines,
+	findLineAtOrAfter,
+	findLineAtOrBefore,
 	growBox,
 	snapToGridResolution,
 	toGridSpan,
@@ -167,11 +169,17 @@ export const findLinkCovering = (
  *   weighs the band a margin around it
  * @param origins - The points of interest as line indices, x then y for each, every
  *   one a node whatever crosses it
+ * @param crossableBands - The bands a route only crosses straight over (see
+ *   EdgeRoutingOptions.crossableBands): a horizontal unit step is blocked where it
+ *   runs through one or along its top or bottom edge, a vertical one nowhere. One
+ *   reaching past the lines is cut to them, and none weighs a margin band of its own
+ *   (its sides are counted on the lines, see createRouteLines)
  */
 export const buildRouteGraph = (
 	lines: RouteLines,
 	obstacles: readonly BoundingBox[],
 	origins: Int32Array,
+	crossableBands: readonly BoundingBox[],
 ): RouteGraph => {
 	const { xs, ys } = lines;
 	const nx = xs.length;
@@ -198,6 +206,17 @@ export const buildRouteGraph = (
 			}
 		}
 		bands.push(toGridSpan(lines, growBox(box, EDGE_ROUTE_MARGIN)));
+	}
+	for (const band of crossableBands) {
+		const left = findLineAtOrAfter(xs, snapToGridResolution(band.left));
+		const top = findLineAtOrAfter(ys, snapToGridResolution(band.top));
+		const right = findLineAtOrBefore(xs, snapToGridResolution(band.right));
+		const bottom = findLineAtOrBefore(ys, snapToGridResolution(band.bottom));
+		for (let yi = top; yi <= bottom; yi += 1) {
+			for (let xi = left; xi < right; xi += 1) {
+				stepsH[yi * (nx - 1) + xi] = BLOCKED;
+			}
+		}
 	}
 
 	// Run a line each way from every point of interest until a blocked step.

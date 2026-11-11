@@ -19,23 +19,42 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   doc-op (`DocOps.routeConnectors`, the ai-tools `route_connectors`) gives each
   connector between two shapes the sides and the right-angled route that go
   around every other shape, the caption hung below a `"label"` type and a
-  container's title band, running flush along none of their edges, paying for
+  container's title, running flush along none of their edges, paying for
   running within its margin (`EDGE_ROUTE_MARGIN`) of them or of a container's
   frame (the nearer, the dearer) and crossing and running along the routes drawn
   before it as little as it can; the corners are written as `points` and
   `routing` is dropped. It runs once: a shape moved
   afterwards is not followed. Omitted ids redraw every connector; named shapes
   (a group or a container shape standing for its contents) redraw the
-  connectors among them. A self loop, an end that is free, on a declared
-  connect point, on a container shape or on a rotated or flipped shape, ends
-  whose boxes overlap and a connector no way is found for are left as they are
-  and reported by reason (`ConnectorRouteKeptReasons`). A connector leaving
+  connectors among them. A container's title band is crossed straight over
+  beside its title where the container's type says how much of the band the
+  title covers (the new `ObjectDocDefinition.layoutContainerTitleRegion`, which
+  the shipped `container` and `awsGroup` declare), the container is neither
+  rotated nor flipped and no shape stands in the band; any other title band is
+  gone around whole. An end on a declared connect point its type places on a
+  side of its box (the new `ObjectDocDefinition.extraConnectPointEdgeAnchors`,
+  which `erEntity` declares for its columns) is redrawn from that point, or
+  from another point of the same `alternateGroup` (the other end of an ER
+  column's row) when that gives the cheaper route, and the routes to one such
+  point gather into one trunk. A self loop, an end that is free, on a container
+  shape or on a rotated or flipped shape, an end on a declared connect point its
+  type places on no side of its box, ends whose boxes overlap and a connector no
+  way is found for are left as they are and reported by reason
+  (`ConnectorRouteKeptReasons`). A connector leaving
   through its own end's caption is moved to just beneath that shape, as
   `layoutObjects` does. The routing itself is `routeEdgesAroundNodes`
   (`@jiscribe/layout`): edge by edge in the order given, an A* search over an
   orthogonal visibility graph run from the obstacles' corners, their margins and
   the ends' stubs, first close around the two ends and further out only when
-  no route is found there. Then the routes running together are spread
+  no route is found there. A band given as one of
+  `EdgeRoutingOptions.crossableBands` is crossed straight over and neither run
+  along nor bent in, its top and bottom sides costing what a border's side does
+  (once where a border's side lies on one), and an end's stub stops short of it.
+  An end given `RoutableEdge.sourceEnds` / `targetEnds` sits only on one of those
+  places and does not slide afterwards; the routes drawn to one such place are a
+  bundle, which a later route to it follows for half its length's cost
+  (`ROUTE_COSTS.bundledPerPx`) and no overlap, and whose segments lying on one
+  line are spread and straightened as one. Then the routes running together are spread
   `GAP_LANE_SPACING` apart (less in a tight channel, and a pair that has no room
   to part at all is left as it stands) in an order that keeps them from crossing
   where they need not, which can bring a run within half that of a shape,

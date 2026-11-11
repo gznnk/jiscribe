@@ -187,6 +187,12 @@ export { calcFullBoxTextRegion } from "./plugin/ObjectDocTextRegion";
 // outline is not its box: a plugin author implementing one needs the shape of it.
 export type { ObjectDocOutlineCalculator } from "./plugin/ObjectDocOutline";
 export type { ObjectDocAnchorRegionCalculator } from "./plugin/ObjectDocAnchorRegion";
+// Where a declared connect point sits on its box, which routing a connector from it
+// reads off the doc definition.
+export type {
+	ObjectDocConnectPointEdgeAnchor,
+	ObjectDocConnectPointEdgeAnchorsCalculator,
+} from "./plugin/ObjectDocConnectPointEdgeAnchor";
 // The overflow declaration a doc definition carries, for a type that lays some of
 // its content out by a rule of its own: a plugin author implementing one needs the
 // shape of it.

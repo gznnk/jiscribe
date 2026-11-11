@@ -45,11 +45,14 @@ but not the connect points, guide the adjustments after `layout_objects`.
 Once the shapes stand where they belong, call `route_connectors` instead of
 choosing connect points and corners yourself: it keeps every shape where it is
 and gives each connector the sides and the right-angled route around the other
-shapes, the labels below icons and the container title bands, and moves each
-connector's label to where it covers as little of any shape, and as few of the
-other labels and of the lines redrawn in the same call, as it can. It runs once, so
-call it again after moving shapes. `layout_objects` moves the shapes as well;
-keep it for a diagram the connectors structure.
+shapes, the labels below icons and the titles of containers (it crosses the rest
+of a container's title band straight over), and moves each connector's label to
+where it covers as little of any shape, and as few of the other labels and of the
+lines redrawn in the same call, as it can. A relationship line of an ER diagram
+stays on its columns: it picks the end of each row and gathers the lines to one
+column into one trunk. It runs once, so call it again after moving shapes.
+`layout_objects` moves the shapes as well; keep it for a diagram the connectors
+structure.
 
 ## Choosing what to draw with
 

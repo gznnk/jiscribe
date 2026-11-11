@@ -4,18 +4,17 @@ import type {
 	ObjectVisualBoundsCalculator,
 } from "@jiscribe/canvas";
 import { calcLabelBoxSize, readTextSlot } from "@jiscribe/canvas-sdk";
-import type { TextSlot, TextSlotStyle } from "@jiscribe/doc";
-import { textStyleKeysOf } from "@jiscribe/doc";
+import type { TextSlot } from "@jiscribe/doc";
 import type { Dimensions, Rect } from "@jiscribe/geometry";
 
 import {
 	AWS_GROUP_CORNER_ICON_SIZE,
-	AWS_GROUP_DOC_DEFAULTS,
-	AWS_GROUP_LABEL_GAP,
 	AWS_GROUP_PADDING,
-	AwsGroupFeatures,
 } from "../schema/AwsGroupDoc";
-import { readAwsGroupKindStyle } from "../schema/awsGroupKinds";
+import {
+	AWS_GROUP_LABEL_STYLE_DEFAULTS,
+	calcAwsGroupLabelLeft,
+} from "../schema/awsGroupLabelLayout";
 
 /** What placing the label reads off a state: the box, the kind, the text slots. */
 type AwsGroupLabelState = Dimensions & {
@@ -23,35 +22,6 @@ type AwsGroupLabelState = Dimensions & {
 	kind?: string;
 	/** The text slots. Absent, the label is measured as empty. */
 	text?: Record<string, TextSlot>;
-};
-
-/**
- * The typography the label is drawn with where the slot sets none: the type's
- * creation defaults read for the fields its text type accepts, the family left
- * out, as ObjectTextStyleDefaultsRegistry reads them for the overlay. Not the
- * shared caption ones (14px bold).
- */
-const AWS_GROUP_LABEL_STYLE_DEFAULTS: TextSlotStyle = Object.fromEntries(
-	textStyleKeysOf(AwsGroupFeatures.text)
-		.filter((key) => key !== "fontFamily")
-		.flatMap((key) => {
-			const value = (AWS_GROUP_DOC_DEFAULTS as TextSlotStyle)[key];
-			return value === undefined ? [] : [[key, value]];
-		}),
-);
-
-/**
- * Left edge of the label band: a kind with a corner badge starts that much
- * further right. Local coordinates, the shape's centre being the origin.
- */
-const calcLabelLeft = (state: AwsGroupLabelState): number => {
-	const hasCornerIcon =
-		readAwsGroupKindStyle(state.kind).cornerIcon !== undefined;
-	return (
-		-state.width / 2 +
-		AWS_GROUP_PADDING +
-		(hasCornerIcon ? AWS_GROUP_CORNER_ICON_SIZE + AWS_GROUP_LABEL_GAP : 0)
-	);
 };
 
 /**
@@ -83,7 +53,7 @@ export const calcAwsGroupLabelTextRegion: ObjectTextRegionCalculator<
 		-state.height / 2 + AWS_GROUP_PADDING + AWS_GROUP_CORNER_ICON_SIZE / 2;
 
 	return {
-		x: calcLabelLeft(state),
+		x: calcAwsGroupLabelLeft(state),
 		y: rowCenterY - height / 2,
 		width,
 		height,

@@ -3,9 +3,11 @@ import type { Point } from "@jiscribe/geometry";
 import {
 	type NudgePass,
 	type RouteSegment,
+	type SegmentMember,
 	acrossOf,
 	alongOf,
 	calcOverlap,
+	listSegmentMembers,
 } from "./routeSegments";
 import { isSameCoordinate } from "../../shared/coordinate";
 
@@ -74,18 +76,35 @@ const judgeEnd = (
 	return onward === 0 ? 0 : -turn * onward * direction;
 };
 
-/** The ends of a segment's run, the one at its `from` first. */
+/**
+ * The ends of a segment's run, the one at its `from` first. A merged segment (see
+ * RouteSegment.members) is followed, at each end of its stretch, along the member that
+ * reaches that end, the first of them on a tie.
+ */
 const listRunEnds = (
 	segment: RouteSegment,
 	{ routes, isVertical }: NudgePass,
 ): { low: RunEnd; high: RunEnd } => {
-	const { path } = routes[segment.routeIndex];
-	const start: RunEnd = { path, pointIndex: segment.segmentIndex, step: -1 };
-	const end: RunEnd = { path, pointIndex: segment.segmentIndex + 1, step: 1 };
-	return alongOf(path[start.pointIndex], isVertical) <
-		alongOf(path[end.pointIndex], isVertical)
-		? { low: start, high: end }
-		: { low: end, high: start };
+	const endsOf = ({
+		routeIndex,
+		segmentIndex,
+	}: SegmentMember): { low: RunEnd; high: RunEnd } => {
+		const { path } = routes[routeIndex];
+		const start: RunEnd = { path, pointIndex: segmentIndex, step: -1 };
+		const end: RunEnd = { path, pointIndex: segmentIndex + 1, step: 1 };
+		return alongOf(path[start.pointIndex], isVertical) <
+			alongOf(path[end.pointIndex], isVertical)
+			? { low: start, high: end }
+			: { low: end, high: start };
+	};
+	const members = listSegmentMembers(segment);
+	const lowest = members.reduce((best, member) =>
+		member.from < best.from ? member : best,
+	);
+	const highest = members.reduce((best, member) =>
+		member.to > best.to ? member : best,
+	);
+	return { low: endsOf(lowest).low, high: endsOf(highest).high };
 };
 
 /**

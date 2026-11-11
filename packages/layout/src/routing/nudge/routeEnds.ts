@@ -90,7 +90,8 @@ export const findEndGap = (
  * The end gap of each side two or more route ends share, by `sideKey`: the length
  * from the lowest of their slides' mins to the highest of their maxes, shared among
  * the k ends as k − 1 whole-px gaps, at most EDGE_END_SPACING and at least
- * LEAST_LANE_SPACING. A straight route is an end on each of its two sides.
+ * LEAST_LANE_SPACING. A straight route is an end on each of its two sides. A pinned
+ * end is left out: it stands where it is whatever the others do.
  */
 export const calcEndGaps = (
 	routes: readonly RouteToNudge[],
@@ -100,7 +101,10 @@ export const calcEndGaps = (
 		{ count: number; min: number; max: number }
 	>();
 	for (const { source, target } of routes) {
-		for (const { sideKey, slide } of [source, target]) {
+		for (const { sideKey, slide, isPinned } of [source, target]) {
+			if (isPinned === true) {
+				continue;
+			}
 			const stretch = stretches.get(sideKey);
 			if (stretch === undefined) {
 				stretches.set(sideKey, { count: 1, ...slide });

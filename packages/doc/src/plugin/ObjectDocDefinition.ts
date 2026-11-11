@@ -1,5 +1,8 @@
+import type { Rect } from "@jiscribe/geometry";
+
 import type { ObjectDocAnchorRegionCalculator } from "./ObjectDocAnchorRegion";
 import type { ObjectDocBoundsCalculator } from "./ObjectDocBounds";
+import type { ObjectDocConnectPointEdgeAnchorsCalculator } from "./ObjectDocConnectPointEdgeAnchor";
 import type { ObjectDocOutlineCalculator } from "./ObjectDocOutline";
 import type { ObjectDocOverflowDiagnoser } from "./ObjectDocOverflow";
 import type { ObjectDocTextRegionCalculator } from "./ObjectDocTextRegion";
@@ -90,6 +93,18 @@ export type ObjectDocDefinition = {
 	extraConnectPointIds?: (doc: ObjectDoc) => readonly string[];
 
 	/**
+	 * Where on its box each connect point of {@link extraConnectPointIds} sits, for the
+	 * ones lying on a side of the type's untransformed box (see
+	 * {@link ObjectDocConnectPointEdgeAnchor}). A connector ending on a point answered
+	 * here is routed from it by `routeConnectors`, and may be moved to another point of
+	 * the same `alternateGroup`; one ending on a point left out (it lies on no side) is
+	 * left as it is. Says nothing new about where the point is drawn: it must agree with
+	 * the presentation's `extraConnectPoints`. Omitted = no declared connect point of
+	 * the type is routed from.
+	 */
+	extraConnectPointEdgeAnchors?: ObjectDocConnectPointEdgeAnchorsCalculator;
+
+	/**
 	 * Declared by a titled region other objects sit inside (a VPC, a subsystem
 	 * boundary). An automatic layout keeps the objects a doc of this type holds inside
 	 * it and sizes it to them, instead of moving it as one box among the others, and
@@ -100,6 +115,18 @@ export type ObjectDocDefinition = {
 	 * doc of this type is a box like any other.
 	 */
 	layoutContainer?: (doc: ObjectDoc) => { titleHeight: number };
+
+	/**
+	 * The part of the title band the title itself covers — its text, and a badge beside
+	 * it — for a type that declares {@link layoutContainer}: a connector being routed
+	 * (`routeConnectors`) goes around it, and crosses the rest of the band straight
+	 * over. In local coordinates (the shape's centre the origin) on the untransformed
+	 * box, as {@link textRegion} answers; only the horizontal extent is read, the region
+	 * being taken to span the band's height. A region of width 0 says the band holds no
+	 * title. `undefined` (a doc whose box cannot be read) and an omitted hook both leave
+	 * the whole band something a route goes around, as does a rotated or flipped doc.
+	 */
+	layoutContainerTitleRegion?: (doc: ObjectDoc) => Rect | undefined;
 
 	/**
 	 * Where the type lays one text slot out, given a doc of it. Read by the headless

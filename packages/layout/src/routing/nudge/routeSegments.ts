@@ -27,6 +27,12 @@ export type RouteEnd = {
 	 * box, and that box's caption when the end sits on the bottom side.
 	 */
 	ownWallIndices: readonly number[];
+	/**
+	 * Set for an end held to its spot (see RoutableEdge.sourceEnds): its slide is that
+	 * spot alone, and it takes no share of its side's stretch from the ends that slide
+	 * (see calcEndGaps).
+	 */
+	isPinned?: true;
 };
 
 /** A route the nudging may move the corners and ends of. */
@@ -43,6 +49,23 @@ export type RouteToNudge = {
 	source: RouteEnd;
 	/** Where the last point of `path` may slide to; see {@link RouteEnd}. */
 	target: RouteEnd;
+	/**
+	 * Names each pinned spot the route ends at. Routes with one in common are a bundle:
+	 * where their segments lie on one line and share or touch a stretch they are spread
+	 * as one segment, so the bundle's trunk stays one line. Left out, the route is in
+	 * no bundle.
+	 */
+	bundleKeys?: readonly string[];
+};
+
+/** Whether two routes are of one bundle: they share a bundle key (see RouteToNudge.bundleKeys). */
+export const isOfOneBundle = (a: RouteToNudge, b: RouteToNudge): boolean => {
+	const { bundleKeys } = b;
+	return (
+		a.bundleKeys !== undefined &&
+		bundleKeys !== undefined &&
+		a.bundleKeys.some((key) => bundleKeys.includes(key))
+	);
 };
 
 /** What every step of the nudging reads, whichever axis it works on. */
@@ -89,7 +112,25 @@ export type RouteSegment = {
 	 * corners, both ends' for a straight route.
 	 */
 	sideKeys: readonly string[];
+	/**
+	 * For a segment standing for several of one bundle lying on one line (see
+	 * RouteToNudge.bundleKeys): every one of them, itself first, each with its own
+	 * stretch. `from` and `to` then cover them all, the channel is the room every one
+	 * has, and they move as one. Left out, the segment stands for itself alone.
+	 */
+	members?: readonly SegmentMember[];
 };
+
+/** One segment a merged {@link RouteSegment} stands for. */
+export type SegmentMember = Pick<
+	RouteSegment,
+	"routeIndex" | "segmentIndex" | "from" | "to"
+>;
+
+/** The segments `segment` stands for: itself alone unless it is a merged one. */
+export const listSegmentMembers = (
+	segment: RouteSegment,
+): readonly SegmentMember[] => segment.members ?? [segment];
 
 /** One segment of a route, on the route's own path or on one standing for it. */
 export type SegmentOnPath = {
@@ -364,14 +405,18 @@ export const calcOverlap = (
 
 /**
  * Whether two parallel segments share a stretch: one that only touches counts across
- * routes, not within one.
+ * routes, not within one. Two merged segments (see RouteSegment.members) are within
+ * one route when a member of each is.
  */
 export const isAlongside = (
-	a: Pick<RouteSegment, "routeIndex" | "from" | "to">,
-	b: Pick<RouteSegment, "routeIndex" | "from" | "to">,
+	a: Pick<RouteSegment, "routeIndex" | "from" | "to" | "members">,
+	b: Pick<RouteSegment, "routeIndex" | "from" | "to" | "members">,
 ): boolean => {
 	const overlap = calcOverlap(a, b);
-	if (a.routeIndex === b.routeIndex) {
+	const routesOfB = (b.members ?? [b]).map(({ routeIndex }) => routeIndex);
+	if (
+		(a.members ?? [a]).some(({ routeIndex }) => routesOfB.includes(routeIndex))
+	) {
 		return overlap > 0 && !isSameCoordinate(overlap, 0);
 	}
 	return isAtLeast(overlap, 0);

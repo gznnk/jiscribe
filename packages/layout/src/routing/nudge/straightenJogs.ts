@@ -10,8 +10,10 @@ import {
 	type SegmentWalk,
 	acrossOf,
 	alongOf,
+	calcOverlap,
 	calcSegmentSpan,
 	isAlongside,
+	isOfOneBundle,
 	isZeroLength,
 	walkAllSegments,
 } from "./routeSegments";
@@ -65,13 +67,16 @@ const listStretches = (
  * alongside (see isAlongside): on the side it stood on, neither touching nor passing
  * it, and no nearer than the gap they keep (the end gap for two stubs sharing a side,
  * the lane spacing otherwise) or than they stood, whichever is less. A pair not
- * alongside before stood at that gap.
+ * alongside before stood at that gap. A segment of a route of the same bundle that it
+ * lay on one line with, and still does, is kept clear of as it stands: a trunk's
+ * members stay 0 apart.
  */
 const keepsSpacing = (
 	moved: Stretch,
 	previous: Pick<Stretch, "position" | "from" | "to">,
 	others: readonly Stretch[],
 	endGaps: ReadonlyMap<string, number>,
+	routes: readonly RouteToNudge[],
 ): boolean =>
 	others.every((other) => {
 		if (!isAlongside(moved, other)) {
@@ -80,10 +85,13 @@ const keepsSpacing = (
 		const distance = moved.position - other.position;
 		const previousDistance = previous.position - other.position;
 		const previousSide = signOf(previousDistance);
-		if (
-			signOf(distance) === 0 ||
-			(previousSide !== 0 && signOf(distance) !== previousSide)
-		) {
+		if (signOf(distance) === 0) {
+			return (
+				previousSide === 0 &&
+				isOfOneBundle(routes[moved.routeIndex], routes[other.routeIndex])
+			);
+		}
+		if (previousSide !== 0 && signOf(distance) !== previousSide) {
 			return false;
 		}
 		const gap = findEndGap(moved, other, endGaps) ?? GAP_LANE_SPACING;
@@ -232,6 +240,20 @@ const straightenJog = (
 	) {
 		return undefined;
 	}
+	// A segment on one line with another of its bundle is part of the trunk, which
+	// taking a jog out may not pull it off.
+	if (
+		route.bundleKeys !== undefined &&
+		listStretches(routes, undefined, isVertical).some(
+			(other) =>
+				other.routeIndex !== routeIndex &&
+				isOfOneBundle(route, routes[other.routeIndex]) &&
+				isSameCoordinate(other.position, moved.position) &&
+				isAtLeast(calcOverlap(moved, other), 0),
+		)
+	) {
+		return undefined;
+	}
 
 	const farIndex = isBefore ? movedIndex - 1 : movedIndex + 1;
 	const beyondIndex = isBefore ? farIndex - 1 : farIndex + 1;
@@ -290,6 +312,7 @@ const straightenJog = (
 				isVertical,
 			),
 			endGaps,
+			routes,
 		)
 	) {
 		return undefined;
@@ -305,6 +328,7 @@ const straightenJog = (
 				!isVertical,
 			),
 			endGaps,
+			routes,
 		)
 	) {
 		return undefined;

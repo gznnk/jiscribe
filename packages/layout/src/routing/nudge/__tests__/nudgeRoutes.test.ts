@@ -1,7 +1,12 @@
 import type { BoundingBox, Point } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
+import {
+	EDGE_END_SPACING,
+	GAP_LANE_SPACING,
+} from "../../../shared/edgeSpacing";
 import { nudgeRoutes } from "../nudgeRoutes";
+import { calcEndGaps } from "../routeEnds";
 import type { RouteEnd, RouteToNudge } from "../routeSegments";
 
 let endCount = 0;
@@ -1583,6 +1588,306 @@ describe("nudgeRoutes", () => {
 
 				expect(toPairs(kept.path)).toEqual(zPoints);
 			});
+		});
+	});
+
+	describe("gathering the routes to one pinned place", () => {
+		/** `routeToNudge` of the bundles `bundleKeys` names. */
+		const inBundles = (
+			bundleKeys: readonly string[],
+			routeToNudge: RouteToNudge,
+		): RouteToNudge => ({ ...routeToNudge, bundleKeys });
+		/** A route running right along y `y` from x `from` to `to`, its stubs down from y 0 and to y 100. */
+		const runAlong = (
+			y: number,
+			from: number,
+			to: number,
+		): [number, number][] => [
+			[from, 0],
+			[from, y],
+			[to, y],
+			[to, 100],
+		];
+
+		it("keeps two routes of one bundle on their shared line, both moving as one off a third", () => {
+			const first = inBundles(["P"], route(runAlong(50, 0, 200)));
+			const second = inBundles(["P"], route(runAlong(50, 20, 220)));
+			const third = route(runAlong(50, 40, 240));
+
+			nudgeRoutes([first, second, third], []);
+
+			expect(first.path[1].y).not.toBe(50);
+			expect(toPairs(first.path)).toEqual(runAlong(first.path[1].y, 0, 200));
+			expect(toPairs(second.path)).toEqual(runAlong(first.path[1].y, 20, 220));
+			expect(Math.abs(third.path[1].y - first.path[1].y)).toBe(
+				GAP_LANE_SPACING,
+			);
+		});
+
+		it("merges a chain of routes each sharing a bundle with the next, though the ends share none", () => {
+			// `first` and `last` share no key and no stretch, only `middle` joins them;
+			// `crossing` runs along the whole line and pushes them.
+			const first = inBundles(["P"], route(runAlong(50, 0, 150)));
+			const middle = inBundles(["P", "Q"], route(runAlong(50, 100, 250)));
+			const last = inBundles(["Q"], route(runAlong(50, 200, 350)));
+			const crossing = route(runAlong(50, -50, 400));
+
+			nudgeRoutes([first, middle, last, crossing], []);
+
+			const lineY = first.path[1].y;
+			expect(lineY).not.toBe(50);
+			expect([middle.path[1].y, last.path[1].y]).toEqual([lineY, lineY]);
+			expect(Math.abs(crossing.path[1].y - lineY)).toBe(GAP_LANE_SPACING);
+		});
+
+		it("spreads two routes of one bundle lying on different lines", () => {
+			const upper = inBundles(["P"], route(runAlong(50, 0, 200)));
+			const lower = inBundles(["P"], route(runAlong(54, 20, 220)));
+
+			nudgeRoutes([upper, lower], []);
+
+			expect(Math.abs(upper.path[1].y - lower.path[1].y)).toBe(
+				GAP_LANE_SPACING,
+			);
+		});
+
+		it("spreads two routes on one line that share no bundle", () => {
+			const first = inBundles(["P"], route(runAlong(50, 0, 200)));
+			const second = inBundles(["Q"], route(runAlong(50, 20, 220)));
+
+			nudgeRoutes([first, second], []);
+
+			expect(Math.abs(first.path[1].y - second.path[1].y)).toBe(
+				GAP_LANE_SPACING,
+			);
+		});
+
+		it("keeps a merged segment where it is when one of its routes' segments may not move", () => {
+			// `pinned` starts with its stub along y 50, held to its spot.
+			const pinned = inBundles(
+				["P"],
+				route(
+					[
+						[0, 50],
+						[200, 50],
+						[200, 100],
+					],
+					[],
+					{ source: { isPinned: true } },
+				),
+			);
+			const joining = inBundles(["P"], route(runAlong(50, 20, 220)));
+			const other = route(runAlong(50, 40, 240));
+
+			nudgeRoutes([pinned, joining, other], []);
+
+			expect(toPairs(joining.path)).toEqual(runAlong(50, 20, 220));
+			expect(Math.abs(other.path[1].y - 50)).toBe(GAP_LANE_SPACING);
+		});
+
+		it("keeps a free stub from folding its route where the segment two on merges with a pinned stub", () => {
+			// `jogging` runs up x 54.5 from its stub's turn, on one line with `pinned`'s
+			// stub, which holds it there. The end beside it turning left pushes its stub
+			// right; a wall right of the stub keeps it from moving onto x 54.5.
+			const box = { left: 0, top: 0, right: 100, bottom: 40 };
+			const onTop = (): Partial<RouteEnd> => ({
+				sideKey: "box:top",
+				slide: { min: 20, max: 80 },
+				ownWallIndices: [0],
+			});
+			const jogging = inBundles(
+				["P"],
+				route(
+					[
+						[50, 0],
+						[50, -30],
+						[54.5, -30],
+						[54.5, -200],
+						[300, -200],
+					],
+					[box, { left: 64, top: -25, right: 80, bottom: -5 }],
+					{ source: onTop() },
+				),
+			);
+			const pinned = inBundles(
+				["P"],
+				route(
+					[
+						[54.5, -400],
+						[54.5, -150],
+						[-100, -150],
+					],
+					[],
+					{ source: { isPinned: true } },
+				),
+			);
+			const toLeft = route(
+				[
+					[50, 0],
+					[50, -30],
+					[-200, -30],
+					[-200, -200],
+				],
+				[box],
+				{ source: onTop() },
+			);
+
+			nudgeRoutes([jogging, pinned, toLeft], []);
+
+			expect(toPairs(jogging.path)).toEqual([
+				[53, 0],
+				[53, -30],
+				[54.5, -30],
+				[54.5, -200],
+				[300, -200],
+			]);
+			expect(toLeft.path[0].x).toBe(33);
+		});
+
+		describe("straightening a route of a bundle", () => {
+			const pinnedEnd = (): Partial<RouteEnd> => ({ isPinned: true });
+
+			it("leaves a jog whose taking out would pull the route's segment off the trunk, and takes one elsewhere", () => {
+				// The run along y 23 touches `mate`'s at x 200; moving it onto y 20 would
+				// leave `mate` alone on the trunk. A box below the run along y 20 keeps
+				// that one from moving down instead. The jog at the start, along y -50,
+				// is no part of the trunk.
+				const jogged = inBundles(
+					["P"],
+					route(
+						[
+							[-3, -100],
+							[-3, -50],
+							[0, -50],
+							[0, 20],
+							[150, 20],
+							[150, 23],
+							[200, 23],
+							[200, 100],
+						],
+						[{ left: 20, top: 34, right: 80, bottom: 60 }],
+						{ target: pinnedEnd() },
+					),
+				);
+				const mate = inBundles(
+					["P"],
+					route(
+						[
+							[300, -50],
+							[300, 23],
+							[200, 23],
+							[200, 100],
+						],
+						[],
+						{ target: pinnedEnd() },
+					),
+				);
+
+				nudgeRoutes([jogged, mate], []);
+
+				expect(toPairs(jogged.path)).toEqual([
+					[-3, -100],
+					[-3, 20],
+					[150, 20],
+					[150, 23],
+					[200, 23],
+					[200, 100],
+				]);
+				expect(toPairs(mate.path)).toEqual([
+					[300, -50],
+					[300, 23],
+					[200, 23],
+					[200, 100],
+				]);
+			});
+
+			it("takes a jog out though the moved segment's far neighbour lies on the trunk, 0 off its mate", () => {
+				// Moving the run along y 23 onto y 20 stretches the run down x 200, on one
+				// line with `mate`'s, without moving it.
+				const build = (
+					bundleKeys: readonly string[] | undefined,
+				): RouteToNudge[] => {
+					const routes = [
+						route(
+							[
+								[0, 20],
+								[100, 20],
+								[100, 23],
+								[200, 23],
+								[200, 100],
+							],
+							[],
+							{ target: pinnedEnd() },
+						),
+						route(
+							[
+								[300, -50],
+								[300, 0],
+								[200, 0],
+								[200, 100],
+							],
+							[],
+							{ target: pinnedEnd() },
+						),
+					];
+					return bundleKeys === undefined
+						? routes
+						: routes.map((routeToNudge) => inBundles(bundleKeys, routeToNudge));
+				};
+				const bundled = build(["P"]);
+				const unbundled = build(undefined);
+
+				nudgeRoutes(bundled, []);
+				nudgeRoutes(unbundled, []);
+
+				expect(toPairs(bundled[0].path)).toEqual([
+					[0, 20],
+					[200, 20],
+					[200, 100],
+				]);
+				// Two routes of no bundle may not end up 0 apart, so the jog stays.
+				expect(toPairs(unbundled[0].path)).toEqual([
+					[0, 20],
+					[100, 20],
+					[100, 23],
+					[200, 23],
+					[200, 100],
+				]);
+			});
+		});
+	});
+
+	describe("calcEndGaps", () => {
+		it("leaves a pinned end out of its side's end gap", () => {
+			// Two free ends share 0..32 as one gap, capped at EDGE_END_SPACING; with the
+			// pinned end in, three would share it as two gaps of 16.
+			const end = (isPinned: boolean): RouteEnd => ({
+				sideKey: "box:left",
+				slide: { min: 0, max: 32 },
+				ownWallIndices: [],
+				...(isPinned ? { isPinned: true } : {}),
+			});
+			const toRoute = (target: RouteEnd): RouteToNudge => ({
+				...route([
+					[-100, 16],
+					[0, 16],
+				]),
+				target,
+			});
+
+			const withPinned = calcEndGaps([
+				toRoute(end(false)),
+				toRoute(end(false)),
+				toRoute(end(true)),
+			]);
+			const onlyPinned = calcEndGaps([
+				toRoute(end(false)),
+				toRoute(end(true)),
+				toRoute(end(true)),
+			]);
+
+			expect(withPinned.get("box:left")).toBe(EDGE_END_SPACING);
+			expect(onlyPinned.has("box:left")).toBe(false);
 		});
 	});
 });

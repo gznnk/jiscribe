@@ -26,6 +26,12 @@ import { straightenJogs } from "./straightenJogs";
  * already ran nearer, and without crossing more segments; its points go, and the two
  * segments merge. An end point moved for it stays on its box side, within its slide.
  *
+ * Routes sharing a bundle key (see RouteToNudge.bundleKeys) keep their trunk: their
+ * segments lying on one line and sharing or touching a stretch are spread as one
+ * segment (see mergeBundledSegments), and no jog is taken out by moving one of them
+ * off that line. A pinned end (see RouteEnd.isPinned) stands where it is and takes no
+ * share of its side's end gap.
+ *
  * A segment that moves lands on a whole px, or on the exact coordinate of the segment
  * it merges with; one that does not keeps its coordinate exactly.
  *

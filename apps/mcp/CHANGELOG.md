@@ -20,14 +20,18 @@ covers that.
 - **`route_connectors` redraws the lines without moving a shape.** For a
   drawing whose shapes you placed yourself: each line gets the sides and the
   right-angled route that go around the other shapes, the labels below icons
-  and the container title bands without hugging their edges or a container's
-  frame, crossing and running along the other lines as little as it can; each
+  and the titles of containers (the rest of a title band it crosses straight
+  over) without hugging their edges or a container's frame, crossing and running along the other lines as little as it can; each
   line's label is moved to where it covers as little of any shape, and as few
-  of the other labels and of the lines redrawn in the same call, as it can. It runs once, so run it again after moving shapes. Give it
+  of the other labels and of the lines redrawn in the same call, as it can. An
+  end on an ER entity's column is redrawn from that column, from whichever end
+  of its row gives the cheaper route, and the lines to one column gather into
+  one trunk. It runs once, so run it again after moving shapes. Give it
   lines, or shapes (a group or a container counting its contents) to redraw the
   lines among them, or nothing for every line. The reply names the lines it
   redrew, the ones it left as they were and why (a self loop, an end on a
-  column, a container or a rotated shape, overlapping shapes, no way through),
+  container or a rotated shape, an end on a declared connect point that lies on
+  no side of its shape, overlapping shapes, no way through),
   and the ones it moved beneath a shape whose label they leave through.
 
 - **`layout_objects` makes room for the label below an icon or a pictogram.**

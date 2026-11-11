@@ -8,6 +8,7 @@ import { createFrameObjectDoc } from "@jiscribe/canvas-sdk/doc";
 import type { CanvasDocPlugin, ObjectDocDefinition } from "@jiscribe/doc";
 
 import { readContainerHeaderHeight } from "./schema/calcContainerHeaderHeight";
+import { calcContainerTitleRegion } from "./schema/calcContainerTitleRegion";
 import type { ContainerDoc } from "./schema/ContainerDoc";
 import {
 	CONTAINER_DOC_DEFAULTS,
@@ -26,6 +27,7 @@ export const containerDocDefinition: ObjectDocDefinition = createFrameObjectDoc(
 		] satisfies readonly (keyof ContainerDoc)[],
 		defaults: CONTAINER_DOC_DEFAULTS,
 		layoutContainer: (doc) => ({ titleHeight: readContainerHeaderHeight(doc) }),
+		layoutContainerTitleRegion: calcContainerTitleRegion,
 		textRegion: calcContainerTextRegion,
 		// The region is the title band, so sizing the box from the text would give
 		// the height of the title and swallow whatever the container frames.

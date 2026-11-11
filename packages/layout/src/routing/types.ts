@@ -40,6 +40,18 @@ export type RoutableEdge = {
 	/** Id of the node the edge ends at; must be among the nodes. */
 	targetId: string;
 	/**
+	 * The only places the source end may sit, each a side of the source node's box and
+	 * a ratio 0..1 along it (a connect point the node's type declares): the route starts
+	 * at the one that gives it the cheapest way, and the end is pinned there, not
+	 * sliding along its side afterwards. A place whose stub cannot leave is dropped; an
+	 * edge left with none, an empty list included, is unrouted. Routes pinned to one
+	 * place gather into one trunk (see routeEdgesAroundNodes). Left out, the end sits
+	 * wherever on the node's sides the route is cheapest.
+	 */
+	sourceEnds?: readonly LayoutEdgeAnchor[];
+	/** The same for the target end, on the target node. */
+	targetEnds?: readonly LayoutEdgeAnchor[];
+	/**
 	 * Size in px of the box the edge's label is drawn in. Routing makes no room for it:
 	 * the label is placed on the finished route (see RoutedEdge.labelPosition). Left
 	 * out, the edge has no label.
@@ -54,6 +66,18 @@ export type EdgeRoutingOptions = {
 	 * Like a node's box, one is left out for an edge with an end on a node it covers.
 	 */
 	obstacles?: readonly Rect[];
+	/**
+	 * Horizontal bands a route crosses straight over, top to bottom or bottom to top,
+	 * but neither runs along nor bends in (a container's title band, beside its title),
+	 * in the nodes' coordinates. Crossing a band's top and its bottom side each costs
+	 * what crossing a border's side does, counted once where a side of one of
+	 * `borders` lies on it, and a run alongside within a margin what one alongside a
+	 * border does; do not list a band among `borders` as well. Unlike one of
+	 * `obstacles`, a band holds for an edge whose end node it covers too, so a node
+	 * standing in a band can leave it only straight up or down. One reaching past
+	 * every node is cut to the routed area.
+	 */
+	crossableBands?: readonly Rect[];
 	/**
 	 * Rects whose outline a route pays a little to cross or to run alongside within a
 	 * margin (a container's frame), in the nodes' coordinates; the inside is free to

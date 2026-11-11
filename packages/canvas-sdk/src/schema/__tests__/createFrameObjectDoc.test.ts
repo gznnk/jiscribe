@@ -50,15 +50,25 @@ describe("createFrameObjectDoc", () => {
 		expect(definition.summary).toBe("demo");
 	});
 
-	it("carries the layoutContainer hook into the definition as-is", () => {
+	it("carries the layoutContainer hook and its title region into the definition as-is", () => {
 		const layoutContainer = () => ({ titleHeight: 24 });
+		const layoutContainerTitleRegion = () => ({
+			x: -50,
+			y: -40,
+			width: 30,
+			height: 24,
+		});
 		const definition = createFrameObjectDoc({
 			features: DemoFeatures,
 			defaults: DEMO_DOC_DEFAULTS,
 			layoutContainer,
+			layoutContainerTitleRegion,
 		});
 
 		expect(definition.layoutContainer).toBe(layoutContainer);
+		expect(definition.layoutContainerTitleRegion).toBe(
+			layoutContainerTitleRegion,
+		);
 	});
 
 	it("carries the outline and the anchor region into the definition as-is", () => {
