@@ -5,7 +5,11 @@ import {
 } from "@jiscribe/geometry";
 
 import { EDGE_ROUTE_MARGIN } from "./edgeRoutingCosts";
-import { isOwnWall, listEndCandidates } from "./endCandidates";
+import {
+	isOwnWall,
+	listContendedSideKeys,
+	listEndCandidates,
+} from "./endCandidates";
 import { placeRouteLabels } from "./labels/placeRouteLabels";
 import { nudgeRoutes } from "./nudge/nudgeRoutes";
 import type { RouteEnd, RouteToNudge } from "./nudge/routeSegments";
@@ -169,7 +173,9 @@ const listExcludedObstacles = (
  *
  * Each end picks among, on every side of its box, the side's centre and the spot that
  * runs straight to the other box's centred end when the other box lies wholly beyond
- * the side; where neither end is given places to sit, also the spots GAP_LANE_SPACING
+ * the side; where neither end is given places to sit and two or more of the edges
+ * have their other box wholly beyond that side of either box, also the spots
+ * GAP_LANE_SPACING
  * either side of those two that run straight between the two boxes with
  * {@link EDGE_ROUTE_MARGIN} clear of every other obstacle, border's side and crossable
  * band alongside, which lose a tie to the others, so a second edge between two
@@ -270,6 +276,13 @@ export const routeEdgesAroundNodes = (
 	// segment is nudged across the sides of.
 	const fences = [...borders, ...crossableBands];
 
+	const contendedSideKeys = listContendedSideKeys(
+		edges.flatMap((edge) => {
+			const source = requireNode(edge.sourceId, edge.id);
+			const target = requireNode(edge.targetId, edge.id);
+			return source === target ? [] : [{ source, target }];
+		}),
+	);
 	const unroutedEdgeIds = new Set<string>();
 	const prepared: PreparedEdge[] = [];
 	for (const edge of edges) {
@@ -295,6 +308,7 @@ export const routeEdgesAroundNodes = (
 				excludedSet,
 				crossableBands,
 				borders,
+				contendedSideKeys,
 				edge.sourceEnds,
 				edge.targetEnds,
 			),
@@ -305,6 +319,7 @@ export const routeEdgesAroundNodes = (
 				excludedSet,
 				crossableBands,
 				borders,
+				contendedSideKeys,
 				edge.targetEnds,
 				edge.sourceEnds,
 			),

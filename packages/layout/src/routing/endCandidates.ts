@@ -144,16 +144,56 @@ const offsetPoint = (
 });
 
 /**
+ * The sides of the nodes that two or more edges may each want the centre of: a side
+ * some two of the edges have their other end's node wholly beyond, as its key
+ * (toSideKey). Only there does a spot beside the centre help, so only there
+ * listEndCandidates offers one.
+ *
+ * @param ends - Every edge's two nodes, each a box no self loop among them
+ */
+export const listContendedSideKeys = (
+	ends: readonly { source: RoutableNode; target: RoutableNode }[],
+): Set<string> => {
+	const counts = new Map<string, number>();
+	const count = (node: RoutableNode, other: RoutableNode): void => {
+		const box = convertRectToBoundingBox(node.bounds);
+		const otherBox = convertRectToBoundingBox(other.bounds);
+		const beyond: [LayoutSide, boolean][] = [
+			["top", otherBox.bottom <= box.top],
+			["right", otherBox.left >= box.right],
+			["bottom", otherBox.top >= box.bottom],
+			["left", otherBox.right <= box.left],
+		];
+		for (const [side, isBeyond] of beyond) {
+			if (isBeyond) {
+				const key = toSideKey(node.id, side);
+				counts.set(key, (counts.get(key) ?? 0) + 1);
+			}
+		}
+	};
+	for (const { source, target } of ends) {
+		count(source, target);
+		count(target, source);
+	}
+	return new Set(
+		[...counts].filter(([, total]) => total >= 2).map(([key]) => key),
+	);
+};
+
+/**
  * The places one end of an edge may sit: on each side, the side's centre (as a side's
  * only end sits in a layered layout) and, when the other node lies wholly beyond the
  * side, the spot that runs straight to the other node's centred end (see
  * calcStraightAnchorRatio); and, when both ends are free, the spots GAP_LANE_SPACING
  * either side of this node's and the other node's centred end that run straight
  * between the two boxes with a margin clear alongside (see routeEdgesAroundNodes),
- * each a little dearer than the others. A spot whose stub is blocked is left out.
+ * each a little dearer than the others, on a side of either box that another edge
+ * may want too (`contendedSideKeys`). A spot whose stub is blocked is left out.
  *
  * @param crossableBands - What stops a stub besides the obstacles (see calcStubLength)
  * @param borders - Rects whose sides a spot beside the centre keeps a margin off
+ * @param contendedSideKeys - The sides (toSideKey) that two or more of the edges
+ *   being routed have their other node wholly beyond (see listContendedSideKeys)
  * @param pinnedEnds - The only places the end may sit (see RoutableEdge.sourceEnds),
  *   which are then its candidates; undefined for an end free to sit on any side
  * @param otherPinnedEnds - The only places the other node's end may sit; a free end
@@ -167,6 +207,7 @@ export const listEndCandidates = (
 	excluded: ReadonlySet<Obstacle>,
 	crossableBands: readonly BoundingBox[],
 	borders: readonly BoundingBox[],
+	contendedSideKeys: ReadonlySet<string>,
 	pinnedEnds?: readonly LayoutEdgeAnchor[],
 	otherPinnedEnds?: readonly LayoutEdgeAnchor[],
 ): EndCandidate[] => {
@@ -318,7 +359,12 @@ export const listEndCandidates = (
 				}
 			}
 		}
-		if (isBeyond[side] && otherPinnedEnds === undefined) {
+		if (
+			isBeyond[side] &&
+			otherPinnedEnds === undefined &&
+			(contendedSideKeys.has(toSideKey(node.id, side)) ||
+				contendedSideKeys.has(toSideKey(other.id, OPPOSITE_SIDES[side])))
+		) {
 			const otherSide = OPPOSITE_SIDES[side];
 			const axis = createSideAxis(side);
 			const centres = [

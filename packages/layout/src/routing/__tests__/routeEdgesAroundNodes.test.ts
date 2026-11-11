@@ -5,7 +5,7 @@ import { calcAnchorPoint } from "../../shared/calcAnchorPoint";
 import { GAP_LANE_SPACING } from "../../shared/edgeSpacing";
 import type { LayoutEdgeAnchor, LayoutSide } from "../../shared/types";
 import { EDGE_ROUTE_MARGIN } from "../edgeRoutingCosts";
-import { listEndCandidates } from "../endCandidates";
+import { listContendedSideKeys, listEndCandidates } from "../endCandidates";
 import { routeEdgesAroundNodes } from "../routeEdgesAroundNodes";
 import type { RoutableNode, RoutedEdge } from "../types";
 
@@ -1420,6 +1420,15 @@ describe("routeEdgesAroundNodes", () => {
 
 	describe("ends beside the centre", () => {
 		const facingPair = [box("a", 0, 0), box("b", 300, 0)];
+		/** The contended sides when two edges join `source` and `target`. */
+		const twiceBetween = (
+			source: RoutableNode,
+			target: RoutableNode,
+		): Set<string> =>
+			listContendedSideKeys([
+				{ source, target },
+				{ source, target },
+			]);
 		const twoEdges = [edge("first", "a", "b"), edge("second", "a", "b")];
 
 		it("runs a second edge between two facing boxes straight beside the first", () => {
@@ -1490,6 +1499,7 @@ describe("routeEdgesAroundNodes", () => {
 					new Set(),
 					[],
 					[],
+					twiceBetween(a, b),
 					pinnedEnds,
 					otherPinnedEnds,
 				)
@@ -1511,6 +1521,37 @@ describe("routeEdgesAroundNodes", () => {
 			]);
 		});
 
+		it("offers spots beside the centre only on a side two edges have their other box beyond", () => {
+			const [a, b] = facingPair;
+			const above = box("c", 300, -300);
+			const listBesideOnRight = (contendedSideKeys: ReadonlySet<string>) =>
+				listEndCandidates(a, b, [], new Set(), [], [], contendedSideKeys)
+					.filter(({ side, sideCost }) => side === "right" && sideCost > 0)
+					.map(({ t }) => t);
+			const between = (source: RoutableNode, target: RoutableNode) => ({
+				source,
+				target,
+			});
+
+			// One edge alone, and two leaving a by different sides of b: no side is wanted twice.
+			expect(listBesideOnRight(listContendedSideKeys([between(a, b)]))).toEqual(
+				[],
+			);
+			// b and c both lie beyond a's right side.
+			expect(
+				listBesideOnRight(
+					listContendedSideKeys([between(a, b), between(above, a)]),
+				),
+			).toEqual([0.1, 0.9]);
+			// The contended side may be the other box's: two edges reach b's left side.
+			const left = box("d", -300, 300);
+			expect(
+				listBesideOnRight(
+					listContendedSideKeys([between(a, b), between(b, left)]),
+				),
+			).toEqual([0.1, 0.9]);
+		});
+
 		it("offers no horizontal run inside a crossable band's strip, where a vertical one is still offered", () => {
 			// Each band spans exactly the margin either side of the spot 16px past the
 			// centre (y 36, x 46), its sides no nearer than the margin.
@@ -1521,7 +1562,15 @@ describe("routeEdgesAroundNodes", () => {
 				band: BoundingBox,
 				side: LayoutSide,
 			) =>
-				listEndCandidates(a, other, [], new Set(), [band], [])
+				listEndCandidates(
+					a,
+					other,
+					[],
+					new Set(),
+					[band],
+					[],
+					twiceBetween(a, other),
+				)
 					.filter(
 						(candidate) => candidate.side === side && candidate.sideCost > 0,
 					)
