@@ -1,6 +1,18 @@
 import { AUTO_COLOR } from "@jiscribe/doc/model/objects/utils/autoColor";
 
 /**
+ * Whether a label's background, as stored, is the knockout: omitted or
+ * `"auto"`. Such a label is painted on the page's color with the frames it lies
+ * on over it (LabelBackdropLayers); any other value is painted as it is.
+ *
+ * @param value a connector label's `fill` or a caption's `labelFill`, as stored
+ */
+export const isAutoLabelFill = (
+	value: string | undefined,
+): value is typeof AUTO_COLOR | undefined =>
+	value === undefined || value === AUTO_COLOR;
+
+/**
  * Resolves the render color for a label's background: a connector label's
  * `fill`, or the `labelFill` a `text: "label"` caption is painted on. Shared so
  * the labels, the connector label's inline editor and the label-fill swatches
@@ -17,5 +29,4 @@ import { AUTO_COLOR } from "@jiscribe/doc/model/objects/utils/autoColor";
 export const resolveLabelFill = (
 	fill: string | undefined,
 	documentSurface: string,
-): string =>
-	fill === undefined || fill === AUTO_COLOR ? documentSurface : fill;
+): string => (isAutoLabelFill(fill) ? documentSurface : fill);

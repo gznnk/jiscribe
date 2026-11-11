@@ -21,8 +21,8 @@ export { BelowLabelHitArea } from "./presentation/BelowLabelHitArea";
 // The box the caption's background is painted on is LabelTextFill, in the
 // unstable surface re-exported above: createFrameObject draws it, and a caption
 // shape whose component is written without createFrameObject draws it itself,
-// passing the shape's id as `ownerId` for an "auto" caption to be painted on
-// the frames it lies on (labelBackdrop).
+// passing the shape's id as `ownerId` (required), under which an "auto"
+// caption finds the frames it lies on (labelBackdrop).
 
 // The measurement of a caption, for a `features.text: "label"` / `"innerLabel"`
 // shape that places its caption somewhere of its own (a group marker's, set

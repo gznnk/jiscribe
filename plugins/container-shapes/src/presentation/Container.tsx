@@ -1,5 +1,6 @@
-import { createFrameObject, resolveAutoColor } from "@jiscribe/canvas-sdk";
+import { createFrameObject } from "@jiscribe/canvas-sdk";
 
+import { calcContainerHeaderBand } from "./calcContainerHeaderBand";
 import {
 	ContainerBody,
 	ContainerDivider,
@@ -7,7 +8,6 @@ import {
 	ContainerOutline,
 	ContainerOutlineHitArea,
 } from "./ContainerStyled";
-import { calcContainerHeaderHeight } from "../schema/calcContainerHeaderHeight";
 import type { ContainerState } from "../state/ContainerState";
 
 /**
@@ -33,12 +33,8 @@ export const Container = createFrameObject<ContainerState>((state, shape) => {
 	const { width, height } = state;
 	const x = -width / 2;
 	const y = -height / 2;
-	const headerHeight = calcContainerHeaderHeight(state);
-
-	// Header band follows the same auto/color model as fill & stroke: "auto"
-	// (the default) → theme surface; a set color → that color. Independent of
-	// the body `fill` — no derivation, so it is a plain resettable field.
-	const headerColor = resolveAutoColor(state.headerFill, "surface");
+	const headerBand = calcContainerHeaderBand(state, fillAlpha);
+	const headerHeight = headerBand.rect.height;
 
 	return (
 		<g data-kind={dataKind} data-id={dataId} transform={transform}>
@@ -51,12 +47,12 @@ export const Container = createFrameObject<ContainerState>((state, shape) => {
 				fillAlpha={fillAlpha}
 			/>
 			<ContainerHeader
-				x={x}
-				y={y}
-				width={width}
-				height={headerHeight}
-				fillColor={headerColor}
-				fillAlpha={fillAlpha}
+				x={headerBand.rect.x}
+				y={headerBand.rect.y}
+				width={headerBand.rect.width}
+				height={headerBand.rect.height}
+				fillColor={headerBand.fill}
+				fillAlpha={headerBand.fillOpacity}
 			/>
 			<ContainerDivider
 				x1={x}

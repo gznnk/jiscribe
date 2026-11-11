@@ -59,8 +59,8 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   other type, a connector included, `setStyle` reports it as not taken. A
   component written without `createFrameObject` draws the box itself with
   `LabelTextFill` (`@jiscribe/canvas/unstable`, and so `@jiscribe/canvas-sdk`),
-  passing the shape's id as its new `ownerId` for the frames under the caption
-  to be painted (left out, the box stays in the page's color).
+  passing the shape's id as its required `ownerId`, under which an `"auto"`
+  caption finds the frames it lies on.
 - **`labelBackdrop`: a frame's fill under the `"auto"` labels lying on it.**
   `ObjectTypeDefinition` takes `labelBackdrop`, returning the regions a frame
   paints, bottom first (`ObjectLabelBackdropRegion`, from `@jiscribe/canvas`: a
@@ -74,9 +74,15 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   label count; where the frame or the label's shape is rotated or flipped, the
   box's center decides and the region then covers the whole box. It is worked
   out again whenever the drawing changes, except during a drag, which keeps the
-  previous result until it ends; an export of a subset counts only the frames in
-  it. container and awsGroup declare one; a filled rectangle is no backdrop. A
-  connector label being edited stays on the page's color.
+  previous result until it ends (an export taken mid-drag is worked out all
+  the same); an export of a subset counts only the frames in it. container and
+  awsGroup declare one; a filled rectangle is no backdrop. A connector label
+  being edited stays on the page's color.
+- **`@jiscribe/geometry` exports `calcBoundingBoxIntersection` and
+  `isPointInBoundingBox`.** The first is the part two bounding boxes share,
+  `null` when they share no area (apart, or only touching along an edge or at a
+  corner, or with a `NaN` edge); the second whether a point lies inside a box or
+  on its edge, `false` for an inverted box or a `NaN` coordinate.
 - **A type can measure the text body it draws itself.** `ObjectTypeDefinition`
   takes `textMeasurer` (`ObjectTextMeasurer`, returning an
   `ObjectTextMeasurement`), which `CanvasHandle.measure.textSlot` calls in place

@@ -7,7 +7,6 @@ import {
 	BODY_TEXT_SLOT_ID,
 	readTextSlotContent,
 } from "@jiscribe/doc/model/objects/types/text/TextSlot";
-import { AUTO_COLOR } from "@jiscribe/doc/model/objects/utils/autoColor";
 import { TEXT_STYLE_FALLBACK } from "@jiscribe/doc/text/style/textStyleFallback";
 import {
 	convertBoundingBoxToRect,
@@ -25,7 +24,7 @@ import { useDocumentSurface } from "../DocumentSurfaceContext";
 import { useObjectTextStyleDefaultsRegistry } from "../registry/ObjectTextStyleDefaultsRegistryContext";
 import { useIsTextLegible } from "../useIsTextLegible";
 import { useLabelBackdropLayers } from "../useLabelBackdropLayers";
-import { resolveLabelFill } from "../utils/resolveLabelFill";
+import { isAutoLabelFill, resolveLabelFill } from "../utils/resolveLabelFill";
 
 type LabelTextFillProps = {
 	/** The shape's type, which the caption's style defaults are looked up under. */
@@ -35,17 +34,17 @@ type LabelTextFillProps = {
 	/**
 	 * The shape's `labelFill` as stored; omitted or `"auto"` knocks out in the
 	 * page's color (resolveLabelFill), with the backdrops lying under the caption
-	 * painted over it when `ownerId` is given.
+	 * painted over it.
 	 */
 	labelFill: string | undefined;
 	/** The caption's box in the shape's local coordinates, as its `"textSlot"` part kind places it. */
 	region: Rect;
 	/**
 	 * The id of the shape owning the caption, under which the surrounding
-	 * `<Canvas>` keeps the backdrops it lies on (useLabelBackdropLayers).
-	 * Omitted = the page's color alone, wherever the caption lies.
+	 * `<Canvas>` keeps the backdrops it lies on (useLabelBackdropLayers); outside
+	 * a `<Canvas>` there are none, whatever the id.
 	 */
-	ownerId?: string;
+	ownerId: string;
 };
 
 const LabelTextFillComponent: React.FC<LabelTextFillProps> = ({
@@ -56,7 +55,7 @@ const LabelTextFillComponent: React.FC<LabelTextFillProps> = ({
 	ownerId,
 }) => {
 	const documentSurface = useDocumentSurface();
-	const isAuto = labelFill === undefined || labelFill === AUTO_COLOR;
+	const isAuto = isAutoLabelFill(labelFill);
 	const layers = useLabelBackdropLayers(isAuto ? ownerId : undefined);
 	// The layers' origin, a flipped shape's region running backwards.
 	const layerBox = useMemo(
@@ -110,9 +109,9 @@ const LabelTextFillComponent: React.FC<LabelTextFillProps> = ({
  * The box painted behind a `features.text: "label"` caption, in the shape's
  * `labelFill`: what knocks out the lines running under the caption, the way a
  * connector's label does. Drawn by createFrameObject ahead of the caption's text;
- * a component written by hand draws it itself, as it does the text, and passes
- * `ownerId` for an `"auto"` caption to be painted on the frames it lies on
- * (LabelBackdropLayers) rather than on the page's color alone.
+ * a component written by hand draws it itself, as it does the text, passing the
+ * shape's id as `ownerId`, under which an `"auto"` caption finds the frames it
+ * lies on (LabelBackdropLayers).
  *
  * Carries no `data-kind`, so it is no object of its own (the DOM allows one per
  * object), and takes no pointer, the shape's own hit area being what grabs the

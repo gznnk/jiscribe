@@ -65,7 +65,7 @@ const renderFill = ({
 	labelFill,
 	zoom = 1,
 }: {
-	ownerId?: string;
+	ownerId: string;
 	labelFill?: string;
 	zoom?: number;
 }) => {
@@ -130,18 +130,12 @@ describe("LabelTextFill backdrop", () => {
 	});
 
 	it("keeps the knockout smoothed on no backdrop", () => {
-		const { container } = renderFill({});
+		// The store holds layers for "shape" alone.
+		const { container } = renderFill({ ownerId: "elsewhere" });
 		const knockout = container.querySelector(
 			'g[data-canvas-export="flatten"] > rect',
 		);
 		expect(knockout?.hasAttribute("shape-rendering")).toBe(false);
-	});
-
-	it("paints the page's color alone without an ownerId, as before", () => {
-		const { container } = renderFill({});
-		const group = container.querySelector('g[data-canvas-export="flatten"]')!;
-		expect(group.children).toHaveLength(1);
-		expect((group.children[0] as SVGRectElement).style.fill).toBe(SURFACE);
 	});
 
 	it("paints no layers under a caption with a background of its own", () => {

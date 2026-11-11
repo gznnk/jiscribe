@@ -94,8 +94,9 @@ export type ObjectTypeDefinition<
 	 * fill an `"auto"` label lying on it should blend into: such a label is
 	 * painted on the page's color and then on these regions, bottom first, where
 	 * they lie under its box. Called with the body fill core resolved (state,
-	 * type default, last resort, `"auto"` as the theme surface). Read after a
-	 * drag ends, never during one. Omitted = the type is no backdrop, however it
+	 * type default, last resort, `"auto"` as the theme surface). Not called
+	 * while a drag is under way, save for an export taken mid-drag, which is
+	 * worked out for what it draws. Omitted = the type is no backdrop, however it
 	 * is filled (see ObjectLabelBackdropRegistry).
 	 */
 	labelBackdrop?: ObjectLabelBackdropCalculator<TState>;

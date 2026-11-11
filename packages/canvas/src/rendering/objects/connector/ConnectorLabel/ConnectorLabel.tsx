@@ -1,4 +1,3 @@
-import { AUTO_COLOR } from "@jiscribe/doc/model/objects/utils/autoColor";
 import type { Point } from "@jiscribe/geometry";
 import type React from "react";
 import { memo, useMemo } from "react";
@@ -13,7 +12,10 @@ import { useFontsLoadedNonceContext } from "../../FontsLoadedNonceContext";
 import { useIsTextLegible } from "../../useIsTextLegible";
 import { useLabelBackdropLayers } from "../../useLabelBackdropLayers";
 import { resolveAutoColor } from "../../utils/resolveAutoColor";
-import { resolveLabelFill } from "../../utils/resolveLabelFill";
+import {
+	isAutoLabelFill,
+	resolveLabelFill,
+} from "../../utils/resolveLabelFill";
 import {
 	placeConnectorLabelBox,
 	resolveConnectorLabelBox,
@@ -92,7 +94,7 @@ const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
 		() => placeConnectorLabelBox(anchor, boxSize),
 		[anchor, boxSize],
 	);
-	const isAuto = fill === undefined || fill === AUTO_COLOR;
+	const isAuto = isAutoLabelFill(fill);
 	const layers = useLabelBackdropLayers(isAuto ? id : undefined);
 
 	// A label is one plain string, so its own size is the largest it draws.

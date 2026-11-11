@@ -66,7 +66,7 @@ export const resolveConnectorLabelMetrics = (
  *
  * The single derivation shared by the renderer (ConnectorLabel.tsx), the
  * connector extent (calcConnectorBoundingBox) and the label's backdrop
- * (calcConnectorLabelRect), so the drawn box and the boxes the others reserve
+ * (resolveLabelBackdrops), so the drawn box and the boxes the others reserve
  * cannot drift apart.
  *
  * @param label - Stored label; an omitted `fontFamily` / `fontSize` / `fontWeight`
@@ -115,23 +115,3 @@ export const placeConnectorLabelBox = (
 	width: box.width,
 	height: box.height,
 });
-
-/**
- * The box a label is drawn in on its connector, worked out from the path and
- * the stored label alone: the same box ConnectorLabel draws.
- *
- * @param points - The drawn path, source first, in world coordinates
- *   (listConnectorPathPoints)
- * @param label - The stored label
- * @returns The box in world coordinates, or null where nothing is drawn (an
- *   empty label, an empty path)
- */
-export const calcConnectorLabelRect = (
-	points: readonly Point[],
-	label: ConnectorLabel,
-): Rect | null => {
-	const anchor = resolveConnectorLabelAnchor(points, label);
-	return anchor === null
-		? null
-		: placeConnectorLabelBox(anchor, resolveConnectorLabelBox(label));
-};

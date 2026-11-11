@@ -163,8 +163,8 @@ them in place of its own; one without the other, or a `"textSlot"` part kind
 placing nothing, is refused at registration. Such a shape draws its own grab area
 over the caption. A component written
 without `createFrameObject` draws `LabelTextFill` (part of the unstable surface the kit re-exports) itself, ahead of the caption's
-text, as it draws the text, and passes it the shape's id as `ownerId` for an `"auto"`
-caption to be painted on the frames it lies on (left out, it stays on the page's color). The default menus offer the caption's background under
+text, as it draws the text, and passes it the shape's id as `ownerId` (required), under
+which an `"auto"` caption finds the frames it lies on. The default menus offer the caption's background under
 the `label-style` section; a type stating its own `menu` puts
 `{ type: "labelBackgroundColor" }` there too, so the item survives a selection
 mixing it with another label type.
@@ -183,8 +183,8 @@ with a resolved color and an opacity (`ObjectLabelBackdropRegion`); the second a
 the body fill the core resolved the way `createFrameObject` draws it (`fillColor`, `"auto"`
 already the theme surface, and `fillAlpha`), so the type repeats none of its defaults.
 A region painting nothing (a transparent color, opacity 0) is dropped. Only a type
-declaring it counts: a filled rectangle is no backdrop. It is read after a drag ends,
-never during one.
+declaring it counts: a filled rectangle is no backdrop. It is not read while a drag is
+under way, except for an export taken mid-drag, which is worked out for what it draws.
 
 A type whose slots are laid out against each other (a table's cells, a record's
 compartments) declares the `"textSlot"` part kind itself, with

@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { advanceTextMeasurementGeneration } from "@jiscribe/doc/text/measure/textMeasurementSlot";
 import type { Rect } from "@jiscribe/geometry";
 import { act, memo } from "react";
 import { createRoot } from "react-dom/client";
@@ -22,11 +23,14 @@ import { useLabelBackdropStore } from "../useLabelBackdropStore";
 // flushes being correct all the same.
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
-/** A probe caption's box in its shape's local space: as wide as the text has characters × 10, 20 tall, under the box. */
+/** How wide one character measures, which a face landing changes. */
+const glyphWidth = { value: 10 };
+
+/** A probe caption's box in its shape's local space: as wide as the text has characters × glyphWidth, 20 tall, under the box. */
 const captionRegion = (state: ObjectState): Rect => {
 	const text = (state as ObjectState & { text: { body: { text: string } } })
 		.text.body.text;
-	return { x: -20, y: 25, width: text.length * 10, height: 20 };
+	return { x: -20, y: 25, width: text.length * glyphWidth.value, height: 20 };
 };
 
 const registries = createTestRegistries();
@@ -132,6 +136,7 @@ afterEach(() => {
 	unmount?.();
 	unmount = null;
 	probeRenders.clear();
+	glyphWidth.value = 10;
 });
 
 const mountHost = () => {
@@ -282,6 +287,20 @@ describe("useLabelBackdropStore", () => {
 		expect(latestLayers("shape")).toBe(NO_LABEL_BACKDROP_LAYERS);
 		expect(latestLayers("other")).toBe(otherLayers);
 		expect(probeRenders.get("other")).toHaveLength(otherRenderCount);
+	});
+
+	it("works the layers out again when a face lands, the objects unchanged", () => {
+		const objects = toObjects(frame("frame", 100), captioned("shape", 100));
+		const render = mountHost();
+		render({ objects, rootIds: ROOT_IDS, probeIds: ["shape"] });
+		expect(latestLayers("shape")[0].rect.width).toBe(20);
+
+		// What the canvas does when web fonts land (useDocFonts): measurements
+		// answer differently, and the nonce moves.
+		glyphWidth.value = 12;
+		advanceTextMeasurementGeneration();
+		render({ objects, rootIds: ROOT_IDS, fontsNonce: 1, probeIds: ["shape"] });
+		expect(latestLayers("shape")[0].rect.width).toBe(24);
 	});
 
 	it("works out an export's scope when only the scope changes, and the whole tree after it", () => {

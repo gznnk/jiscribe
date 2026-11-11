@@ -2,7 +2,7 @@ import type { Rect } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
 import { theme } from "../../../foundation/theme/themeTokens";
-import { calcConnectorLabelRect } from "../../../rendering/objects/connector/geometry/label/connectorLabelLayout";
+import { resolveConnectorLabelBox } from "../../../rendering/objects/connector/geometry/label/connectorLabelLayout";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../states/objects/connector/ConnectorState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
@@ -298,21 +298,14 @@ describe("resolveLabelBackdrops", () => {
 		);
 		// The frame covers x 0..100: the label, centered on (100, 100), is half on it.
 		const backdrops = resolve([frame("frame", 50, 100, 100, 200), connector]);
-		const box = calcConnectorLabelRect(
-			[
-				{ x: 0, y: 100 },
-				{ x: 200, y: 100 },
-			],
-			label,
-		);
-		expect(box).not.toBeNull();
+		const box = resolveConnectorLabelBox(label);
 		const layers = backdrops.get("connector");
 		expect(layers).toHaveLength(1);
 		expect(layers?.[0]).toMatchObject({ fill: "#ff0000", fillOpacity: 0.5 });
 		expect(layers?.[0].rect.x).toBe(0);
 		expect(layers?.[0].rect.y).toBe(0);
-		expect(layers?.[0].rect.width).toBeCloseTo(box!.width / 2, 6);
-		expect(layers?.[0].rect.height).toBeCloseTo(box!.height, 6);
+		expect(layers?.[0].rect.width).toBeCloseTo(box.width / 2, 6);
+		expect(layers?.[0].rect.height).toBeCloseTo(box.height, 6);
 
 		const colored = resolve([
 			frame("frame", 50, 100, 100, 200),

@@ -148,7 +148,7 @@ foreignObject に `display="none"` を付ける。テキストオーバーレイ
 枠の上にある auto のラベルは、その枠の塗りの上にも描き、ページ色で浮かずに枠に馴染ませる。枠に数えるのは
 `labelBackdrop` を宣言した型（container・awsGroup）だけ。`resolveLabelBackdrops`
 （`controllers/utils/resolveLabelBackdrops.ts`）が描画順に図形を舐め、各ラベルの箱を、それより前に描かれた
-枠の塗る領域で切り取る。`<Canvas>` は描くものが変わるたびにこれを求め直す（ドラッグ中は求めない）。結果は
+枠の塗る領域で切り取る。`<Canvas>` は描くものが変わるたびにこれを求め直す（ドラッグ中は求めない。ドラッグ中に取った書き出しだけは、描く範囲について求める）。結果は
 ストアに入れ、各ラベルは持ち主の id で自分の分だけを購読する（`rendering/objects/LabelBackdropStoreContext.ts`・
 `useLabelBackdropLayers`）。ラベルはページ色を塗り、その上に領域ごとの図形を領域の色と不透明度で重ねる
 （`rendering/objects/base/LabelBackdropLayers.tsx`）。半透明の塗りもテーマ色も枠と同じ見た目になる。

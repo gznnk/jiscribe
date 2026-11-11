@@ -1,11 +1,12 @@
+import type { ConnectorLabel } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import { richTextToPlain } from "@jiscribe/doc/model/objects/types/text/RichText";
 import {
 	BODY_TEXT_SLOT_ID,
 	readTextSlotContent,
 } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 import { hasLabelFill } from "@jiscribe/doc/model/objects/types/text/TextType";
-import { AUTO_COLOR } from "@jiscribe/doc/model/objects/utils/autoColor";
 import type { ObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
+import { readTextMeasurementGeneration } from "@jiscribe/doc/text/measure/textMeasurementSlot";
 import {
 	calcAffineTransformedPoint,
 	calcBoundingBoxIntersection,
@@ -15,12 +16,7 @@ import {
 	isPointInBoundingBox,
 	isTransformedFrame,
 } from "@jiscribe/geometry";
-import type {
-	BoundingBox,
-	Point,
-	Rect,
-	TransformedFrame,
-} from "@jiscribe/geometry";
+import type { BoundingBox, Point, TransformedFrame } from "@jiscribe/geometry";
 
 import type { ConnectorRouteRegistries } from "./VisualExtentRegistries";
 import { isTransparentColor } from "../../foundation/color/isTransparentColor";
@@ -29,13 +25,22 @@ import {
 	resolveConnectorPointsCached,
 	resolveEndpointOwner,
 } from "../../rendering/objects/connector/geometry/endpoints";
-import { calcConnectorLabelRect } from "../../rendering/objects/connector/geometry/label/connectorLabelLayout";
+import {
+	placeConnectorLabelBox,
+	resolveConnectorLabelAnchor,
+	resolveConnectorLabelBox,
+} from "../../rendering/objects/connector/geometry/label/connectorLabelLayout";
+import type { ConnectorLabelBox } from "../../rendering/objects/connector/geometry/label/connectorLabelLayout";
 import type { LabelBackdropLayer } from "../../rendering/objects/LabelBackdropStoreContext";
 import type { ObjectLabelBackdropRegistry } from "../../rendering/objects/registry/ObjectLabelBackdropRegistry";
-import type { ObjectPartKindRegistry } from "../../rendering/objects/registry/ObjectPartKindRegistry";
+import type {
+	ObjectPartKindDefinition,
+	ObjectPartKindRegistry,
+} from "../../rendering/objects/registry/ObjectPartKindRegistry";
 import { TEXT_SLOT_PART_KIND } from "../../rendering/objects/registry/ObjectPartKindRegistry";
 import { calcTextRegion } from "../../rendering/objects/utils/calcTextRegion";
 import { resolveAutoColor } from "../../rendering/objects/utils/resolveAutoColor";
+import { isAutoLabelFill } from "../../rendering/objects/utils/resolveLabelFill";
 import type { FillStyleState } from "../../states/objects/base/FillStyleState";
 import type { LabelTextStyleState } from "../../states/objects/base/LabelTextStyleState";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
@@ -71,8 +76,8 @@ type PaintedRegion = {
 	frame: TransformedFrame;
 };
 
-/** A label's box as the walk tests it against the painted regions. */
-type LabelBox = {
+/** Where a label's box lies, as the walk tests it against the painted regions. */
+type LabelBoxPlacement = {
 	/** The box in world coordinates; for an owner rotated or flipped, only its center is meaningful. */
 	worldBox: BoundingBox;
 	/** The box's center in world coordinates. */
@@ -81,14 +86,39 @@ type LabelBox = {
 	width: number;
 	height: number;
 	/** True when the owner is rotated or flipped, so the box is tested by its center alone. */
-	isTransformed: boolean;
+	isRotatedOrFlipped: boolean;
 };
 
-const isTransformedAway = (frame: TransformedFrame): boolean =>
+const isRotatedOrFlipped = (frame: TransformedFrame): boolean =>
 	frame.rotation !== 0 || frame.scaleX !== 1 || frame.scaleY !== 1;
 
-const isAutoLabelFill = (fill: string | undefined): boolean =>
-	fill === undefined || fill === AUTO_COLOR;
+/**
+ * A caption's placement as last worked out for one object state, which never
+ * changes: still the answer while the text measurement and the part kind
+ * placing the caption are the ones it was worked out under.
+ */
+type CaptionPlacementEntry = {
+	measurementGeneration: number;
+	textSlotKind: ObjectPartKindDefinition | undefined;
+	/** Null for a caption with no text, which paints no box. */
+	placement: LabelBoxPlacement | null;
+};
+
+const captionPlacementCache = new WeakMap<ObjectState, CaptionPlacementEntry>();
+
+/**
+ * A connector label's measured size as last worked out for one label object:
+ * still the answer while the text measurement is the one it was measured under.
+ */
+type ConnectorLabelSizeEntry = {
+	measurementGeneration: number;
+	size: ConnectorLabelBox;
+};
+
+const connectorLabelSizeCache = new WeakMap<
+	ConnectorLabel,
+	ConnectorLabelSizeEntry
+>();
 
 const shiftBox = (box: BoundingBox, dx: number, dy: number): BoundingBox => ({
 	left: box.left + dx,
@@ -97,39 +127,18 @@ const shiftBox = (box: BoundingBox, dx: number, dy: number): BoundingBox => ({
 	bottom: box.bottom + dy,
 });
 
-/** The caption box of a `features.text: "label"` shape with an `"auto"` background and some text, else null. */
-const resolveCaptionBox = (
-	obj: ObjectState,
-	registries: LabelBackdropRegistries,
-): LabelBox | null => {
-	if (!hasLabelFill(obj.features?.text) || !isTransformedFrame(obj)) {
-		return null;
-	}
-	const captioned = obj as ObjectState &
-		TransformedFrame &
-		Partial<LabelTextStyleState> &
-		TextStyleState;
-	if (!isAutoLabelFill(captioned.labelFill)) {
-		return null;
-	}
-	const bodySlot = captioned.text?.[BODY_TEXT_SLOT_ID];
-	if (
-		bodySlot === undefined ||
-		richTextToPlain(readTextSlotContent(bodySlot.text)) === ""
-	) {
-		return null;
-	}
-	const region = calcTextRegion(
-		captioned,
-		BODY_TEXT_SLOT_ID,
-		registries.objectPartKind.get(obj.type, TEXT_SLOT_PART_KIND),
-	);
+/** Where a caption lies, from the region its part kind places it in. */
+const placeCaption = (
+	captioned: ObjectState & TransformedFrame & TextStyleState,
+	textSlotKind: ObjectPartKindDefinition | undefined,
+): LabelBoxPlacement => {
+	const region = calcTextRegion(captioned, BODY_TEXT_SLOT_ID, textSlotKind);
 	const localBox = convertRectToBoundingBox(region);
 	const localCenter = {
 		x: (localBox.left + localBox.right) / 2,
 		y: (localBox.top + localBox.bottom) / 2,
 	};
-	const isTransformed = isTransformedAway(captioned);
+	const isTransformed = isRotatedOrFlipped(captioned);
 	return {
 		worldBox: shiftBox(localBox, captioned.cx, captioned.cy),
 		worldCenter: isTransformed
@@ -145,16 +154,77 @@ const resolveCaptionBox = (
 			: { x: localCenter.x + captioned.cx, y: localCenter.y + captioned.cy },
 		width: localBox.right - localBox.left,
 		height: localBox.bottom - localBox.top,
-		isTransformed,
+		isRotatedOrFlipped: isTransformed,
 	};
 };
 
-/** A connector's label box, for an `"auto"` label with some text on a resolvable path, else null. */
-const resolveConnectorLabelBox = (
+/**
+ * Where the caption of a `features.text: "label"` shape with an `"auto"`
+ * background and some text lies, else null. Cached per object state, so an
+ * object a pass did not change is not placed again.
+ */
+const resolveCaptionPlacement = (
+	obj: ObjectState,
+	registries: LabelBackdropRegistries,
+): LabelBoxPlacement | null => {
+	if (!hasLabelFill(obj.features?.text) || !isTransformedFrame(obj)) {
+		return null;
+	}
+	const captioned = obj as ObjectState &
+		TransformedFrame &
+		Partial<LabelTextStyleState> &
+		TextStyleState;
+	if (!isAutoLabelFill(captioned.labelFill)) {
+		return null;
+	}
+	const textSlotKind = registries.objectPartKind.get(
+		obj.type,
+		TEXT_SLOT_PART_KIND,
+	);
+	const measurementGeneration = readTextMeasurementGeneration();
+	const cached = captionPlacementCache.get(obj);
+	if (
+		cached !== undefined &&
+		cached.measurementGeneration === measurementGeneration &&
+		cached.textSlotKind === textSlotKind
+	) {
+		return cached.placement;
+	}
+	const bodySlot = captioned.text?.[BODY_TEXT_SLOT_ID];
+	const placement =
+		bodySlot === undefined ||
+		richTextToPlain(readTextSlotContent(bodySlot.text)) === ""
+			? null
+			: placeCaption(captioned, textSlotKind);
+	captionPlacementCache.set(obj, {
+		measurementGeneration,
+		textSlotKind,
+		placement,
+	});
+	return placement;
+};
+
+/** A connector label's size, measured once per label object and text measurement. */
+const measureConnectorLabel = (label: ConnectorLabel): ConnectorLabelBox => {
+	const measurementGeneration = readTextMeasurementGeneration();
+	const cached = connectorLabelSizeCache.get(label);
+	if (
+		cached !== undefined &&
+		cached.measurementGeneration === measurementGeneration
+	) {
+		return cached.size;
+	}
+	const size = resolveConnectorLabelBox(label);
+	connectorLabelSizeCache.set(label, { measurementGeneration, size });
+	return size;
+};
+
+/** Where a connector's label lies, for an `"auto"` label with some text on a resolvable path, else null. */
+const resolveConnectorLabelPlacement = (
 	obj: ObjectState,
 	objects: Record<string, ObjectState>,
 	registries: LabelBackdropRegistries,
-): LabelBox | null => {
+): LabelBoxPlacement | null => {
 	if (!isConnectorState(obj)) {
 		return null;
 	}
@@ -178,19 +248,20 @@ const resolveConnectorLabelBox = (
 	if (!resolved) {
 		return null;
 	}
-	const rect: Rect | null = calcConnectorLabelRect(
+	const anchor = resolveConnectorLabelAnchor(
 		listConnectorPathPoints(resolved),
 		label,
 	);
-	if (rect === null) {
+	if (anchor === null) {
 		return null;
 	}
+	const rect = placeConnectorLabelBox(anchor, measureConnectorLabel(label));
 	return {
 		worldBox: convertRectToBoundingBox(rect),
 		worldCenter: { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 },
 		width: rect.width,
 		height: rect.height,
-		isTransformed: false,
+		isRotatedOrFlipped: false,
 	};
 };
 
@@ -212,7 +283,7 @@ const collectPaintedRegions = (
 		fillColor: resolveAutoColor(bodyStyle.fill, "surface"),
 		fillAlpha: bodyStyle.fillOpacity,
 	});
-	const isTransformed = isTransformedAway(frame);
+	const isTransformed = isRotatedOrFlipped(frame);
 	const painted: PaintedRegion[] = [];
 	for (const region of regions) {
 		if (region.fillOpacity <= 0 || isTransparentColor(region.fill)) {
@@ -232,12 +303,12 @@ const collectPaintedRegions = (
 
 /** The layers the regions painted so far put under `labelBox`, bottom first. */
 const cutLayers = (
-	labelBox: LabelBox,
+	labelBox: LabelBoxPlacement,
 	paintedRegions: readonly PaintedRegion[],
 ): LabelBackdropLayer[] => {
 	const layers: LabelBackdropLayer[] = [];
 	for (const region of paintedRegions) {
-		if (!labelBox.isTransformed && region.worldBox !== null) {
+		if (!labelBox.isRotatedOrFlipped && region.worldBox !== null) {
 			const overlap = calcBoundingBoxIntersection(
 				labelBox.worldBox,
 				region.worldBox,
@@ -292,6 +363,10 @@ const cutLayers = (
  * region's overlap with the box is what is painted; otherwise the box's center
  * decides, and a region holding it covers the whole box.
  *
+ * A caption's placement is kept per object state, and a connector label's size
+ * per label object, each for as long as the text measurement stands
+ * (readTextMeasurementGeneration): a pass re-measures only what changed.
+ *
  * Labels taken: a `features.text: "label"` caption with text and an `"auto"`
  * (or omitted) `labelFill`, and a connector label with text and an `"auto"`
  * (or omitted) `fill`.
@@ -332,8 +407,8 @@ export const resolveLabelBackdrops = (
 			return;
 		}
 		const labelBox = isConnectorState(obj)
-			? resolveConnectorLabelBox(obj, objects, registries)
-			: resolveCaptionBox(obj, registries);
+			? resolveConnectorLabelPlacement(obj, objects, registries)
+			: resolveCaptionPlacement(obj, registries);
 		if (labelBox !== null && paintedRegions.length > 0) {
 			const layers = cutLayers(labelBox, paintedRegions);
 			if (layers.length > 0) {

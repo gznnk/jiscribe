@@ -39,6 +39,7 @@ function buildDiagram(
 	frameCount: number,
 	labelCount: number,
 	connectorCount: number,
+	plainCount = 0,
 ): { objects: Record<string, ObjectState>; rootIds: string[] } {
 	const objects: Record<string, ObjectState> = {};
 	const rootIds: string[] = [];
@@ -79,6 +80,22 @@ function buildDiagram(
 		} as unknown as ObjectState;
 		rootIds.push(id);
 	}
+	// Shapes holding no label and painting no backdrop, which the walk only passes.
+	for (let i = 0; i < plainCount; i++) {
+		const id = `plain${i}`;
+		objects[id] = {
+			id,
+			type: "rect",
+			cx: (i * 29) % spanX,
+			cy: (i * 31) % spanY,
+			width: 60,
+			height: 40,
+			rotation: 0,
+			scaleX: 1,
+			scaleY: 1,
+		} as unknown as ObjectState;
+		rootIds.push(id);
+	}
 	for (let i = 0; i < connectorCount; i++) {
 		const id = `connector${i}`;
 		const y = (i * 41) % spanY;
@@ -107,5 +124,49 @@ describe("resolveLabelBackdrops", () => {
 	const large = buildDiagram(40, 400, 100);
 	bench("40 frames, 400 captions, 100 connector labels", () => {
 		resolveLabelBackdrops(large.objects, large.rootIds, registries);
+	});
+});
+
+describe("resolveLabelBackdrops, about 5000 objects", () => {
+	// 100 frames, 2000 "auto" captions, 500 connector labels, 2400 plain shapes.
+	const huge = buildDiagram(100, 2000, 500, 2400);
+	const ids = Object.keys(huge.objects);
+
+	/** Fresh copies of every object: nothing a previous pass cached applies to them. */
+	const copyObjects = (): Record<string, ObjectState> => {
+		const copies: Record<string, ObjectState> = {};
+		for (const id of ids) {
+			copies[id] = { ...huge.objects[id] };
+		}
+		return copies;
+	};
+
+	bench("copying the objects alone (the cold pass's overhead)", () => {
+		copyObjects();
+	});
+
+	bench("cold pass: nothing cached", () => {
+		resolveLabelBackdrops(copyObjects(), huge.rootIds, registries);
+	});
+
+	// One caption moved by a pixel since the last pass, back and forth: a
+	// keystroke's or a nudge's pass.
+	const editedId = "shape1000";
+	const editedStates = [
+		huge.objects[editedId],
+		{
+			...huge.objects[editedId],
+			cx: (huge.objects[editedId] as ObjectState & { cx: number }).cx + 1,
+		} as ObjectState,
+	];
+	let editedIndex = 0;
+	resolveLabelBackdrops(huge.objects, huge.rootIds, registries);
+	bench("warm pass: one object changed since the last", () => {
+		editedIndex = 1 - editedIndex;
+		resolveLabelBackdrops(
+			{ ...huge.objects, [editedId]: editedStates[editedIndex] },
+			huge.rootIds,
+			registries,
+		);
 	});
 });
