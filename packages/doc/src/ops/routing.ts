@@ -479,11 +479,12 @@ const readKeptReason = (
  * container (`RoutableNode.isHollow`). The routes are drawn one by one in the order
  * of their ends in the stacking order (sortEdgesByEndOrder), each keeping off the ones
  * drawn before it in this call; the connectors not redrawn are not kept off. A label
- * is moved (its `position` and `offset`) to where it covers as little of any shape, and as few of the other labels and of the lines redrawn in the same call,
- * as it can; the connectors not redrawn, and their labels, are not taken into
- * account. A connector whose route runs under its own
- * end's caption is moved to just beneath that shape in the stacking order, as
- * layoutObjects does. Nothing follows a shape moved afterwards: run it again.
+ * is moved (its `position` and `offset`) to where it covers as little of any shape,
+ * and as few of the other labels and of the lines redrawn in the same call, as it
+ * can; the connectors not redrawn, and their labels, are not taken into account. A
+ * connector whose route runs under its own end's caption is moved to just beneath
+ * that shape in the stacking order, as layoutObjects does. Nothing follows a shape
+ * moved afterwards: run it again.
  *
  * @param doc - Mutated in place
  * @param ids - What to redraw; omitted, every connector in the document. A connector
