@@ -54,7 +54,8 @@ import type { ObjectDocConnectPointEdgeAnchor } from "../plugin/ObjectDocConnect
  * - `declaredConnectPoint`: an end on a connect point its owner's type declares and
  *   places on no side of its box (it answers no edge anchor for it, see
  *   `ObjectDocDefinition.extraConnectPointEdgeAnchors`)
- * - `containerEnd`: an end on a shape whose type declares `container`
+ * - `containerEnd`: an end on a shape whose type declares `container`, the other end's
+ *   box overlapping it (a shape inside it, a container around it)
  * - `transformedEnd`: an end on a shape that is rotated or flipped
  * - `unmeasurableEnd`: an end on an object with no box to route around (a group, an
  *   unknown type)
@@ -104,6 +105,8 @@ type SceneShape = {
 /** Everything the routes go around: the shapes, and the containers' title bands and frames. */
 type RoutingScene = {
 	shapeById: Map<string, SceneShape>;
+	/** The container shapes with a box, which a route may end on but goes around nothing of. */
+	containerById: Map<string, SceneShape>;
 	containerIds: Set<string>;
 	/** What no route enters of the title bands: a whole band, or the title in it. */
 	titleObstacles: Rect[];
@@ -124,6 +127,7 @@ const collectRoutingScene = (
 ): RoutingScene => {
 	const scene: RoutingScene = {
 		shapeById: new Map(),
+		containerById: new Map(),
 		containerIds: new Set(),
 		titleObstacles: [],
 		crossableTitleBands: [],
@@ -152,6 +156,12 @@ const collectRoutingScene = (
 				return;
 			}
 			scene.frames.push(bounds);
+			scene.containerById.set(object.id, {
+				object,
+				bounds,
+				isTransformed: isTransformed(object),
+				node: { id: object.id, bounds, isHollow: true },
+			});
 			const { titleHeight } = container(object);
 			if (Number.isFinite(titleHeight) && titleHeight > 0) {
 				// A turned container's title lies elsewhere than its untransformed box says.
@@ -320,6 +330,13 @@ const selectConnectors = (
 	return connectors;
 };
 
+/** The shape or container shape an end sits on, as the scene measures it. */
+const findEndShape = (
+	scene: RoutingScene,
+	ownerId: string,
+): SceneShape | undefined =>
+	scene.shapeById.get(ownerId) ?? scene.containerById.get(ownerId);
+
 /** One place an end on a declared connect point may sit: the point's id and its place on the owner's box. */
 type PinnedEnd = { id: string; anchor: LayoutEdgeAnchor };
 
@@ -410,20 +427,20 @@ const readKeptReason = (
 	) {
 		return "declaredConnectPoint";
 	}
-	if (scene.containerIds.has(sourceId) || scene.containerIds.has(targetId)) {
-		return "containerEnd";
-	}
-	const source = scene.shapeById.get(sourceId);
-	const target = scene.shapeById.get(targetId);
+	const source = findEndShape(scene, sourceId);
+	const target = findEndShape(scene, targetId);
 	if (source?.isTransformed === true || target?.isTransformed === true) {
 		return "transformedEnd";
 	}
 	if (source === undefined || target === undefined) {
 		return "unmeasurableEnd";
 	}
-	return doRectsOverlap(source.bounds, target.bounds)
-		? "overlappingEnds"
-		: undefined;
+	if (!doRectsOverlap(source.bounds, target.bounds)) {
+		return undefined;
+	}
+	return scene.containerIds.has(sourceId) || scene.containerIds.has(targetId)
+		? "containerEnd"
+		: "overlappingEnds";
 };
 
 /**
@@ -518,7 +535,13 @@ export const routeConnectors = (
 	const endShapeIds = new Set(
 		edges.flatMap(({ sourceId, targetId }) => [sourceId, targetId]),
 	);
-	const sceneShapes = [...scene.shapeById.values()];
+	// A container shape is a node only where a connector ends on it.
+	const sceneShapes = [
+		...scene.shapeById.values(),
+		...[...scene.containerById.values()].filter(({ object }) =>
+			endShapeIds.has(object.id),
+		),
+	];
 	const anchorShapeById = new Map(
 		sceneShapes
 			.filter(({ object }) => endShapeIds.has(object.id))
@@ -609,7 +632,7 @@ export const routeConnectors = (
 		routed.edges,
 		edges,
 		[...endShapeIds].map((id) => {
-			const { object, bounds } = scene.shapeById.get(id) as SceneShape;
+			const { object, bounds } = findEndShape(scene, id) as SceneShape;
 			return {
 				id,
 				visualMargin: readLayoutVisualMargin(object, bounds, definitions),

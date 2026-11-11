@@ -119,7 +119,8 @@ const toNudgedAnchor = (
 
 /**
  * The obstacles an edge may run through: every one covering or overlapping either end
- * node's box, but for the end nodes' own boxes and captions.
+ * node's box, but for the end nodes' own boxes and captions, and for what lies in a
+ * hollow end node, which that node does not let the edge through.
  */
 const listExcludedObstacles = (
 	obstacles: readonly Obstacle[],
@@ -130,8 +131,11 @@ const listExcludedObstacles = (
 		(obstacle) =>
 			obstacle.ownerId !== source.id &&
 			obstacle.ownerId !== target.id &&
-			(doRectsOverlap(obstacle.rect, source.bounds) ||
-				doRectsOverlap(obstacle.rect, target.bounds)),
+			[source, target].some(
+				(node) =>
+					node.isHollow !== true &&
+					doRectsOverlap(obstacle.rect, node.bounds),
+			),
 	);
 };
 
@@ -225,11 +229,15 @@ export const routeEdgesAroundNodes = (
 	};
 	const obstacleRects = [
 		...nodes.flatMap((node) => [
-			{
-				rect: node.bounds,
-				ownerId: node.id,
-				isLabel: false,
-			},
+			...(node.isHollow === true
+				? []
+				: [
+						{
+							rect: node.bounds,
+							ownerId: node.id,
+							isLabel: false,
+						},
+					]),
 			...(node.labelBounds === undefined
 				? []
 				: [

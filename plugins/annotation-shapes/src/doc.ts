@@ -28,6 +28,7 @@ import { calloutOutline } from "./schema/callout/calloutOutline";
 import { validateCalloutTail } from "./schema/callout/validateCalloutTail";
 import { NOTE_DOC_DEFAULTS, NoteFeatures } from "./schema/note/NoteDoc";
 import { noteOutline } from "./schema/note/noteOutline";
+import { calcGroupMarkerConnectPointEdgeAnchors } from "./schema/shared/calcGroupMarkerConnectPointEdgeAnchors";
 import { createGroupMarkerObjectFactory } from "./schema/shared/createGroupMarkerObjectFactory";
 import { GROUP_MARKER_EXTRA_CONNECT_POINT_IDS } from "./schema/shared/groupMarkerConnectPointIds";
 import {
@@ -45,6 +46,7 @@ const withGroupMarkerTipConnectPoint = (
 ): ObjectDocDefinition => ({
 	...definition,
 	extraConnectPointIds: () => GROUP_MARKER_EXTRA_CONNECT_POINT_IDS,
+	extraConnectPointEdgeAnchors: calcGroupMarkerConnectPointEdgeAnchors,
 });
 
 export const braceDocDefinition: ObjectDocDefinition =

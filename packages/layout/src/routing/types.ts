@@ -30,6 +30,14 @@ export type RoutableNode = {
 	 * the whole side (0..1).
 	 */
 	anchorBodyRanges?: LayoutSideAnchorRanges;
+	/**
+	 * Set for a node that is a frame around others and no body (a container): edges
+	 * end on its sides and leave outward as on any node, but its box is no obstacle to
+	 * any route, and what stands inside it stays one to the edges ending on it. Give
+	 * its outline among `EdgeRoutingOptions.borders` as well for routes to keep off it.
+	 * An edge between it and a node inside it is routed from outside, round the frame.
+	 */
+	isHollow?: true;
 };
 
 /** An edge to route, between two of the nodes given. */
