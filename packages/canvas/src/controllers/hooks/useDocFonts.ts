@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+import { advanceTextMeasurementGeneration } from "@jiscribe/doc/text/measure/textMeasurementSlot";
+import { useCallback, useEffect } from "react";
 
 import { useDocFontsPreload } from "./useDocFontsPreload";
 import { useFontsLoadedNonce } from "./useFontsLoadedNonce";
@@ -11,7 +12,9 @@ type UseDocFontsOptions = {
 	/**
 	 * Called whenever the faces the document can draw with change: once when the
 	 * mount preload settles (before the flag flips, same synchronous callback) and
-	 * again for every later arrival {@link useFontsLoadedNonce} reports.
+	 * again for every later arrival {@link useFontsLoadedNonce} reports. The text
+	 * measurement generation has already been advanced by then, once per change,
+	 * so a re-measure it triggers is not answered from a cache.
 	 */
 	onFacesChanged?: () => void;
 };
@@ -55,12 +58,17 @@ export const useDocFonts = ({
 	collectRequests,
 	onFacesChanged,
 }: UseDocFontsOptions): DocFontsState => {
-	const fontsLoadedNonce = useFontsLoadedNonce();
-	const isSettled = useDocFontsPreload(collectRequests, onFacesChanged);
-
-	// Read only from the effect below, so the callback does not have to hold its
-	// identity across renders.
+	// Read only from callbacks, so it does not have to hold its identity across
+	// renders.
 	const onFacesChangedRef = useLatestRef(onFacesChanged);
+	const fontsLoadedNonce = useFontsLoadedNonce();
+	// The nonce's events advance the generation themselves (useFontsLoadedNonce);
+	// the preload's settle does it here, before the caller re-measures.
+	const handlePreloadSettled = useCallback(() => {
+		advanceTextMeasurementGeneration();
+		onFacesChangedRef.current?.();
+	}, [onFacesChangedRef]);
+	const isSettled = useDocFontsPreload(collectRequests, handlePreloadSettled);
 
 	useEffect(() => {
 		if (fontsLoadedNonce > 0) {

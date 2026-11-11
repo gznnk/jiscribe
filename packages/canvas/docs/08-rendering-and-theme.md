@@ -228,7 +228,10 @@ Theming is host-injectable and neutral — the canvas knows nothing about VSCode
     dispatches its own re-measure as it settles. Neither hook is reached directly: `useDocFonts`
     (`controllers/hooks/useDocFonts.ts`) is the entry point Canvas takes, with the two behind
     it — it folds them into one counter and one `onFacesChanged` callback and reports whether
-    the content is still held back. A dispatch only reaches boxes that live in the state, so
+    the content is still held back. Each change advances the text measurement generation first
+    (`useFontsLoadedNonce` before the counter moves, the preload's settle before the callback),
+    so neither the render reacting to the counter nor the dispatch reads a size cached against
+    the fallback face. A dispatch only reaches boxes that live in the state, so
     the render layer is handed a counter as `FontsLoadedNonceContext` as well — this one plus the
     gate's settling, since neither says anything but "measure again". The sites
     that measure while they render (a record's bands, a connector's label box, a text object's hit

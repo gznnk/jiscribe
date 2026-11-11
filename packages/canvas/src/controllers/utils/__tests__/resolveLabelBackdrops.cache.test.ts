@@ -129,6 +129,37 @@ describe("resolveLabelBackdrops caches", () => {
 		expect(captionRegionCalls.count).toBe(3);
 	});
 
+	it("places a caption again through a canvas whose part kind places it elsewhere", () => {
+		const shape = captioned(100);
+		const first = resolve(frame, shape);
+		expect(captionRegionCalls.count).toBe(1);
+
+		// The same state drawn by another canvas, whose caption box is 10 taller.
+		const otherRegionCalls = { count: 0 };
+		const otherRegistries = createTestRegistries();
+		otherRegistries.objectLabelBackdrop.register(
+			"frame",
+			registries.objectLabelBackdrop.get("frame")!,
+		);
+		otherRegistries.objectPartKind.register("captioned", [
+			createTextSlotPartKindDefinition({
+				region: () => {
+					otherRegionCalls.count += 1;
+					return { x: -20, y: 25, width: 40, height: 30 };
+				},
+			}),
+		]);
+		const other = resolveLabelBackdrops(
+			{ frame, shape },
+			["frame", "shape"],
+			otherRegistries,
+		);
+
+		expect(otherRegionCalls.count).toBe(1);
+		expect(first.get("shape")?.[0].rect.height).toBe(20);
+		expect(other.get("shape")?.[0].rect.height).toBe(30);
+	});
+
 	it("measures an unchanged connector label once, its route moving or not, and again once the text measurement moves", () => {
 		resolve(frame, connector(100));
 		resolve(frame, connector(110));
