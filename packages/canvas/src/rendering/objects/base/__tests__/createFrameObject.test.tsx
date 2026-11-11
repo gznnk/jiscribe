@@ -17,6 +17,7 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { createLabelBackdropStore } from "../../../../controllers/hooks/utils/createLabelBackdropStore";
 import {
 	createTextSlotPartKindDefinition,
 	placeTextSlotRegions,
@@ -28,6 +29,8 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { StrokeStyleState } from "../../../../states/objects/base/StrokeStyleState";
 import type { TextStyleState } from "../../../../states/objects/base/TextStyleState";
 import { FontsLoadedNonceContext } from "../../FontsLoadedNonceContext";
+import type { LabelBackdropStore } from "../../LabelBackdropStoreContext";
+import { LabelBackdropStoreContext } from "../../LabelBackdropStoreContext";
 import { createObjectPartKindRegistry } from "../../registry/ObjectPartKindRegistry";
 import type { ObjectPartKindRegistry } from "../../registry/ObjectPartKindRegistry";
 import { ObjectPartKindRegistryContext } from "../../registry/ObjectPartKindRegistryContext";
@@ -103,6 +106,7 @@ const renderFrameShape = (options?: {
 	state?: ProbeState;
 	shapeStyleDefaults?: ObjectShapeStyleDefaultsRegistry;
 	partKinds?: ObjectPartKindRegistry;
+	labelBackdropStore?: LabelBackdropStore;
 }) => {
 	const drawCount = { value: 0 };
 	const drawnShape: { value: FrameShapeProps | null } = { value: null };
@@ -137,9 +141,13 @@ const renderFrameShape = (options?: {
 					<ObjectShapeStyleDefaultsRegistryContext value={shapeStyleDefaults}>
 						<ObjectPartKindRegistryContext value={partKinds}>
 							<FontsLoadedNonceContext value={nonce}>
-								<svg>
-									<FrameShape {...state} />
-								</svg>
+								<LabelBackdropStoreContext
+									value={options?.labelBackdropStore ?? null}
+								>
+									<svg>
+										<FrameShape {...state} />
+									</svg>
+								</LabelBackdropStoreContext>
 							</FontsLoadedNonceContext>
 						</ObjectPartKindRegistryContext>
 					</ObjectShapeStyleDefaultsRegistryContext>,
@@ -363,7 +371,7 @@ describe("createFrameObject", () => {
 			shape.unmount();
 		});
 
-		it("knocks out in the page's color where labelFill is omitted or auto", () => {
+		it("knocks out in the page's color where labelFill is omitted or auto and no backdrop lies under it", () => {
 			for (const labelFill of [undefined, AUTO_COLOR]) {
 				const shape = renderFrameShape({
 					state: captioned({ labelFill }),
@@ -375,6 +383,39 @@ describe("createFrameObject", () => {
 				expect(readFill(shape.container)?.style.fill).toBe(theme.canvasBg);
 				shape.unmount();
 			}
+		});
+
+		it("paints the backdrop the canvas keeps under the shape's own id over the knockout", () => {
+			const labelBackdropStore = createLabelBackdropStore();
+			labelBackdropStore.replaceLayers(
+				new Map([
+					[
+						probeState.id,
+						[
+							{
+								rect: { x: 0, y: 0, width: 40, height: 28 },
+								fill: "rgb(0, 0, 255)",
+								fillOpacity: 0.5,
+							},
+						],
+					],
+				]),
+			);
+			const shape = renderFrameShape({
+				state: captioned(),
+				partKinds: captionKinds(),
+				labelBackdropStore,
+			});
+			shape.render(0);
+
+			const layer = shape.container.querySelector<SVGRectElement>(
+				'g[data-canvas-export="flatten"] > g > rect',
+			);
+			expect(layer?.getAttribute("x")).toBe("-20");
+			expect(layer?.getAttribute("y")).toBe("29");
+			expect(layer?.style.fill).toBe("rgb(0, 0, 255)");
+			expect(readFill(shape.container)?.style.fill).toBe(theme.canvasBg);
+			shape.unmount();
 		});
 
 		it("paints nothing behind an empty caption", () => {

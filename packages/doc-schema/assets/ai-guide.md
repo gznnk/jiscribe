@@ -1,4 +1,4 @@
-<!-- jiscribe guide 0.12.2+0664995f -->
+<!-- jiscribe guide 0.12.2+b4d9966f -->
 
 # Jiscribe AI Authoring Guide
 
@@ -17,7 +17,7 @@ It focuses on the essentials. The field-level specification lives in the JSON Sc
 - Colors (`stroke` / `fontColor` / `fill`): a CSS color string, or `"auto"` to follow the editor theme. `"auto"` is the default for `stroke` / `fontColor` (resolved to the theme foreground) and adapts to light/dark; `fill` defaults to `"transparent"`. Prefer `"auto"` (or omit the field) unless a specific color is needed.
 - Stroke: `stroke` (color, default `"auto"`), `strokeWidth` (default 2), `strokeDashType`: `"solid"`/`"dashed"`/`"dotted"`, `strokeOpacity` (0–1, default 1)
 - Fill: `fill` (default `"transparent"`), `fillOpacity` (0–1, default 1)
-- Text (every box shape, and `text`): `text`, `textAlign`: `"left"`/`"center"`/`"right"`, `verticalAlign`: `"top"`/`"middle"`/`"bottom"`, `fontColor` (default `"auto"`), `fontSize` (default 16). Where inside a shape the text lands differs by type — see "Where text is drawn". A shape that draws its text as a label below the box takes no `verticalAlign` (the label's box is sized from its text, leaving nothing to align within) and takes `labelFill` instead: the color painted behind the label, default `"auto"`, which knocks out connectors running under it in the page's color.
+- Text (every box shape, and `text`): `text`, `textAlign`: `"left"`/`"center"`/`"right"`, `verticalAlign`: `"top"`/`"middle"`/`"bottom"`, `fontColor` (default `"auto"`), `fontSize` (default 16). Where inside a shape the text lands differs by type — see "Where text is drawn". A shape that draws its text as a label below the box takes no `verticalAlign` (the label's box is sized from its text, leaving nothing to align within) and takes `labelFill` instead: the color painted behind the label, default `"auto"`, which knocks out connectors running under it in the page's color, or in the fill of the container / AWS group it lies on.
 
 ## Arrows and relationship notation
 
@@ -325,7 +325,7 @@ where its text actually goes.
 - For `cloud`, text is placed in a reduced central region inside the bumps, so give the shape generous width/height.
 - For `document` and `callout`, text sits above the bottom wave/tail band.
 - For `multiDocument`, text is confined to the front (bottom-left) sheet, so give the shape generous size.
-- For `actor`, `server`, `package`, `envelope`, `queue`, `gear`, `lock`, `extract`, `cross`, `awsIcon`, `azureIcon` and `gcpIcon`, the drawing fills the whole box and the text is drawn as a label below it, auto-sized to the text itself — so the box does not need to be widened for a long name, and omitting the text leaves a bare figure. The label is painted on `labelFill` (default `"auto"`, the page's color), so a connector running under it is hidden there; set `"transparent"` to let it show through.
+- For `actor`, `server`, `package`, `envelope`, `queue`, `gear`, `lock`, `extract`, `cross`, `awsIcon`, `azureIcon` and `gcpIcon`, the drawing fills the whole box and the text is drawn as a label below it, auto-sized to the text itself — so the box does not need to be widened for a long name, and omitting the text leaves a bare figure. The label is painted on `labelFill` (default `"auto"`, the page's color, or the fill of the container / AWS group it lies on), so a connector running under it is hidden there; set `"transparent"` to let it show through.
 - **`record` is the exception**: its text is a set of named slots, and the typography lives inside each slot rather than on the shape (see "`record` — a titled box with compartments").
 
 ## Layout

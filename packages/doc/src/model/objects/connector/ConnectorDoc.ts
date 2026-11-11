@@ -55,7 +55,8 @@ export const CONNECTOR_DOC_DEFAULTS: Required<
  *
  * Background and border borrow the same vocabulary as shapes (`fill` / `stroke` / `strokeWidth`).
  * When `fill` is omitted, the knockout that hides the line is kept, in the document's `background` when it
- * is opaque, otherwise the theme's canvas colour;
+ * is opaque, otherwise the theme's canvas colour, with the fill of any frame the label lies on (a container,
+ * an AWS group) over it;
  * when `strokeWidth` is omitted, there is no border.
  */
 export type ConnectorLabel = Pick<

@@ -5,6 +5,7 @@ import { ContainerHeaderHeightControl } from "./controls/ContainerHeaderHeightCo
 import { handleContainerHeaderHeight } from "./controls/handleContainerHeaderHeight";
 import { containerDocDefinition } from "./doc";
 import { HeaderColorMenu } from "./menu/HeaderColorMenu";
+import { calcContainerLabelBackdrop } from "./presentation/calcContainerLabelBackdrop";
 import { Container } from "./presentation/Container";
 import { HeaderColorProperty } from "./propertyPanel/HeaderColorProperty";
 import { HeaderHeightProperty } from "./propertyPanel/HeaderHeightProperty";
@@ -42,6 +43,7 @@ export const containerDefinition: ObjectTypeDefinition<
 		isContainerHeaderHeight(state.headerHeight),
 	component: Container,
 	textRegion: calcContainerTextRegion,
+	labelBackdrop: calcContainerLabelBackdrop,
 	selectionControls: [
 		{
 			name: "headerHeight",

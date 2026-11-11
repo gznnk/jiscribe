@@ -45,6 +45,7 @@ import { useExportDialog } from "./hooks/useExportDialog";
 import { useGestureRecognizer } from "./hooks/useGestureRecognizer";
 import { useInitialViewOpen } from "./hooks/useInitialViewOpen";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
+import { useLabelBackdropStore } from "./hooks/useLabelBackdropStore";
 import { useNotifySaveRequest } from "./hooks/useNotifySaveRequest";
 import { useNotifySelectionChange } from "./hooks/useNotifySelectionChange";
 import { useNotifySidebarsChange } from "./hooks/useNotifySidebarsChange";
@@ -640,6 +641,16 @@ const CanvasComponent = ({
 		snapshotRenderScope,
 		culledObjectIds,
 	);
+	// Worked out from what is drawn, the edited text's draft included, so a
+	// caption growing as it is typed is cut against the frames it now covers.
+	const labelBackdropStore = useLabelBackdropStore({
+		objects: draftObjects,
+		rootIds: state.rootIds,
+		fontsNonce,
+		snapshotRenderScope,
+		isDragging: state.drag !== null,
+		registries,
+	});
 
 	const canvasHandle = useCanvasHandle({
 		dispatch,
@@ -707,6 +718,7 @@ const CanvasComponent = ({
 			registries={registries}
 			fontsNonce={fontsNonce}
 			zoomStore={canvasZoomStore}
+			labelBackdropStore={labelBackdropStore}
 			lookupResolvedImage={lookupResolvedImage}
 			documentSurface={documentSurface}
 			viewportElementRef={canvasRef}

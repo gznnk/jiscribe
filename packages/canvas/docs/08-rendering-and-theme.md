@@ -147,6 +147,18 @@ what shows through it: a see-through `background` (`transparent`, alpha below 1 
 resolved per element (`var()`, `currentColor`), one the browser keeps in another color space (`oklch()`,
 `color-mix()`), and a value it does not parse (`foundation/color/isOpaqueCssColor.ts`).
 
+An auto label lying on a frame is painted on that frame's fill too, so it blends into the frame rather
+than standing out in the page's color. Only a type declaring `labelBackdrop` (container, awsGroup)
+counts as a frame. `resolveLabelBackdrops` (`controllers/utils/resolveLabelBackdrops.ts`) walks the
+objects in drawing order and cuts each label's box against the regions the frames drawn before it paint;
+`<Canvas>` works this out again whenever what it draws changes, but not during a drag, and hands the
+result to each label through a store it subscribes to by its owner's id
+(`rendering/objects/LabelBackdropStoreContext.ts`, `useLabelBackdropLayers`). The label then draws the
+page's color and, over it, one shape per region (`rendering/objects/base/LabelBackdropLayers.tsx`), in the
+region's own color and opacity, so a translucent fill or a theme token looks the same as on the frame. A
+frame or a label owner that is rotated or flipped is judged by the box's center alone, the region then
+covering the whole box. A connector label's inline editor stays on the page's color.
+
 **Single rule**: "auto resolves to the role's theme token, and color is applied via CSS." Because
 `var(--jiscribe-*)` is not resolved by SVG presentation attributes, **color is never applied via attributes**,
 including stroke / fill / arrow color.

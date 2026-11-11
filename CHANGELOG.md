@@ -53,11 +53,30 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   over a box painted in `labelFill`, which `set_style` / `add_objects`, the
   ObjectMenu and the properties sidebar (a `label-style` section, built-in item
   `labelBackgroundColor`) set; omitted or `"auto"` knocks out what lies behind
-  in the page's color, the way a connector's label does. The field is
+  in the page's color, with the fill of any frame it lies on painted over it
+  (`labelBackdrop`, below), the way a connector's label does. The field is
   `LABEL_TEXT_KEYS` (`@jiscribe/doc`), held by a `"label"` type alone; on any
   other type, a connector included, `setStyle` reports it as not taken. A
   component written without `createFrameObject` draws the box itself with
-  `LabelTextFill` (`@jiscribe/canvas/unstable`, and so `@jiscribe/canvas-sdk`).
+  `LabelTextFill` (`@jiscribe/canvas/unstable`, and so `@jiscribe/canvas-sdk`),
+  passing the shape's id as its new `ownerId` for the frames under the caption
+  to be painted (left out, the box stays in the page's color).
+- **`labelBackdrop`: a frame's fill under the `"auto"` labels lying on it.**
+  `ObjectTypeDefinition` takes `labelBackdrop`, returning the regions a frame
+  paints, bottom first (`ObjectLabelBackdropRegion`, from `@jiscribe/canvas`: a
+  rect in the shape's local coordinates, a resolved color and an opacity); it is
+  handed the body fill the core resolved (`fillColor` / `fillAlpha`, as
+  `createFrameObject` draws it), and `createFrameObjectDefinition` passes it
+  through. An `"auto"` caption background or connector label `fill` lying on such
+  a frame is painted in the page's color and then in each region where it lies
+  under the label's box, so the label blends into a filled container or awsGroup
+  instead of standing out as a page-colored box. Only the frames drawn before the
+  label count; where the frame or the label's shape is rotated or flipped, the
+  box's center decides and the region then covers the whole box. It is worked
+  out again whenever the drawing changes, except during a drag, which keeps the
+  previous result until it ends; an export of a subset counts only the frames in
+  it. container and awsGroup declare one; a filled rectangle is no backdrop. A
+  connector label being edited stays on the page's color.
 - **A type can measure the text body it draws itself.** `ObjectTypeDefinition`
   takes `textMeasurer` (`ObjectTextMeasurer`, returning an
   `ObjectTextMeasurement`), which `CanvasHandle.measure.textSlot` calls in place
@@ -305,13 +324,14 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   as a table's row insertion does, and Enter opens the new column's name. Tab
   off the last slot still adds a column and carries on editing.
 - **The label below a pictogram, an icon or a flowchart marker is painted on
-  the page's color.** The twelve `"label"` shapes hanging their label below the
+  the page's color, and on the frame it lies on.** The twelve `"label"` shapes hanging their label below the
   box draw a box in `labelFill` behind it, so a connector or a shape lying under
-  it is hidden where the label is, in images exported too. Set `labelFill` to
+  it is hidden where the label is, in images exported too; inside a filled
+  container or awsGroup the box takes the frame's fill. Set `labelFill` to
   `"transparent"` for the old look, or reorder the objects. The group markers
   create with `labelFill: "transparent"`, and look as they did; one saved
   before this release carries no `labelFill`, so its label is painted on the
-  page's color too. Set its `labelFill` to `"transparent"` for the old look.
+  page's color (or its frame's fill) too. Set its `labelFill` to `"transparent"` for the old look.
 - **The group markers (brace, bracket, bracketWithStem) are `"label"` types,
   and awsGroup an `"innerLabel"` one.** Their label is sized from its own text
   as before; they now take no `verticalAlign` (a `verticalAlign` in an existing
@@ -638,7 +658,8 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   own opaque `background` every default label was a box of another colour, in the
   viewer and in PNG / SVG export alike. A default label now knocks the line out
   in the document's opaque `background`, and otherwise in the theme's canvas
-  colour; its inline editor, the label-fill swatches and export follow it.
+  colour; its inline editor, the label-fill swatches and export follow it. On a
+  frame declaring `labelBackdrop`, the frame's fill is painted over that colour.
 - **A `set:` style action that changes nothing is no longer committed.** The
   ObjectMenu's and the properties sidebar's swatches wrote through it whether
   or not the value was already in place, and every write was a commit: a

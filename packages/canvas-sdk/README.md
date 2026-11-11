@@ -50,7 +50,10 @@ ESM 専用、など）。1 ファイル 1 エントリで対応させること�
   図形固有のフィールド名は doc 定義の `extraKeys` から読む（宣言は
   `createFrameObjectDoc` 側 1 箇所）。`isExtraStateValid` と、`textRegion` /
   `visualBounds` / `stencils` 等の任意フィールドを透過（`features.text: "label"` の型は
-  `textRegion` と `visualBounds` を揃えて渡せばラベルを自分で置ける。片方だけだと throw）
+  `textRegion` と `visualBounds` を揃えて渡せばラベルを自分で置ける。片方だけだと throw）。
+  枠の図形（container・awsGroup）は `labelBackdrop` で自分が塗る領域を返し、その上の `"auto"`
+  のラベルを自分の塗りに馴染ませる（`ObjectLabelBackdropRegion`。第 2 引数に core が解決した
+  本体の塗りが来る。詳細は canvas の docs/13-authoring-plugins.ja.md）
 
 どちらも糖衣であり、`ObjectDocDefinition` / `ObjectTypeDefinition` の直書きは引き続き
 第一級（例: uml の record は mapper が派生物のため definition を直書き）。

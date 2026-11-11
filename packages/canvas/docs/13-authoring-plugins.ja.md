@@ -157,7 +157,8 @@ canvas に残して SDK が再エクスポートする。物理的に移すと c
 `LABEL_TEXT_STYLE_DEFAULTS` でなければそれを渡す）。core は自分の置き場所の代わりに
 それを登録する。片方だけ、または何も置かない `"textSlot"` の部分種別は登録時に
 拒否される。そうした図形はラベルの掴み領域を自分で描く。`createFrameObject` を使わずに書いた
-component は、文字と同じく `LabelTextFill`（キットが再エクスポートする unstable 面にある）も自分で文字より前に描く。既定のメニューは
+component は、文字と同じく `LabelTextFill`（キットが再エクスポートする unstable 面にある）も自分で文字より前に描き、
+`ownerId` に図形の id を渡す（渡すと `"auto"` のラベルが下にある枠の塗りに馴染む。渡さなければページ色のまま）。既定のメニューは
 ラベルの背景色を `label-style` セクションに出す。`menu` を自分で書く型もそこに
 `{ type: "labelBackgroundColor" }` を置く。別のラベル型と一緒に選んでも項目が残るように
 するためである。
@@ -166,6 +167,14 @@ component は、文字と同じく `LabelTextFill`（キットが再エクスポ
 見出し）は `features.text: "innerLabel"` を宣言する。同じ見出しだが、既定の置き場所と
 `labelFill` を持たない。UI 定義は必ず `textRegion` と `visualBounds` を渡し（無ければ
 登録時に拒否される）、背景の四角は描かれず、既定のメニューも背景色を出さない。
+
+他の図形を載せる枠（container・awsGroup）は UI 定義に `labelBackdrop` を宣言する。その上にある
+`"auto"` のラベル（見出しの `labelFill`・コネクターラベルの `fill`）が、ページ色で浮かずに枠の塗りの上に
+描かれる。返すのは枠が塗る領域を下から順に並べたもので、それぞれ図形のローカル座標の矩形と、解決済みの
+色・不透明度を持つ（`ObjectLabelBackdropRegion`）。第 2 引数は core が `createFrameObject` と同じく解決した
+本体の塗り（`fillColor` は `"auto"` をテーマの面の色に解決済み、と `fillAlpha`）なので、型は既定値を
+書き写さない。何も塗らない領域（透明な色・不透明度 0）は捨てられる。数えるのは宣言した型だけで、塗った
+四角は下地にならない。読まれるのはドラッグの完了後で、ドラッグ中には読まれない。
 
 スロット同士を並べてレイアウトする型（表のセル、record の区画）は、`"textSlot"` の
 部分種別を自分で宣言し、`createTextSlotPartKindDefinition({ regions })` を

@@ -5,6 +5,9 @@ import {
 } from "@jiscribe/doc/text/block/textBoxPadding";
 import { TEXT_LINE_HEIGHT } from "@jiscribe/doc/text/layout/textLineHeight";
 
+/** The label box's corner radius in world units, which the SVG painted under it (ConnectorLabel) rounds by too. */
+export const LABEL_BOX_CORNER_RADIUS = 2;
+
 /**
  * The label body. Drawn horizontally over the line, with a background (knockout)
  * that hides the line to preserve readability. Dimensions based on text amount
@@ -21,7 +24,7 @@ export const LabelBox = styled.div`
 	justify-content: center;
 	box-sizing: border-box;
 	padding: ${TEXT_BOX_PADDING_Y}px ${TEXT_BOX_PADDING_X}px;
-	border-radius: 2px;
+	border-radius: ${LABEL_BOX_CORNER_RADIUS}px;
 	line-height: ${TEXT_LINE_HEIGHT};
 	text-align: center;
 	white-space: pre-wrap;

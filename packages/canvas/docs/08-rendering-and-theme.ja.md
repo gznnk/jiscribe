@@ -145,6 +145,16 @@ foreignObject に `display="none"` を付ける。テキストオーバーレイ
 解決されるもの（`var()`・`currentColor`）、ブラウザが別の色空間のまま保つもの（`oklch()`・`color-mix()`）、
 ブラウザが色と解釈しない値が当たる（`foundation/color/isOpaqueCssColor.ts`）。
 
+枠の上にある auto のラベルは、その枠の塗りの上にも描き、ページ色で浮かずに枠に馴染ませる。枠に数えるのは
+`labelBackdrop` を宣言した型（container・awsGroup）だけ。`resolveLabelBackdrops`
+（`controllers/utils/resolveLabelBackdrops.ts`）が描画順に図形を舐め、各ラベルの箱を、それより前に描かれた
+枠の塗る領域で切り取る。`<Canvas>` は描くものが変わるたびにこれを求め直す（ドラッグ中は求めない）。結果は
+ストアに入れ、各ラベルは持ち主の id で自分の分だけを購読する（`rendering/objects/LabelBackdropStoreContext.ts`・
+`useLabelBackdropLayers`）。ラベルはページ色を塗り、その上に領域ごとの図形を領域の色と不透明度で重ねる
+（`rendering/objects/base/LabelBackdropLayers.tsx`）。半透明の塗りもテーマ色も枠と同じ見た目になる。
+枠かラベルの持ち主が回転・反転していれば、箱の中心点だけで判定し、入っていれば箱全体を塗る。
+コネクターラベルのインライン編集中の箱はページ色のまま。
+
 **単一ルール**: 「auto はロールのテーマトークンへ解決し、色は CSS で当てる」。`var(--jiscribe-*)` は
 SVG presentation 属性では解決されないため、stroke / fill / arrow の color も含め**色は属性では当てない**。
 

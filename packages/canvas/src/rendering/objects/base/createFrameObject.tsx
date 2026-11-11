@@ -327,6 +327,7 @@ export const createFrameObject = <TState extends FrameRenderState>(
 
 		const overlays = useMemo(() => {
 			const {
+				id: ownerId,
 				text: sourceText,
 				type,
 				labelFill,
@@ -357,6 +358,7 @@ export const createFrameObject = <TState extends FrameRenderState>(
 								textSlot={bodySlot}
 								labelFill={labelFill}
 								region={bodyRegion}
+								ownerId={ownerId}
 							/>
 						)}
 						<TextSlotOverlay

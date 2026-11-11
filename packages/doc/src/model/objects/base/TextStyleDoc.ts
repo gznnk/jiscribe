@@ -76,9 +76,10 @@ export type InnerLabelTextStyleDoc = Omit<
 export type LabelTextStyleDoc = InnerLabelTextStyleDoc & {
 	/**
 	 * Color painted behind the caption, any CSS color. Omitted or `"auto"`
-	 * (AUTO_COLOR) knocks out what lies behind it in the page's color — the
-	 * document's opaque `background`, else the theme's canvas color — the way a
-	 * connector's label does.
+	 * (AUTO_COLOR) knocks out what lies behind it in what is under the caption:
+	 * the page's color — the document's opaque `background`, else the theme's
+	 * canvas color — with the fill of any frame it lies on (a container, an AWS
+	 * group) over it, the way a connector's label does.
 	 */
 	labelFill?: string;
 };
