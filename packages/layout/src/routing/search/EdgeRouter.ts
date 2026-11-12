@@ -482,7 +482,10 @@ export class EdgeRouter {
 			direction: RouteDirection,
 			stubSteps?: number[],
 		): void => {
-			const key = toDrawnStep(stepIndex(this.lines, xi, yi, direction), direction);
+			const key = toDrawnStep(
+				stepIndex(this.lines, xi, yi, direction),
+				direction,
+			);
 			drawn.steps.push(key);
 			stubSteps?.push(key);
 		};
@@ -571,6 +574,40 @@ export class EdgeRouter {
 	}
 
 	/**
+	 * Whether the edge's route runs along another route's step or is crossed by one:
+	 * what routing it again could mend. False for an edge with no route.
+	 *
+	 * @param edge - An edge given to `route` or `reroute` before
+	 */
+	hasConflict(edge: RoutableEdge): boolean {
+		const drawn = this.drawnRouteByEdge.get(edge);
+		if (drawn === undefined) {
+			return false;
+		}
+		const nx = this.lines.xs.length;
+		const ny = this.lines.ys.length;
+		return drawn.steps.some((key) => {
+			const step = key >> 1;
+			const isHorizontal = (key & 1) === 0;
+			if (
+				(isHorizontal
+					? this.lines.occupiedH[step]
+					: this.lines.occupiedV[step]) > 1
+			) {
+				return true;
+			}
+			// The point the step runs to, crossed where a route runs through it sideways.
+			const xi = isHorizontal
+				? (step % (nx - 1)) + 1
+				: Math.floor(step / (ny - 1));
+			const yi = isHorizontal
+				? Math.floor(step / (nx - 1))
+				: (step % (ny - 1)) + 1;
+			return this.countDrawnCrossingsAt(xi, yi, isHorizontal ? 1 : 2) > 0;
+		});
+	}
+
+	/**
 	 * Route an edge again against every other route drawn: its own route is taken back
 	 * off the lines first, as if it had not been drawn, and the new one drawn in its
 	 * place. The route found may be the one it had.
@@ -627,7 +664,8 @@ export class EdgeRouter {
 				continue;
 			}
 			seen.add(endKey);
-			for (const [step, total] of this.routeStepsByPinnedEnd.get(endKey) ?? []) {
+			for (const [step, total] of this.routeStepsByPinnedEnd.get(endKey) ??
+				[]) {
 				bundle ??= new Map();
 				bundle.set(step, (bundle.get(step) ?? 0) + total);
 			}

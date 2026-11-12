@@ -103,7 +103,8 @@ const isSameRoute = (a: RoutedEdge, b: RoutedEdge): boolean =>
 	a.target.t === b.target.t &&
 	a.points.length === b.points.length &&
 	a.points.every(
-		(point, index) => point.x === b.points[index].x && point.y === b.points[index].y,
+		(point, index) =>
+			point.x === b.points[index].x && point.y === b.points[index].y,
 	);
 
 /** Names the spot a pinned end is held to: the node's side and the place along it. */
@@ -384,6 +385,9 @@ export const routeEdgesAroundNodes = (
 		for (let pass = 0; pass < REROUTE_PASSES; pass += 1) {
 			let hasChanged = false;
 			for (const [edgeToRoute, routed] of routedByEdge) {
+				if (!router.hasConflict(edgeToRoute.edge)) {
+					continue;
+				}
 				const rerouted = router.reroute(edgeToRoute) ?? routed;
 				if (!isSameRoute(rerouted, routed)) {
 					hasChanged = true;
