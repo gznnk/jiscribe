@@ -165,7 +165,10 @@ const listExcludedObstacles = (
  * Running within {@link EDGE_ROUTE_MARGIN} of them or of the borders' sides costs it,
  * the nearer the dearer, and it crosses and runs along the routes drawn before it as
  * little as it can. Edges are routed one by one in the order given, each against the
- * routes of the edges before it in this call only.
+ * routes of the edges before it; then, up to REROUTE_PASSES times and as long as a
+ * route changes, each route in the same order is taken back and found again against
+ * all the others, so an early edge gives way where a later one needed the room. The
+ * order still decides between routes of equal cost.
  *
  * Once every edge is routed, parallel runs are spread GAP_LANE_SPACING apart where
  * there is room, or less in a tight channel, in an order that keeps routes running
@@ -381,8 +384,7 @@ export const routeEdgesAroundNodes = (
 		for (let pass = 0; pass < REROUTE_PASSES; pass += 1) {
 			let hasChanged = false;
 			for (const [edgeToRoute, routed] of routedByEdge) {
-				router.withdraw(edgeToRoute.edge.id);
-				const rerouted = router.route(edgeToRoute) ?? routed;
+				const rerouted = router.reroute(edgeToRoute) ?? routed;
 				if (!isSameRoute(rerouted, routed)) {
 					hasChanged = true;
 					routedByEdge.set(edgeToRoute, rerouted);

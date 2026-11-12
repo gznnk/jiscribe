@@ -180,7 +180,7 @@ export class EdgeRouter {
 		string,
 		Map<number, number>
 	>();
-	/** What each routed edge drew, by edge id, for withdraw to take back. */
+	/** What each routed edge drew, by edge id, for reroute to take back. */
 	private readonly drawnRouteByEdgeId = new Map<string, DrawnRoute>();
 	/**
 	 * Every unit step drawn so far, in the order drawn, as step × 2 plus 1 for a
@@ -464,7 +464,7 @@ export class EdgeRouter {
 	/**
 	 * Count the route's unit steps, and its stubs under their ends, as drawn.
 	 *
-	 * @returns What was counted, for withdraw to take back
+	 * @returns What was counted, for reroute to take back
 	 */
 	private occupy(
 		route: readonly { xi: number; yi: number }[],
@@ -521,7 +521,7 @@ export class EdgeRouter {
 	/**
 	 * Count a route's steps into what the lines hold, or back out of it.
 	 *
-	 * @param delta - 1 to draw the route, -1 to withdraw it
+	 * @param delta - 1 to draw the route, -1 to take it back
 	 */
 	private countDrawnRoute(drawn: DrawnRoute, delta: 1 | -1): void {
 		const count = (steps: Map<number, number>, key: number): void => {
@@ -567,17 +567,28 @@ export class EdgeRouter {
 	}
 
 	/**
-	 * Take a routed edge's route back off the lines, as if it had not been drawn, so
-	 * it can be routed again against the others; nothing for an edge with no route.
+	 * Route an edge again against every other route drawn: its own route is taken back
+	 * off the lines first, as if it had not been drawn, and the new one drawn in its
+	 * place. The route found may be the one it had.
 	 *
-	 * @param edgeId - Id of an edge given to `route` before
+	 * @param prepared - An edge given to `route` before; one that got no route then is
+	 *   routed as `route` would
+	 * @returns The new route; undefined when none is found, the route it had then
+	 *   staying drawn
 	 */
-	withdraw(edgeId: string): void {
+	reroute(prepared: PreparedEdge): RoutedEdge | undefined {
+		const edgeId = prepared.edge.id;
 		const drawn = this.drawnRouteByEdgeId.get(edgeId);
 		if (drawn !== undefined) {
 			this.drawnRouteByEdgeId.delete(edgeId);
 			this.countDrawnRoute(drawn, -1);
 		}
+		const routed = this.route(prepared);
+		if (routed === undefined && drawn !== undefined) {
+			this.countDrawnRoute(drawn, 1);
+			this.drawnRouteByEdgeId.set(edgeId, drawn);
+		}
+		return routed;
 	}
 
 	/** The summed length in px of unit steps given as toDrawnStep numbers. */
