@@ -133,6 +133,16 @@ const countBendsAtLeast = (
 const toDrawnStep = (step: number, direction: RouteDirection): number =>
 	isHorizontalDirection(direction) ? step * 2 : step * 2 + 1;
 
+/** What one route drew on the lines, as toDrawnStep numbers. */
+type DrawnRoute = {
+	/** Every unit step, stubs included, one entry per step run. */
+	steps: number[];
+	/** The stub steps among them, under each end's key. */
+	stubSteps: { endKey: string; steps: number[] }[];
+	/** The keys of its pinned ends, whose bundles its steps were added to. */
+	pinnedEndKeys: string[];
+};
+
 /** A stub on the lines: its anchor's line indices and the unit steps it runs. */
 type StubOnLines = {
 	xi: number;
@@ -166,7 +176,12 @@ export class EdgeRouter {
 	 * end's key and as toDrawnStep numbers it: what a later route to the same end may
 	 * follow as its bundle.
 	 */
-	private readonly routeStepsByPinnedEnd = new Map<string, number[]>();
+	private readonly routeStepsByPinnedEnd = new Map<
+		string,
+		Map<number, number>
+	>();
+	/** What each routed edge drew, by edge id, for withdraw to take back. */
+	private readonly drawnRouteByEdgeId = new Map<string, DrawnRoute>();
 	/**
 	 * Every unit step drawn so far, in the order drawn, as step × 2 plus 1 for a
 	 * vertical one: what a graph's `drawnCosts` takes in (see applyDrawnSteps).
@@ -446,42 +461,34 @@ export class EdgeRouter {
 		);
 	}
 
-	/** Count the route's unit steps, and its stubs under their ends, as drawn. */
+	/**
+	 * Count the route's unit steps, and its stubs under their ends, as drawn.
+	 *
+	 * @returns What was counted, for withdraw to take back
+	 */
 	private occupy(
 		route: readonly { xi: number; yi: number }[],
 		source: EndCandidate,
 		target: EndCandidate,
-	): void {
+	): DrawnRoute {
+		const drawn: DrawnRoute = { steps: [], stubSteps: [], pinnedEndKeys: [] };
 		const mark = (
 			xi: number,
 			yi: number,
 			direction: RouteDirection,
-			endKey?: string,
+			stubSteps?: number[],
 		): void => {
-			const step = stepIndex(this.lines, xi, yi, direction);
-			if (isHorizontalDirection(direction)) {
-				this.lines.occupiedH[step] += 1;
-			} else {
-				this.lines.occupiedV[step] += 1;
-			}
-			const key = toDrawnStep(step, direction);
-			this.drawnSteps.push(key);
-			if (endKey === undefined) {
-				return;
-			}
-			let steps = this.stubStepsByEnd.get(endKey);
-			if (steps === undefined) {
-				steps = new Map();
-				this.stubStepsByEnd.set(endKey, steps);
-			}
-			steps.set(key, (steps.get(key) ?? 0) + 1);
+			const key = toDrawnStep(stepIndex(this.lines, xi, yi, direction), direction);
+			drawn.steps.push(key);
+			stubSteps?.push(key);
 		};
-		const firstDrawnStep = this.drawnSteps.length;
 		for (const candidate of [source, target]) {
 			const stub = this.toStubOnLines(candidate);
+			const stubSteps: number[] = [];
+			drawn.stubSteps.push({ endKey: candidate.endKey, steps: stubSteps });
 			let { xi, yi } = stub;
 			for (let index = 0; index < stub.steps; index += 1) {
-				mark(xi, yi, stub.direction, candidate.endKey);
+				mark(xi, yi, stub.direction, stubSteps);
 				xi += STEP_X[stub.direction];
 				yi += STEP_Y[stub.direction];
 			}
@@ -503,21 +510,73 @@ export class EdgeRouter {
 			}
 		}
 		for (const candidate of [source, target]) {
-			if (!candidate.isPinned) {
-				continue;
+			if (candidate.isPinned) {
+				drawn.pinnedEndKeys.push(candidate.endKey);
 			}
-			let steps = this.routeStepsByPinnedEnd.get(candidate.endKey);
+		}
+		this.countDrawnRoute(drawn, 1);
+		return drawn;
+	}
+
+	/**
+	 * Count a route's steps into what the lines hold, or back out of it.
+	 *
+	 * @param delta - 1 to draw the route, -1 to withdraw it
+	 */
+	private countDrawnRoute(drawn: DrawnRoute, delta: 1 | -1): void {
+		const count = (steps: Map<number, number>, key: number): void => {
+			const total = (steps.get(key) ?? 0) + delta;
+			if (total === 0) {
+				steps.delete(key);
+			} else {
+				steps.set(key, total);
+			}
+		};
+		const stepsOf = (
+			byEnd: Map<string, Map<number, number>>,
+			endKey: string,
+		): Map<number, number> => {
+			let steps = byEnd.get(endKey);
 			if (steps === undefined) {
-				steps = [];
-				this.routeStepsByPinnedEnd.set(candidate.endKey, steps);
+				steps = new Map();
+				byEnd.set(endKey, steps);
 			}
-			for (
-				let index = firstDrawnStep;
-				index < this.drawnSteps.length;
-				index += 1
-			) {
-				steps.push(this.drawnSteps[index]);
+			return steps;
+		};
+		for (const key of drawn.steps) {
+			if ((key & 1) === 0) {
+				this.lines.occupiedH[key >> 1] += delta;
+			} else {
+				this.lines.occupiedV[key >> 1] += delta;
 			}
+			// A step whose count changed either way has its links' costs counted again.
+			this.drawnSteps.push(key);
+		}
+		for (const { endKey, steps } of drawn.stubSteps) {
+			const stubSteps = stepsOf(this.stubStepsByEnd, endKey);
+			for (const key of steps) {
+				count(stubSteps, key);
+			}
+		}
+		for (const endKey of drawn.pinnedEndKeys) {
+			const bundleSteps = stepsOf(this.routeStepsByPinnedEnd, endKey);
+			for (const key of drawn.steps) {
+				count(bundleSteps, key);
+			}
+		}
+	}
+
+	/**
+	 * Take a routed edge's route back off the lines, as if it had not been drawn, so
+	 * it can be routed again against the others; nothing for an edge with no route.
+	 *
+	 * @param edgeId - Id of an edge given to `route` before
+	 */
+	withdraw(edgeId: string): void {
+		const drawn = this.drawnRouteByEdgeId.get(edgeId);
+		if (drawn !== undefined) {
+			this.drawnRouteByEdgeId.delete(edgeId);
+			this.countDrawnRoute(drawn, -1);
 		}
 	}
 
@@ -553,9 +612,9 @@ export class EdgeRouter {
 				continue;
 			}
 			seen.add(endKey);
-			for (const step of this.routeStepsByPinnedEnd.get(endKey) ?? []) {
+			for (const [step, total] of this.routeStepsByPinnedEnd.get(endKey) ?? []) {
 				bundle ??= new Map();
-				bundle.set(step, (bundle.get(step) ?? 0) + 1);
+				bundle.set(step, (bundle.get(step) ?? 0) + total);
 			}
 		}
 		return bundle;
@@ -877,7 +936,7 @@ export class EdgeRouter {
 			xi: graph.nodeXi[state >> 2],
 			yi: graph.nodeYi[state >> 2],
 		}));
-		this.occupy(route, source, target);
+		this.drawnRouteByEdgeId.set(edge.id, this.occupy(route, source, target));
 		const onLines = (point: Point): Point => ({
 			x: snapToGridResolution(point.x),
 			y: snapToGridResolution(point.y),

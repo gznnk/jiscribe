@@ -93,6 +93,19 @@ const toRouteEnd = (
 	};
 };
 
+/** How many times at most every route is taken back and found again against the others. */
+const REROUTE_PASSES = 2;
+
+const isSameRoute = (a: RoutedEdge, b: RoutedEdge): boolean =>
+	a.source.side === b.source.side &&
+	a.source.t === b.source.t &&
+	a.target.side === b.target.side &&
+	a.target.t === b.target.t &&
+	a.points.length === b.points.length &&
+	a.points.every(
+		(point, index) => point.x === b.points[index].x && point.y === b.points[index].y,
+	);
+
 /** Names the spot a pinned end is held to: the node's side and the place along it. */
 const toPinnedEndKey = (
 	node: RoutableNode,
@@ -354,12 +367,32 @@ export const routeEdgesAroundNodes = (
 			sourcePoint: Point;
 			targetPoint: Point;
 		}[] = [];
+		const routedByEdge = new Map<PreparedEdge, RoutedEdge>();
 		for (const edgeToRoute of prepared) {
 			const routed = router.route(edgeToRoute);
 			if (routed === undefined) {
 				unroutedEdgeIds.add(edgeToRoute.edge.id);
 				continue;
 			}
+			routedByEdge.set(edgeToRoute, routed);
+		}
+		// Each route was found against the ones before it alone; taken back and found
+		// again against all the others, it gives way where a later one needed the room.
+		for (let pass = 0; pass < REROUTE_PASSES; pass += 1) {
+			let hasChanged = false;
+			for (const [edgeToRoute, routed] of routedByEdge) {
+				router.withdraw(edgeToRoute.edge.id);
+				const rerouted = router.route(edgeToRoute) ?? routed;
+				if (!isSameRoute(rerouted, routed)) {
+					hasChanged = true;
+					routedByEdge.set(edgeToRoute, rerouted);
+				}
+			}
+			if (!hasChanged) {
+				break;
+			}
+		}
+		for (const [edgeToRoute, routed] of routedByEdge) {
 			const { edge, sourceNode, targetNode } = edgeToRoute;
 			const excludedSet = new Set(edgeToRoute.excluded);
 			const walls = obstacles.filter((obstacle) => !excludedSet.has(obstacle));
