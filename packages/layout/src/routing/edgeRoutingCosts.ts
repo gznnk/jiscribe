@@ -22,7 +22,7 @@ export const ROUTE_HUG_REACH = EDGE_ROUTE_MARGIN / 3;
  * caption, crossing a border; and per px run, on top of the length: along a route
  * already drawn, and near a box or alongside a border, weighed by how near (1 against
  * it, falling to 0 a margin away; a box's weight gains `hugWeight` on top within
- * ROUTE_HUG_REACH of it, where it is the dearest of the per-px costs).
+ * ROUTE_HUG_REACH of it).
  */
 export const ROUTE_COSTS = {
 	crossing: 300,
