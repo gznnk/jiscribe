@@ -50,6 +50,14 @@ export const isOwnWall = (
 	obstacle.ownerId === node.id && (!obstacle.isLabel || side === "bottom");
 
 /**
+ * How wide, in margins, the gap between a side and the nearest obstacle facing it may
+ * be for a stub to run to its middle (see calcStubLength): a channel between two rows
+ * or columns of boxes, not open ground.
+ */
+const STUB_CHANNEL_MARGINS = 4;
+const PINNED_STUB_CHANNEL_MARGINS = 6;
+
+/**
  * How far the stub of an end at `anchor` on `side` runs: {@link EDGE_ROUTE_MARGIN}
  * past the box, or past its caption on a bottom side, but half the gap to an
  * obstacle or a crossable band straight ahead nearer than that, so two facing stubs
@@ -67,6 +75,7 @@ const calcStubLength = (
 	obstacles: readonly Obstacle[],
 	excluded: ReadonlySet<Obstacle>,
 	crossableBands: readonly BoundingBox[],
+	channelMargins: number,
 ): number | undefined => {
 	const box = convertRectToBoundingBox(node.bounds);
 	const runsThroughLabel = side === "bottom" && node.labelBounds !== undefined;
@@ -74,6 +83,7 @@ const calcStubLength = (
 		? convertRectToBoundingBox(node.labelBounds as Rect).bottom - box.bottom
 		: 0;
 	let nearestGap = Infinity;
+	let facingGap = Infinity;
 	const obstacleCount = obstacles.length;
 	for (
 		let index = 0;
@@ -91,34 +101,33 @@ const calcStubLength = (
 			ahead = crossableBands[index - obstacleCount];
 		}
 		const { left, top, right, bottom } = ahead;
+		const isVertical = side === "top" || side === "bottom";
+		// Straight ahead of the end itself, or only of some other stretch of the side.
+		const isAheadOfEnd = isVertical
+			? left < anchor.x && anchor.x < right
+			: top < anchor.y && anchor.y < bottom;
+		const isAheadOfSide = isVertical
+			? left < box.right && box.left < right
+			: top < box.bottom && box.top < bottom;
+		if (!isAheadOfEnd && !isAheadOfSide) {
+			continue;
+		}
 		let near: number;
 		let far: number;
 		switch (side) {
 			case "top":
-				if (!(left < anchor.x && anchor.x < right)) {
-					continue;
-				}
 				near = box.top - bottom;
 				far = box.top - top;
 				break;
 			case "bottom":
-				if (!(left < anchor.x && anchor.x < right)) {
-					continue;
-				}
 				near = top - box.bottom;
 				far = bottom - box.bottom;
 				break;
 			case "left":
-				if (!(top < anchor.y && anchor.y < bottom)) {
-					continue;
-				}
 				near = box.left - right;
 				far = box.left - left;
 				break;
 			case "right":
-				if (!(top < anchor.y && anchor.y < bottom)) {
-					continue;
-				}
 				near = left - box.right;
 				far = right - box.right;
 				break;
@@ -126,12 +135,24 @@ const calcStubLength = (
 		if (far <= 0) {
 			continue;
 		}
+		if (!isAheadOfEnd) {
+			if (near > clearFrom) {
+				facingGap = Math.min(facingGap, near - clearFrom);
+			}
+			continue;
+		}
 		if (near < clearFrom || isSameCoordinate(near, clearFrom)) {
 			return undefined;
 		}
 		nearestGap = Math.min(nearestGap, near - clearFrom);
+		facingGap = Math.min(facingGap, near - clearFrom);
 	}
-	return clearFrom + Math.min(EDGE_ROUTE_MARGIN, nearestGap / 2);
+	// In a channel between this side and what faces it, the stub reaches the middle.
+	const reach =
+		facingGap <= EDGE_ROUTE_MARGIN * channelMargins
+			? Math.max(EDGE_ROUTE_MARGIN, facingGap / 2)
+			: EDGE_ROUTE_MARGIN;
+	return clearFrom + Math.min(reach, nearestGap / 2);
 };
 
 const offsetPoint = (
@@ -225,6 +246,7 @@ export const listEndCandidates = (
 			obstacles,
 			excluded,
 			crossableBands,
+			isPinned ? PINNED_STUB_CHANNEL_MARGINS : STUB_CHANNEL_MARGINS,
 		);
 		if (stubLength === undefined) {
 			return undefined;
