@@ -778,18 +778,18 @@ describe("routeEdgesAroundNodes", () => {
 		});
 
 		it("keeps a label off the caption of a box its route passes", () => {
-			// The caption hangs 8px above the line's middle, where the label would cover
-			// its bottom; the label moves along the line instead.
+			// The caption hangs 12px above the line's middle, where the label, 40 tall,
+			// would cover its bottom; the label moves along the line instead.
 			const nodes: RoutableNode[] = [
 				box("a", 0, 0),
 				box("b", 400, 0),
 				{
 					...box("c", 200, -60),
-					labelBounds: { x: 190, y: -2, width: 80, height: 14 },
+					labelBounds: { x: 190, y: -6, width: 80, height: 14 },
 				},
 			];
 			const result = routeEdgesAroundNodes(nodes, [
-				{ ...edge("e", "a", "b"), label: { width: 40, height: 20 } },
+				{ ...edge("e", "a", "b"), label: { width: 40, height: 40 } },
 			]);
 
 			const routed = result.edges[0];
@@ -1961,6 +1961,209 @@ describe("routeEdgesAroundNodes", () => {
 					box("x", 0, 50, 20, 10),
 				]),
 			).toBe(24 + EDGE_ROUTE_MARGIN);
+		});
+	});
+
+	describe("staying inside the border both ends share", () => {
+		// c stands between a and b, 32px off the border's top and bottom sides; d, above
+		// the border, gives the lines a way round c outside it, cheaper than the way
+		// inside, which runs 2px off a side.
+		const border = { x: -50, y: -82, width: 660, height: 204 };
+		const nodes = [
+			box("a", 0, 0),
+			box("b", 500, 0),
+			box("c", 150, -50, 200, 140),
+			box("d", 230, -182, 40, 40),
+		];
+
+		/** Whether every point of the path lies inside the rect, off its outline. */
+		const liesStrictlyInside = (path: readonly Point[], rect: Rect): boolean =>
+			path.every(
+				({ x, y }) =>
+					x > rect.x &&
+					x < rect.x + rect.width &&
+					y > rect.y &&
+					y < rect.y + rect.height,
+			);
+
+		it("stays inside the border though a way round outside it is cheaper", () => {
+			const result = routeEdgesAroundNodes(nodes, [edge("e", "a", "b")], {
+				borders: [border],
+			});
+
+			const path = pathOf(result.edges[0], nodes, "a", "b");
+			expect(liesStrictlyInside(path, border)).toBe(true);
+		});
+
+		it("leaves a border that does not hold both ends whole, where the way outside is cheaper", () => {
+			// Its right side runs through b.
+			const narrowBorder = { ...border, width: 580 };
+
+			const result = routeEdgesAroundNodes(nodes, [edge("e", "a", "b")], {
+				borders: [narrowBorder],
+			});
+
+			const path = pathOf(result.edges[0], nodes, "a", "b");
+			expect(path.some(({ y }) => y < narrowBorder.y)).toBe(true);
+		});
+
+		it("routes the edge outside the border when no way inside is left", () => {
+			// Closing the gaps between c and the border's top and bottom sides.
+			const walls = [
+				{ x: 200, y: -82, width: 20, height: 32 },
+				{ x: 200, y: 90, width: 20, height: 32 },
+			];
+
+			const result = routeEdgesAroundNodes(nodes, [edge("e", "a", "b")], {
+				borders: [border],
+				obstacles: walls,
+			});
+
+			expect(result.unroutedEdgeIds).toEqual([]);
+			const path = pathOf(result.edges[0], nodes, "a", "b");
+			expect(liesStrictlyInside(path, border)).toBe(false);
+			expect(walls.some((wall) => entersRect(path, wall))).toBe(false);
+		});
+
+		it("stays inside the inner of two borders that both hold the ends", () => {
+			const outer = { x: -100, y: -300, width: 760, height: 500 };
+
+			const result = routeEdgesAroundNodes(nodes, [edge("e", "a", "b")], {
+				borders: [outer, border],
+			});
+
+			const path = pathOf(result.edges[0], nodes, "a", "b");
+			expect(liesStrictlyInside(path, border)).toBe(true);
+		});
+
+		it("stays inside the border around two hollow ends, each with its own outline a border too", () => {
+			const leftFrame = { x: -20, y: -20, width: 100, height: 80 };
+			const rightFrame = { x: 480, y: -20, width: 100, height: 80 };
+			const framed = [
+				hollowBox(
+					"h1",
+					leftFrame.x,
+					leftFrame.y,
+					leftFrame.width,
+					leftFrame.height,
+				),
+				hollowBox(
+					"h2",
+					rightFrame.x,
+					rightFrame.y,
+					rightFrame.width,
+					rightFrame.height,
+				),
+				...nodes.slice(2),
+			];
+
+			const result = routeEdgesAroundNodes(framed, [edge("e", "h1", "h2")], {
+				borders: [border, leftFrame, rightFrame],
+			});
+
+			const path = pathOf(result.edges[0], framed, "h1", "h2");
+			expect(liesStrictlyInside(path, border)).toBe(true);
+		});
+
+		it("takes no run along the border's outline for a way inside", () => {
+			// c stands a margin off the top and bottom sides: the only run past it
+			// inside would lie on them.
+			const tightBorder = { x: -50, y: -80, width: 660, height: 200 };
+			const tightNodes = [...nodes.slice(0, 3), box("d", 230, -180, 40, 40)];
+
+			const result = routeEdgesAroundNodes(tightNodes, [edge("e", "a", "b")], {
+				borders: [tightBorder],
+			});
+
+			const path = pathOf(result.edges[0], tightNodes, "a", "b");
+			const runsOnOutline = segmentsOf(path).some(
+				([from, to]) =>
+					from.y === to.y &&
+					[tightBorder.y, tightBorder.y + tightBorder.height].includes(from.y),
+			);
+			expect(runsOnOutline).toBe(false);
+			expect(path.some(({ y }) => y < tightBorder.y)).toBe(true);
+		});
+
+		it("keeps an edge routed again inside the border", () => {
+			// Routed alone, e runs over c; "down", from d into c's top, crosses that, so
+			// e is routed again, under c. f, below the border, gives a way round c
+			// outside it there.
+			const withOthers = [...nodes, box("f", 230, 182, 40, 40)];
+
+			const result = routeEdgesAroundNodes(
+				withOthers,
+				[edge("e", "a", "b"), edge("down", "d", "c")],
+				{ borders: [border] },
+			);
+
+			const path = pathOf(result.edges[0], withOthers, "a", "b");
+			const c = withOthers[2].bounds;
+			expect(path.some(({ y }) => y > c.y + c.height)).toBe(true);
+			expect(liesStrictlyInside(path, border)).toBe(true);
+		});
+	});
+
+	describe("keeping off a box's edge", () => {
+		/**
+		 * How near the path runs to the rect along a stretch the two share, the least of
+		 * its segments' distances; Infinity when no segment runs alongside it.
+		 */
+		const calcRunClearance = (path: readonly Point[], rect: Rect): number =>
+			Math.min(
+				Infinity,
+				...segmentsOf(path).flatMap((segment) => {
+					const isHorizontal = segment[0].y === segment[1].y;
+					const extent: readonly [Point, Point] = [
+						{ x: rect.x, y: rect.y },
+						{ x: rect.x + rect.width, y: rect.y + rect.height },
+					];
+					if (calcSharedStretch(segment, extent, isHorizontal) <= 0) {
+						return [];
+					}
+					const across = isHorizontal ? segment[0].y : segment[0].x;
+					const low = isHorizontal ? rect.y : rect.x;
+					const high = isHorizontal
+						? rect.y + rect.height
+						: rect.x + rect.width;
+					return [Math.max(low - across, across - high, 0)];
+				}),
+			);
+
+		it("goes round a box its straight way would pass a few px off", () => {
+			// Straight down from a's bottom, the route would pass n 8px off.
+			const nodes = [
+				box("a", 0, 0),
+				box("b", 0, 400),
+				box("n", 38, 100, 60, 100),
+			];
+
+			const result = routeEdgesAroundNodes(nodes, [edge("e", "a", "b")]);
+
+			const path = pathOf(result.edges[0], nodes, "a", "b");
+			expect(calcRunClearance(path, nodes[2].bounds)).toBeGreaterThanOrEqual(
+				EDGE_ROUTE_MARGIN / 3,
+			);
+		});
+
+		it("still routes through a channel narrower than two thirds of the margin, the only way", () => {
+			// Walls round a, but for a slit from x 22 to 37 in the bottom one.
+			const walls = [
+				{ x: -100, y: -100, width: 260, height: 40 },
+				{ x: -100, y: -100, width: 40, height: 240 },
+				{ x: 120, y: -100, width: 40, height: 240 },
+				{ x: -100, y: 100, width: 122, height: 40 },
+				{ x: 37, y: 100, width: 123, height: 40 },
+			];
+			const nodes = [box("a", 0, 0), box("b", 0, 400)];
+
+			const result = routeEdgesAroundNodes(nodes, [edge("e", "a", "b")], {
+				obstacles: walls,
+			});
+
+			expect(result.unroutedEdgeIds).toEqual([]);
+			const path = pathOf(result.edges[0], nodes, "a", "b");
+			expect(walls.some((wall) => entersRect(path, wall))).toBe(false);
 		});
 	});
 });
