@@ -88,6 +88,30 @@ const calcSharedStretch = (
 	);
 };
 
+/** Whether a segment of one path crosses one of the other at right angles, inside both. */
+const doPathsCross = (
+	path: readonly Point[],
+	other: readonly Point[],
+): boolean =>
+	segmentsOf(path).some((segment) =>
+		segmentsOf(other).some((otherSegment) => {
+			const [horizontal, vertical] =
+				segment[0].y === segment[1].y
+					? [segment, otherSegment]
+					: [otherSegment, segment];
+			const { x } = vertical[0];
+			const { y } = horizontal[0];
+			return (
+				vertical[1].x === x &&
+				horizontal[1].y === y &&
+				x > Math.min(horizontal[0].x, horizontal[1].x) &&
+				x < Math.max(horizontal[0].x, horizontal[1].x) &&
+				y > Math.min(vertical[0].y, vertical[1].y) &&
+				y < Math.max(vertical[0].y, vertical[1].y)
+			);
+		}),
+	);
+
 describe("routeEdgesAroundNodes", () => {
 	it("runs straight between two boxes facing each other", () => {
 		const result = routeEdgesAroundNodes(
@@ -537,11 +561,71 @@ describe("routeEdgesAroundNodes", () => {
 		).toThrow("node a is given twice");
 	});
 
+	describe("routing each edge again against the others", () => {
+		// m stands between a and b, u straight above it: "around" goes round m above or
+		// below, and "down" runs straight from u into m.
+		const nodes = [
+			box("a", 0, 0),
+			box("b", 300, 0),
+			box("u", 150, -120),
+			box("m", 150, 0),
+		];
+
+		it("takes a route away from where a later edge has to cross it", () => {
+			const result = routeEdgesAroundNodes(nodes, [
+				edge("around", "a", "b"),
+				edge("down", "u", "m"),
+			]);
+
+			// Routed once each in the order given, "around" would go over m and "down"
+			// cross it.
+			const [around, down] = result.edges;
+			expect(around.source.side).toBe("bottom");
+			expect(
+				doPathsCross(
+					pathOf(around, nodes, "a", "b"),
+					pathOf(down, nodes, "u", "m"),
+				),
+			).toBe(false);
+		});
+
+		it("gives the same routes when called twice on the same input", () => {
+			// Two rows of three boxes, where routing again changes routes and the order
+			// the edges are routed again in would change them further.
+			const grid = [0, 1, 2, 3, 4, 5].map((index) =>
+				box(`n${index}`, (index % 3) * 150, Math.floor(index / 3) * 120),
+			);
+			const edges = [
+				edge("e0", "n3", "n0"),
+				edge("e1", "n3", "n4"),
+				edge("e2", "n2", "n3"),
+				edge("e3", "n1", "n2"),
+				edge("e4", "n0", "n5"),
+				edge("e5", "n1", "n4"),
+			];
+
+			const first = routeEdgesAroundNodes(grid, edges);
+			const second = routeEdgesAroundNodes(grid, edges);
+
+			expect(second).toEqual(first);
+		});
+
+		it("routes two edges given one id", () => {
+			const result = routeEdgesAroundNodes(nodes, [
+				edge("twin", "a", "b"),
+				edge("twin", "u", "m"),
+			]);
+
+			expect(result.unroutedEdgeIds).toEqual([]);
+			expect(result.edges).toHaveLength(2);
+		});
+	});
+
 	describe("fanning the ends that share a side", () => {
 		it("fans two ends stage one puts on one spot, rewriting each one's t", () => {
-			// Three boxes in a column below and to the right, none facing a: two edges
-			// leave a's bottom centre.
-			const ys = [100, 200, 300];
+			// Two boxes in a column below and to the right, none facing a, and a wall
+			// against a's right side: both edges leave a's bottom centre.
+			const ys = [100, 200];
 			const nodes = [
 				box("a", 0, 0),
 				...ys.map((y, index) => box(`t${index}`, 300, y)),
@@ -549,6 +633,7 @@ describe("routeEdgesAroundNodes", () => {
 			const result = routeEdgesAroundNodes(
 				nodes,
 				ys.map((_, index) => edge(`e${index}`, "a", `t${index}`)),
+				{ obstacles: [{ x: 60, y: 0, width: 40, height: 40 }] },
 			);
 
 			const onBottom = result.edges.filter(
@@ -1232,6 +1317,30 @@ describe("routeEdgesAroundNodes", () => {
 			expect(p1.points[0].x).toBe(p1.points[1].x);
 			expect(p2.points[0].x).toBe(p1.points[0].x);
 			expect(p2.points[1]).toEqual(p1.points[1]);
+		});
+
+		it("gathers into one trunk the routes to one pinned place where the first one routed joins a later one's", () => {
+			// Routed alone, p1 comes down to the trunk at x 90; p2 then comes straight
+			// down from s2, at x 280, and routed again p1 joins it there.
+			const nodes = [
+				box("s1", -100, -100),
+				box("s2", 250, -200),
+				box("s3", 0, 100),
+				target,
+			];
+			const result = routeEdgesAroundNodes(nodes, [
+				{ ...edge("p1", "s1", "T"), ...pinned },
+				{ ...edge("p2", "s2", "T"), ...pinned },
+				{ ...edge("p3", "s3", "T"), ...pinned },
+			]);
+
+			expect(result.unroutedEdgeIds).toEqual([]);
+			const lastSegments = result.edges.map((routed) =>
+				pathOf(routed, nodes, routed.id.replace("p", "s"), "T").slice(-2),
+			);
+			expect(lastSegments[0]).toEqual([{ x: 280, y: pinnedAt.y }, pinnedAt]);
+			expect(lastSegments[1]).toEqual(lastSegments[0]);
+			expect(lastSegments[2]).toEqual(lastSegments[0]);
 		});
 
 		it("keeps a free route the lane spacing off a trunk it runs alongside", () => {
