@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
 import { calcAnchorPoint } from "../../shared/calcAnchorPoint";
 import { GAP_LANE_SPACING } from "../../shared/edgeSpacing";
 import type { LayoutEdgeAnchor, LayoutSide } from "../../shared/types";
-import { EDGE_ROUTE_MARGIN } from "../edgeRoutingCosts";
+import { EDGE_ROUTE_MARGIN, ROUTE_HUG_REACH } from "../edgeRoutingCosts";
 import { listContendedSideKeys, listEndCandidates } from "../endCandidates";
 import { routeEdgesAroundNodes } from "../routeEdgesAroundNodes";
 import type { EndCandidate, Obstacle } from "../search/EdgeRouter";
@@ -2142,11 +2142,11 @@ describe("routeEdgesAroundNodes", () => {
 
 			const path = pathOf(result.edges[0], nodes, "a", "b");
 			expect(calcRunClearance(path, nodes[2].bounds)).toBeGreaterThanOrEqual(
-				EDGE_ROUTE_MARGIN / 3,
+				ROUTE_HUG_REACH,
 			);
 		});
 
-		it("still routes through a channel narrower than two thirds of the margin, the only way", () => {
+		it("still routes through a channel narrower than twice the hug reach, the only way", () => {
 			// Walls round a, but for a slit from x 22 to 37 in the bottom one.
 			const walls = [
 				{ x: -100, y: -100, width: 260, height: 40 },

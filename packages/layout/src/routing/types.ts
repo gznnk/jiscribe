@@ -89,7 +89,9 @@ export type EdgeRoutingOptions = {
 	/**
 	 * Rects whose outline a route pays a little to cross or to run alongside within a
 	 * margin (a container's frame), in the nodes' coordinates; the inside is free to
-	 * run through.
+	 * run through. An edge whose two end boxes lie inside one of them stays strictly
+	 * inside the innermost such rect where a route is found there (see
+	 * routeEdgesAroundNodes).
 	 */
 	borders?: readonly Rect[];
 };

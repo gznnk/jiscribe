@@ -81,7 +81,7 @@ export type PreparedEdge = {
 	 * it, off its outline, where a way is found there, even when a cheaper one runs
 	 * outside. Undefined when no border holds both ends.
 	 */
-	home?: BoundingBox;
+	sharedBorder?: BoundingBox;
 };
 
 /**
@@ -744,7 +744,10 @@ export class EdgeRouter {
 
 	/**
 	 * The cheapest route for one edge: an A* search over (node, direction) from every
-	 * source stub tip to a virtual finish reached from every target stub tip.
+	 * source stub tip to a virtual finish reached from every target stub tip. An edge
+	 * with a `sharedBorder` is searched strictly inside that border first, and anywhere
+	 * only when no route is found there, so its route is the cheapest inside the
+	 * border though a cheaper one runs outside.
 	 *
 	 * @returns The route, or undefined when no target can be reached
 	 */
@@ -756,24 +759,24 @@ export class EdgeRouter {
 			prepared.targetBox,
 		]) as BoundingBox;
 		const { xs, ys } = this.lines;
-		const { home } = prepared;
-		if (home !== undefined) {
+		const { sharedBorder } = prepared;
+		if (sharedBorder !== undefined) {
 			// Inside the border both ends share first, wider and wider up to all of it;
 			// strictly inside, since the nudging lets a run lying on a border's side off
 			// it either way.
 			const inside = {
-				left: snapToGridResolution(home.left) + GRID_STEP,
-				top: snapToGridResolution(home.top) + GRID_STEP,
-				right: snapToGridResolution(home.right) - GRID_STEP,
-				bottom: snapToGridResolution(home.bottom) - GRID_STEP,
+				left: snapToGridResolution(sharedBorder.left) + GRID_STEP,
+				top: snapToGridResolution(sharedBorder.top) + GRID_STEP,
+				right: snapToGridResolution(sharedBorder.right) - GRID_STEP,
+				bottom: snapToGridResolution(sharedBorder.bottom) - GRID_STEP,
 			};
 			for (let reach = SEARCH_WINDOW_REACH; ; reach *= SEARCH_WINDOW_GROWTH) {
 				const window = growBox(around, reach);
-				const coversHome =
-					window.left <= home.left &&
-					window.top <= home.top &&
-					window.right >= home.right &&
-					window.bottom >= home.bottom;
+				const coversBorder =
+					window.left <= sharedBorder.left &&
+					window.top <= sharedBorder.top &&
+					window.right >= sharedBorder.right &&
+					window.bottom >= sharedBorder.bottom;
 				const routed = this.searchWithin(
 					prepared,
 					graph,
@@ -788,7 +791,7 @@ export class EdgeRouter {
 				if (routed !== undefined) {
 					return routed;
 				}
-				if (coversHome) {
+				if (coversBorder) {
 					break;
 				}
 			}

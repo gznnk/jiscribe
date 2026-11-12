@@ -3,7 +3,7 @@ import {
 	convertRectToBoundingBox,
 	doRectsOverlap,
 	type Point,
-	unionBoundingBoxes,
+	type Rect,
 } from "@jiscribe/geometry";
 
 import { EDGE_ROUTE_MARGIN } from "./edgeRoutingCosts";
@@ -12,6 +12,7 @@ import {
 	listContendedSideKeys,
 	listEndCandidates,
 } from "./endCandidates";
+import { isRectInside } from "../shared/isRectInside";
 import { placeRouteLabels } from "./labels/placeRouteLabels";
 import { nudgeRoutes } from "./nudge/nudgeRoutes";
 import type { RouteEnd, RouteToNudge } from "./nudge/routeSegments";
@@ -124,35 +125,29 @@ const isSameRoute = (a: RoutedEdge, b: RoutedEdge): boolean =>
 	);
 
 /**
- * The innermost of `borders` that both nodes' boxes lie inside, their sides touching
- * included, as a prepared edge's `home`; nothing when none holds both. A hollow node's
- * own frame never holds the other end of an edge that reaches the router with a way to
- * go, so it needs no leaving out.
+ * The innermost of `borders` that both nodes' boxes lie inside, edges included (see
+ * isRectInside): what a prepared edge takes as its `sharedBorder`. Undefined when no
+ * border holds both.
  */
-const findHome = (
-	borders: readonly BoundingBox[],
+const findInnermostSharedBorder = (
+	borders: readonly Rect[],
 	source: RoutableNode,
 	target: RoutableNode,
-): { home?: BoundingBox } => {
-	const around = unionBoundingBoxes([
-		convertRectToBoundingBox(source.bounds),
-		convertRectToBoundingBox(target.bounds),
-	]) as BoundingBox;
-	let home: BoundingBox | undefined;
+): BoundingBox | undefined => {
+	let innermost: Rect | undefined;
 	for (const border of borders) {
 		if (
-			border.left <= around.left &&
-			border.top <= around.top &&
-			border.right >= around.right &&
-			border.bottom >= around.bottom &&
-			(home === undefined ||
-				(border.right - border.left) * (border.bottom - border.top) <
-					(home.right - home.left) * (home.bottom - home.top))
+			isRectInside(border, source.bounds) &&
+			isRectInside(border, target.bounds) &&
+			(innermost === undefined ||
+				border.width * border.height < innermost.width * innermost.height)
 		) {
-			home = border;
+			innermost = border;
 		}
 	}
-	return home === undefined ? {} : { home };
+	return innermost === undefined
+		? undefined
+		: convertRectToBoundingBox(innermost);
 };
 
 /** Names the spot a pinned end is held to: the node's side and the place along it. */
@@ -212,7 +207,7 @@ const listExcludedObstacles = (
  * box but its own ends' — not even there, past the stub each end runs straight out
  * along — nor any caption or other obstacle, and runs flush along none of their edges.
  * Running within {@link EDGE_ROUTE_MARGIN} of them or of the borders' sides costs it,
- * the nearer the dearer and much dearer within a third of that of a box, and it
+ * the nearer the dearer and much dearer within ROUTE_HUG_REACH of a box, and it
  * crosses and runs along the routes drawn before it as
  * little as it can. Edges are routed one by one in the order given, each against the
  * routes of the edges before it; then, up to REROUTE_PASSES times and as long as a
@@ -367,6 +362,11 @@ export const routeEdgesAroundNodes = (
 			continue;
 		}
 		const excluded = listExcludedObstacles(obstacles, source, target);
+		const sharedBorder = findInnermostSharedBorder(
+			options.borders ?? [],
+			source,
+			target,
+		);
 		const excludedSet = new Set(excluded);
 		prepared.push({
 			edge,
@@ -374,7 +374,7 @@ export const routeEdgesAroundNodes = (
 			targetNode: target,
 			sourceBox: convertRectToBoundingBox(source.bounds),
 			targetBox: convertRectToBoundingBox(target.bounds),
-			...findHome(borders, source, target),
+			...(sharedBorder === undefined ? {} : { sharedBorder }),
 			excluded,
 			sources: listEndCandidates(
 				source,

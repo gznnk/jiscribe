@@ -16,6 +16,7 @@ import {
 	isOfOneBundle,
 	isZeroLength,
 	walkAllSegments,
+	walkRouteSegments,
 } from "./routeSegments";
 import { isAtLeast, isSameCoordinate, signOf } from "../../shared/coordinate";
 import { GAP_LANE_SPACING } from "../../shared/edgeSpacing";
@@ -43,22 +44,54 @@ const toStretch = (segment: SegmentOnPath, isVertical: boolean): Stretch => ({
 });
 
 /**
+ * Each route's segments along each axis as last listed, by axis (vertical at 1) and
+ * route index: a route's entry is dropped when its path changes (see dropStretches).
+ */
+type StretchCache = [(Stretch[] | undefined)[], (Stretch[] | undefined)[]];
+
+const createStretchCache = (): StretchCache => [[], []];
+
+/** Forget what was listed for a route whose path has changed. */
+const dropStretches = (cache: StretchCache, routeIndex: number): void => {
+	cache[0][routeIndex] = undefined;
+	cache[1][routeIndex] = undefined;
+};
+
+/**
  * Every segment running along the axis, with `standIn` in place of its route; a
- * segment of no length runs along neither axis.
+ * segment of no length runs along neither axis. The other routes' segments are read
+ * from `cache` and kept there.
  */
 const listStretches = (
 	routes: readonly RouteToNudge[],
 	standIn: SegmentWalk["standIn"],
 	isVertical: boolean,
+	cache: StretchCache,
 ): Stretch[] => {
+	const cached = cache[isVertical ? 1 : 0];
 	const stretches: Stretch[] = [];
-	walkAllSegments(
-		routes,
-		{ isVertical, skipZeroLength: true, standIn },
-		(segment) => {
-			stretches.push(toStretch(segment, isVertical));
-		},
-	);
+	routes.forEach((route, routeIndex) => {
+		const isStoodIn = standIn?.routeIndex === routeIndex;
+		let ofRoute = isStoodIn ? undefined : cached[routeIndex];
+		if (ofRoute === undefined) {
+			const listed: Stretch[] = [];
+			walkRouteSegments(
+				route,
+				routeIndex,
+				{ isVertical, skipZeroLength: true, standIn },
+				(segment) => {
+					listed.push(toStretch(segment, isVertical));
+				},
+			);
+			if (!isStoodIn) {
+				cached[routeIndex] = listed;
+			}
+			ofRoute = listed;
+		}
+		for (const stretch of ofRoute) {
+			stretches.push(stretch);
+		}
+	});
 	return stretches;
 };
 
@@ -207,6 +240,7 @@ const straightenJog = (
 	routeIndex: number,
 	jogIndex: number,
 	movedIndex: number,
+	stretchCache: StretchCache,
 ): Point[] | undefined => {
 	const route = routes[routeIndex];
 	const { path } = route;
@@ -244,7 +278,8 @@ const straightenJog = (
 	// taking a jog out may not pull it off.
 	if (
 		route.bundleKeys !== undefined &&
-		listStretches(routes, undefined, isVertical).some(
+		route.bundleKeys.length > 0 &&
+		listStretches(routes, undefined, isVertical, stretchCache).some(
 			(other) =>
 				other.routeIndex !== routeIndex &&
 				isOfOneBundle(route, routes[other.routeIndex]) &&
@@ -310,6 +345,7 @@ const straightenJog = (
 				routes,
 				{ routeIndex, path: straightened, skipped: new Set([mergedIndex]) },
 				isVertical,
+				stretchCache,
 			),
 			endGaps,
 			routes,
@@ -326,6 +362,7 @@ const straightenJog = (
 				routes,
 				{ routeIndex, path: straightened, skipped: new Set([newFarIndex]) },
 				!isVertical,
+				stretchCache,
 			),
 			endGaps,
 			routes,
@@ -391,6 +428,7 @@ type ListedJog = {
  */
 export const straightenJogs = (context: NudgeContext): void => {
 	const { routes } = context;
+	const stretchCache = createStretchCache();
 	let hasRemoved: boolean;
 	do {
 		hasRemoved = false;
@@ -450,9 +488,11 @@ export const straightenJogs = (context: NudgeContext): void => {
 					routeIndex,
 					jogIndex,
 					movedIndex,
+					stretchCache,
 				);
 				if (straightened !== undefined) {
 					path.splice(0, path.length, ...straightened);
+					dropStretches(stretchCache, routeIndex);
 					hasRemoved = true;
 					break;
 				}
