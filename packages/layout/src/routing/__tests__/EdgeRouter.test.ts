@@ -186,6 +186,68 @@ describe("EdgeRouter", () => {
 		});
 	});
 
+	describe("isOvertaken", () => {
+		// As above: "around" routed first goes over m, where "down" then crosses it.
+		const nodes = [
+			box("a", 0, 0),
+			box("b", 300, 0),
+			box("u", 150, -120),
+			box("m", 150, 0),
+			box("far", 0, 400),
+			box("off", 300, 400),
+		];
+		const { prepared, createRouter } = prepareScene(nodes, [
+			edge("around", "a", "b"),
+			edge("down", "u", "m"),
+			edge("apart", "far", "off"),
+		]);
+		const around = prepared.get("around") as PreparedEdge;
+		const down = prepared.get("down") as PreparedEdge;
+		const apart = prepared.get("apart") as PreparedEdge;
+
+		it("holds for an edge a later route crosses, not for the later one nor one apart", () => {
+			const router = createRouter();
+			router.route(around);
+			router.route(apart);
+
+			expect(router.isOvertaken(around.edge)).toBe(false);
+
+			router.route(down);
+
+			expect(router.isOvertaken(around.edge)).toBe(true);
+			expect(router.isOvertaken(down.edge)).toBe(false);
+			expect(router.isOvertaken(apart.edge)).toBe(false);
+		});
+
+		it("holds no longer once the edge is routed again, clear of the other", () => {
+			const router = createRouter();
+			router.route(around);
+			router.route(down);
+			router.reroute(around);
+
+			expect(router.isOvertaken(around.edge)).toBe(false);
+			expect(router.isOvertaken(down.edge)).toBe(false);
+		});
+
+		it("is not raised by a route found again where it was", () => {
+			// "around" shares its stub's line with nothing; "down" runs straight whatever
+			// else is drawn, and routed again where it was it overtakes nothing.
+			const router = createRouter();
+			router.route(down);
+			router.route(around);
+			const before = router.isOvertaken(down.edge);
+			router.reroute(around);
+			router.reroute(down);
+
+			expect(before).toBe(false);
+			expect(router.isOvertaken(around.edge)).toBe(false);
+		});
+
+		it("is false for an edge with no route", () => {
+			expect(createRouter().isOvertaken(around.edge)).toBe(false);
+		});
+	});
+
 	it("takes a route taken back out of its bundle, so the routes to one pinned end gather into one trunk", () => {
 		// T's left side is pinned at y 150. Routed alone, p1 comes down to it at x 90;
 		// p2 then comes straight down from s2 at x 280.

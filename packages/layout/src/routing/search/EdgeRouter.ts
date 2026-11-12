@@ -186,6 +186,12 @@ export class EdgeRouter {
 	 * not having to differ.
 	 */
 	private readonly drawnRouteByEdge = new Map<RoutableEdge, DrawnRoute>();
+	/** The edges whose routes run along each unit step, by toDrawnStep number. */
+	private readonly edgesByStep = new Map<number, Set<RoutableEdge>>();
+	/** What reroute took back of the edge it is routing again; undefined otherwise. */
+	private routeTakenBack: DrawnRoute | undefined;
+	/** The edges a route drawn after theirs runs along or crosses; see isOvertaken. */
+	private readonly overtakenEdges = new Set<RoutableEdge>();
 	/**
 	 * Every unit step drawn so far, in the order drawn, as step × 2 plus 1 for a
 	 * vertical one: what a graph's `drawnCosts` takes in (see applyDrawnSteps).
@@ -466,9 +472,8 @@ export class EdgeRouter {
 	}
 
 	/**
-	 * Count the route's unit steps, and its stubs under their ends, as drawn.
-	 *
-	 * @returns What was counted, for reroute to take back
+	 * The route's unit steps, and its stubs under their ends, for countDrawnRoute to
+	 * count as drawn and reroute to take back.
 	 */
 	private occupy(
 		route: readonly { xi: number; yi: number }[],
@@ -521,7 +526,6 @@ export class EdgeRouter {
 				drawn.pinnedEndKeys.push(candidate.endKey);
 			}
 		}
-		this.countDrawnRoute(drawn, 1);
 		return drawn;
 	}
 
@@ -529,8 +533,15 @@ export class EdgeRouter {
 	 * Count a route's steps into what the lines hold, or back out of it.
 	 *
 	 * @param delta - 1 to draw the route, -1 to take it back
+	 * @param overtakes - Whether to note the routes it runs along or crosses as
+	 *   overtaken (see isOvertaken); false for a route drawn back where it was
 	 */
-	private countDrawnRoute(drawn: DrawnRoute, delta: 1 | -1): void {
+	private countDrawnRoute(
+		edge: RoutableEdge,
+		drawn: DrawnRoute,
+		delta: 1 | -1,
+		overtakes = delta === 1,
+	): void {
 		const count = (steps: Map<number, number>, key: number): void => {
 			const total = (steps.get(key) ?? 0) + delta;
 			if (total === 0) {
@@ -558,6 +569,22 @@ export class EdgeRouter {
 			}
 			// A step whose count changed either way has its links' costs counted again.
 			this.drawnSteps.push(key);
+			let edges = this.edgesByStep.get(key);
+			if (delta === 1) {
+				if (edges === undefined) {
+					edges = new Set();
+					this.edgesByStep.set(key, edges);
+				}
+				edges.add(edge);
+			} else {
+				edges?.delete(edge);
+			}
+		}
+		if (overtakes) {
+			this.markOvertaken(edge, drawn);
+		}
+		if (delta === -1) {
+			this.overtakenEdges.delete(edge);
 		}
 		for (const { endKey, steps } of drawn.stubSteps) {
 			const stubSteps = stepsOf(this.stubStepsByEnd, endKey);
@@ -574,37 +601,58 @@ export class EdgeRouter {
 	}
 
 	/**
-	 * Whether the edge's route runs along another route's step or is crossed by one:
-	 * what routing it again could mend. False for an edge with no route.
-	 *
-	 * @param edge - An edge given to `route` or `reroute` before
+	 * Note every other edge whose route the newly drawn one runs along, or crosses at
+	 * the point one of its steps runs to, as overtaken.
 	 */
-	hasConflict(edge: RoutableEdge): boolean {
-		const drawn = this.drawnRouteByEdge.get(edge);
-		if (drawn === undefined) {
-			return false;
-		}
+	private markOvertaken(edge: RoutableEdge, drawn: DrawnRoute): void {
 		const nx = this.lines.xs.length;
 		const ny = this.lines.ys.length;
-		return drawn.steps.some((key) => {
+		const mark = (other: RoutableEdge): void => {
+			if (other !== edge) {
+				this.overtakenEdges.add(other);
+			}
+		};
+		for (const key of drawn.steps) {
+			this.edgesByStep.get(key)?.forEach(mark);
 			const step = key >> 1;
 			const isHorizontal = (key & 1) === 0;
-			if (
-				(isHorizontal
-					? this.lines.occupiedH[step]
-					: this.lines.occupiedV[step]) > 1
-			) {
-				return true;
-			}
-			// The point the step runs to, crossed where a route runs through it sideways.
 			const xi = isHorizontal
 				? (step % (nx - 1)) + 1
 				: Math.floor(step / (ny - 1));
 			const yi = isHorizontal
 				? Math.floor(step / (nx - 1))
 				: (step % (ny - 1)) + 1;
-			return this.countDrawnCrossingsAt(xi, yi, isHorizontal ? 1 : 2) > 0;
-		});
+			const sideways: [RouteDirection, RouteDirection] = isHorizontal
+				? [0, 2]
+				: [3, 1];
+			const before = stepIndex(this.lines, xi, yi, sideways[0]);
+			const after = stepIndex(this.lines, xi, yi, sideways[1]);
+			if (before < 0 || after < 0) {
+				continue;
+			}
+			const beyond = this.edgesByStep.get(toDrawnStep(after, sideways[1]));
+			if (beyond === undefined) {
+				continue;
+			}
+			for (const other of this.edgesByStep.get(
+				toDrawnStep(before, sideways[0]),
+			) ?? []) {
+				if (beyond.has(other)) {
+					mark(other);
+				}
+			}
+		}
+	}
+
+	/**
+	 * Whether a route drawn after the edge's own runs along it or crosses it: the edge
+	 * was routed without knowing of that one, so routing it again may mend the two.
+	 * False once it is routed again, and for an edge with no route.
+	 *
+	 * @param edge - An edge given to `route` or `reroute` before
+	 */
+	isOvertaken(edge: RoutableEdge): boolean {
+		return this.overtakenEdges.has(edge);
 	}
 
 	/**
@@ -622,14 +670,19 @@ export class EdgeRouter {
 		const drawn = this.drawnRouteByEdge.get(edge);
 		if (drawn !== undefined) {
 			this.drawnRouteByEdge.delete(edge);
-			this.countDrawnRoute(drawn, -1);
+			this.countDrawnRoute(edge, drawn, -1);
 		}
-		const routed = this.route(prepared);
-		if (routed === undefined && drawn !== undefined) {
-			this.countDrawnRoute(drawn, 1);
-			this.drawnRouteByEdge.set(edge, drawn);
+		this.routeTakenBack = drawn;
+		try {
+			const routed = this.route(prepared);
+			if (routed === undefined && drawn !== undefined) {
+				this.countDrawnRoute(edge, drawn, 1, false);
+				this.drawnRouteByEdge.set(edge, drawn);
+			}
+			return routed;
+		} finally {
+			this.routeTakenBack = undefined;
 		}
-		return routed;
 	}
 
 	/** The summed length in px of unit steps given as toDrawnStep numbers. */
@@ -989,7 +1042,15 @@ export class EdgeRouter {
 			xi: graph.nodeXi[state >> 2],
 			yi: graph.nodeYi[state >> 2],
 		}));
-		this.drawnRouteByEdge.set(edge, this.occupy(route, source, target));
+		const drawn = this.occupy(route, source, target);
+		const takenBack = this.routeTakenBack;
+		// Found again where it was, it overtakes no route it had not before.
+		const isWhereItWas =
+			takenBack !== undefined &&
+			takenBack.steps.length === drawn.steps.length &&
+			takenBack.steps.every((key, index) => key === drawn.steps[index]);
+		this.countDrawnRoute(edge, drawn, 1, !isWhereItWas);
+		this.drawnRouteByEdge.set(edge, drawn);
 		const onLines = (point: Point): Point => ({
 			x: snapToGridResolution(point.x),
 			y: snapToGridResolution(point.y),

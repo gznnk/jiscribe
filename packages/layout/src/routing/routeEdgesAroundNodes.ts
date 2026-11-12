@@ -385,7 +385,7 @@ export const routeEdgesAroundNodes = (
 		for (let pass = 0; pass < REROUTE_PASSES; pass += 1) {
 			let hasChanged = false;
 			for (const [edgeToRoute, routed] of routedByEdge) {
-				if (!router.hasConflict(edgeToRoute.edge)) {
+				if (!router.isOvertaken(edgeToRoute.edge)) {
 					continue;
 				}
 				const rerouted = router.reroute(edgeToRoute) ?? routed;
