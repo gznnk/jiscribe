@@ -21,8 +21,8 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   around every other shape, the caption hung below a `"label"` type and a
   container's title, running flush along none of their edges, paying for
   running within its margin (`EDGE_ROUTE_MARGIN`) of them or of a container's
-  frame (the nearer, the dearer) and crossing and running along the routes drawn
-  before it as little as it can; the corners are written as `points` and
+  frame (the nearer, the dearer) and crossing and running along the other routes
+  drawn in the same call as little as it can; the corners are written as `points` and
   `routing` is dropped. It runs once: a shape moved
   afterwards is not followed. Omitted ids redraw every connector; named shapes
   (a group or a container shape standing for its contents) redraw the
@@ -51,7 +51,9 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   (`@jiscribe/layout`): edge by edge in the order given, an A* search over an
   orthogonal visibility graph run from the obstacles' corners, their margins and
   the ends' stubs, first close around the two ends and further out only when
-  no route is found there. A band given as one of
+  no route is found there; once every edge has a route, each is taken back and
+  found again against all the others, up to twice, so an early edge gives way
+  where a later one needed the room. A band given as one of
   `EdgeRoutingOptions.crossableBands` is crossed straight over and neither run
   along nor bent in, its top and bottom sides costing what a border's side does
   (once where a border's side lies on one), and an end's stub stops short of it.

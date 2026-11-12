@@ -153,7 +153,8 @@ type StubOnLines = {
 
 /**
  * Route every edge in turn on shared lines, each on the graph of the obstacles it
- * must keep out of and against the routes drawn before it; see routeEdgesAroundNodes.
+ * must keep out of and against the routes drawn at the time: those before it for
+ * `route`, every other one for `reroute`; see routeEdgesAroundNodes.
  */
 export class EdgeRouter {
 	private readonly lines: RouteLines;
@@ -180,8 +181,11 @@ export class EdgeRouter {
 		string,
 		Map<number, number>
 	>();
-	/** What each routed edge drew, by edge id, for reroute to take back. */
-	private readonly drawnRouteByEdgeId = new Map<string, DrawnRoute>();
+	/**
+	 * What each routed edge drew, for reroute to take back; by the edge itself, ids
+	 * not having to differ.
+	 */
+	private readonly drawnRouteByEdge = new Map<RoutableEdge, DrawnRoute>();
 	/**
 	 * Every unit step drawn so far, in the order drawn, as step × 2 plus 1 for a
 	 * vertical one: what a graph's `drawnCosts` takes in (see applyDrawnSteps).
@@ -577,16 +581,16 @@ export class EdgeRouter {
 	 *   staying drawn
 	 */
 	reroute(prepared: PreparedEdge): RoutedEdge | undefined {
-		const edgeId = prepared.edge.id;
-		const drawn = this.drawnRouteByEdgeId.get(edgeId);
+		const { edge } = prepared;
+		const drawn = this.drawnRouteByEdge.get(edge);
 		if (drawn !== undefined) {
-			this.drawnRouteByEdgeId.delete(edgeId);
+			this.drawnRouteByEdge.delete(edge);
 			this.countDrawnRoute(drawn, -1);
 		}
 		const routed = this.route(prepared);
 		if (routed === undefined && drawn !== undefined) {
 			this.countDrawnRoute(drawn, 1);
-			this.drawnRouteByEdgeId.set(edgeId, drawn);
+			this.drawnRouteByEdge.set(edge, drawn);
 		}
 		return routed;
 	}
@@ -947,7 +951,7 @@ export class EdgeRouter {
 			xi: graph.nodeXi[state >> 2],
 			yi: graph.nodeYi[state >> 2],
 		}));
-		this.drawnRouteByEdgeId.set(edge.id, this.occupy(route, source, target));
+		this.drawnRouteByEdge.set(edge, this.occupy(route, source, target));
 		const onLines = (point: Point): Point => ({
 			x: snapToGridResolution(point.x),
 			y: snapToGridResolution(point.y),
