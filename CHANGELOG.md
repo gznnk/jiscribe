@@ -54,10 +54,10 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   no route is found there; once every edge has a route, each one that a later
   route runs along or crosses is taken back and found again against all the
   others, up to twice, so an early edge gives way where a later one needed the
-  room. An end's stub runs to the middle of a channel between its side and the
-  box facing it (up to four margins wide, six for an end on a declared connect
-  point), so the lines between two columns of boxes bend down the middle. A band given as one of
-  `EdgeRoutingOptions.crossableBands` is crossed straight over and neither run
+  room. An end's stub runs to the middle of a channel between its side and
+  what faces it (up to four margins wide, six for an end on a declared connect
+  point), so the lines between two columns of boxes bend down the middle. A
+  band given as one of `EdgeRoutingOptions.crossableBands` is crossed straight over and neither run
   along nor bent in, its top and bottom sides costing what a border's side does
   (once where a border's side lies on one), and an end's stub stops short of it.
   An end given `RoutableEdge.sourceEnds` / `targetEnds` sits only on one of those

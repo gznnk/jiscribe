@@ -1735,10 +1735,12 @@ describe("routeEdgesAroundNodes", () => {
 				isPinned = false,
 				excludedIds = [],
 				borders = [],
+				crossableBands = [],
 			}: {
 				isPinned?: boolean;
 				excludedIds?: readonly string[];
 				borders?: readonly BoundingBox[];
+				crossableBands?: readonly BoundingBox[];
 			} = {},
 		): number | undefined => {
 			const obstacles = obstaclesOf([node, ...around]);
@@ -1751,7 +1753,7 @@ describe("routeEdgesAroundNodes", () => {
 						excludedIds.includes(ownerId as string),
 					),
 				),
-				[],
+				crossableBands,
 				borders,
 				new Set(),
 				isPinned ? [{ side, t: 0.5 }] : undefined,
@@ -1852,6 +1854,21 @@ describe("routeEdgesAroundNodes", () => {
 			for (const side of ["top", "right", "bottom", "left"] as const) {
 				expect(measureStub(a, side, [offCorner])).toBe(EDGE_ROUTE_MARGIN);
 			}
+		});
+
+		it("takes a crossable band facing the side for the channel's other side, as it takes a box", () => {
+			const a = box("a", 0, 0);
+			// 100px right of a: one straight ahead of the end at y 20, one beside it.
+			const ahead = { left: 160, right: 260, top: 0, bottom: 40 };
+			const beside = { left: 160, right: 260, top: 25, bottom: 35 };
+
+			expect(measureStub(a, "right", [], { crossableBands: [ahead] })).toBe(
+				50 - GAP_LANE_SPACING / 2,
+			);
+			expect(measureStub(a, "right", [], { crossableBands: [beside] })).toBe(
+				50,
+			);
+			expect(measureStub(a, "right", [])).toBe(EDGE_ROUTE_MARGIN);
 		});
 
 		it("runs a pinned end's stub half a lane short of the middle of a channel up to six margins wide", () => {

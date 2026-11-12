@@ -213,10 +213,11 @@ const listExcludedObstacles = (
  * band alongside, which lose a tie to the others, so a second edge between two
  * facing boxes runs straight beside the first. An end's stub runs
  * {@link EDGE_ROUTE_MARGIN} out, a bottom one past the box's caption first; to the
- * middle of a channel between its side and what faces it, where that is no wider than
- * four margins (six for an end given places to sit); and shrinks to half the gap to an
- * obstacle or crossable band straight ahead that is nearer. A box, caption or obstacle covering or overlapping an edge's end box is no
- * obstacle to that edge.
+ * middle of a channel between its side and what faces it, where that is a few margins
+ * wide at the most, more for an end given places to sit; and stops short of an
+ * obstacle or crossable band straight ahead that is nearer (see calcStubLength for
+ * the widths and how short). A box, caption or obstacle covering or overlapping an
+ * edge's end box is no obstacle to that edge.
  *
  * A hollow node (`RoutableNode.isHollow`) is a frame: its box is an obstacle to the
  * edges ending on it alone, whose ends sit on its sides and leave outward, and every

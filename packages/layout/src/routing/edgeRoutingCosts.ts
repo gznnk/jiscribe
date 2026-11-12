@@ -1,7 +1,8 @@
 /**
  * How far in px a route is searched to keep from a box it passes, running nearer
  * costing it the more the nearer (see ROUTE_COSTS), and how far an end runs straight
- * out of its side before the route may bend. Spreading parallel runs and straightening
+ * out of its side before the route may bend, at the least where nothing stands in
+ * its way and further in a channel (see calcStubLength). Spreading parallel runs and straightening
  * jogs once every edge is routed may bring a run nearer a box than this (see
  * nudgeRoutes). A label's spot keeps this far along the route from either end of it
  * (see placeRouteLabels). The canvas's own routing reads it as its
