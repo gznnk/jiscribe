@@ -173,9 +173,9 @@ export class EdgeRouter {
 	/** How many stubs of each end run along each unit step, by end and then step. */
 	private readonly stubStepsByEnd = new Map<string, Map<number, number>>();
 	/**
-	 * Every unit step of the routes drawn to each pinned end, stubs included, by the
-	 * end's key and as toDrawnStep numbers it: what a later route to the same end may
-	 * follow as its bundle.
+	 * How many of the routes drawn to each pinned end run along each unit step, stubs
+	 * included, by the end's key and then the step's toDrawnStep number: what a later
+	 * route to the same end may follow as its bundle.
 	 */
 	private readonly routeStepsByPinnedEnd = new Map<
 		string,
@@ -193,8 +193,9 @@ export class EdgeRouter {
 	/** The edges a route drawn after theirs runs along or crosses; see isOvertaken. */
 	private readonly overtakenEdges = new Set<RoutableEdge>();
 	/**
-	 * Every unit step drawn so far, in the order drawn, as step × 2 plus 1 for a
-	 * vertical one: what a graph's `drawnCosts` takes in (see applyDrawnSteps).
+	 * Every unit step whose count of routes changed so far, drawn or taken back, in
+	 * that order, as step × 2 plus 1 for a vertical one: what a graph's `drawnCosts`
+	 * takes in (see applyDrawnSteps).
 	 */
 	private readonly drawnSteps: number[] = [];
 	/**

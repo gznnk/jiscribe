@@ -478,8 +478,8 @@ const readKeptReason = (
  * on a side of the container's box and leaves outward, the route keeping out of the
  * container (`RoutableNode.isHollow`). The routes are drawn one by one in the order
  * of their ends in the stacking order (sortEdgesByEndOrder), each keeping off the ones
- * drawn before it in this call, and then drawn again against all the others drawn in
- * this call; the connectors not redrawn are not kept off. A label
+ * drawn before it in this call, and one that a later one runs along or crosses then
+ * drawn again against all the others drawn in this call; the connectors not redrawn are not kept off. A label
  * is moved (its `position` and `offset`) to where it covers as little of any shape,
  * and as few of the other labels and of the lines redrawn in the same call, as it
  * can; the connectors not redrawn, and their labels, are not taken into account. A

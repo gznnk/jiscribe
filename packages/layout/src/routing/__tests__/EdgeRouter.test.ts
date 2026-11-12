@@ -230,17 +230,30 @@ describe("EdgeRouter", () => {
 		});
 
 		it("is not raised by a route found again where it was", () => {
-			// "around" shares its stub's line with nothing; "down" runs straight whatever
-			// else is drawn, and routed again where it was it overtakes nothing.
-			const router = createRouter();
-			router.route(down);
-			router.route(around);
-			const before = router.isOvertaken(down.edge);
-			router.reroute(around);
-			router.reroute(down);
+			// Two routes into one pinned spot share their last stretch. Once each has
+			// been routed against the other, routing the first again finds it where it
+			// was, along the second's steps still.
+			const pinned = [{ side: "left", t: 0.5 }] as const;
+			const bundle = prepareScene(
+				[
+					box("s1", -100, -100),
+					box("s2", 250, -200),
+					box("T", 400, 0, 60, 300),
+				],
+				[edge("p1", "s1", "T", pinned), edge("p2", "s2", "T", pinned)],
+			);
+			const p1 = bundle.prepared.get("p1") as PreparedEdge;
+			const p2 = bundle.prepared.get("p2") as PreparedEdge;
+			const router = bundle.createRouter();
+			router.route(p1);
+			router.route(p2);
+			const settled = router.reroute(p1);
+			router.reroute(p2);
 
-			expect(before).toBe(false);
-			expect(router.isOvertaken(around.edge)).toBe(false);
+			expect(router.isOvertaken(p1.edge)).toBe(false);
+			expect(router.isOvertaken(p2.edge)).toBe(false);
+			expect(router.reroute(p1)).toEqual(settled);
+			expect(router.isOvertaken(p2.edge)).toBe(false);
 		});
 
 		it("is false for an edge with no route", () => {
