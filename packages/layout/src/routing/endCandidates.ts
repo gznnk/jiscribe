@@ -70,11 +70,13 @@ const PINNED_STUB_CHANNEL_MARGINS = 6;
  * the side and the nearest obstacle or band facing any stretch of it, where that gap
  * is a channel no wider than `channelMargins` margins, so the routes of two rows or
  * columns of boxes bend down the middle between them; but never past half the gap to
- * an obstacle or a crossable band straight ahead of the end itself, so two facing
- * stubs meet halfway and a stub heading for a band stops short of it, where the route
- * may still bend.
+ * an obstacle or a crossable band straight ahead of the end itself, less half a lane
+ * (GAP_LANE_SPACING) once it is longer than the margin, so two facing stubs stop a
+ * lane apart and a stub heading for a band stops short of it, where the route may
+ * still bend. A border's side beyond the side ends the channel as an obstacle does.
  *
  * @param crossableBands - Stand in the stub's way as obstacles do, for every edge
+ * @param borders - Rects whose sides beyond the side end the channel too
  * @param channelMargins - How wide a gap still counts as a channel, in margins (see
  *   STUB_CHANNEL_MARGINS, PINNED_STUB_CHANNEL_MARGINS)
  * @returns The length, or undefined when an obstacle or band sits on the stretch the
@@ -87,6 +89,7 @@ const calcStubLength = (
 	obstacles: readonly Obstacle[],
 	excluded: ReadonlySet<Obstacle>,
 	crossableBands: readonly BoundingBox[],
+	borders: readonly BoundingBox[],
 	channelMargins: number,
 ): number | undefined => {
 	const box = convertRectToBoundingBox(node.bounds);
@@ -148,9 +151,8 @@ const calcStubLength = (
 			continue;
 		}
 		if (!isAheadOfEnd) {
-			if (near > clearFrom) {
-				facingGap = Math.min(facingGap, near - clearFrom);
-			}
+			// One against the side, or beside the caption, leaves no channel at all.
+			facingGap = Math.min(facingGap, Math.max(near - clearFrom, 0));
 			continue;
 		}
 		if (near < clearFrom || isSameCoordinate(near, clearFrom)) {
@@ -159,12 +161,46 @@ const calcStubLength = (
 		nearestGap = Math.min(nearestGap, near - clearFrom);
 		facingGap = Math.min(facingGap, near - clearFrom);
 	}
-	// In a channel between this side and what faces it, the stub reaches the middle.
+	// A border's side lying beyond the side ends the channel as an obstacle would, so
+	// no stub is lengthened across a frame.
+	const isVerticalSide = side === "top" || side === "bottom";
+	for (const border of borders) {
+		const isFacing = isVerticalSide
+			? border.left < box.right && box.left < border.right
+			: border.top < box.bottom && box.top < border.bottom;
+		if (!isFacing) {
+			continue;
+		}
+		const sideEdge = {
+			top: box.top,
+			right: box.right,
+			bottom: box.bottom,
+			left: box.left,
+		}[side];
+		const outward = side === "bottom" || side === "right" ? 1 : -1;
+		for (const borderSide of isVerticalSide
+			? [border.top, border.bottom]
+			: [border.left, border.right]) {
+			const gap = (borderSide - sideEdge) * outward - clearFrom;
+			if (gap > 0) {
+				facingGap = Math.min(facingGap, gap);
+			}
+		}
+	}
+	// In a channel between this side and what faces it, the stub reaches the middle;
+	// less half a lane where something stands straight ahead, so the stub of an end
+	// facing it across the channel does not run into this one's.
 	const reach =
 		facingGap <= EDGE_ROUTE_MARGIN * channelMargins
 			? Math.max(EDGE_ROUTE_MARGIN, facingGap / 2)
 			: EDGE_ROUTE_MARGIN;
-	return clearFrom + Math.min(reach, nearestGap / 2);
+	return (
+		clearFrom +
+		Math.max(
+			Math.min(EDGE_ROUTE_MARGIN, nearestGap / 2),
+			Math.min(reach, (nearestGap - GAP_LANE_SPACING) / 2),
+		)
+	);
 };
 
 const offsetPoint = (
@@ -258,6 +294,7 @@ export const listEndCandidates = (
 			obstacles,
 			excluded,
 			crossableBands,
+			borders,
 			isPinned ? PINNED_STUB_CHANNEL_MARGINS : STUB_CHANNEL_MARGINS,
 		);
 		if (stubLength === undefined) {

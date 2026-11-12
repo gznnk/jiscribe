@@ -1,4 +1,9 @@
-import type { BoundingBox, Point, Rect } from "@jiscribe/geometry";
+import {
+	type BoundingBox,
+	convertRectToBoundingBox,
+	type Point,
+	type Rect,
+} from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
 import { calcAnchorPoint } from "../../shared/calcAnchorPoint";
@@ -7,6 +12,7 @@ import type { LayoutEdgeAnchor, LayoutSide } from "../../shared/types";
 import { EDGE_ROUTE_MARGIN } from "../edgeRoutingCosts";
 import { listContendedSideKeys, listEndCandidates } from "../endCandidates";
 import { routeEdgesAroundNodes } from "../routeEdgesAroundNodes";
+import type { Obstacle } from "../search/EdgeRouter";
 import type { RoutableNode, RoutedEdge } from "../types";
 
 const box = (
@@ -1695,6 +1701,166 @@ describe("routeEdgesAroundNodes", () => {
 					"bottom",
 				),
 			).toEqual([46 / 60]);
+		});
+	});
+
+	describe("an end's stub in a channel", () => {
+		/** The edge's other end, lying where it faces none of the sides measured. */
+		const elsewhere = box("elsewhere", 1000, 1000);
+
+		/** The boxes' and captions' obstacles, as routeEdgesAroundNodes makes them. */
+		const obstaclesOf = (nodes: readonly RoutableNode[]): Obstacle[] =>
+			nodes
+				.flatMap((node) => [
+					{ rect: node.bounds, ownerId: node.id, isLabel: false },
+					...(node.labelBounds === undefined
+						? []
+						: [{ rect: node.labelBounds, ownerId: node.id, isLabel: true }]),
+				])
+				.map((obstacle, index) => ({
+					...obstacle,
+					index,
+					box: convertRectToBoundingBox(obstacle.rect),
+				}));
+
+		/**
+		 * How far the stub of `node`'s end at the centre of `side` runs out of the box
+		 * with `around` standing beside it; undefined when that end is not offered.
+		 */
+		const measureStub = (
+			node: RoutableNode,
+			side: LayoutSide,
+			around: readonly RoutableNode[],
+			{
+				isPinned = false,
+				excludedIds = [],
+			}: { isPinned?: boolean; excludedIds?: readonly string[] } = {},
+		): number | undefined => {
+			const obstacles = obstaclesOf([node, ...around]);
+			const candidate = listEndCandidates(
+				node,
+				elsewhere,
+				obstacles,
+				new Set(
+					obstacles.filter(({ ownerId }) =>
+						excludedIds.includes(ownerId as string),
+					),
+				),
+				[],
+				[],
+				new Set(),
+				isPinned ? [{ side, t: 0.5 }] : undefined,
+			).find((end) => end.side === side && end.t === 0.5);
+			return candidate === undefined
+				? undefined
+				: Math.abs(candidate.tip.x - candidate.anchor.x) +
+						Math.abs(candidate.tip.y - candidate.anchor.y);
+		};
+
+		/** A box `gap` px right of a box at the origin, its side facing a's right side. */
+		const facingRight = (gap: number, y = 0): RoutableNode =>
+			box("b", 60 + gap, y);
+
+		it("runs both stubs to the middle of a channel, where a route that has to cross it bends", () => {
+			const a = box("a", 0, 0);
+			const b = facingRight(100);
+
+			expect(measureStub(a, "right", [b])).toBe(50);
+			expect(measureStub(b, "left", [a])).toBe(50);
+
+			// Two columns facing across x 60 to 160.
+			const nodes = [a, b, box("c", 0, 200), box("d", 160, 200)];
+			const result = routeEdgesAroundNodes(nodes, [edge("e", "a", "d")]);
+			expect(result.edges[0]).toMatchObject({
+				source: { side: "right", t: 0.5 },
+				target: { side: "left", t: 0.5 },
+				points: [
+					{ x: 110, y: 20 },
+					{ x: 110, y: 220 },
+				],
+			});
+		});
+
+		it("runs a free end's stub to the middle of a channel up to four margins wide, and the margin out of a wider one", () => {
+			const a = box("a", 0, 0);
+
+			expect(measureStub(a, "right", [facingRight(80)])).toBe(40);
+			expect(measureStub(a, "right", [facingRight(120)])).toBe(60);
+			expect(measureStub(a, "right", [facingRight(121)])).toBe(
+				EDGE_ROUTE_MARGIN,
+			);
+			expect(measureStub(a, "right", [facingRight(200)])).toBe(
+				EDGE_ROUTE_MARGIN,
+			);
+		});
+
+		it("takes a box facing some stretch of the side, though not the end's own spot, for the channel's other side", () => {
+			const a = box("a", 0, 0);
+
+			// Its top at y 25 is below the end at y 20 but above a's bottom at y 40.
+			expect(measureStub(a, "right", [facingRight(100, 25)])).toBe(50);
+			// Its top level with a's bottom, it faces no stretch of the side.
+			expect(measureStub(a, "right", [facingRight(100, 40)])).toBe(
+				EDGE_ROUTE_MARGIN,
+			);
+		});
+
+		it("runs the margin out of a side nothing faces", () => {
+			const a = box("a", 0, 0);
+			// Off to the right and below, beside neither side's stretch.
+			const offCorner = box("b", 160, 100);
+
+			for (const side of ["top", "right", "bottom", "left"] as const) {
+				expect(measureStub(a, side, [offCorner])).toBe(EDGE_ROUTE_MARGIN);
+			}
+		});
+
+		it("runs a pinned end's stub to the middle of a channel up to six margins wide", () => {
+			const a = box("a", 0, 0);
+			const measurePinned = (gap: number) =>
+				measureStub(a, "right", [facingRight(gap)], { isPinned: true });
+
+			expect(measurePinned(150)).toBe(75);
+			expect(measurePinned(180)).toBe(90);
+			expect(measurePinned(181)).toBe(EDGE_ROUTE_MARGIN);
+			expect(measureStub(a, "right", [facingRight(150)])).toBe(
+				EDGE_ROUTE_MARGIN,
+			);
+		});
+
+		it("halves the stub to an obstacle straight ahead nearer than the box facing it, and drops the end flush against one", () => {
+			const a = box("a", 0, 0);
+			const b = facingRight(100);
+
+			// 40px and 70px off a's right side, across the end's line at y 20.
+			expect(measureStub(a, "right", [b, box("x", 100, 10, 20, 20)])).toBe(20);
+			expect(measureStub(a, "right", [b, box("x", 130, 10, 20, 20)])).toBe(35);
+			expect(
+				measureStub(a, "right", [b, box("x", 60, 10, 20, 20)]),
+			).toBeUndefined();
+		});
+
+		it("measures a bottom end's channel from the far edge of the caption it runs through", () => {
+			// The caption ends 24px below the box; b lies 100px below the caption.
+			const caption = { x: -10, y: 44, width: 80, height: 20 };
+			const b = box("b", 0, 164);
+
+			expect(
+				measureStub({ ...box("a", 0, 0), labelBounds: caption }, "bottom", [b]),
+			).toBe(24 + 50);
+			// 124px below the box alone is wider than the channel a free end reaches across.
+			expect(measureStub(box("a", 0, 0), "bottom", [b])).toBe(
+				EDGE_ROUTE_MARGIN,
+			);
+		});
+
+		it("does not take an obstacle the edge runs through for the channel's other side", () => {
+			const a = box("a", 0, 0);
+			const b = facingRight(100);
+
+			expect(measureStub(a, "right", [b], { excludedIds: ["b"] })).toBe(
+				EDGE_ROUTE_MARGIN,
+			);
 		});
 	});
 });

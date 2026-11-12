@@ -134,7 +134,9 @@ describe("EdgeRouter", () => {
 		const nodes = [
 			box("a", 0, 0),
 			box("b", 300, 0),
-			box("u", 150, -120),
+			// Far enough above m that m's top stub, which "detour" ends on, stays one
+			// margin long and so on the line "around" first ran along.
+			box("u", 150, -180),
 			box("m", 150, 0),
 			box("p", -150, 0),
 		];
