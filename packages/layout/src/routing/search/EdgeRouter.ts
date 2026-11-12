@@ -188,6 +188,11 @@ export class EdgeRouter {
 	private readonly drawnRouteByEdge = new Map<RoutableEdge, DrawnRoute>();
 	/** The edges whose routes run along each unit step, by toDrawnStep number. */
 	private readonly edgesByStep = new Map<number, Set<RoutableEdge>>();
+	/**
+	 * How many states every search so far took off its queue in all: a measure of the
+	 * work done that does not depend on the machine.
+	 */
+	searchedStateCount = 0;
 	/** What reroute took back of the edge it is routing again; undefined otherwise. */
 	private routeTakenBack: DrawnRoute | undefined;
 	/** The edges a route drawn after theirs runs along or crosses; see isOvertaken. */
@@ -938,6 +943,7 @@ export class EdgeRouter {
 		});
 
 		while (queue.pop()) {
+			this.searchedStateCount += 1;
 			const state = queue.poppedState;
 			const g = queue.poppedG;
 			if (state < 0) {

@@ -96,6 +96,20 @@ const toRouteEnd = (
 /** How many times at most every route is taken back and found again against the others. */
 const REROUTE_PASSES = 2;
 
+/**
+ * How much search work the routing again may take, as a share of what routing every
+ * edge once took (EdgeRouter.searchedStateCount), so a large drawing takes at most
+ * that much longer; past it the routes stay as they are.
+ */
+const REROUTE_WORK_SHARE = 0.5;
+
+/**
+ * The search work the routing again may take whatever the share allows, in states
+ * searched: several times what a drawing of some fifty edges takes to route once, so
+ * a drawing of that size is routed again until it settles or the passes run out.
+ */
+const REROUTE_WORK_FLOOR = 100_000;
+
 const isSameRoute = (a: RoutedEdge, b: RoutedEdge): boolean =>
 	a.source.side === b.source.side &&
 	a.source.t === b.source.t &&
@@ -381,9 +395,18 @@ export const routeEdgesAroundNodes = (
 			}
 			routedByEdge.set(edgeToRoute, routed);
 		}
+		const searchedStateBudget =
+			router.searchedStateCount +
+			Math.max(
+				router.searchedStateCount * REROUTE_WORK_SHARE,
+				REROUTE_WORK_FLOOR,
+			);
 		for (let pass = 0; pass < REROUTE_PASSES; pass += 1) {
 			let hasChanged = false;
 			for (const [edgeToRoute, routed] of routedByEdge) {
+				if (router.searchedStateCount >= searchedStateBudget) {
+					break;
+				}
 				if (!router.isOvertaken(edgeToRoute.edge)) {
 					continue;
 				}
