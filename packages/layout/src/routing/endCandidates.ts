@@ -55,16 +55,28 @@ export const isOwnWall = (
  * or columns of boxes, not open ground.
  */
 const STUB_CHANNEL_MARGINS = 4;
+
+/**
+ * The same for an end held to given places (see RoutableEdge.sourceEnds): wider, since
+ * the routes to such ends gather into trunks, which read best down the middle of a
+ * channel, and the shapes that give them (an ER entity's columns) carry end markers a
+ * bend close to the side would run over.
+ */
 const PINNED_STUB_CHANNEL_MARGINS = 6;
 
 /**
  * How far the stub of an end at `anchor` on `side` runs: {@link EDGE_ROUTE_MARGIN}
- * past the box, or past its caption on a bottom side, but half the gap to an
- * obstacle or a crossable band straight ahead nearer than that, so two facing stubs
- * meet halfway and a stub heading for a band stops short of it, where the route may
- * still bend.
+ * past the box, or past its caption on a bottom side; to the middle of the gap between
+ * the side and the nearest obstacle or band facing any stretch of it, where that gap
+ * is a channel no wider than `channelMargins` margins, so the routes of two rows or
+ * columns of boxes bend down the middle between them; but never past half the gap to
+ * an obstacle or a crossable band straight ahead of the end itself, so two facing
+ * stubs meet halfway and a stub heading for a band stops short of it, where the route
+ * may still bend.
  *
  * @param crossableBands - Stand in the stub's way as obstacles do, for every edge
+ * @param channelMargins - How wide a gap still counts as a channel, in margins (see
+ *   STUB_CHANNEL_MARGINS, PINNED_STUB_CHANNEL_MARGINS)
  * @returns The length, or undefined when an obstacle or band sits on the stretch the
  *   stub must cross (between the box and the end of its caption) or right against it
  */
