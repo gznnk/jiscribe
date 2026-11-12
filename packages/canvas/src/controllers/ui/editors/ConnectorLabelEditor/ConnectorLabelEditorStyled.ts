@@ -9,6 +9,14 @@ import { TEXT_LINE_HEIGHT } from "@jiscribe/doc/text/layout/textLineHeight";
 import { LABEL_BOX_CORNER_RADIUS } from "../../../../rendering/objects/connector/ConnectorLabel/ConnectorLabelStyled";
 
 /**
+ * The custom property carrying the box's border width to the backdrop and the
+ * redrawn border, which reach past the padding box by that much. Set inline by
+ * ConnectorLabelEditor whenever `hasBackdrop` is, so it is read with no fallback.
+ */
+export const LABEL_EDITOR_BORDER_WIDTH_VAR =
+	"--jiscribe-label-editor-border-width";
+
+/**
  * Wrapper centered on the anchor (the label position along the route).
  * The width is given as a measured value and centered via translate(-50%, -50%);
  * the height follows its content.
@@ -19,14 +27,6 @@ import { LABEL_BOX_CORNER_RADIUS } from "../../../../rendering/objects/connector
  * keystroke via text measurement, so they are passed via the `style` prop
  * instead of emotion interpolation (see #131).
  */
-/**
- * The custom property carrying the box's border width to the backdrop and the
- * redrawn border, which reach past the padding box by that much. Set inline by
- * ConnectorLabelEditor whenever `hasBackdrop` is, so it is read with no fallback.
- */
-export const LABEL_EDITOR_BORDER_WIDTH_VAR =
-	"--jiscribe-label-editor-border-width";
-
 export const ConnectorLabelEditorWrapper = styled.div<{
 	/**
 	 * True while the box lies on a frame's backdrop (ConnectorLabelEditorBackdrop
