@@ -189,8 +189,9 @@ export class EdgeRouter {
 	/** The edges whose routes run along each unit step, by toDrawnStep number. */
 	private readonly edgesByStep = new Map<number, Set<RoutableEdge>>();
 	/**
-	 * How many states every search so far took off its queue in all: a measure of the
-	 * work done that does not depend on the machine.
+	 * How many states every search so far took off its queue in all, plus the states
+	 * of every graph built: a measure of the work done that does not depend on the
+	 * machine.
 	 */
 	searchedStateCount = 0;
 	/** What reroute took back of the edge it is routing again; undefined otherwise. */
@@ -249,6 +250,8 @@ export class EdgeRouter {
 				this.crossableBands,
 			);
 			const stateCount = graph.nodeXi.length * 4;
+			// Building a graph is work as searching one is: a state built counts as one searched.
+			this.searchedStateCount += stateCount;
 			for (const [keptKey, keptGraph] of this.graphs) {
 				if (this.keptStateCount + stateCount <= MAX_KEPT_GRAPH_STATES) {
 					break;
