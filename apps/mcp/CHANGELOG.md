@@ -21,7 +21,9 @@ covers that.
   drawing whose shapes you placed yourself: each line gets the sides and the
   right-angled route that go around the other shapes, the labels below icons
   and the titles of containers (the rest of a title band it crosses straight
-  over) without hugging their edges or a container's frame, crossing and running along the other lines as little as it can; each
+  over) without hugging their edges or a container's frame, staying inside the
+  container both its ends stand in, crossing and running along the other lines
+  as little as it can; each
   line's label is moved to where it covers as little of any shape, and as few
   of the other labels and of the lines redrawn in the same call, as it can. An
   end on an ER entity's column is redrawn from that column, from whichever end

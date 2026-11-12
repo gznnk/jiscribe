@@ -25,6 +25,9 @@ export const isHorizontalDirection = (direction: RouteDirection): boolean =>
  */
 const GRID_RESOLUTION = 1024;
 
+/** How far apart in px two neighbouring coordinates on the lines' resolution lie. */
+export const GRID_STEP = 1 / GRID_RESOLUTION;
+
 /** `value` on the lines' resolution (see GRID_RESOLUTION). */
 export const snapToGridResolution = (value: number): number =>
 	Math.round(value * GRID_RESOLUTION) / GRID_RESOLUTION;

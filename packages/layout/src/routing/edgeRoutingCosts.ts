@@ -24,6 +24,11 @@ export const ROUTE_COSTS = {
 	borderCrossing: 60,
 	overlapPerPx: 4,
 	bandPerPx: 3,
+	/**
+	 * What the weight of a point nearer a box than a third of the margin gains on top:
+	 * this much against the box, falling to 0 at that third, so a run that would read
+	 * as touching the box takes a jog instead. The borders' weights gain nothing.
+	 */
 	hugWeight: 4,
 	/**
 	 * What a px costs along a route already drawn to the same pinned end (a bundle),

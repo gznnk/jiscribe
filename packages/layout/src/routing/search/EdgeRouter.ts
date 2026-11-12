@@ -22,6 +22,7 @@ import {
 	oppositeDirection,
 	pointIndex,
 	snapToGridResolution,
+	GRID_STEP,
 	stepIndex,
 } from "./RouteGrid";
 import { RouteSearchQueue } from "./RouteSearchQueue";
@@ -76,8 +77,9 @@ export type PreparedEdge = {
 	sources: EndCandidate[];
 	targets: EndCandidate[];
 	/**
-	 * The innermost border both end boxes lie inside: the route stays inside it where a
-	 * way is found there. Undefined when no border holds both ends.
+	 * The innermost border both end boxes lie inside: the route stays strictly inside
+	 * it, off its outline, where a way is found there, even when a cheaper one runs
+	 * outside. Undefined when no border holds both ends.
 	 */
 	home?: BoundingBox;
 };
@@ -756,7 +758,15 @@ export class EdgeRouter {
 		const { xs, ys } = this.lines;
 		const { home } = prepared;
 		if (home !== undefined) {
-			// Inside the border both ends share first, wider and wider up to all of it.
+			// Inside the border both ends share first, wider and wider up to all of it;
+			// strictly inside, since the nudging lets a run lying on a border's side off
+			// it either way.
+			const inside = {
+				left: snapToGridResolution(home.left) + GRID_STEP,
+				top: snapToGridResolution(home.top) + GRID_STEP,
+				right: snapToGridResolution(home.right) - GRID_STEP,
+				bottom: snapToGridResolution(home.bottom) - GRID_STEP,
+			};
 			for (let reach = SEARCH_WINDOW_REACH; ; reach *= SEARCH_WINDOW_GROWTH) {
 				const window = growBox(around, reach);
 				const coversHome =
@@ -768,10 +778,10 @@ export class EdgeRouter {
 					prepared,
 					graph,
 					{
-						left: Math.max(window.left, home.left),
-						top: Math.max(window.top, home.top),
-						right: Math.min(window.right, home.right),
-						bottom: Math.min(window.bottom, home.bottom),
+						left: Math.max(window.left, inside.left),
+						top: Math.max(window.top, inside.top),
+						right: Math.min(window.right, inside.right),
+						bottom: Math.min(window.bottom, inside.bottom),
 					},
 					bundleSteps,
 				);

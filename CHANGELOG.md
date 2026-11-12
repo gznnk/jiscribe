@@ -57,6 +57,9 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   room. An end's stub runs to the middle of a channel between its side and
   what faces it (up to four margins wide, six for an end on a declared connect
   point), so the lines between two columns of boxes bend down the middle. A
+  route between two boxes inside one border stays inside the innermost such
+  border where it finds a way there, and a run within a third of the margin of
+  a box costs much more (`ROUTE_COSTS.hugWeight`). A
   band given as one of `EdgeRoutingOptions.crossableBands` is crossed straight over and neither run
   along nor bent in, its top and bottom sides costing what a border's side does
   (once where a border's side lies on one), and an end's stub stops short of it.

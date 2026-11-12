@@ -125,17 +125,15 @@ const isSameRoute = (a: RoutedEdge, b: RoutedEdge): boolean =>
 
 /**
  * The innermost of `borders` that both nodes' boxes lie inside, their sides touching
- * included, as a prepared edge's `home`; nothing when none holds both, or when one of
- * the two is hollow and so a frame itself.
+ * included, as a prepared edge's `home`; nothing when none holds both. A hollow node's
+ * own frame never holds the other end of an edge that reaches the router with a way to
+ * go, so it needs no leaving out.
  */
 const findHome = (
 	borders: readonly BoundingBox[],
 	source: RoutableNode,
 	target: RoutableNode,
 ): { home?: BoundingBox } => {
-	if (source.isHollow === true || target.isHollow === true) {
-		return {};
-	}
 	const around = unionBoundingBoxes([
 		convertRectToBoundingBox(source.bounds),
 		convertRectToBoundingBox(target.bounds),
@@ -214,7 +212,8 @@ const listExcludedObstacles = (
  * box but its own ends' — not even there, past the stub each end runs straight out
  * along — nor any caption or other obstacle, and runs flush along none of their edges.
  * Running within {@link EDGE_ROUTE_MARGIN} of them or of the borders' sides costs it,
- * the nearer the dearer, and it crosses and runs along the routes drawn before it as
+ * the nearer the dearer and much dearer within a third of that of a box, and it
+ * crosses and runs along the routes drawn before it as
  * little as it can. Edges are routed one by one in the order given, each against the
  * routes of the edges before it; then, up to REROUTE_PASSES times and as long as a
  * route changes, each route that one drawn after it runs along or crosses is taken
@@ -254,6 +253,11 @@ const listExcludedObstacles = (
  * obstacle or crossable band straight ahead that is nearer (see calcStubLength for
  * the widths and how short). A box, caption or obstacle covering or overlapping an
  * edge's end box is no obstacle to that edge.
+ *
+ * An edge whose two end boxes lie inside one of the borders stays strictly inside
+ * the innermost such border where a route is found there, though a cheaper one runs
+ * outside: it does not leave the frame its ends share to get round what stands
+ * between them.
  *
  * A hollow node (`RoutableNode.isHollow`) is a frame: its box is an obstacle to the
  * edges ending on it alone, whose ends sit on its sides and leave outward, and every
