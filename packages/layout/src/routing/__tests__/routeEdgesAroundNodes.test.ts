@@ -12,7 +12,7 @@ import type { LayoutEdgeAnchor, LayoutSide } from "../../shared/types";
 import { EDGE_ROUTE_MARGIN } from "../edgeRoutingCosts";
 import { listContendedSideKeys, listEndCandidates } from "../endCandidates";
 import { routeEdgesAroundNodes } from "../routeEdgesAroundNodes";
-import type { Obstacle } from "../search/EdgeRouter";
+import type { EndCandidate, Obstacle } from "../search/EdgeRouter";
 import type { RoutableNode, RoutedEdge } from "../types";
 
 const box = (
@@ -1734,7 +1734,12 @@ describe("routeEdgesAroundNodes", () => {
 			{
 				isPinned = false,
 				excludedIds = [],
-			}: { isPinned?: boolean; excludedIds?: readonly string[] } = {},
+				borders = [],
+			}: {
+				isPinned?: boolean;
+				excludedIds?: readonly string[];
+				borders?: readonly BoundingBox[];
+			} = {},
 		): number | undefined => {
 			const obstacles = obstaclesOf([node, ...around]);
 			const candidate = listEndCandidates(
@@ -1747,7 +1752,7 @@ describe("routeEdgesAroundNodes", () => {
 					),
 				),
 				[],
-				[],
+				borders,
 				new Set(),
 				isPinned ? [{ side, t: 0.5 }] : undefined,
 			).find((end) => end.side === side && end.t === 0.5);
@@ -1761,31 +1766,64 @@ describe("routeEdgesAroundNodes", () => {
 		const facingRight = (gap: number, y = 0): RoutableNode =>
 			box("b", 60 + gap, y);
 
-		it("runs both stubs to the middle of a channel, where a route that has to cross it bends", () => {
-			const a = box("a", 0, 0);
-			const b = facingRight(100);
+		// Two columns facing across x 60 to 160.
+		const columns = [
+			box("a", 0, 0),
+			facingRight(100),
+			box("c", 0, 200),
+			box("d", 160, 200),
+		];
 
-			expect(measureStub(a, "right", [b])).toBe(50);
-			expect(measureStub(b, "left", [a])).toBe(50);
+		it("runs a stub facing a box across a channel to half a lane short of its middle, where a route that has to cross it bends", () => {
+			const [a, b] = columns;
 
-			// Two columns facing across x 60 to 160.
-			const nodes = [a, b, box("c", 0, 200), box("d", 160, 200)];
-			const result = routeEdgesAroundNodes(nodes, [edge("e", "a", "d")]);
+			expect(measureStub(a, "right", [b])).toBe(50 - GAP_LANE_SPACING / 2);
+			expect(measureStub(b, "left", [a])).toBe(50 - GAP_LANE_SPACING / 2);
+
+			// At the tip of d's stub, x 118.
+			const result = routeEdgesAroundNodes(columns, [edge("e", "a", "d")]);
 			expect(result.edges[0]).toMatchObject({
 				source: { side: "right", t: 0.5 },
 				target: { side: "left", t: 0.5 },
 				points: [
-					{ x: 110, y: 20 },
-					{ x: 110, y: 220 },
+					{ x: 118, y: 20 },
+					{ x: 118, y: 220 },
 				],
 			});
 		});
 
-		it("runs a free end's stub to the middle of a channel up to four margins wide, and the margin out of a wider one", () => {
+		it("stops two stubs facing each other on one line a lane apart, and so the corners of two edges crossing the channel", () => {
+			const [a, b, c, d] = columns;
+			const tipOf = (node: RoutableNode, side: LayoutSide): Point =>
+				(
+					listEndCandidates(
+						node,
+						elsewhere,
+						obstaclesOf(columns),
+						new Set(),
+						[],
+						[],
+						new Set(),
+					).find((end) => end.side === side && end.t === 0.5) as EndCandidate
+				).tip;
+
+			expect(tipOf(a, "right")).toEqual({ x: 102, y: 20 });
+			expect(tipOf(b, "left")).toEqual({ x: 118, y: 20 });
+
+			const result = routeEdgesAroundNodes(columns, [
+				edge("down", a.id, d.id),
+				edge("up", b.id, c.id),
+			]);
+			const [down, up] = result.edges;
+			expect(down.points[0]).toEqual({ x: 98, y: 20 });
+			expect(up.points[0]).toEqual({ x: 114, y: 20 });
+		});
+
+		it("runs a free end's stub half a lane short of the middle of a channel up to four margins wide, and the margin out of a wider one", () => {
 			const a = box("a", 0, 0);
 
-			expect(measureStub(a, "right", [facingRight(80)])).toBe(40);
-			expect(measureStub(a, "right", [facingRight(120)])).toBe(60);
+			expect(measureStub(a, "right", [facingRight(80)])).toBe(32);
+			expect(measureStub(a, "right", [facingRight(120)])).toBe(52);
 			expect(measureStub(a, "right", [facingRight(121)])).toBe(
 				EDGE_ROUTE_MARGIN,
 			);
@@ -1794,10 +1832,11 @@ describe("routeEdgesAroundNodes", () => {
 			);
 		});
 
-		it("takes a box facing some stretch of the side, though not the end's own spot, for the channel's other side", () => {
+		it("runs to the very middle of a channel whose other side faces some stretch of the side but not the end's own spot", () => {
 			const a = box("a", 0, 0);
 
-			// Its top at y 25 is below the end at y 20 but above a's bottom at y 40.
+			// Its top at y 25 is below the end at y 20 but above a's bottom at y 40, so
+			// no stub stands straight ahead to keep a lane off.
 			expect(measureStub(a, "right", [facingRight(100, 25)])).toBe(50);
 			// Its top level with a's bottom, it faces no stretch of the side.
 			expect(measureStub(a, "right", [facingRight(100, 40)])).toBe(
@@ -1815,26 +1854,29 @@ describe("routeEdgesAroundNodes", () => {
 			}
 		});
 
-		it("runs a pinned end's stub to the middle of a channel up to six margins wide", () => {
+		it("runs a pinned end's stub half a lane short of the middle of a channel up to six margins wide", () => {
 			const a = box("a", 0, 0);
 			const measurePinned = (gap: number) =>
 				measureStub(a, "right", [facingRight(gap)], { isPinned: true });
 
-			expect(measurePinned(150)).toBe(75);
-			expect(measurePinned(180)).toBe(90);
+			expect(measurePinned(150)).toBe(67);
+			expect(measurePinned(180)).toBe(82);
 			expect(measurePinned(181)).toBe(EDGE_ROUTE_MARGIN);
 			expect(measureStub(a, "right", [facingRight(150)])).toBe(
 				EDGE_ROUTE_MARGIN,
 			);
 		});
 
-		it("halves the stub to an obstacle straight ahead nearer than the box facing it, and drops the end flush against one", () => {
+		it("halves the stub to an obstacle straight ahead nearer than two margins, keeps the margin to one a little farther, and drops the end flush against one", () => {
 			const a = box("a", 0, 0);
 			const b = facingRight(100);
 
-			// 40px and 70px off a's right side, across the end's line at y 20.
+			// 40px and 70px off a's right side, across the end's line at y 20: half the
+			// latter less half a lane falls short of the margin.
 			expect(measureStub(a, "right", [b, box("x", 100, 10, 20, 20)])).toBe(20);
-			expect(measureStub(a, "right", [b, box("x", 130, 10, 20, 20)])).toBe(35);
+			expect(measureStub(a, "right", [b, box("x", 130, 10, 20, 20)])).toBe(
+				EDGE_ROUTE_MARGIN,
+			);
 			expect(
 				measureStub(a, "right", [b, box("x", 60, 10, 20, 20)]),
 			).toBeUndefined();
@@ -1847,7 +1889,7 @@ describe("routeEdgesAroundNodes", () => {
 
 			expect(
 				measureStub({ ...box("a", 0, 0), labelBounds: caption }, "bottom", [b]),
-			).toBe(24 + 50);
+			).toBe(24 + 50 - GAP_LANE_SPACING / 2);
 			// 124px below the box alone is wider than the channel a free end reaches across.
 			expect(measureStub(box("a", 0, 0), "bottom", [b])).toBe(
 				EDGE_ROUTE_MARGIN,
@@ -1861,6 +1903,47 @@ describe("routeEdgesAroundNodes", () => {
 			expect(measureStub(a, "right", [b], { excludedIds: ["b"] })).toBe(
 				EDGE_ROUTE_MARGIN,
 			);
+		});
+
+		it("keeps a stub the margin long where a border's side lies nearer than the box facing it", () => {
+			const a = box("a", 0, 0);
+			const b = facingRight(100);
+
+			// A frame round a whose right side lies 40px past a's, b outside it.
+			expect(
+				measureStub(a, "right", [b], {
+					borders: [{ left: -50, top: -50, right: 100, bottom: 100 }],
+				}),
+			).toBe(EDGE_ROUTE_MARGIN);
+			// Its left side is as near, but it lies wholly below a, beside no stretch of
+			// a's right side.
+			expect(
+				measureStub(a, "right", [b], {
+					borders: [{ left: 100, top: 100, right: 300, bottom: 200 }],
+				}),
+			).toBe(50 - GAP_LANE_SPACING / 2);
+		});
+
+		it("keeps a stub the margin long where an obstacle stands against the side beside the end, or beside a bottom end's caption", () => {
+			const a = box("a", 0, 0);
+
+			// Against a's right side from y 25 to 35, below the end at y 20.
+			expect(
+				measureStub(a, "right", [facingRight(100), box("x", 60, 25, 20, 10)]),
+			).toBe(EDGE_ROUTE_MARGIN);
+
+			// The caption ends 24px below the box; x stands 10px below the box, left
+			// of the end at x 30, and b 100px below the caption.
+			const captioned = {
+				...box("a", 0, 0),
+				labelBounds: { x: -10, y: 44, width: 80, height: 20 },
+			};
+			expect(
+				measureStub(captioned, "bottom", [
+					box("b", 0, 164),
+					box("x", 0, 50, 20, 10),
+				]),
+			).toBe(24 + EDGE_ROUTE_MARGIN);
 		});
 	});
 });
