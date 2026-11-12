@@ -35,7 +35,8 @@ type LabelBackgroundRowProps = {
  * The face of a label's box, for whichever label `property` names. Unset it
  * knocks out what lies behind with the page's color rather than with a color of
  * its own, so its swatch is what resolveLabelFill gives rather than the
- * `canvas` role's theme color.
+ * `canvas` role's theme color. The swatch leaves out the fills of the frames a
+ * label lies on, which differ from one label of a selection to the next.
  */
 const LabelBackgroundRowComponent: React.FC<LabelBackgroundRowProps> = ({
 	property,

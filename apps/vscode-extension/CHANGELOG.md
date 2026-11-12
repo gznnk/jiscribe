@@ -44,8 +44,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **The label below those shapes hides what lies under it.** It is painted on
-  the page's color by default, so a connector running under an icon's label no
-  longer shows through it, in exported images too. Pick a transparent label
+  the page's color by default, or on the fill of the container or AWS group it
+  sits in, so a connector running under an icon's label no longer shows through
+  it, in exported images too. A connector's label sitting in a filled container
+  or AWS group takes its fill the same way. Pick a transparent label
   background color to see through it again. A vertical text alignment saved on
   one of them is dropped when the file opens, having never moved the label.
 - **The Icon and AWS sections of the shape library can show every icon.**

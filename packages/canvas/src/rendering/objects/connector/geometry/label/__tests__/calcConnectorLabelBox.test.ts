@@ -4,7 +4,10 @@ import { describe, expect, it } from "vitest";
 
 import {
 	calcConnectorLabelBox,
+	placeConnectorLabelBox,
+	resolveConnectorLabelAnchor,
 	resolveConnectorLabelBox,
+	resolveConnectorLabelMetrics,
 	type ConnectorLabelFont,
 } from "../connectorLabelLayout";
 
@@ -89,5 +92,40 @@ describe("resolveConnectorLabelBox", () => {
 		expect(styled.height).toBeGreaterThan(
 			resolveConnectorLabelBox({ text: "Yes" }).height,
 		);
+	});
+});
+
+describe("resolveConnectorLabelMetrics", () => {
+	it("falls back to CONNECTOR_LABEL_DEFAULTS and to no border", () => {
+		expect(resolveConnectorLabelMetrics({})).toEqual({
+			fontSize: CONNECTOR_LABEL_DEFAULTS.fontSize,
+			fontFamily: CONNECTOR_LABEL_DEFAULTS.fontFamily,
+			fontWeight: CONNECTOR_LABEL_DEFAULTS.fontWeight,
+			strokeWidth: 0,
+		});
+	});
+});
+
+describe("resolveConnectorLabelAnchor / placeConnectorLabelBox", () => {
+	const path = [
+		{ x: 0, y: 100 },
+		{ x: 200, y: 100 },
+	];
+
+	it("centers the box on the anchor the label's position puts on the path", () => {
+		const label = { text: "go", position: 0.25 };
+		const anchor = resolveConnectorLabelAnchor(path, label);
+		expect(anchor).toEqual({ x: 50, y: 100 });
+		expect(placeConnectorLabelBox(anchor!, { width: 30, height: 20 })).toEqual({
+			x: 35,
+			y: 90,
+			width: 30,
+			height: 20,
+		});
+	});
+
+	it("has no anchor for an empty label or an empty path", () => {
+		expect(resolveConnectorLabelAnchor(path, { text: "" })).toBeNull();
+		expect(resolveConnectorLabelAnchor([], { text: "go" })).toBeNull();
 	});
 });

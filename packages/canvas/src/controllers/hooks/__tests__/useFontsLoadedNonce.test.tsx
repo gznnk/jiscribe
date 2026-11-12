@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { readTextMeasurementGeneration } from "@jiscribe/doc/text/measure/textMeasurementSlot";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -99,6 +100,29 @@ describe("useFontsLoadedNonce", () => {
 
 		expect(probe.latest()).toBe(3);
 		probe.unmount();
+	});
+
+	it("advances the text measurement generation before the render that sees the new value", () => {
+		const stub = stubFontFaceSet();
+		const generationsSeen: Array<{ nonce: number; generation: number }> = [];
+		const Probe = () => {
+			generationsSeen.push({
+				nonce: useFontsLoadedNonce(),
+				generation: readTextMeasurementGeneration(),
+			});
+			return null;
+		};
+		const root = createRoot(document.createElement("div"));
+		act(() => root.render(<Probe />));
+		const before = generationsSeen.at(-1)!;
+
+		act(() => stub.fireLoadingDone());
+
+		expect(generationsSeen.at(-1)).toEqual({
+			nonce: before.nonce + 1,
+			generation: before.generation + 1,
+		});
+		act(() => root.unmount());
 	});
 
 	it("drops its listener on unmount, so a later load cannot set state on it", async () => {

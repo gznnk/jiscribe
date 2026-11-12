@@ -4,6 +4,7 @@ import { createFrameObjectDefinition } from "@jiscribe/canvas-sdk";
 import { awsGroupDocDefinition, awsIconDocDefinition } from "./doc";
 import { AwsGroup } from "./presentation/AwsGroup";
 import { AwsIcon } from "./presentation/AwsIcon";
+import { calcAwsGroupLabelBackdrop } from "./presentation/calcAwsGroupLabelBackdrop";
 import {
 	calcAwsGroupLabelTextRegion,
 	calcAwsGroupVisualBounds,
@@ -54,7 +55,8 @@ export const awsIconDefinition: ObjectTypeDefinition<AwsIconDoc, AwsIconState> =
  *
  * The stroke menu is offered: the default follows `kind`, but telling two VPCs
  * apart in one diagram is worth an override (resolveAwsGroupStroke). AWS frames
- * have no rounded corners, hence `radius: false`.
+ * have no rounded corners, hence `radius: false`. The body is a backdrop, so an
+ * icon's `"auto"` label inside the frame is painted on its fill.
  */
 export const awsGroupDefinition: ObjectTypeDefinition<
 	AwsGroupDoc,
@@ -68,6 +70,7 @@ export const awsGroupDefinition: ObjectTypeDefinition<
 	component: AwsGroup,
 	visualBounds: calcAwsGroupVisualBounds,
 	textRegion: calcAwsGroupLabelTextRegion,
+	labelBackdrop: calcAwsGroupLabelBackdrop,
 	styleEntries: AWS_GROUP_STYLE_ENTRIES,
 	stencils: AwsGroupStencils,
 	menu: [

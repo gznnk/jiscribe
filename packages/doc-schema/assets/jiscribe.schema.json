@@ -1826,7 +1826,7 @@
 					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
 				},
 				"labelFill": {
-					"description": "Background painted behind the caption, as a CSS color string, or \"auto\" to knock out what lies behind the label (connectors running under it) in the page's color: the document's opaque `background`, else the theme's canvas color. Set \"transparent\" to let what lies behind show through. Default: \"transparent\" (overrides the shared default \"auto\").",
+					"description": "Background painted behind the caption, as a CSS color string, or \"auto\" to knock out what lies behind the label (connectors running under it) in what is under it: the page's color (the document's opaque `background`, else the theme's canvas color), with the fill of any frame the label lies on (a container, an AWS group) over it. Set \"transparent\" to let what lies behind show through. Default: \"transparent\" (overrides the shared default \"auto\").",
 					"type": "string",
 					"default": "transparent"
 				}
@@ -1928,7 +1928,7 @@
 					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
 				},
 				"labelFill": {
-					"description": "Background painted behind the caption, as a CSS color string, or \"auto\" to knock out what lies behind the label (connectors running under it) in the page's color: the document's opaque `background`, else the theme's canvas color. Set \"transparent\" to let what lies behind show through. Default: \"transparent\" (overrides the shared default \"auto\").",
+					"description": "Background painted behind the caption, as a CSS color string, or \"auto\" to knock out what lies behind the label (connectors running under it) in what is under it: the page's color (the document's opaque `background`, else the theme's canvas color), with the fill of any frame the label lies on (a container, an AWS group) over it. Set \"transparent\" to let what lies behind show through. Default: \"transparent\" (overrides the shared default \"auto\").",
 					"type": "string",
 					"default": "transparent"
 				}
@@ -2024,7 +2024,7 @@
 					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
 				},
 				"labelFill": {
-					"description": "Background painted behind the caption, as a CSS color string, or \"auto\" to knock out what lies behind the label (connectors running under it) in the page's color: the document's opaque `background`, else the theme's canvas color. Set \"transparent\" to let what lies behind show through. Default: \"transparent\" (overrides the shared default \"auto\").",
+					"description": "Background painted behind the caption, as a CSS color string, or \"auto\" to knock out what lies behind the label (connectors running under it) in what is under it: the page's color (the document's opaque `background`, else the theme's canvas color), with the fill of any frame the label lies on (a container, an AWS group) over it. Set \"transparent\" to let what lies behind show through. Default: \"transparent\" (overrides the shared default \"auto\").",
 					"type": "string",
 					"default": "transparent"
 				}
@@ -4319,7 +4319,7 @@
 							"$ref": "#/$defs/TextStyle/properties/fontWeight"
 						},
 						"fill": {
-							"description": "Label background color (CSS color, or \"auto\"). Omitted/\"auto\" uses the document's background when it is opaque, otherwise the theme's canvas colour, to mask the line behind the label (knockout). Use \"transparent\" to let the line show through.",
+							"description": "Label background color (CSS color, or \"auto\"). Omitted/\"auto\" uses the document's background when it is opaque, otherwise the theme's canvas colour, with the fill of any frame the label lies on (a container, an AWS group) over it, to mask the line behind the label (knockout). Use \"transparent\" to let the line show through.",
 							"$ref": "#/$defs/FillStyle/properties/fill"
 						},
 						"stroke": {
@@ -4994,7 +4994,7 @@
 					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
 				},
 				"labelFill": {
-					"description": "Background painted behind the caption, as a CSS color string, or \"auto\" to knock out what lies behind the label (connectors running under it) in the page's color: the document's opaque `background`, else the theme's canvas color. Set \"transparent\" to let what lies behind show through. Default: \"auto\"",
+					"description": "Background painted behind the caption, as a CSS color string, or \"auto\" to knock out what lies behind the label (connectors running under it) in what is under it: the page's color (the document's opaque `background`, else the theme's canvas color), with the fill of any frame the label lies on (a container, an AWS group) over it. Set \"transparent\" to let what lies behind show through. Default: \"auto\"",
 					"type": "string",
 					"default": "auto"
 				}

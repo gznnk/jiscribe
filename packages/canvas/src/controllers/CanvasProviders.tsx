@@ -12,6 +12,8 @@ import type { CanvasZoomStore } from "../rendering/objects/CanvasZoomStoreContex
 import { CanvasZoomStoreContext } from "../rendering/objects/CanvasZoomStoreContext";
 import { DocumentSurfaceContext } from "../rendering/objects/DocumentSurfaceContext";
 import { FontsLoadedNonceContext } from "../rendering/objects/FontsLoadedNonceContext";
+import type { LabelBackdropStore } from "../rendering/objects/LabelBackdropStoreContext";
+import { LabelBackdropStoreContext } from "../rendering/objects/LabelBackdropStoreContext";
 import { RenderingRegistriesProvider } from "../rendering/objects/registry/RenderingRegistriesProvider";
 import type { ResolvedImageLookup } from "../rendering/objects/ResolvedImagesContext";
 import { ResolvedImagesContext } from "../rendering/objects/ResolvedImagesContext";
@@ -25,6 +27,8 @@ type CanvasProvidersProps = {
 	fontsNonce: number;
 	/** The store from `useCanvasZoomStore`, handed to the text overlays. */
 	zoomStore: CanvasZoomStore;
+	/** The store from `useLabelBackdropStore`, handed to the `"auto"` labels. */
+	labelBackdropStore: LabelBackdropStore;
 	/** The lookup from `useDocImages`, handed to the image shapes. */
 	lookupResolvedImage: ResolvedImageLookup;
 	/** The color from `resolveDocumentSurface`, handed to the default connector label knockout. */
@@ -36,7 +40,7 @@ type CanvasProvidersProps = {
 /**
  * Aggregates the context providers a live `<Canvas>` needs (theme, locale,
  * messages, the registry bundle, its rendering registries, the
- * fonts-loaded counter, the zoom store, the resolved images, the document surface, and the viewport element ref) into one node, so
+ * fonts-loaded counter, the zoom store, the label backdrop store, the resolved images, the document surface, and the viewport element ref) into one node, so
  * Canvas.tsx renders its tree without the deep provider nesting.
  */
 export function CanvasProviders({
@@ -46,6 +50,7 @@ export function CanvasProviders({
 	registries,
 	fontsNonce,
 	zoomStore,
+	labelBackdropStore,
 	lookupResolvedImage,
 	documentSurface,
 	viewportElementRef,
@@ -70,15 +75,17 @@ export function CanvasProviders({
 						>
 							<FontsLoadedNonceContext value={fontsNonce}>
 								<CanvasZoomStoreContext value={zoomStore}>
-									<ResolvedImagesContext value={lookupResolvedImage}>
-										<DocumentSurfaceContext value={documentSurface}>
-											<CanvasViewportElementRefContext
-												value={viewportElementRef}
-											>
-												{children}
-											</CanvasViewportElementRefContext>
-										</DocumentSurfaceContext>
-									</ResolvedImagesContext>
+									<LabelBackdropStoreContext value={labelBackdropStore}>
+										<ResolvedImagesContext value={lookupResolvedImage}>
+											<DocumentSurfaceContext value={documentSurface}>
+												<CanvasViewportElementRefContext
+													value={viewportElementRef}
+												>
+													{children}
+												</CanvasViewportElementRefContext>
+											</DocumentSurfaceContext>
+										</ResolvedImagesContext>
+									</LabelBackdropStoreContext>
 								</CanvasZoomStoreContext>
 							</FontsLoadedNonceContext>
 						</RenderingRegistriesProvider>

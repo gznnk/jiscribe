@@ -14,6 +14,7 @@ import type { Stencil } from "../controllers/ui/objects/Stencil";
 import type { ObjectConnectionAnchorsDeclaration } from "../rendering/objects/registry/ObjectConnectionAnchorsRegistry";
 import type { ObjectExtraConnectPointsCalculator } from "../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import type { ObjectGeometryKeyCalculator } from "../rendering/objects/registry/ObjectGeometryKeyRegistry";
+import type { ObjectLabelBackdropCalculator } from "../rendering/objects/registry/ObjectLabelBackdropRegistry";
 import type { ObjectPartKindDefinition } from "../rendering/objects/registry/ObjectPartKindRegistry";
 import type { ObjectTextMeasurer } from "../rendering/objects/registry/ObjectTextMeasurerRegistry";
 import type { ObjectVisualBoundsCalculator } from "../rendering/objects/registry/ObjectVisualBoundsRegistry";
@@ -87,6 +88,18 @@ export type ObjectTypeDefinition<
 	 * `"label"` type (see ObjectVisualBoundsRegistry).
 	 */
 	visualBounds?: ObjectVisualBoundsCalculator;
+
+	/**
+	 * What the shape paints under the objects drawn on it, for a frame whose
+	 * fill an `"auto"` label lying on it should blend into: such a label is
+	 * painted on the page's color and then on these regions, bottom first, where
+	 * they lie under its box. Called with the body fill core resolved (state,
+	 * type default, last resort, `"auto"` as the theme surface). Not called
+	 * while a drag is under way, save for an export taken mid-drag, which is
+	 * worked out for what it draws. Omitted = the type is no backdrop, however it
+	 * is filled (see ObjectLabelBackdropRegistry).
+	 */
+	labelBackdrop?: ObjectLabelBackdropCalculator<TState>;
 
 	// --- Connections ---
 

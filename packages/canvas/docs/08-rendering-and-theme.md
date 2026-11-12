@@ -147,6 +147,24 @@ what shows through it: a see-through `background` (`transparent`, alpha below 1 
 resolved per element (`var()`, `currentColor`), one the browser keeps in another color space (`oklch()`,
 `color-mix()`), and a value it does not parse (`foundation/color/isOpaqueCssColor.ts`).
 
+An auto label lying on a frame is painted on that frame's fill too, so it blends into the frame rather
+than standing out in the page's color. Only a type declaring `labelBackdrop` (container, awsGroup)
+counts as a frame. `resolveLabelBackdrops` (`controllers/utils/resolveLabelBackdrops.ts`) walks the
+objects in drawing order and cuts each label's box against the regions the frames drawn before it paint;
+`<Canvas>` works this out again whenever what it draws changes, but not during a drag (an export taken
+mid-drag is the exception, worked out for what it draws), and hands the
+result to each label through a store it subscribes to by its owner's id
+(`rendering/objects/LabelBackdropStoreContext.ts`, `useLabelBackdropLayers`). The label then draws the
+page's color and, over it, one shape per region (`rendering/objects/base/LabelBackdropLayers.tsx`), in the
+region's own color and opacity, so a translucent fill or a theme token looks the same as on the frame.
+While it has layers, the page's color and the layers are drawn with `shape-rendering="crispEdges"`, so their
+edges land on the same pixels and no rim of the page's color shows around the box. A
+frame or a label owner that is rotated or flipped is judged by the box's center alone, the region then
+covering the whole box. A connector label's inline editor is painted the same way: the backdrops are
+worked out with its draft grafted onto the connector (`controllers/utils/graftConnectorLabelDraft.ts`, an
+empty label being created included), and the editor draws them through the same part in an SVG behind
+its text, with its border drawn again on top.
+
 **Single rule**: "auto resolves to the role's theme token, and color is applied via CSS." Because
 `var(--jiscribe-*)` is not resolved by SVG presentation attributes, **color is never applied via attributes**,
 including stroke / fill / arrow color.
@@ -213,7 +231,10 @@ Theming is host-injectable and neutral — the canvas knows nothing about VSCode
     dispatches its own re-measure as it settles. Neither hook is reached directly: `useDocFonts`
     (`controllers/hooks/useDocFonts.ts`) is the entry point Canvas takes, with the two behind
     it — it folds them into one counter and one `onFacesChanged` callback and reports whether
-    the content is still held back. A dispatch only reaches boxes that live in the state, so
+    the content is still held back. Each change advances the text measurement generation first
+    (`useFontsLoadedNonce` before the counter moves, the preload's settle before the callback),
+    so neither the render reacting to the counter nor the dispatch reads a size cached against
+    the fallback face. A dispatch only reaches boxes that live in the state, so
     the render layer is handed a counter as `FontsLoadedNonceContext` as well — this one plus the
     gate's settling, since neither says anything but "measure again". The sites
     that measure while they render (a record's bands, a connector's label box, a text object's hit

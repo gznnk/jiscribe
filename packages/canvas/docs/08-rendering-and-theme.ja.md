@@ -145,6 +145,20 @@ foreignObject に `display="none"` を付ける。テキストオーバーレイ
 解決されるもの（`var()`・`currentColor`）、ブラウザが別の色空間のまま保つもの（`oklch()`・`color-mix()`）、
 ブラウザが色と解釈しない値が当たる（`foundation/color/isOpaqueCssColor.ts`）。
 
+枠の上にある auto のラベルは、その枠の塗りの上にも描き、ページ色で浮かずに枠に馴染ませる。枠に数えるのは
+`labelBackdrop` を宣言した型（container・awsGroup）だけ。`resolveLabelBackdrops`
+（`controllers/utils/resolveLabelBackdrops.ts`）が描画順に図形を舐め、各ラベルの箱を、それより前に描かれた
+枠の塗る領域で切り取る。`<Canvas>` は描くものが変わるたびにこれを求め直す（ドラッグ中は求めない。ドラッグ中に取った書き出しだけは、描く範囲について求める）。結果は
+ストアに入れ、各ラベルは持ち主の id で自分の分だけを購読する（`rendering/objects/LabelBackdropStoreContext.ts`・
+`useLabelBackdropLayers`）。ラベルはページ色を塗り、その上に領域ごとの図形を領域の色と不透明度で重ねる
+（`rendering/objects/base/LabelBackdropLayers.tsx`）。半透明の塗りもテーマ色も枠と同じ見た目になる。
+層があるときはページ色と層を `shape-rendering="crispEdges"` で描き、縁を同じピクセルに揃えて、箱の周りに
+ページ色の縁が出ないようにする。
+枠かラベルの持ち主が回転・反転していれば、箱の中心点だけで判定し、入っていれば箱全体を塗る。
+コネクターラベルのインライン編集中の箱も同じく描く。下書きの文字をコネクターに接ぎ木して求め
+（`controllers/utils/graftConnectorLabelDraft.ts`。作成中の空のラベルも含む）、エディターは同じ部品を
+文字の後ろの SVG に描き、枠線をその上に描き直す。
+
 **単一ルール**: 「auto はロールのテーマトークンへ解決し、色は CSS で当てる」。`var(--jiscribe-*)` は
 SVG presentation 属性では解決されないため、stroke / fill / arrow の color も含め**色は属性では当てない**。
 
@@ -205,7 +219,9 @@ style」という 2 方式混在を解消）。
     する。どちらのフックも直接は使わない。Canvas の入口は
     `useDocFonts`（`controllers/hooks/useDocFonts.ts`）で、この 2 つはその後ろにいる —
     2 つの信号を 1 つのカウンタと 1 つの `onFacesChanged` コールバックに畳み、内容をまだ
-    隠しているかどうかも返す。dispatch が届くのは state に
+    隠しているかどうかも返す。どちらの変化でも先にテキスト計測の世代を進める
+    （`useFontsLoadedNonce` はカウンタを動かす前、事前読み込みは決着でコールバックを呼ぶ前）。
+    カウンタに反応するレンダーも dispatch も、代替フェースで測ってキャッシュした大きさを読まない。dispatch が届くのは state に
     現れる箱だけなので、描画層へもカウンタを `FontsLoadedNonceContext` として配る。こちらは
     このカウンタとゲートの決着を足したもので、どちらも「計測し直せ」以上のことを言わない。レンダー中に
     計測するもの（レコードの帯・コネクターのラベル箱・テキストの当たり帯）はこれを購読しており、

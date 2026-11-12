@@ -5,7 +5,8 @@ import { theme } from "../../foundation/theme/themeTokens";
 /**
  * Rendering-layer context carrying the color of the document's surface: what a
  * default label — a connector's, or a `features.text: "label"` caption — knocks
- * the lines behind it out with (resolveLabelFill).
+ * the lines behind it out with (resolveLabelFill), under the fills of the
+ * frames it lies on (LabelBackdropLayers).
  *
  * `<Canvas>` provides it from the document's `background`
  * (resolveDocumentSurface). The default is the theme's canvas color, which is

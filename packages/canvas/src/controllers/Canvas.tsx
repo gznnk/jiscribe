@@ -1,5 +1,4 @@
 ﻿import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
-import { advanceTextMeasurementGeneration } from "@jiscribe/doc/text/measure/textMeasurementSlot";
 import {
 	memo,
 	useCallback,
@@ -45,6 +44,7 @@ import { useExportDialog } from "./hooks/useExportDialog";
 import { useGestureRecognizer } from "./hooks/useGestureRecognizer";
 import { useInitialViewOpen } from "./hooks/useInitialViewOpen";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
+import { useLabelBackdropStore } from "./hooks/useLabelBackdropStore";
 import { useNotifySaveRequest } from "./hooks/useNotifySaveRequest";
 import { useNotifySelectionChange } from "./hooks/useNotifySelectionChange";
 import { useNotifySidebarsChange } from "./hooks/useNotifySidebarsChange";
@@ -96,6 +96,7 @@ import { ExportDialog } from "./ui/modal/ExportDialog";
 import { ShortcutHelpModal } from "./ui/modal/ShortcutHelp/ShortcutHelpModal";
 import type { StencilCategory } from "./ui/objects/StencilCategory";
 import { collectDocFontRequests } from "./utils/collectDocFontRequests";
+import { graftConnectorLabelDraft } from "./utils/graftConnectorLabelDraft";
 import { EXPORT_FIT_PADDING } from "./utils/resolveExportOptions";
 import { resolveRenderedObjectIds } from "./utils/resolveRenderedObjectIds";
 import {
@@ -428,10 +429,9 @@ const CanvasComponent = ({
 	const { fontsNonce, isContentHidden } = useDocFonts({
 		collectRequests: () =>
 			collectDocFontRequests(state.objects, registries.objectTextStyleDefaults),
+		// The generation is already advanced (useDocFonts), so the re-measure is
+		// not answered from a measurement cached against the fallback face.
 		onFacesChanged: () => {
-			// First, so the re-measure is not answered from a measurement cached
-			// against the fallback face.
-			advanceTextMeasurementGeneration();
 			dispatch({ type: "REMEASURE_TEXT" });
 		},
 	});
@@ -644,6 +644,40 @@ const CanvasComponent = ({
 		snapshotRenderScope,
 		culledObjectIds,
 	);
+	// Worked out from what is drawn, the edited text's draft included, so a
+	// caption growing as it is typed is cut against the frames it now covers.
+	// A connector label's draft is grafted for the backdrops alone, so the label
+	// editor's box is cut for the text as typed so far.
+	const labelEditDraft =
+		state.mode.kind === "textEdit" && state.mode.draft.kind === "connectorLabel"
+			? state.mode.draft
+			: null;
+	const labelBackdropInput = useMemo(
+		() =>
+			graftConnectorLabelDraft({
+				objects: draftObjects,
+				selection: state.selection,
+				mode: state.mode,
+			}),
+		// Keyed on the draft's text and placement rather than on `mode`, which a
+		// shape's text edit also moves with the caret.
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[
+			draftObjects,
+			state.selection,
+			labelEditDraft?.text,
+			labelEditDraft?.placement,
+		],
+	);
+	const labelBackdropStore = useLabelBackdropStore({
+		objects: labelBackdropInput.objects,
+		labelEditOwnerId: labelBackdropInput.labelEditOwnerId,
+		rootIds: state.rootIds,
+		fontsNonce,
+		snapshotRenderScope,
+		isDragging: state.drag !== null,
+		registries,
+	});
 
 	const canvasHandle = useCanvasHandle({
 		dispatch,
@@ -711,6 +745,7 @@ const CanvasComponent = ({
 			registries={registries}
 			fontsNonce={fontsNonce}
 			zoomStore={canvasZoomStore}
+			labelBackdropStore={labelBackdropStore}
 			lookupResolvedImage={lookupResolvedImage}
 			documentSurface={documentSurface}
 			viewportElementRef={canvasRef}

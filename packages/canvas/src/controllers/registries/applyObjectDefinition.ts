@@ -707,6 +707,9 @@ export const applyObjectDefinition = (
 			createLabelTextVisualBounds(bodyTextStyleDefaults),
 		);
 	}
+	if (definition.labelBackdrop) {
+		registries.objectLabelBackdrop.register(type, definition.labelBackdrop);
+	}
 	if (definition.transformHandles) {
 		registries.objectTransformHandles.register(
 			type,

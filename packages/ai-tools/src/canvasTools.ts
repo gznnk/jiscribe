@@ -208,7 +208,7 @@ const styleSchema = {
 		.string()
 		.optional()
 		.describe(
-			'Color behind the label of a shape whose text sits below its box (actor, server, the icon sets, …); no other type takes it (a connector\'s label uses fill). Default "auto" paints the page\'s color, hiding connectors under the label; "transparent" shows them.',
+			'Color behind the label of a shape whose text sits below its box (actor, server, the icon sets, …); no other type takes it (a connector\'s label uses fill). Default "auto" paints what is under the label (the page\'s color, or the fill of a container / AWS group it lies on), hiding connectors under it; "transparent" shows them.',
 		),
 	...textSlotStyleSchema,
 };
