@@ -64,7 +64,12 @@ const calcBandWeight = (x: number, y: number, box: BoundingBox): number => {
 		y - box.bottom,
 		0,
 	);
-	return 1 - distance / EDGE_ROUTE_MARGIN;
+	const weight = 1 - distance / EDGE_ROUTE_MARGIN;
+	// Within a third of the margin a run reads as touching the box: much dearer.
+	const hugReach = EDGE_ROUTE_MARGIN / 3;
+	return distance < hugReach
+		? weight + ROUTE_COSTS.hugWeight * (1 - distance / hugReach)
+		: weight;
 };
 
 /** The index among `sorted` of the last value at or before `value` (or before it, unless `inclusive`); -1 for none. */

@@ -75,6 +75,11 @@ export type PreparedEdge = {
 	excluded: Obstacle[];
 	sources: EndCandidate[];
 	targets: EndCandidate[];
+	/**
+	 * The innermost border both end boxes lie inside: the route stays inside it where a
+	 * way is found there. Undefined when no border holds both ends.
+	 */
+	home?: BoundingBox;
 };
 
 /**
@@ -749,6 +754,35 @@ export class EdgeRouter {
 			prepared.targetBox,
 		]) as BoundingBox;
 		const { xs, ys } = this.lines;
+		const { home } = prepared;
+		if (home !== undefined) {
+			// Inside the border both ends share first, wider and wider up to all of it.
+			for (let reach = SEARCH_WINDOW_REACH; ; reach *= SEARCH_WINDOW_GROWTH) {
+				const window = growBox(around, reach);
+				const coversHome =
+					window.left <= home.left &&
+					window.top <= home.top &&
+					window.right >= home.right &&
+					window.bottom >= home.bottom;
+				const routed = this.searchWithin(
+					prepared,
+					graph,
+					{
+						left: Math.max(window.left, home.left),
+						top: Math.max(window.top, home.top),
+						right: Math.min(window.right, home.right),
+						bottom: Math.min(window.bottom, home.bottom),
+					},
+					bundleSteps,
+				);
+				if (routed !== undefined) {
+					return routed;
+				}
+				if (coversHome) {
+					break;
+				}
+			}
+		}
 		for (let reach = SEARCH_WINDOW_REACH; ; reach *= SEARCH_WINDOW_GROWTH) {
 			const window = growBox(around, reach);
 			const coversAll =

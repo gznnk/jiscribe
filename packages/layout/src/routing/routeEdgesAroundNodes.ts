@@ -1,7 +1,9 @@
 import {
+	type BoundingBox,
 	convertRectToBoundingBox,
 	doRectsOverlap,
 	type Point,
+	unionBoundingBoxes,
 } from "@jiscribe/geometry";
 
 import { EDGE_ROUTE_MARGIN } from "./edgeRoutingCosts";
@@ -120,6 +122,40 @@ const isSameRoute = (a: RoutedEdge, b: RoutedEdge): boolean =>
 		(point, index) =>
 			point.x === b.points[index].x && point.y === b.points[index].y,
 	);
+
+/**
+ * The innermost of `borders` that both nodes' boxes lie inside, their sides touching
+ * included, as a prepared edge's `home`; nothing when none holds both, or when one of
+ * the two is hollow and so a frame itself.
+ */
+const findHome = (
+	borders: readonly BoundingBox[],
+	source: RoutableNode,
+	target: RoutableNode,
+): { home?: BoundingBox } => {
+	if (source.isHollow === true || target.isHollow === true) {
+		return {};
+	}
+	const around = unionBoundingBoxes([
+		convertRectToBoundingBox(source.bounds),
+		convertRectToBoundingBox(target.bounds),
+	]) as BoundingBox;
+	let home: BoundingBox | undefined;
+	for (const border of borders) {
+		if (
+			border.left <= around.left &&
+			border.top <= around.top &&
+			border.right >= around.right &&
+			border.bottom >= around.bottom &&
+			(home === undefined ||
+				(border.right - border.left) * (border.bottom - border.top) <
+					(home.right - home.left) * (home.bottom - home.top))
+		) {
+			home = border;
+		}
+	}
+	return home === undefined ? {} : { home };
+};
 
 /** Names the spot a pinned end is held to: the node's side and the place along it. */
 const toPinnedEndKey = (
@@ -334,6 +370,7 @@ export const routeEdgesAroundNodes = (
 			targetNode: target,
 			sourceBox: convertRectToBoundingBox(source.bounds),
 			targetBox: convertRectToBoundingBox(target.bounds),
+			...findHome(borders, source, target),
 			excluded,
 			sources: listEndCandidates(
 				source,
