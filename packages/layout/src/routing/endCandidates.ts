@@ -326,6 +326,7 @@ export const listEndCandidates = (
 				? `${toSideKey(node.id, side)}\u0000${t}\u0000${hubRole}`
 				: `${toSideKey(node.id, side)}\u0000${t}`,
 			isPinned: isPinned || isHubSpot,
+			...(isHubSpot ? { isHub: true as const } : {}),
 		};
 	};
 	if (pinnedEnds !== undefined) {

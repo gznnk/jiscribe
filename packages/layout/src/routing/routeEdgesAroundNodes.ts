@@ -152,10 +152,10 @@ const findInnermostSharedBorder = (
 };
 
 /** Whether the edges that start at one node, or end at one, gather into trunks (prototype switch). */
-const BUNDLE_HUBS = false;
+const BUNDLE_HUBS = true;
 
 /** How far off a side's centre, in px, each of the two trunks of a node that is a hub both ways stands. */
-const HUB_ROLE_OFFSET = 10;
+const HUB_ROLE_OFFSET = 0;
 
 /**
  * `anchor` moved to where the nudging left its end, `point`; `anchor` itself when the
@@ -356,7 +356,8 @@ export const routeEdgesAroundNodes = (
 	// A node two or more edges start at, or end at, is a hub for those edges.
 	const roleCounts = new Map<string, number>();
 	for (const edge of edges) {
-		if (edge.sourceId !== edge.targetId) {
+		// A labelled edge joins no trunk: its label would sit on the shared run.
+		if (edge.sourceId !== edge.targetId && edge.label === undefined) {
 			for (const key of [
 				`${edge.sourceId}\u0000out`,
 				`${edge.targetId}\u0000in`,
@@ -401,7 +402,7 @@ export const routeEdgesAroundNodes = (
 				contendedSideKeys,
 				edge.sourceEnds,
 				edge.targetEnds,
-				isHub(source.id, "out") ? "out" : undefined,
+				isHub(source.id, "out") && edge.label === undefined ? "out" : undefined,
 				isHub(source.id, "in") ? HUB_ROLE_OFFSET : 0,
 			),
 			targets: listEndCandidates(
@@ -414,7 +415,7 @@ export const routeEdgesAroundNodes = (
 				contendedSideKeys,
 				edge.targetEnds,
 				edge.sourceEnds,
-				isHub(target.id, "in") ? "in" : undefined,
+				isHub(target.id, "in") && edge.label === undefined ? "in" : undefined,
 				isHub(target.id, "out") ? -HUB_ROLE_OFFSET : 0,
 			),
 		});
@@ -527,6 +528,10 @@ export const routeEdgesAroundNodes = (
 						...(sourceEnd.isPinned ? [sourceEnd.endKey] : []),
 						...(targetEnd.isPinned ? [targetEnd.endKey] : []),
 					],
+					hubKeys: {
+						...(sourceEnd.isHub === true ? { source: sourceEnd.endKey } : {}),
+						...(targetEnd.isHub === true ? { target: targetEnd.endKey } : {}),
+					},
 				},
 				sourcePoint,
 				targetPoint,
