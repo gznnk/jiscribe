@@ -152,7 +152,7 @@ const findInnermostSharedBorder = (
 };
 
 /** Whether the edges that start at one node, or end at one, gather into trunks (prototype switch). */
-const BUNDLE_HUBS = true;
+const BUNDLE_HUBS = false;
 
 /** How far off a side's centre, in px, each of the two trunks of a node that is a hub both ways stands. */
 const HUB_ROLE_OFFSET = 10;
@@ -357,7 +357,10 @@ export const routeEdgesAroundNodes = (
 	const roleCounts = new Map<string, number>();
 	for (const edge of edges) {
 		if (edge.sourceId !== edge.targetId) {
-			for (const key of [`${edge.sourceId}\u0000out`, `${edge.targetId}\u0000in`]) {
+			for (const key of [
+				`${edge.sourceId}\u0000out`,
+				`${edge.targetId}\u0000in`,
+			]) {
 				roleCounts.set(key, (roleCounts.get(key) ?? 0) + 1);
 			}
 		}
@@ -521,12 +524,8 @@ export const routeEdgesAroundNodes = (
 						targetEnd.isPinned,
 					),
 					bundleKeys: [
-						...(sourceEnd.isPinned
-							? [sourceEnd.endKey]
-							: []),
-						...(targetEnd.isPinned
-							? [targetEnd.endKey]
-							: []),
+						...(sourceEnd.isPinned ? [sourceEnd.endKey] : []),
+						...(targetEnd.isPinned ? [targetEnd.endKey] : []),
 					],
 				},
 				sourcePoint,
