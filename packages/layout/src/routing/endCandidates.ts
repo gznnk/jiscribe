@@ -279,12 +279,15 @@ export const listEndCandidates = (
 	contendedSideKeys: ReadonlySet<string>,
 	pinnedEnds?: readonly LayoutEdgeAnchor[],
 	otherPinnedEnds?: readonly LayoutEdgeAnchor[],
+	hubRole?: "in" | "out",
+	hubOffset = 0,
 ): EndCandidate[] => {
 	const toCandidate = (
 		side: LayoutSide,
 		t: number,
 		isPinned: boolean,
 		isBeside = false,
+		isHubSpot = false,
 	): EndCandidate | undefined => {
 		const anchor = calcAnchorPoint(node.bounds, { side, t });
 		const stubLength = calcStubLength(
@@ -319,8 +322,10 @@ export const listEndCandidates = (
 				(side === "bottom" && node.labelBounds !== undefined
 					? ROUTE_COSTS.labelledBottom
 					: 0) + (isBeside ? 1 : 0),
-			endKey: `${toSideKey(node.id, side)}\u0000${t}`,
-			isPinned,
+			endKey: isHubSpot
+				? `${toSideKey(node.id, side)}\u0000${t}\u0000${hubRole}`
+				: `${toSideKey(node.id, side)}\u0000${t}`,
+			isPinned: isPinned || isHubSpot,
 		};
 	};
 	if (pinnedEnds !== undefined) {
@@ -478,6 +483,34 @@ export const listEndCandidates = (
 					) {
 						besideRatios.push(beside);
 					}
+				}
+			}
+		}
+		if (hubRole !== undefined) {
+			// A hub's centred spot gathers the edges of one role into one trunk; where
+			// the node is a hub both ways, the two trunks stand `hubOffset` either side
+			// of the centre.
+			const axis = createSideAxis(side);
+			const shifted = calcStraightAnchorRatio(
+				node.bounds,
+				columnAt(node.bounds, ratios[0], axis) + hubOffset,
+				usable,
+				axis,
+			);
+			const hubRatio = shifted ?? ratios[0];
+			const hub = toCandidate(side, hubRatio, false, false, true);
+			if (hub !== undefined) {
+				candidates.push(hub);
+			}
+			ratios.splice(0, 1);
+			for (let index = ratios.length - 1; index >= 0; index -= 1) {
+				if (
+					isSameCoordinate(
+						columnAt(node.bounds, ratios[index], axis),
+						columnAt(node.bounds, hubRatio, axis),
+					)
+				) {
+					ratios.splice(index, 1);
 				}
 			}
 		}
