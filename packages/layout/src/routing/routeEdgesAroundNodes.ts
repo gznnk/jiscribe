@@ -152,7 +152,7 @@ const findInnermostSharedBorder = (
 };
 
 /** Whether the edges that start at one node, or end at one, gather into trunks (prototype switch). */
-const BUNDLE_HUBS = true;
+const BUNDLE_HUBS = false;
 
 /** How far off a side's centre, in px, each of the two trunks of a node that is a hub both ways stands. */
 const HUB_ROLE_OFFSET = 0;
