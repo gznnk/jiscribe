@@ -528,26 +528,102 @@ const arrangeGroup = (
 	members: ReadonlySet<number>,
 	positions: readonly number[],
 ): Map<number, number> | SegmentPair | undefined => {
-	const placeOf = new Map(sequence.map((node, index) => [node, index]));
-	const constraints: SeparationConstraint[] = [];
-	const keptGapOf = ({ kind, gap, endGap }: SegmentPair): number => {
-		if (kind === "conflict") {
-			return endGap === undefined ? spacing : Math.min(endGap, endCap);
-		}
-		return endGap === undefined ? gap : Math.min(gap, endCap);
-	};
-	for (const pair of pairs) {
-		const { first, second, kind } = pair;
-		const firstPlace = placeOf.get(first) as number;
-		const secondPlace = placeOf.get(second) as number;
+	// Tried once per conflict that does not fit, on groups of thousands of pairs: the
+	// pass that looks for such a conflict reads plain number arrays, and the objects
+	// the solver takes are made only for an order that fits.
+	const placeOf = new Int32Array(segments.length);
+	sequence.forEach((node, index) => {
+		placeOf[node] = index;
+	});
+	const count = sequence.length;
+	const lefts = new Int32Array(pairs.length);
+	const rights = new Int32Array(pairs.length);
+	const gaps = new Float64Array(pairs.length);
+	// How many constraints have each place on their low side, then where each
+	// place's run of them starts in `outs`, the constraints' own order kept.
+	const outStarts = new Int32Array(count + 1);
+	for (let index = 0; index < pairs.length; index += 1) {
+		const pair = pairs[index];
+		const { kind, gap, endGap } = pair;
+		const firstPlace = placeOf[pair.first];
+		const secondPlace = placeOf[pair.second];
 		if (kind !== "conflict" && firstPlace > secondPlace) {
 			return undefined;
 		}
+		const left = Math.min(firstPlace, secondPlace);
+		lefts[index] = left;
+		rights[index] = Math.max(firstPlace, secondPlace);
+		if (kind === "conflict") {
+			gaps[index] = endGap === undefined ? spacing : Math.min(endGap, endCap);
+		} else {
+			gaps[index] = endGap === undefined ? gap : Math.min(gap, endCap);
+		}
+		outStarts[left + 1] += 1;
+	}
+	for (let place = 0; place < count; place += 1) {
+		outStarts[place + 1] += outStarts[place];
+	}
+	const outs = new Int32Array(pairs.length);
+	const outFills = outStarts.slice(0, count);
+	for (let index = 0; index < pairs.length; index += 1) {
+		outs[outFills[lefts[index]]] = index;
+		outFills[lefts[index]] += 1;
+	}
+
+	const greatest = new Float64Array(count);
+	/** The constraint that held each place below its own greatest, -1 when none did. */
+	const heldBy = new Int32Array(count).fill(-1);
+	for (let place = count - 1; place >= 0; place -= 1) {
+		let most = Infinity;
+		let holder = -1;
+		for (let at = outStarts[place]; at < outStarts[place + 1]; at += 1) {
+			const index = outs[at];
+			const reach = greatest[rights[index]] - gaps[index];
+			if (reach < most) {
+				most = reach;
+				holder = index;
+			}
+		}
+		const node = sequence[place];
+		const segment = segments[node];
+		const isFixed = !members.has(node);
+		const desired = isFixed ? positions[node] : segment.position;
+		const high = isFixed
+			? positions[node]
+			: Math.max(segment.position, segment.highest);
+		let best = -Infinity;
+		if (isAtLeast(most, desired)) {
+			best = desired;
+		}
+		if (!isFixed) {
+			const highestWhole = floorCoordinate(Math.min(most, segment.highest));
+			if (highestWhole >= segment.lowest) {
+				best = Math.max(best, highestWhole);
+			}
+		}
+		if (best === -Infinity) {
+			for (let index = holder; index !== -1; index = heldBy[rights[index]]) {
+				if (pairs[index].kind === "conflict") {
+					return pairs[index];
+				}
+			}
+			throw new Error(
+				"nudgeRoutes: a group that does not fit has no conflict in the way",
+			);
+		}
+		greatest[place] = best;
+		heldBy[place] = best < high ? holder : -1;
+	}
+
+	const constraints: SeparationConstraint[] = [];
+	const ins: number[][] = sequence.map(() => []);
+	for (let index = 0; index < pairs.length; index += 1) {
 		constraints.push({
-			left: Math.min(firstPlace, secondPlace),
-			right: Math.max(firstPlace, secondPlace),
-			gap: keptGapOf(pair),
+			left: lefts[index],
+			right: rights[index],
+			gap: gaps[index],
 		});
+		ins[rights[index]].push(index);
 	}
 	const variables = sequence.map((node): SeparationVariable => {
 		const segment = segments[node];
@@ -565,56 +641,6 @@ const arrangeGroup = (
 					high: positions[node],
 				};
 	});
-	// Constraint indices, which are the pairs' too.
-	const ins: number[][] = sequence.map(() => []);
-	const outs: number[][] = sequence.map(() => []);
-	constraints.forEach(({ left, right }, index) => {
-		ins[right].push(index);
-		outs[left].push(index);
-	});
-
-	const greatest: number[] = new Array<number>(sequence.length);
-	/** The constraint that held each place below its own greatest, when one did. */
-	const heldBy: (number | undefined)[] = new Array<number | undefined>(
-		sequence.length,
-	);
-	for (let place = sequence.length - 1; place >= 0; place -= 1) {
-		let most = Infinity;
-		let holder: number | undefined;
-		for (const index of outs[place]) {
-			const { right, gap } = constraints[index];
-			if (greatest[right] - gap < most) {
-				most = greatest[right] - gap;
-				holder = index;
-			}
-		}
-		const { desired, isFixed, high } = variables[place];
-		const segment = segments[sequence[place]];
-		const candidates = isAtLeast(most, desired) ? [desired] : [];
-		if (!isFixed) {
-			const highestWhole = floorCoordinate(Math.min(most, segment.highest));
-			if (highestWhole >= segment.lowest) {
-				candidates.push(highestWhole);
-			}
-		}
-		if (candidates.length === 0) {
-			for (
-				let index = holder;
-				index !== undefined;
-				index = heldBy[constraints[index].right]
-			) {
-				if (pairs[index].kind === "conflict") {
-					return pairs[index];
-				}
-			}
-			throw new Error(
-				"nudgeRoutes: a group that does not fit has no conflict in the way",
-			);
-		}
-		greatest[place] = Math.max(...candidates);
-		heldBy[place] = greatest[place] < high ? holder : undefined;
-	}
-
 	const solved = solveSeparation(variables, constraints);
 	const placed: number[] = [];
 	for (let place = 0; place < sequence.length; place += 1) {
@@ -697,12 +723,15 @@ const spreadGroup = (
 	].sort((a, b) => a - b);
 	const localIndex = new Map(nodes.map((node, index) => [node, index]));
 	let pairs = groupPairs;
+	let decided: number[] | undefined;
 	/** The group's arrangement, or the conflict in the way in the current order. */
 	const arrange = (
 		spacing: number,
 		endCap: number,
 	): Map<number, number> | SegmentPair => {
-		const decided = orderTopologically(
+		// The decided order follows from which pairs are swapped alone, so it is made
+		// again only once one of those has given way (see the loop below).
+		decided ??= orderTopologically(
 			nodes.length,
 			pairs.map(({ first, second, isSwapped }) => {
 				const edge = [
@@ -748,6 +777,9 @@ const spreadGroup = (
 		pairs = pairs.map((pair) =>
 			pair === blocking ? toOrderPair(segments, pair) : pair,
 		);
+		if (blocking.isSwapped) {
+			decided = undefined;
+		}
 	}
 	if (!pairs.some(({ kind }) => kind === "conflict")) {
 		return new Map();
