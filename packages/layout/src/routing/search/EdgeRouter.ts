@@ -60,11 +60,6 @@ export type EndCandidate = {
 	endKey: string;
 	/** Whether the end is held to this spot (see RoutableEdge.sourceEnds). */
 	isPinned: boolean;
-	/**
-	 * Set for a hub's gathering spot (see listEndCandidates): the routes to it share
-	 * only their run into the spot, not their whole way.
-	 */
-	isHub?: true;
 };
 
 export type PreparedEdge = {
@@ -151,8 +146,8 @@ type DrawnRoute = {
 	steps: number[];
 	/** The stub steps among them, under each end's key. */
 	stubSteps: { endKey: string; steps: number[] }[];
-	/** For each of its pinned ends, the steps added to that end's bundle. */
-	bundles: { endKey: string; steps: number[] }[];
+	/** The keys of its pinned ends, whose bundles its steps were added to. */
+	pinnedEndKeys: string[];
 };
 
 /** A stub on the lines: its anchor's line indices and the unit steps it runs. */
@@ -501,7 +496,7 @@ export class EdgeRouter {
 		source: EndCandidate,
 		target: EndCandidate,
 	): DrawnRoute {
-		const drawn: DrawnRoute = { steps: [], stubSteps: [], bundles: [] };
+		const drawn: DrawnRoute = { steps: [], stubSteps: [], pinnedEndKeys: [] };
 		const mark = (
 			xi: number,
 			yi: number,
@@ -526,8 +521,6 @@ export class EdgeRouter {
 				yi += STEP_Y[stub.direction];
 			}
 		}
-		// The steps of each link of the route, to tell the runs at its two ends.
-		const linkSteps: { direction: RouteDirection; steps: number[] }[] = [];
 		for (let index = 1; index < route.length; index += 1) {
 			const from = route[index - 1];
 			const to = route[index];
@@ -537,38 +530,18 @@ export class EdgeRouter {
 			} else {
 				direction = to.yi > from.yi ? 2 : 0;
 			}
-			const steps: number[] = [];
-			linkSteps.push({ direction, steps });
 			let { xi, yi } = from;
 			while (xi !== to.xi || yi !== to.yi) {
-				mark(xi, yi, direction, steps);
+				mark(xi, yi, direction);
 				xi += STEP_X[direction];
 				yi += STEP_Y[direction];
 			}
 		}
-		[source, target].forEach((candidate, endIndex) => {
-			if (!candidate.isPinned) {
-				return;
+		for (const candidate of [source, target]) {
+			if (candidate.isPinned) {
+				drawn.pinnedEndKeys.push(candidate.endKey);
 			}
-			if (candidate.isHub !== true) {
-				drawn.bundles.push({ endKey: candidate.endKey, steps: drawn.steps });
-				return;
-			}
-			// A hub's bundle is the stub and the straight run that goes on from it.
-			const steps = [...drawn.stubSteps[endIndex].steps];
-			const ordered = endIndex === 0 ? linkSteps : [...linkSteps].reverse();
-			const along =
-				endIndex === 0
-					? candidate.outward
-					: oppositeDirection(candidate.outward);
-			for (const link of ordered) {
-				if (link.direction !== along) {
-					break;
-				}
-				steps.push(...link.steps);
-			}
-			drawn.bundles.push({ endKey: candidate.endKey, steps });
-		});
+		}
 		return drawn;
 	}
 
@@ -635,9 +608,9 @@ export class EdgeRouter {
 				count(stubSteps, key);
 			}
 		}
-		for (const { endKey, steps } of drawn.bundles) {
+		for (const endKey of drawn.pinnedEndKeys) {
 			const bundleSteps = stepsOf(this.routeStepsByPinnedEnd, endKey);
-			for (const key of steps) {
+			for (const key of drawn.steps) {
 				count(bundleSteps, key);
 			}
 		}

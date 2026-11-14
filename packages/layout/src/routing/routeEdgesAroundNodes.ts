@@ -18,7 +18,6 @@ import { nudgeRoutes } from "./nudge/nudgeRoutes";
 import type { RouteEnd, RouteToNudge } from "./nudge/routeSegments";
 import {
 	EdgeRouter,
-	type EndCandidate,
 	type Obstacle,
 	type PreparedEdge,
 } from "./search/EdgeRouter";
@@ -151,11 +150,11 @@ const findInnermostSharedBorder = (
 		: convertRectToBoundingBox(innermost);
 };
 
-/** Whether the edges that start at one node, or end at one, gather into trunks (prototype switch). */
-const BUNDLE_HUBS = false;
-
-/** How far off a side's centre, in px, each of the two trunks of a node that is a hub both ways stands. */
-const HUB_ROLE_OFFSET = 0;
+/** Names the spot a pinned end is held to: the node's side and the place along it. */
+const toPinnedEndKey = (
+	node: RoutableNode,
+	{ side, t }: LayoutEdgeAnchor,
+): string => `${toSideKey(node.id, side)}\u0000${t}`;
 
 /**
  * `anchor` moved to where the nudging left its end, `point`; `anchor` itself when the
@@ -353,21 +352,6 @@ export const routeEdgesAroundNodes = (
 			return source === target ? [] : [{ source, target }];
 		}),
 	);
-	// A node two or more edges start at, or end at, is a hub for those edges.
-	const roleCounts = new Map<string, number>();
-	for (const edge of edges) {
-		// A labelled edge joins no trunk: its label would sit on the shared run.
-		if (edge.sourceId !== edge.targetId && edge.label === undefined) {
-			for (const key of [
-				`${edge.sourceId}\u0000out`,
-				`${edge.targetId}\u0000in`,
-			]) {
-				roleCounts.set(key, (roleCounts.get(key) ?? 0) + 1);
-			}
-		}
-	}
-	const isHub = (nodeId: string, role: "in" | "out"): boolean =>
-		BUNDLE_HUBS && (roleCounts.get(`${nodeId}\u0000${role}`) ?? 0) >= 2;
 	const unroutedEdgeIds = new Set<string>();
 	const prepared: PreparedEdge[] = [];
 	for (const edge of edges) {
@@ -402,8 +386,6 @@ export const routeEdgesAroundNodes = (
 				contendedSideKeys,
 				edge.sourceEnds,
 				edge.targetEnds,
-				isHub(source.id, "out") && edge.label === undefined ? "out" : undefined,
-				isHub(source.id, "in") ? HUB_ROLE_OFFSET : 0,
 			),
 			targets: listEndCandidates(
 				target,
@@ -415,8 +397,6 @@ export const routeEdgesAroundNodes = (
 				contendedSideKeys,
 				edge.targetEnds,
 				edge.sourceEnds,
-				isHub(target.id, "in") && edge.label === undefined ? "in" : undefined,
-				isHub(target.id, "out") ? -HUB_ROLE_OFFSET : 0,
 			),
 		});
 	}
@@ -485,15 +465,6 @@ export const routeEdgesAroundNodes = (
 		}
 		for (const [edgeToRoute, routed] of routedByEdge) {
 			const { edge, sourceNode, targetNode } = edgeToRoute;
-			const findEnd = (
-				candidates: readonly EndCandidate[],
-				anchor: LayoutEdgeAnchor,
-			): EndCandidate =>
-				candidates.find(
-					({ side, t }) => side === anchor.side && t === anchor.t,
-				) as EndCandidate;
-			const sourceEnd = findEnd(edgeToRoute.sources, routed.source);
-			const targetEnd = findEnd(edgeToRoute.targets, routed.target);
 			const excludedSet = new Set(edgeToRoute.excluded);
 			const walls = obstacles.filter((obstacle) => !excludedSet.has(obstacle));
 			const sourcePoint = calcAnchorPoint(sourceNode.bounds, routed.source);
@@ -515,23 +486,23 @@ export const routeEdgesAroundNodes = (
 						routed.source,
 						sourcePoint,
 						walls,
-						sourceEnd.isPinned,
+						edge.sourceEnds !== undefined,
 					),
 					target: toRouteEnd(
 						targetNode,
 						routed.target,
 						targetPoint,
 						walls,
-						targetEnd.isPinned,
+						edge.targetEnds !== undefined,
 					),
 					bundleKeys: [
-						...(sourceEnd.isPinned ? [sourceEnd.endKey] : []),
-						...(targetEnd.isPinned ? [targetEnd.endKey] : []),
+						...(edge.sourceEnds !== undefined
+							? [toPinnedEndKey(sourceNode, routed.source)]
+							: []),
+						...(edge.targetEnds !== undefined
+							? [toPinnedEndKey(targetNode, routed.target)]
+							: []),
 					],
-					hubKeys: {
-						...(sourceEnd.isHub === true ? { source: sourceEnd.endKey } : {}),
-						...(targetEnd.isHub === true ? { target: targetEnd.endKey } : {}),
-					},
 				},
 				sourcePoint,
 				targetPoint,

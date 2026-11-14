@@ -9,13 +9,13 @@ import {
 	LEAST_LANE_SPACING,
 	type NudgePass,
 	type RouteSegment,
-	type RouteToNudge,
 	type SegmentMember,
 	acrossOf,
 	calcOverlap,
 	calcSegmentSpan,
 	isAlongside,
 	isImmovable,
+	isOfOneBundle,
 	listSegmentMembers,
 	pairKey,
 	walkAllSegments,
@@ -240,29 +240,10 @@ const mergeBundledSegments = (
 	segments: readonly RouteSegment[],
 	{ routes }: NudgePass,
 ): RouteSegment[] => {
-	/** Whether `segment` is its route's segment at the end sitting on the hub spot `key`. */
-	const isEndRunAt = (segment: RouteSegment, key: string): boolean => {
-		const { hubKeys, path } = routes[segment.routeIndex];
-		return (
-			(hubKeys?.source === key && segment.segmentIndex === 0) ||
-			(hubKeys?.target === key && segment.segmentIndex === path.length - 2)
-		);
-	};
-	const isHubKey = (route: RouteToNudge, key: string): boolean =>
-		route.hubKeys?.source === key || route.hubKeys?.target === key;
-	const isBundledWith = (a: RouteSegment, b: RouteSegment): boolean => {
-		if (a.routeIndex === b.routeIndex || !isAtLeast(calcOverlap(a, b), 0)) {
-			return false;
-		}
-		const routeA = routes[a.routeIndex];
-		const routeB = routes[b.routeIndex];
-		return (routeA.bundleKeys ?? []).some(
-			(key) =>
-				(routeB.bundleKeys ?? []).includes(key) &&
-				// A hub's bundle is one line only where both routes run into the hub.
-				(!isHubKey(routeA, key) || (isEndRunAt(a, key) && isEndRunAt(b, key))),
-		);
-	};
+	const isBundledWith = (a: RouteSegment, b: RouteSegment): boolean =>
+		a.routeIndex !== b.routeIndex &&
+		isOfOneBundle(routes[a.routeIndex], routes[b.routeIndex]) &&
+		isAtLeast(calcOverlap(a, b), 0);
 	const parents = segments.map((_, index) => index);
 	const findRoot = (index: number): number => {
 		let root = index;

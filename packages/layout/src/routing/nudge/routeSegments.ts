@@ -56,11 +56,6 @@ export type RouteToNudge = {
 	 * no bundle.
 	 */
 	bundleKeys?: readonly string[];
-	/**
-	 * Those of `bundleKeys` that name a hub's gathering spot, by the end of the route
-	 * that sits on it: the routes of such a bundle share only the segment at that end.
-	 */
-	hubKeys?: { source?: string; target?: string };
 };
 
 /** Whether two routes are of one bundle: they share a bundle key (see RouteToNudge.bundleKeys). */
