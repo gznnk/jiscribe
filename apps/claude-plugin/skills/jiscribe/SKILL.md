@@ -3,7 +3,7 @@ name: jiscribe
 description: Use when creating or editing a Jiscribe canvas diagram — a .jis / .jiscribe file, or a flowchart, architecture diagram, sticky-note board or chart the user wants drawn on a Jiscribe canvas.
 ---
 
-<!-- jiscribe guide 0.12.2+2e8b8b90 -->
+<!-- jiscribe guide 0.12.2+b7fdbdc9 -->
 
 # Drawing on a Jiscribe canvas
 
@@ -381,17 +381,13 @@ but not the connect points, guide the adjustments after `layout_objects`.
 - Choose connect points to match the connection direction (for left→right, source = `rightCenter`, target = `leftCenter`).
 - Do not overlap objects that are already there.
 
-Once the shapes stand where they belong, call `route_connectors` instead of
-choosing connect points and corners yourself: it keeps every shape where it is
-and gives each connector the sides and the right-angled route around the other
-shapes, the labels below icons and the titles of containers (it crosses the rest
-of a container's title band straight over), and moves each connector's label to
-where it covers as little of any shape, and as few of the other labels and of the
-lines redrawn in the same call, as it can. A relationship line of an ER diagram
-stays on its columns: it picks the end of each row and gathers the lines to one
-column into one trunk. It runs once, so call it again after moving shapes.
-`layout_objects` moves the shapes as well; keep it for a diagram the connectors
-structure.
+For a drawing that has to read well, route the lines yourself: choose each
+line's sides and bends, and gather lines to one shape into a trunk.
+`route_connectors` is the fast way (after moving shapes, a first draft, too many
+lines to route by hand). Leave room between the shapes for the lines, then render
+and fix by hand what reads badly. It runs once, so call it again after moving
+shapes; `layout_objects` moves the shapes as well, so keep that for a diagram the
+connectors structure.
 
 ## Choosing what to draw with
 

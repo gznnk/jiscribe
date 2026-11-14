@@ -17,8 +17,9 @@ covers that.
 
 ### Added
 
-- **`route_connectors` redraws the lines without moving a shape.** For a
-  drawing whose shapes you placed yourself: each line gets the sides and the
+- **`route_connectors` redraws the lines without moving a shape.** A quick
+  draft, for after moving shapes or when speed matters: lines routed by hand
+  read better. Each line gets the sides and the
   right-angled route that go around the other shapes, the labels below icons
   and the titles of containers (the rest of a title band it crosses straight
   over) without hugging their edges or a container's frame, staying inside the
