@@ -19,31 +19,20 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   doc-op (`DocOps.routeConnectors`, the ai-tools `route_connectors`) gives each
   connector between two shapes the sides and the right-angled route that go
   around every other shape, the caption hung below a `"label"` type and a
-  container's title, running flush along none of their edges, paying for
+  container's title band, running flush along none of their edges, paying for
   running within its margin (`EDGE_ROUTE_MARGIN`) of them or of a container's
   frame (the nearer, the dearer) and crossing and running along the other routes
   drawn in the same call as little as it can; the corners are written as `points` and
   `routing` is dropped. It runs once: a shape moved
   afterwards is not followed. Omitted ids redraw every connector; named shapes
   (a group or a container shape standing for its contents) redraw the
-  connectors among them. A container's title band is crossed straight over
-  beside its title where the container's type says how much of the band the
-  title covers (the new `ObjectDocDefinition.layoutContainerTitleRegion`, which
-  the shipped `container` and `awsGroup` declare), the container is neither
-  rotated nor flipped and no shape stands in the band; any other title band is
-  gone around whole. An end on a declared connect point its type places on a
-  side of its box (the new `ObjectDocDefinition.extraConnectPointEdgeAnchors`,
-  which `erEntity` declares for its columns) is redrawn from that point, or
-  from another point of the same `alternateGroup` (the other end of an ER
-  column's row) when that gives the cheaper route, and the routes to one such
-  point gather into one trunk; the group markers (`brace`, `bracket`,
-  `bracketWithStem`) declare their tip so. An end on a container shape sits on
+  connectors among them. An end on a container shape sits on
   the container's side and leaves outward (the new `RoutableNode.isHollow` of
   `@jiscribe/layout`). Two connectors between facing shapes run straight side
   by side where the gap between the shapes is clear. A self loop, an end that
   is free or on a rotated or flipped shape, a connector between a container
-  shape and a shape standing in it, an end on a declared connect point its
-  type places on no side of its box, ends whose boxes overlap and a connector no
+  shape and a shape standing in it, an end on a declared connect point, ends
+  whose boxes overlap and a connector no
   way is found for are left as they are and reported by reason
   (`ConnectorRouteKeptReasons`). A connector leaving
   through its own end's caption is moved to just beneath that shape, as
@@ -55,8 +44,8 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   route runs along or crosses is taken back and found again against all the
   others, up to twice, so an early edge gives way where a later one needed the
   room. An end's stub runs to the middle of a channel between its side and
-  what faces it (up to four margins wide, six for an end on a declared connect
-  point), so the lines between two columns of boxes bend down the middle. A
+  what faces it (up to four margins wide, six for an end given
+  `RoutableEdge.sourceEnds` / `targetEnds`), so the lines between two columns of boxes bend down the middle. A
   route between two boxes inside one border stays inside the innermost such
   border where it finds a way there, and a run within a third of the margin
   of a box costs much more (`ROUTE_COSTS.hugWeight`). A
@@ -67,7 +56,8 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   places and does not slide afterwards; the routes drawn to one such place are a
   bundle, which a later route to it follows for half its length's cost
   (`ROUTE_COSTS.bundledPerPx`) and no overlap, and whose segments lying on one
-  line are spread and straightened as one. Then the routes running together are spread
+  line are spread and straightened as one; `routeConnectors` passes neither
+  `crossableBands` nor such ends. Then the routes running together are spread
   `GAP_LANE_SPACING` apart (less in a tight channel, and a pair that has no room
   to part at all is left as it stands) in an order that keeps them from crossing
   where they need not, which can bring a run within half that of a shape,

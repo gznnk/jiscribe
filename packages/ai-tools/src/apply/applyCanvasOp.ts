@@ -34,8 +34,7 @@ import type { AiDocBridge } from "./docBridge";
 const KEPT_CONNECTOR_REASON_TEXTS: Record<ConnectorRouteKeptReason, string> = {
 	freeEnd: "an end attached to no shape",
 	selfLoop: "a self loop",
-	declaredConnectPoint:
-		"an end on a connect point the shape's type places on no side of its box",
+	declaredConnectPoint: "an end on a connect point the shape declares",
 	containerEnd: "an end on a container shape the other end stands in or around",
 	transformedEnd: "an end on a rotated or flipped shape",
 	unmeasurableEnd: "an end on an object with no box of its own",

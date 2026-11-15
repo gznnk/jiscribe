@@ -17,7 +17,6 @@ import type {
 } from "@jiscribe/doc";
 import { convertFrameToRect } from "@jiscribe/geometry";
 
-import { calcErEntityConnectPointEdgeAnchors } from "./layout/calcErEntityConnectPointEdgeAnchors";
 import { calcErEntityLayout } from "./layout/calcErEntityLayout";
 import { readErEntityDocLayoutInput } from "./layout/readErEntityLayoutSource";
 import type { ErEntityDocLayoutFields } from "./layout/readErEntityLayoutSource";
@@ -105,7 +104,6 @@ export const erEntityDocDefinition: ObjectDocDefinition = {
 	defaults: ER_ENTITY_DOC_DEFAULTS,
 	bounds: calcErEntityDocBounds,
 	extraConnectPointIds: calcErEntityExtraConnectPointIds,
-	extraConnectPointEdgeAnchors: calcErEntityConnectPointEdgeAnchors,
 	textSlotStyleDefaults: ER_ENTITY_TEXT_SLOT_STYLE_DECLARATION,
 	diagnoseOverflow: diagnoseErEntityLineBreaks,
 	description:

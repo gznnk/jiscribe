@@ -21,22 +21,18 @@ covers that.
   draft, for after moving shapes or when speed matters: lines routed by hand
   read better. Each line gets the sides and the
   right-angled route that go around the other shapes, the labels below icons
-  and the titles of containers (the rest of a title band it crosses straight
-  over) without hugging their edges or a container's frame, staying inside the
+  and container title bands without hugging their edges or a container's frame, staying inside the
   container both its ends stand in where it finds a way there, crossing and
   running along the other lines as little as it can; each
   line's label is moved to where it covers as little of any shape, and as few
-  of the other labels and of the lines redrawn in the same call, as it can. An
-  end on an ER entity's column is redrawn from that column, from whichever end
-  of its row gives the cheaper route, and the lines to one column gather into
-  one trunk; a line to the tip of a brace or a bracket stays on the tip, and
-  one ending on a container is drawn to the container's side. It runs once, so
+  of the other labels and of the lines redrawn in the same call, as it can. A
+  line ending on a container is drawn to the container's side. It runs once, so
   run it again after moving shapes. Give it
   lines, or shapes (a group or a container counting its contents) to redraw the
   lines among them, or nothing for every line. The reply names the lines it
   redrew, the ones it left as they were and why (a self loop, a line between
   a container and a shape inside it, an end on a rotated shape, an end on a
-  declared connect point that lies on no side of its shape, overlapping shapes,
+  declared connect point, overlapping shapes,
   no way through),
   and the ones it moved beneath a shape whose label they leave through.
 

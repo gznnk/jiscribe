@@ -1174,10 +1174,9 @@ export const createCanvasToolDescriptors = (
 	const routeConnectorsTool = defineCanvasTool(
 		"route_connectors",
 		[
-			"Redraw connectors without moving any shape: each gets the sides and the right-angled route that go around other shapes, the captions below them and the titles of container shapes (the rest of a container's title band it crosses straight over), staying inside the container shape both its ends stand in where it finds a way there, crossing and overlapping the others as little as it can, and its label is moved to where it covers as little of any shape, and as few of the other labels and of the lines redrawn in the same call, as it can.",
-			"An end on a connect point a shape declares on a side of its box (an ER entity's column) is redrawn from that point, or from the other end of the same row when that gives the cheaper route, and the lines to one such point gather into one trunk.",
+			"Redraw connectors without moving any shape: each gets the sides and the right-angled route that go around other shapes, the captions below them and container title bands, staying inside the container shape both its ends stand in where it finds a way there, crossing and overlapping the others as little as it can, and its label is moved to where it covers as little of any shape, and as few of the other labels and of the lines redrawn in the same call, as it can.",
 			"Once only: a shape moved later is not followed, so run it again. A quick draft: lines you route yourself read better. Use it for a first draft or when there are too many lines to route by hand, then fix by hand what reads badly; on a flow you want arranged use layout_objects instead.",
-			"Omit ids for every connector; name connectors, or shapes (a group or container shape counts its contents) to redraw the connectors between them. A self loop, a line between a container shape and a shape inside it, an end on a rotated shape, an end on a declared connect point that lies on no side of its shape's box, and ends whose boxes overlap are left as they are.",
+			"Omit ids for every connector; name connectors, or shapes (a group or container shape counts its contents) to redraw the connectors between them. A self loop, a line between a container shape and a shape inside it, an end on a rotated shape, an end on a declared connect point, and ends whose boxes overlap are left as they are.",
 		].join(" "),
 		{
 			ids: z

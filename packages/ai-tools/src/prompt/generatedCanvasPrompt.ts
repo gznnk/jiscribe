@@ -1,7 +1,7 @@
 // 生成物。編集しないこと（pnpm generate:schema で再生成）。
 // 正本は engine/packages/doc-schema/parts/ にある。
 
-export const GENERATED_CANVAS_PROMPT = `<!-- jiscribe guide 0.12.2+d075398c -->
+export const GENERATED_CANVAS_PROMPT = `<!-- jiscribe guide 0.12.2+0b337867 -->
 
 # Drawing on a Jiscribe canvas
 
@@ -149,10 +149,7 @@ Use \`erEntity\` for every entity of an ER diagram, never \`record\`. The title 
   pick the sides for the direction you will lay the diagram out in: with \`LR\` the FK
   entity lands left of the one it references, so FK \`:right\` to PK \`:left\`. Two FK
   columns pointing at entities above and below can share one trunk unless the column
-  nearer the top points at the entity above (\`er_entity_move_columns\`). On entities
-  you placed yourself, \`route_connectors\` picks the end of each row for you (it may
-  move an end from \`:right\` to \`:left\` of the same column) and gathers the
-  relationships to one column into one trunk.
+  nearer the top points at the entity above (\`er_entity_move_columns\`).
 - Resolve a many-to-many relationship through a junction entity holding both
   foreign keys.
 

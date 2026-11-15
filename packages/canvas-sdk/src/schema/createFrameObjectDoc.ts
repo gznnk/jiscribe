@@ -78,13 +78,6 @@ type FrameObjectDocCommonParams = {
 	layoutContainer?: ObjectDocDefinition["layoutContainer"];
 
 	/**
-	 * The part of the title band the title covers, for a shape that declares
-	 * `layoutContainer` (see `ObjectDocDefinition.layoutContainerTitleRegion`). Carried
-	 * into the definition as-is. Omitted = the title covers the whole band.
-	 */
-	layoutContainerTitleRegion?: ObjectDocDefinition["layoutContainerTitleRegion"];
-
-	/**
 	 * Where the shape lays its text out (see `ObjectDocDefinition.textRegion`):
 	 * the rectangle the headless checks and the auto-height measurement read,
 	 * `calcFullBoxTextRegion` for the whole box. Where the canvas draws the text
@@ -185,7 +178,6 @@ export const createFrameObjectDoc = ({
 	outline,
 	anchorRegion,
 	layoutContainer,
-	layoutContainerTitleRegion,
 	diagnoseOverflow,
 	autoHeight,
 	autoHeightPaddingEm,
@@ -206,7 +198,6 @@ export const createFrameObjectDoc = ({
 	outline,
 	anchorRegion,
 	layoutContainer,
-	layoutContainerTitleRegion,
 	textRegion,
 	textSlotStyleDefaults,
 	autoHeight,

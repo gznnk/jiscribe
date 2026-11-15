@@ -1,4 +1,4 @@
-<!-- jiscribe guide 0.12.2+d075398c -->
+<!-- jiscribe guide 0.12.2+0b337867 -->
 
 # The Jiscribe file format
 

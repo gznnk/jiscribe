@@ -1,6 +1,5 @@
 import { doRectsOverlap, type Rect } from "@jiscribe/geometry";
 import {
-	type LayoutEdgeAnchor,
 	type RoutableEdge,
 	type RoutableNode,
 	type RoutedEdge,
@@ -45,15 +44,13 @@ import type { ConnectorDoc } from "../model/objects/connector/ConnectorDoc";
 import { GroupFeatures } from "../model/objects/primitives/group/GroupDoc";
 import { isOnDeclaredConnectPoint } from "../model/objects/types/EndpointRef";
 import { sortEdgesByEndOrder } from "../model/objects/utils/sortEdgesByEndOrder";
-import type { ObjectDocConnectPointEdgeAnchor } from "../plugin/ObjectDocConnectPointEdgeAnchor";
 
 /**
  * Why routeConnectors left a connector as it was, in the order it asks:
  * - `freeEnd`: an end attached to no shape, or to an id the document does not hold
  * - `selfLoop`: both ends on one shape
- * - `declaredConnectPoint`: an end on a connect point its owner's type declares and
- *   places on no side of its box (it answers no edge anchor for it, see
- *   `ObjectDocDefinition.extraConnectPointEdgeAnchors`)
+ * - `declaredConnectPoint`: an end on a connect point its owner's type declares (an ER
+ *   entity's column), which the type, not a side, places
  * - `transformedEnd`: an end on a shape that is rotated or flipped
  * - `unmeasurableEnd`: an end on an object with no box to route around (a group, an
  *   unknown type)
@@ -111,10 +108,7 @@ type RoutingScene = {
 	/** The container shapes with a box, which a route may end on but goes around nothing of. */
 	containerById: Map<string, SceneShape>;
 	containerIds: Set<string>;
-	/** What no route enters of the title bands: a whole band, or the title in it. */
-	titleObstacles: Rect[];
-	/** The title bands a route may cross straight over, beside the title. */
-	crossableTitleBands: Rect[];
+	titleBands: Rect[];
 	frames: Rect[];
 };
 
@@ -133,16 +127,9 @@ const collectRoutingScene = (
 		shapeById: new Map(),
 		containerById: new Map(),
 		containerIds: new Set(),
-		titleObstacles: [],
-		crossableTitleBands: [],
+		titleBands: [],
 		frames: [],
 	};
-	const titleBands: {
-		band: Rect;
-		/** What `layoutContainerTitleRegion` answers, local to the container's centre. */
-		titleRegion: Rect | undefined;
-		centreX: number;
-	}[] = [];
 	visitObjects(doc.root, (object) => {
 		if (
 			isConnectorObject(object) ||
@@ -152,8 +139,7 @@ const collectRoutingScene = (
 			return;
 		}
 		const bounds = getObjectBounds(object, definitions);
-		const definition = definitions.get(object.type);
-		const container = definition?.layoutContainer;
+		const container = definitions.get(object.type)?.layoutContainer;
 		if (container !== undefined) {
 			scene.containerIds.add(object.id);
 			if (bounds === null) {
@@ -168,14 +154,9 @@ const collectRoutingScene = (
 			});
 			const { titleHeight } = container(object);
 			if (Number.isFinite(titleHeight) && titleHeight > 0) {
-				// A turned container's title lies elsewhere than its untransformed box says.
-				const titleRegion = isTransformed(object)
-					? undefined
-					: definition?.layoutContainerTitleRegion?.(object);
-				titleBands.push({
-					band: { ...bounds, height: Math.min(titleHeight, bounds.height) },
-					titleRegion,
-					centreX: bounds.x + bounds.width / 2,
+				scene.titleBands.push({
+					...bounds,
+					height: Math.min(titleHeight, bounds.height),
 				});
 			}
 			return;
@@ -215,43 +196,6 @@ const collectRoutingScene = (
 			},
 		});
 	});
-	const shapeBounds = [...scene.shapeById.values()].map(
-		({ node }) => node.bounds,
-	);
-	const containerBounds = [...scene.containerById.values()].map(
-		({ bounds }) => bounds,
-	);
-	for (const { band, titleRegion, centreX } of titleBands) {
-		// A shape standing in the band could not leave it were the band crossable only
-		// straight over, so such a band stays an obstacle, left out for that shape's
-		// edges; so does one a container shape other than those around it stands in.
-		if (
-			titleRegion === undefined ||
-			shapeBounds.some((bounds) => doRectsOverlap(bounds, band)) ||
-			containerBounds.some(
-				(bounds) =>
-					doRectsOverlap(bounds, band) &&
-					!(
-						bounds.x <= band.x &&
-						bounds.y <= band.y &&
-						bounds.x + bounds.width >= band.x + band.width &&
-						bounds.y + bounds.height >= band.y + band.height
-					),
-			)
-		) {
-			scene.titleObstacles.push(band);
-			continue;
-		}
-		scene.crossableTitleBands.push(band);
-		const left = Math.max(centreX + titleRegion.x, band.x);
-		const right = Math.min(
-			centreX + titleRegion.x + titleRegion.width,
-			band.x + band.width,
-		);
-		if (right > left) {
-			scene.titleObstacles.push({ ...band, x: left, width: right - left });
-		}
-	}
 	return scene;
 };
 
@@ -355,74 +299,11 @@ const findEndShape = (
 ): SceneShape | undefined =>
 	scene.shapeById.get(ownerId) ?? scene.containerById.get(ownerId);
 
-/** One place an end on a declared connect point may sit: the point's id and its place on the owner's box. */
-type PinnedEnd = { id: string; anchor: LayoutEdgeAnchor };
-
-/**
- * The places an end on a declared connect point may be routed from: the point it
- * names, then the other points of its `alternateGroup` in the order the type declares
- * them (`ObjectDocDefinition.extraConnectPointEdgeAnchors`); undefined when the
- * owner's type places the point on no side of its box.
- *
- * @param endpoint - An end on a declared connect point, its owner among the scene's shapes
- * @param edgeAnchorsByOwnerId - What the types answered so far, by owner id; filled in for an owner not yet asked
- */
-const listPinnedEnds = (
-	endpoint: ConnectorDoc["source"],
-	scene: RoutingScene,
-	definitions: DocDefinitions,
-	edgeAnchorsByOwnerId: Map<string, readonly ObjectDocConnectPointEdgeAnchor[]>,
-): PinnedEnd[] | undefined => {
-	const ownerId = readOwnerId(endpoint);
-	const shape =
-		ownerId === undefined ? undefined : findEndShape(scene, ownerId);
-	if (
-		ownerId === undefined ||
-		shape === undefined ||
-		endpoint.anchor.kind !== "connectPoint"
-	) {
-		return undefined;
-	}
-	let edgeAnchors = edgeAnchorsByOwnerId.get(ownerId);
-	if (edgeAnchors === undefined) {
-		edgeAnchors =
-			definitions
-				.get(shape.object.type)
-				?.extraConnectPointEdgeAnchors?.(shape.object) ?? [];
-		edgeAnchorsByOwnerId.set(ownerId, edgeAnchors);
-	}
-	const namedId = endpoint.anchor.id;
-	const named = edgeAnchors.find(({ id }) => id === namedId);
-	if (named === undefined) {
-		return undefined;
-	}
-	return [
-		named,
-		...edgeAnchors.filter(
-			(edgeAnchor) =>
-				edgeAnchor !== named &&
-				named.alternateGroup !== undefined &&
-				edgeAnchor.alternateGroup === named.alternateGroup,
-		),
-	].map(({ id, side, t }) => ({ id, anchor: { side, t } }));
-};
-
-/** Where each end of a connector may be routed from when it sits on a declared connect point; undefined for an end that does not, or whose point is on no side. */
-type ConnectorPinnedEnds = {
-	source: PinnedEnd[] | undefined;
-	target: PinnedEnd[] | undefined;
-};
-
-/**
- * Why the connector is left as it is, or undefined when it is to be routed.
- *
- * @param pinnedEnds - What listPinnedEnds answers for each of its ends on a declared connect point
- */
+/** Why the connector is left as it is, or undefined when it is to be routed. */
 const readKeptReason = (
 	connector: ConnectorDoc,
 	scene: RoutingScene,
 	objectIds: ReadonlySet<string>,
-	pinnedEnds: ConnectorPinnedEnds,
 ): ConnectorRouteKeptReason | undefined => {
 	const sourceId = readOwnerId(connector.source);
 	const targetId = readOwnerId(connector.target);
@@ -438,10 +319,8 @@ const readKeptReason = (
 		return "selfLoop";
 	}
 	if (
-		(isOnDeclaredConnectPoint(connector.source) &&
-			pinnedEnds.source === undefined) ||
-		(isOnDeclaredConnectPoint(connector.target) &&
-			pinnedEnds.target === undefined)
+		isOnDeclaredConnectPoint(connector.source) ||
+		isOnDeclaredConnectPoint(connector.target)
 	) {
 		return "declaredConnectPoint";
 	}
@@ -464,17 +343,9 @@ const readKeptReason = (
 /**
  * Redraw connectors between shapes that stay where they stand, mutating `doc` in
  * place: each one's ends are moved to the sides and spots that give it the cheapest
- * right-angled route around every other shape, caption and container title in
+ * right-angled route around every other shape, caption and container title band in
  * the document (routeEdgesAroundNodes), and its corners are written as `points`
- * (none when it runs straight); `routing` is dropped. A container's title band is
- * crossed straight over beside its title, where the container's type says how much of
- * the band the title covers (`ObjectDocDefinition.layoutContainerTitleRegion`), the
- * container is neither rotated nor flipped and neither a shape nor a container shape
- * inside it stands in the band; any other band is gone around whole. An end on a
- * declared connect point its owner's type places on a side of its box
- * (`ObjectDocDefinition.extraConnectPointEdgeAnchors`) stays on that point or moves
- * to another of the same `alternateGroup`, whichever gives the cheaper route, and the
- * routes to one such point gather into one trunk. An end on a container shape sits
+ * (none when it runs straight); `routing` is dropped. An end on a container shape sits
  * on a side of the container's box and leaves outward, the route keeping out of the
  * container (`RoutableNode.isHollow`). The routes are drawn one by one in the order
  * of their ends in the stacking order (sortEdgesByEndOrder), each keeping off the ones
@@ -493,10 +364,9 @@ const readKeptReason = (
  *   named is redrawn; a shape named stands for itself, a group for every object in it,
  *   and a container shape for itself and the shapes at its own level lying inside it,
  *   and every connector joining two shapes so named is redrawn. Every id must exist
- * @param definitions - Type table the boxes, `layoutContainer` (the title band) and
- *   `layoutContainerTitleRegion`, the captions of `features.text: "label"` types,
- *   `extraConnectPointEdgeAnchors` and the `outline` / `anchorRegion` an end is kept
- *   on are read from
+ * @param definitions - Type table the boxes, `layoutContainer` (the title band), the
+ *   captions of `features.text: "label"` types and the `outline` / `anchorRegion` an
+ *   end is kept on are read from
  * @returns Which connectors were redrawn, which were left as they were and why, and
  *   which were moved in the stacking order
  * @throws {@link DocOperationError} for an id that is missing, before anything is
@@ -521,39 +391,15 @@ export const routeConnectors = (
 		(keptConnectorIdsByReason[reason] ??= []).push(connectorId);
 	};
 	const connectorById = new Map<string, ConnectorDoc>();
-	const pinnedEndsById = new Map<string, ConnectorPinnedEnds>();
-	const edgeAnchorsByOwnerId = new Map<
-		string,
-		readonly ObjectDocConnectPointEdgeAnchor[]
-	>();
-	const readPinnedEnds = (
-		endpoint: ConnectorDoc["source"],
-	): PinnedEnd[] | undefined =>
-		isOnDeclaredConnectPoint(endpoint)
-			? listPinnedEnds(endpoint, scene, definitions, edgeAnchorsByOwnerId)
-			: undefined;
 	const edges: RoutableEdge[] = [];
 	for (const connector of connectors) {
-		const pinnedEnds: ConnectorPinnedEnds = {
-			source: readPinnedEnds(connector.source),
-			target: readPinnedEnds(connector.target),
-		};
-		const reason = readKeptReason(connector, scene, objectIds, pinnedEnds);
+		const reason = readKeptReason(connector, scene, objectIds);
 		if (reason !== undefined) {
 			keep(connector.id, reason);
 			continue;
 		}
 		connectorById.set(connector.id, connector);
-		pinnedEndsById.set(connector.id, pinnedEnds);
-		edges.push({
-			...buildConnectorGraphEdge(connector),
-			...(pinnedEnds.source !== undefined
-				? { sourceEnds: pinnedEnds.source.map(({ anchor }) => anchor) }
-				: {}),
-			...(pinnedEnds.target !== undefined
-				? { targetEnds: pinnedEnds.target.map(({ anchor }) => anchor) }
-				: {}),
-		});
+		edges.push(buildConnectorGraphEdge(connector));
 	}
 	const endShapeIds = new Set(
 		edges.flatMap(({ sourceId, targetId }) => [sourceId, targetId]),
@@ -584,8 +430,7 @@ export const routeConnectors = (
 	});
 	const sortedEdges = sortEdgesByEndOrder(edges, treeOrderIds);
 	const routed = routeEdgesAroundNodes(nodes, sortedEdges, {
-		obstacles: scene.titleObstacles,
-		crossableBands: scene.crossableTitleBands,
+		obstacles: scene.titleBands,
 		borders: scene.frames,
 	});
 	const unroutedIds = new Set(routed.unroutedEdgeIds);
@@ -601,43 +446,21 @@ export const routeConnectors = (
 	const toEndpoint = (
 		ownerId: string,
 		anchor: RoutedEdge["source"],
-		pinnedEnds: PinnedEnd[] | undefined,
 	): ConnectorDoc["source"] =>
-		pinnedEnds !== undefined
-			? {
-					owner: { id: ownerId },
-					anchor: {
-						kind: "connectPoint",
-						id: (
-							pinnedEnds.find(
-								(end) =>
-									end.anchor.side === anchor.side && end.anchor.t === anchor.t,
-							) as PinnedEnd
-						).id,
-					},
-				}
-			: buildRoutedEndpoint(
-					locatedOwners,
-					ownerId,
-					anchor,
-					anchorShapeById.get(ownerId) as EdgeAnchorOutlineShape,
-					definitions,
-				);
+		buildRoutedEndpoint(
+			locatedOwners,
+			ownerId,
+			anchor,
+			anchorShapeById.get(ownerId) as EdgeAnchorOutlineShape,
+			definitions,
+		);
 	const edgeById = new Map(edges.map((edge) => [edge.id, edge] as const));
 	const writes = routed.edges.map((routedEdge) => {
 		const { sourceId, targetId } = edgeById.get(routedEdge.id) as RoutableEdge;
 		return {
 			connector: connectorById.get(routedEdge.id) as ConnectorDoc,
-			source: toEndpoint(
-				sourceId,
-				routedEdge.source,
-				pinnedEndsById.get(routedEdge.id)?.source,
-			),
-			target: toEndpoint(
-				targetId,
-				routedEdge.target,
-				pinnedEndsById.get(routedEdge.id)?.target,
-			),
+			source: toEndpoint(sourceId, routedEdge.source),
+			target: toEndpoint(targetId, routedEdge.target),
 			points: toStoredRouteCorners(
 				routedEdge.points,
 				routedEdge.source.side,
