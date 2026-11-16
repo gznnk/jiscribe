@@ -2,7 +2,6 @@ import type { Rect } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
 import { theme } from "../../../foundation/theme/themeTokens";
-import { resolveConnectorLabelBox } from "../../../rendering/objects/connector/geometry/label/connectorLabelLayout";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../states/objects/connector/ConnectorState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
@@ -28,11 +27,32 @@ registries.objectLabelBackdrop.register("frame", (state, style) => {
 		},
 	];
 });
+// A container-like frame: its body, then a title band over its top 30 units.
+registries.objectLabelBackdrop.register("banded", (state, style) => {
+	const { width, height } = state as ObjectState & {
+		width: number;
+		height: number;
+	};
+	return [
+		{
+			rect: { x: -width / 2, y: -height / 2, width, height },
+			fill: style.fillColor,
+			fillOpacity: style.fillAlpha,
+		},
+		{
+			rect: { x: -width / 2, y: -height / 2, width, height: 30 },
+			fill: "#00ff00",
+			fillOpacity: style.fillAlpha,
+		},
+	];
+});
 registries.objectPartKind.register("captioned", [
 	createTextSlotPartKindDefinition({ region: () => CAPTION_REGION }),
 ]);
 
 type FrameOptions = {
+	/** The backdrop type; "frame" (one region) unless given. */
+	type?: string;
 	fill?: string;
 	fillOpacity?: number;
 	rotation?: number;
@@ -47,6 +67,7 @@ const frame = (
 	width: number,
 	height: number,
 	{
+		type = "frame",
 		fill = "#ff0000",
 		fillOpacity = 0.5,
 		rotation = 0,
@@ -55,7 +76,7 @@ const frame = (
 ): ObjectState =>
 	({
 		id,
-		type: "frame",
+		type,
 		parentId,
 		cx,
 		cy,
@@ -149,17 +170,15 @@ const resolve = (
 		renderScope,
 	);
 
-const WHOLE_BOX = { x: 0, y: 0, width: 40, height: 20 };
+const RED_LAYER = { fill: "#ff0000", fillOpacity: 0.5 };
 
 describe("resolveLabelBackdrops", () => {
-	it("covers the whole box of a caption lying inside a frame, in the frame's fill", () => {
+	it("gives a caption lying inside a frame the frame's fill", () => {
 		const backdrops = resolve([
 			frame("frame", 100, 100, 200, 200),
 			captioned("shape", 100, 80),
 		]);
-		expect(backdrops.get("shape")).toEqual([
-			{ rect: WHOLE_BOX, fill: "#ff0000", fillOpacity: 0.5 },
-		]);
+		expect(backdrops.get("shape")).toEqual([RED_LAYER]);
 	});
 
 	it("leaves a caption outside every frame out", () => {
@@ -170,19 +189,37 @@ describe("resolveLabelBackdrops", () => {
 		expect(backdrops.has("shape")).toBe(false);
 	});
 
-	it("paints only the part of a box straddling the frame's edge", () => {
-		// The frame's right edge at x 200; the box spans x 190..230, y 105..125.
+	it("gives a box straddling the frame's edge the frame's fill while its center is inside", () => {
+		// The frame's right edge at x 200; the box spans x 175..215, its center at 195.
 		const backdrops = resolve([
 			frame("frame", 100, 100, 200, 200),
-			captioned("shape", 210, 80),
+			captioned("shape", 195, 80),
 		]);
-		expect(backdrops.get("shape")).toEqual([
-			{
-				rect: { x: 0, y: 0, width: 10, height: 20 },
-				fill: "#ff0000",
-				fillOpacity: 0.5,
-			},
+		expect(backdrops.get("shape")).toEqual([RED_LAYER]);
+	});
+
+	it("gives a box overlapping the frame nothing while its center is outside", () => {
+		// The box spans x 185..225 over the frame's right edge at x 200, its center at 205.
+		const backdrops = resolve([
+			frame("frame", 100, 100, 200, 200),
+			captioned("shape", 205, 80),
 		]);
+		expect(backdrops.has("shape")).toBe(false);
+	});
+
+	it("counts a center on a region's edge as inside it, so a title band's lower edge is the band's", () => {
+		// The band covers y 0..30 of a frame spanning y 0..200; the caption's box
+		// spans y cy+25..cy+45, its center at cy+35.
+		const layersWithCenterAt = (centerY: number) =>
+			resolve([
+				frame("frame", 100, 100, 200, 200, { type: "banded" }),
+				captioned("shape", 100, centerY - 35),
+			]).get("shape");
+		expect(layersWithCenterAt(30)).toEqual([
+			RED_LAYER,
+			{ fill: "#00ff00", fillOpacity: 0.5 },
+		]);
+		expect(layersWithCenterAt(31)).toEqual([RED_LAYER]);
 	});
 
 	it("stacks nested frames bottom first", () => {
@@ -192,8 +229,8 @@ describe("resolveLabelBackdrops", () => {
 			captioned("shape", 100, 80),
 		]);
 		expect(backdrops.get("shape")).toEqual([
-			{ rect: WHOLE_BOX, fill: "#ff0000", fillOpacity: 0.5 },
-			{ rect: WHOLE_BOX, fill: "#0000ff", fillOpacity: 1 },
+			RED_LAYER,
+			{ fill: "#0000ff", fillOpacity: 1 },
 		]);
 	});
 
@@ -211,21 +248,17 @@ describe("resolveLabelBackdrops", () => {
 			frame("frame", 100, 100, 200, 200, { parentId: "group" }),
 			captioned("shape", 100, 80, { parentId: "group" }),
 		];
-		expect(resolve(objects, ["group"]).get("shape")).toEqual([
-			{ rect: WHOLE_BOX, fill: "#ff0000", fillOpacity: 0.5 },
-		]);
+		expect(resolve(objects, ["group"]).get("shape")).toEqual([RED_LAYER]);
 	});
 
-	it("judges a rotated frame by the box's center, covering the whole box", () => {
+	it("judges a rotated frame by the same rule, the box's center taken into its space", () => {
 		// Rotated 45°, the frame's corners swing out; the box's center (100, 115)
 		// still lies inside it.
 		const inside = resolve([
 			frame("frame", 100, 100, 100, 100, { rotation: 45 }),
 			captioned("shape", 100, 80),
 		]);
-		expect(inside.get("shape")).toEqual([
-			{ rect: WHOLE_BOX, fill: "#ff0000", fillOpacity: 0.5 },
-		]);
+		expect(inside.get("shape")).toEqual([RED_LAYER]);
 
 		// The box (x 140..180, y 105..125) overlaps the rotated frame's right
 		// corner, but its center (160, 115) lies outside it.
@@ -234,17 +267,26 @@ describe("resolveLabelBackdrops", () => {
 			captioned("shape", 160, 80),
 		]);
 		expect(outside.has("shape")).toBe(false);
+
+		// Where only the rotation decides: (165, 100) lies in the rotated frame's
+		// right corner, past the unrotated square's edge at x 150; (140, 140)
+		// lies in the unrotated square's corner, outside the rotated one.
+		const rotatedFrame = frame("frame", 100, 100, 100, 100, { rotation: 45 });
+		expect(
+			resolve([rotatedFrame, captioned("shape", 165, 65)]).get("shape"),
+		).toEqual([RED_LAYER]);
+		expect(
+			resolve([rotatedFrame, captioned("shape", 140, 105)]).has("shape"),
+		).toBe(false);
 	});
 
-	it("judges a rotated caption by its box's center, covering the whole box", () => {
+	it("judges a rotated caption by the same rule, its box's center taken through its rotation", () => {
 		// Rotated 180° about (100, 80), the box's center moves to (100, 45).
 		const backdrops = resolve([
 			frame("frame", 100, 25, 200, 50),
 			captioned("shape", 100, 80, { rotation: 180 }),
 		]);
-		expect(backdrops.get("shape")).toEqual([
-			{ rect: WHOLE_BOX, fill: "#ff0000", fillOpacity: 0.5 },
-		]);
+		expect(backdrops.get("shape")).toEqual([RED_LAYER]);
 		// Unrotated, the same box (y 105..125) would lie below that frame.
 		expect(
 			resolve([
@@ -288,24 +330,20 @@ describe("resolveLabelBackdrops", () => {
 		expect(backdrops.get("shape")?.[0].fill).toBe(theme.objectSurface);
 	});
 
-	it("cuts a connector's label against the frames under it", () => {
-		const label = { text: "go" };
+	it("judges a connector's label by its anchor, the center its box is placed on", () => {
 		const connector = labelledConnector(
 			"connector",
 			{ x: 0, y: 100 },
 			{ x: 200, y: 100 },
-			label,
+			{ text: "go" },
 		);
-		// The frame covers x 0..100: the label, centered on (100, 100), is half on it.
-		const backdrops = resolve([frame("frame", 50, 100, 100, 200), connector]);
-		const box = resolveConnectorLabelBox(label);
-		const layers = backdrops.get("connector");
-		expect(layers).toHaveLength(1);
-		expect(layers?.[0]).toMatchObject({ fill: "#ff0000", fillOpacity: 0.5 });
-		expect(layers?.[0].rect.x).toBe(0);
-		expect(layers?.[0].rect.y).toBe(0);
-		expect(layers?.[0].rect.width).toBeCloseTo(box.width / 2, 6);
-		expect(layers?.[0].rect.height).toBeCloseTo(box.height, 6);
+		// The label is centered on (100, 100); its box reaches past x 90 and x 110.
+		expect(
+			resolve([frame("frame", 55, 100, 110, 200), connector]).get("connector"),
+		).toEqual([RED_LAYER]);
+		expect(
+			resolve([frame("frame", 45, 100, 90, 200), connector]).has("connector"),
+		).toBe(false);
 
 		const colored = resolve([
 			frame("frame", 50, 100, 100, 200),
@@ -340,14 +378,7 @@ describe("resolveLabelBackdrops", () => {
 			undefined,
 			"connector",
 		);
-		const box = resolveConnectorLabelBox({ text: "" });
-		expect(edited.get("connector")).toEqual([
-			{
-				rect: { x: 0, y: 0, width: box.width, height: box.height },
-				fill: "#ff0000",
-				fillOpacity: 0.5,
-			},
-		]);
+		expect(edited.get("connector")).toEqual([RED_LAYER]);
 	});
 
 	it("counts only the frames inside the render scope", () => {

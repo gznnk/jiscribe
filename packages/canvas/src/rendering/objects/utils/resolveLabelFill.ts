@@ -20,8 +20,8 @@ export const isAutoLabelFill = (
  *
  * @param fill the label's background as stored; omitted or `"auto"` gives
  *   `documentSurface`, so the box knocks out what lies behind it in the page's
- *   color, the frames it lies on then being painted over it by the label
- *   (LabelBackdropLayers). A concrete color is returned as-is (`"transparent"`
+ *   color, the fills of the frames its center lies in then being painted over
+ *   the whole box by the label (LabelBackdropLayers). A concrete color is returned as-is (`"transparent"`
  *   lets it show through)
  * @param documentSurface the color of the page behind the label, from
  *   useDocumentSurface

@@ -108,22 +108,22 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   handed the body fill the core resolved (`fillColor` / `fillAlpha`, as
   `createFrameObject` draws it), and `createFrameObjectDefinition` passes it
   through. An `"auto"` caption background or connector label `fill` lying on such
-  a frame is painted in the page's color and then in each region where it lies
-  under the label's box, so the label blends into a filled container or awsGroup
-  instead of standing out as a page-colored box. Only the frames drawn before the
-  label count; where the frame or the label's shape is rotated or flipped, the
-  box's center decides and the region then covers the whole box. It is worked
+  a frame is painted in the page's color and then, over the whole box, in each
+  region the center of the label's box lies in (its edge included), so the label
+  blends into a filled container or awsGroup instead of standing out as a
+  page-colored box. A label straddling a frame's edge takes the frame's fill
+  when its center is inside, and the page's color alone when it is outside.
+  Only the frames drawn before the label count, rotated or flipped ones by the
+  same rule. It is worked
   out again whenever the drawing changes, except during a drag, which keeps the
   previous result until it ends (an export taken mid-drag is worked out all
   the same); an export of a subset counts only the frames in it. container and
   awsGroup declare one; a filled rectangle is no backdrop. A connector label
-  being edited is painted the same way, cut for the text as typed so far, an
-  empty one being created included.
-- **`@jiscribe/geometry` exports `calcBoundingBoxIntersection` and
-  `isPointInBoundingBox`.** The first is the part two bounding boxes share,
-  `null` when they share no area (apart, or only touching along an edge or at a
-  corner, or with a `NaN` edge); the second whether a point lies inside a box or
-  on its edge, `false` for an inverted box or a `NaN` coordinate.
+  being edited is painted the same way, for the text as typed so far, an empty
+  one being created included.
+- **`@jiscribe/geometry` exports `isPointInBoundingBox`**, whether a point lies
+  inside a box or on its edge, `false` for an inverted box or a `NaN`
+  coordinate.
 - **A type can measure the text body it draws itself.** `ObjectTypeDefinition`
   takes `textMeasurer` (`ObjectTextMeasurer`, returning an
   `ObjectTextMeasurement`), which `CanvasHandle.measure.textSlot` calls in place

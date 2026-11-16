@@ -1,13 +1,11 @@
-import type { Rect } from "@jiscribe/geometry";
 import { createContext, useContext } from "react";
 
 /**
- * One backdrop region painted under an `"auto"` label: the part of a frame's
- * fill that lies under the label's box (resolveLabelBackdrops).
+ * One backdrop region painted under an `"auto"` label: the fill of a frame
+ * region the center of the label's box lies in, painted over the whole box
+ * (resolveLabelBackdrops).
  */
 export type LabelBackdropLayer = {
-	/** The painted part, with the label box's top-left corner as the origin, in the units the box is drawn in. */
-	rect: Rect;
 	/** The frame's resolved color: a CSS color or a `var(--jiscribe-…)` theme token. */
 	fill: string;
 	/** The frame's fill opacity, 0 to 1. */

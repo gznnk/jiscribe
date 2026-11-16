@@ -150,17 +150,21 @@ resolved per element (`var()`, `currentColor`), one the browser keeps in another
 An auto label lying on a frame is painted on that frame's fill too, so it blends into the frame rather
 than standing out in the page's color. Only a type declaring `labelBackdrop` (container, awsGroup)
 counts as a frame. `resolveLabelBackdrops` (`controllers/utils/resolveLabelBackdrops.ts`) walks the
-objects in drawing order and cuts each label's box against the regions the frames drawn before it paint;
+objects in drawing order and tests the center of each label's box against the regions the frames drawn
+before it paint, a point on a region's edge counting as inside;
 `<Canvas>` works this out again whenever what it draws changes, but not during a drag (an export taken
 mid-drag is the exception, worked out for what it draws), and hands the
 result to each label through a store it subscribes to by its owner's id
 (`rendering/objects/LabelBackdropStoreContext.ts`, `useLabelBackdropLayers`). The label then draws the
-page's color and, over it, one shape per region (`rendering/objects/base/LabelBackdropLayers.tsx`), in the
-region's own color and opacity, so a translucent fill or a theme token looks the same as on the frame.
+page's color and, over it, one rect over its whole box for each region holding that center
+(`rendering/objects/base/LabelBackdropLayers.tsx`), in the region's own color and opacity, so a translucent
+fill or a theme token looks the same as on the frame. A label straddling a frame's edge therefore takes the
+frame's fill all over when its center is inside, and the page's color alone when it is outside; one across a
+container's title band and body takes the color of the side its center is on.
 While it has layers, the page's color and the layers are drawn with `shape-rendering="crispEdges"`, so their
 edges land on the same pixels and no rim of the page's color shows around the box. A
-frame or a label owner that is rotated or flipped is judged by the box's center alone, the region then
-covering the whole box. A connector label's inline editor is painted the same way: the backdrops are
+frame or a label owner that is rotated or flipped answers by the same rule, the center being taken into the
+frame's own space. A connector label's inline editor is painted the same way: the backdrops are
 worked out with its draft grafted onto the connector (`controllers/utils/graftConnectorLabelDraft.ts`, an
 empty label being created included), and the editor draws them through the same part in an SVG behind
 its text, with its border drawn again on top.

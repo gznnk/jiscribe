@@ -2,46 +2,35 @@
 
 import { act } from "react";
 import { createRoot } from "react-dom/client";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
-import type * as ConnectorLabelLayoutModule from "../../../rendering/objects/connector/geometry/label/connectorLabelLayout";
 import type { LabelBackdropLayer } from "../../../rendering/objects/LabelBackdropStoreContext";
-import { LabelBackdropStoreContext } from "../../../rendering/objects/LabelBackdropStoreContext";
+import {
+	LabelBackdropStoreContext,
+	NO_LABEL_BACKDROP_LAYERS,
+} from "../../../rendering/objects/LabelBackdropStoreContext";
 import { useLabelBackdropLayers } from "../../../rendering/objects/useLabelBackdropLayers";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
+import { createTextSlotPartKindDefinition } from "../../selection/partKinds/textSlotPartKind";
 import { useDocFonts } from "../useDocFonts";
 import { useLabelBackdropStore } from "../useLabelBackdropStore";
 
 /**
- * A web font landing after mount changes how wide a connector's label measures
- * while every object stays as it was. The render reacting to the fonts-loaded
- * counter is the only pass that sees it (the re-measure dispatched after it
- * moves no box and so hands back the same objects), so that pass must already
- * measure in the new face rather than answer from a size cached in the old one.
+ * A web font landing after mount changes how wide a caption measures, and so
+ * where the center of its box lies, while every object stays as it was. The
+ * render reacting to the fonts-loaded counter is the only pass that sees it (the
+ * re-measure dispatched after it moves no box and so hands back the same
+ * objects), so that pass must already measure in the new face rather than
+ * answer from a placement cached in the old one.
  */
 
 // Without this React treats every `act` below as unsupported and warns, the
 // flushes being correct all the same.
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
-/** How wide the label measures in whichever face is loaded. */
-const labelWidth = vi.hoisted(() => ({ value: 40 }));
-
-// Stands in for the browser's measureText: the face landing is what moves it.
-vi.mock(
-	"../../../rendering/objects/connector/geometry/label/connectorLabelLayout",
-	async (importOriginal) => {
-		const actual = await importOriginal<typeof ConnectorLabelLayoutModule>();
-		return {
-			...actual,
-			resolveConnectorLabelBox: () => ({
-				width: labelWidth.value,
-				height: 20,
-			}),
-		};
-	},
-);
+/** How wide one character of the caption measures in whichever face is loaded. */
+const glyphWidth = { value: 10 };
 
 /** A FontFaceSet stand-in whose `loadingdone` is fired by hand; `ready` never settles. */
 const stubFontFaceSet = () => {
@@ -82,6 +71,21 @@ registries.objectLabelBackdrop.register("frame", (state, style) => {
 		},
 	];
 });
+// The caption's box starts 20 left of its shape's center and grows with its text.
+registries.objectPartKind.register("captioned", [
+	createTextSlotPartKindDefinition({
+		region: (state: ObjectState) => {
+			const text = (state as ObjectState & { text: { body: { text: string } } })
+				.text.body.text;
+			return {
+				x: -20,
+				y: 25,
+				width: text.length * glyphWidth.value,
+				height: 20,
+			};
+		},
+	}),
+]);
 
 const objects: Record<string, ObjectState> = {
 	frame: {
@@ -89,31 +93,38 @@ const objects: Record<string, ObjectState> = {
 		type: "frame",
 		cx: 100,
 		cy: 100,
-		width: 400,
-		height: 400,
+		width: 200,
+		height: 200,
 		rotation: 0,
 		scaleX: 1,
 		scaleY: 1,
 		fill: "#ff0000",
 		fillOpacity: 1,
 	} as unknown as ObjectState,
-	connector: {
-		id: "connector",
-		type: "connector",
-		points: [],
-		routing: "straight",
-		source: { anchor: { kind: "free", point: { x: 0, y: 100 } } },
-		target: { anchor: { kind: "free", point: { x: 200, y: 100 } } },
-		label: { text: "go" },
+	// The 8-character caption's box starts at x 156: its center at 196 in
+	// 10-wide glyphs, inside the frame's right edge at x 200, and at 204 in
+	// 12-wide ones, outside it.
+	shape: {
+		id: "shape",
+		type: "captioned",
+		features: { type: "captioned", geometry: "rect", text: "label" },
+		cx: 176,
+		cy: 80,
+		width: 40,
+		height: 40,
+		rotation: 0,
+		scaleX: 1,
+		scaleY: 1,
+		text: { body: { text: "Hi there" } },
 	} as unknown as ObjectState,
 };
-const rootIds = ["frame", "connector"];
+const rootIds = ["frame", "shape"];
 
-/** The connector label's layers, every render recorded in order. */
+/** The caption's layers, every render recorded in order. */
 const renders: Array<readonly LabelBackdropLayer[]> = [];
 
 const Probe = () => {
-	renders.push(useLabelBackdropLayers("connector"));
+	renders.push(useLabelBackdropLayers("shape"));
 	return null;
 };
 
@@ -140,20 +151,20 @@ afterEach(() => {
 	// @ts-expect-error jsdom has no `fonts` to restore, so the stub is removed.
 	delete document.fonts;
 	renders.length = 0;
-	labelWidth.value = 40;
+	glyphWidth.value = 10;
 });
 
 describe("useLabelBackdropStore when a font lands", () => {
-	it("cuts a connector label's layers to its width in the new face, the objects unchanged", () => {
+	it("judges a caption by where its center lies in the new face, the objects unchanged", () => {
 		const fonts = stubFontFaceSet();
 		const root = createRoot(document.createElement("div"));
 		act(() => root.render(<Host />));
-		expect(renders.at(-1)?.[0].rect.width).toBe(40);
+		expect(renders.at(-1)).toHaveLength(1);
 
-		labelWidth.value = 56;
+		glyphWidth.value = 12;
 		act(() => fonts.fireLoadingDone());
 
-		expect(renders.at(-1)?.[0].rect.width).toBe(56);
+		expect(renders.at(-1)).toBe(NO_LABEL_BACKDROP_LAYERS);
 		act(() => root.unmount());
 	});
 });

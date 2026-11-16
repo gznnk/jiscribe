@@ -20,7 +20,7 @@ const REGION = { x: -20, y: 25, width: 40, height: 20 };
 const TEXT_SLOT: TextSlot = { text: "Caption", fontSize: 12 };
 const SURFACE = "rgb(1, 2, 3)";
 
-/** A store holding two layers under "shape": its frame's body, and a band over the box's left half. */
+/** A store holding two layers under "shape": a translucent frame's body, and an opaque frame nested in it. */
 const createStoreWithLayers = () => {
 	const store = createLabelBackdropStore();
 	store.replaceLayers(
@@ -28,16 +28,8 @@ const createStoreWithLayers = () => {
 			[
 				"shape",
 				[
-					{
-						rect: { x: 0, y: 0, width: 40, height: 20 },
-						fill: "rgb(255, 0, 0)",
-						fillOpacity: 0.5,
-					},
-					{
-						rect: { x: 0, y: 0, width: 20, height: 20 },
-						fill: "rgb(0, 0, 255)",
-						fillOpacity: 1,
-					},
+					{ fill: "rgb(255, 0, 0)", fillOpacity: 0.5 },
+					{ fill: "rgb(0, 0, 255)", fillOpacity: 1 },
 				],
 			],
 		]),
@@ -93,7 +85,7 @@ const renderFill = ({
 };
 
 describe("LabelTextFill backdrop", () => {
-	it("paints the layers over the page's color, offset to the caption's box, in one group", () => {
+	it("paints the layers over the page's color, each over the caption's whole box, in one group", () => {
 		const { container } = renderFill({ ownerId: "shape" });
 		const group = container.querySelector('g[data-canvas-export="flatten"]')!;
 		const knockout = group.querySelector(":scope > rect") as SVGRectElement;
@@ -107,15 +99,30 @@ describe("LabelTextFill backdrop", () => {
 		expect(
 			layers.map((layer) => ({
 				x: layer.getAttribute("x"),
+				y: layer.getAttribute("y"),
 				width: layer.getAttribute("width"),
+				height: layer.getAttribute("height"),
 				fill: layer.style.fill,
 				fillOpacity: layer.style.fillOpacity,
 			})),
 		).toEqual([
-			{ x: "-20", width: "40", fill: "rgb(255, 0, 0)", fillOpacity: "0.5" },
-			{ x: "-20", width: "20", fill: "rgb(0, 0, 255)", fillOpacity: "1" },
+			{
+				x: "-20",
+				y: "25",
+				width: "40",
+				height: "20",
+				fill: "rgb(255, 0, 0)",
+				fillOpacity: "0.5",
+			},
+			{
+				x: "-20",
+				y: "25",
+				width: "40",
+				height: "20",
+				fill: "rgb(0, 0, 255)",
+				fillOpacity: "1",
+			},
 		]);
-		expect(layers[0].getAttribute("y")).toBe("25");
 	});
 
 	it("rasterizes the knockout and the layers without smoothing while it has layers", () => {

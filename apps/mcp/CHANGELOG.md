@@ -43,8 +43,8 @@ covers that.
   behind the label of a shape that draws its text below its box (actor, server,
   the AWS / Azure / Google Cloud icons, …). Omitted or `"auto"`, the label knocks
   out what runs under it in the page's color, or in the fill of the container
-  or AWS group it lies on; on any other type, a connector
-  included, `set_style` names it as not supported by the type.
+  or AWS group its center lies in; on any other type, a connector included,
+  `set_style` names it as not supported by the type.
 - **`diagnose_canvas` reports images a reader cannot see, and more.** An image whose
   file is missing, or whose `src` no host accepts, is an error; an image
   reached through a link out of the diagram's directory is a warning, since

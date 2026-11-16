@@ -15,8 +15,9 @@ export type ObjectLabelBackdropRegion = {
 
 /**
  * Lists what a frame (container, awsGroup) paints under the objects drawn on
- * it, bottom first, so an `"auto"` label lying on it is painted on the same
- * colors rather than on the page's (resolveLabelBackdrops). Only a type that
+ * it, bottom first, so an `"auto"` label whose box's center lies in one of
+ * those regions is painted on that region's color, over its whole box, rather
+ * than on the page's alone (resolveLabelBackdrops). Only a type that
  * declares one counts as a backdrop; a shape that merely has a fill does not.
  *
  * Takes the state and the body fill core resolved from it the way

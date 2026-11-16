@@ -177,7 +177,8 @@ is painted behind it, and the default menus offer no background for it.
 
 A frame that other shapes sit on (container, awsGroup) declares `labelBackdrop` on its UI
 definition, so an `"auto"` label lying on it — a caption's `labelFill`, a connector label's
-`fill` — is painted on its fill rather than standing out in the page's color. It returns
+`fill` — is painted on its fill rather than standing out in the page's color: each region
+holding the center of the label's box paints the whole box. It returns
 the regions the frame paints, bottom first, each a rect in the shape's local coordinates
 with a resolved color and an opacity (`ObjectLabelBackdropRegion`); the second argument is
 the body fill the core resolved the way `createFrameObject` draws it (`fillColor`, `"auto"`

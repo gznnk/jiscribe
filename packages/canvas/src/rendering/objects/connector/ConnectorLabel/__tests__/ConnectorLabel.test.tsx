@@ -205,18 +205,10 @@ describe("ConnectorLabel backdrop", () => {
 	const left = LABEL_ANCHOR.x - box.width / 2;
 	const top = LABEL_ANCHOR.y - box.height / 2;
 
-	it("draws the knockout and the layers under a transparent box, rounding the layers at the box's corners", () => {
+	it("draws the knockout and the layers under a transparent box, each layer over the whole box with its corners rounded", () => {
 		const label = renderOnBackdrop([
-			{
-				rect: { x: 0, y: 0, width: box.width, height: box.height },
-				fill: "rgb(255, 0, 0)",
-				fillOpacity: 0.5,
-			},
-			{
-				rect: { x: 4, y: 2, width: 2, height: 2 },
-				fill: "rgb(0, 0, 255)",
-				fillOpacity: 1,
-			},
+			{ fill: "rgb(255, 0, 0)", fillOpacity: 0.5 },
+			{ fill: "rgb(0, 0, 255)", fillOpacity: 1 },
 		]);
 		const [knockout, layerGroup, foreignObject] = [...label.svg.children];
 		expect(knockout.tagName).toBe("rect");
@@ -228,14 +220,28 @@ describe("ConnectorLabel backdrop", () => {
 		// Unsmoothed alike, so no rim of the knockout shows around the layers.
 		expect(knockout.getAttribute("shape-rendering")).toBe("crispEdges");
 		expect(layerGroup.getAttribute("shape-rendering")).toBe("crispEdges");
-		// The layer reaching the box's corners is a path; the inner one stays a rect.
-		const [cornered, inner] = [...layerGroup.children] as SVGElement[];
-		expect(cornered.tagName).toBe("path");
-		expect(cornered.getAttribute("d")).toContain(" A2 2 0 0 1 ");
-		expect(cornered.style.fill).toBe("rgb(255, 0, 0)");
-		expect(inner.tagName).toBe("rect");
-		expect(inner.getAttribute("x")).toBe(String(left + 4));
-		expect(inner.getAttribute("y")).toBe(String(top + 2));
+		const layers = [...layerGroup.children] as SVGElement[];
+		expect(
+			layers.map((layer) => ({
+				tag: layer.tagName,
+				x: layer.getAttribute("x"),
+				y: layer.getAttribute("y"),
+				width: layer.getAttribute("width"),
+				height: layer.getAttribute("height"),
+				rx: layer.getAttribute("rx"),
+				fill: layer.style.fill,
+			})),
+		).toEqual(
+			["rgb(255, 0, 0)", "rgb(0, 0, 255)"].map((fill) => ({
+				tag: "rect",
+				x: String(left),
+				y: String(top),
+				width: String(box.width),
+				height: String(box.height),
+				rx: "2",
+				fill,
+			})),
+		);
 		expect(foreignObject.tagName).toBe("foreignObject");
 		expect(
 			(foreignObject.firstElementChild as HTMLElement).style.background,
@@ -258,13 +264,7 @@ describe("ConnectorLabel backdrop", () => {
 
 	it("ignores the backdrop for a label with a background of its own", () => {
 		const label = renderOnBackdrop(
-			[
-				{
-					rect: { x: 0, y: 0, width: box.width, height: box.height },
-					fill: "rgb(255, 0, 0)",
-					fillOpacity: 0.5,
-				},
-			],
+			[{ fill: "rgb(255, 0, 0)", fillOpacity: 0.5 }],
 			"#00ff00",
 		);
 		expect(label.svg.children).toHaveLength(1);
@@ -273,11 +273,7 @@ describe("ConnectorLabel backdrop", () => {
 
 	it("hides the knockout and the layers with the box while too small to read", () => {
 		const label = renderOnBackdrop([
-			{
-				rect: { x: 0, y: 0, width: box.width, height: box.height },
-				fill: "rgb(255, 0, 0)",
-				fillOpacity: 0.5,
-			},
+			{ fill: "rgb(255, 0, 0)", fillOpacity: 0.5 },
 		]);
 		// 12 × 0.3 = 3.6px
 		act(() => label.zoomStore.setZoom(0.3));

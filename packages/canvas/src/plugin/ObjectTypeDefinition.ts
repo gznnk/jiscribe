@@ -92,8 +92,8 @@ export type ObjectTypeDefinition<
 	/**
 	 * What the shape paints under the objects drawn on it, for a frame whose
 	 * fill an `"auto"` label lying on it should blend into: such a label is
-	 * painted on the page's color and then on these regions, bottom first, where
-	 * they lie under its box. Called with the body fill core resolved (state,
+	 * painted on the page's color and then, bottom first, on each of these regions
+	 * that holds the center of its box, each over the whole box. Called with the body fill core resolved (state,
 	 * type default, last resort, `"auto"` as the theme surface). Not called
 	 * while a drag is under way, save for an export taken mid-drag, which is
 	 * worked out for what it draws. Omitted = the type is no backdrop, however it

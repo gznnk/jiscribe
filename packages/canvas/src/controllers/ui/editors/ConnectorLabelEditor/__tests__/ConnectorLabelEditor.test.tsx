@@ -18,11 +18,7 @@ Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 const SURFACE = "rgb(11, 18, 32)";
 const ANCHOR = { x: 100, y: 50 };
 const LAYERS: LabelBackdropLayer[] = [
-	{
-		rect: { x: 0, y: 0, width: 200, height: 100 },
-		fill: "rgb(255, 0, 0)",
-		fillOpacity: 0.5,
-	},
+	{ fill: "rgb(255, 0, 0)", fillOpacity: 0.5 },
 ];
 
 let unmount: (() => void) | null = null;
@@ -87,8 +83,9 @@ describe("ConnectorLabelEditor backdrop", () => {
 		expect(knockout.getAttribute("shape-rendering")).toBe("crispEdges");
 		expect(layerGroup.getAttribute("shape-rendering")).toBe("crispEdges");
 		const layer = layerGroup.firstElementChild as SVGElement;
-		// It reaches the box's corners, so it is rounded as the box is.
-		expect(layer.tagName).toBe("path");
+		// Over the whole box, rounded as the box is.
+		expect(layer.tagName).toBe("rect");
+		expect(layer.getAttribute("rx")).toBe("2");
 		expect(layer.style.fill).toBe("rgb(255, 0, 0)");
 	});
 

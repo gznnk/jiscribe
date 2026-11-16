@@ -15,7 +15,7 @@ export type ConnectorLabelDraftObjects = {
 /**
  * Where a connector label open in the editor sits: the pending placement of a
  * label being created, else the label's own. The one rule the editor's anchor
- * (TextEditorLayer) and the box its backdrop is cut for
+ * (TextEditorLayer) and the point its backdrop is worked out at
  * ({@link graftConnectorLabelDraft}) both follow, so the two cannot part.
  *
  * @param connector - The connector whose label is edited; its `label` may be absent for a label being created
@@ -33,8 +33,8 @@ export const resolveLabelDraftPlacement = (
 /**
  * Grafts the connector label being edited onto its connector, for the label
  * backdrops alone (resolveLabelBackdrops): the editor draws the draft's box,
- * placed where the label being created will go, so the backdrop under it is cut
- * for that box rather than the committed one. Only the backdrop pass reads the
+ * placed where the label being created will go, so the backdrop under it is
+ * worked out at that box's center rather than the committed one's. Only the backdrop pass reads the
  * result; the drawing, the menus and hit testing keep the map
  * graftTextEditDraft gives, which leaves a label's draft out.
  *

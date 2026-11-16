@@ -96,14 +96,14 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 	const color = resolveAutoColor(fontColor, "ink");
 	const knockout = resolveLabelFill(fill, documentSurface);
 	const borderColor = resolveAutoColor(stroke, "ink");
-	// Cut by the canvas for the draft's box (graftConnectorLabelDraft), so they
-	// follow every keystroke.
+	// Worked out by the canvas for the draft's placement (graftConnectorLabelDraft),
+	// so they follow every keystroke.
 	const layers = useLabelBackdropLayers(isAutoLabelFill(fill) ? id : undefined);
 	const hasLayers = layers.length > 0;
 
 	// Width is the measured text's, so the box grows sideways as it is typed and
 	// the textarea never wraps. Height follows the textarea's scrollHeight; the
-	// measured one is the box the backdrop was cut for, which it matches.
+	// measured one is what the backdrop's layers are drawn over, which it matches.
 	const { width, height } = calcConnectorLabelBox(
 		text,
 		{ fontSize, fontFamily, fontWeight },

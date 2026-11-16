@@ -389,16 +389,7 @@ describe("createFrameObject", () => {
 			const labelBackdropStore = createLabelBackdropStore();
 			labelBackdropStore.replaceLayers(
 				new Map([
-					[
-						probeState.id,
-						[
-							{
-								rect: { x: 0, y: 0, width: 40, height: 28 },
-								fill: "rgb(0, 0, 255)",
-								fillOpacity: 0.5,
-							},
-						],
-					],
+					[probeState.id, [{ fill: "rgb(0, 0, 255)", fillOpacity: 0.5 }]],
 				]),
 			);
 			const shape = renderFrameShape({

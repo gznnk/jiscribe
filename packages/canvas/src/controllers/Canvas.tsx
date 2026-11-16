@@ -645,9 +645,9 @@ const CanvasComponent = ({
 		culledObjectIds,
 	);
 	// Worked out from what is drawn, the edited text's draft included, so a
-	// caption growing as it is typed is cut against the frames it now covers.
-	// A connector label's draft is grafted for the backdrops alone, so the label
-	// editor's box is cut for the text as typed so far.
+	// caption growing as it is typed is judged by where its center now is. A
+	// connector label's draft is grafted for the backdrops alone, so the label
+	// editor's box is judged as placed for the text as typed so far.
 	const labelEditDraft =
 		state.mode.kind === "textEdit" && state.mode.draft.kind === "connectorLabel"
 			? state.mode.draft

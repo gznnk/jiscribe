@@ -1,7 +1,6 @@
 import { advanceTextMeasurementGeneration } from "@jiscribe/doc/text/measure/textMeasurementSlot";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
-import type * as ConnectorLabelLayoutModule from "../../../rendering/objects/connector/geometry/label/connectorLabelLayout";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { createTextSlotPartKindDefinition } from "../../selection/partKinds/textSlotPartKind";
@@ -9,27 +8,9 @@ import { resolveLabelBackdrops } from "../resolveLabelBackdrops";
 
 /**
  * What a pass works out again for an object it did not change: nothing. A
- * caption is placed, and a connector label measured, once per object state and
- * text measurement, so a keystroke or a nudge elsewhere costs neither.
+ * caption is placed once per object state, text measurement and part kind, so
+ * a keystroke or a nudge elsewhere does not place it again.
  */
-
-const labelMeasureCalls = vi.hoisted(() => ({ count: 0 }));
-
-vi.mock(
-	"../../../rendering/objects/connector/geometry/label/connectorLabelLayout",
-	async (importOriginal) => {
-		const actual = await importOriginal<typeof ConnectorLabelLayoutModule>();
-		return {
-			...actual,
-			resolveConnectorLabelBox: (
-				...args: Parameters<typeof actual.resolveConnectorLabelBox>
-			) => {
-				labelMeasureCalls.count += 1;
-				return actual.resolveConnectorLabelBox(...args);
-			},
-		};
-	},
-);
 
 const captionRegionCalls = { count: 0 };
 
@@ -85,20 +66,6 @@ const captioned = (cx: number): ObjectState =>
 		text: { body: { text: "Caption" } },
 	}) as unknown as ObjectState;
 
-const LABEL = { text: "go" };
-
-/** A connector carrying LABEL, its route moved by `y`. */
-const connector = (y: number): ObjectState =>
-	({
-		id: "connector",
-		type: "connector",
-		points: [],
-		routing: "straight",
-		source: { anchor: { kind: "free", point: { x: 0, y } } },
-		target: { anchor: { kind: "free", point: { x: 200, y } } },
-		label: LABEL,
-	}) as unknown as ObjectState;
-
 const resolve = (...objects: ObjectState[]) =>
 	resolveLabelBackdrops(
 		Object.fromEntries(objects.map((obj) => [obj.id, obj])),
@@ -109,7 +76,6 @@ const resolve = (...objects: ObjectState[]) =>
 describe("resolveLabelBackdrops caches", () => {
 	beforeEach(() => {
 		captionRegionCalls.count = 0;
-		labelMeasureCalls.count = 0;
 	});
 
 	it("places an unchanged caption once, and again once the text measurement moves", () => {
@@ -134,7 +100,8 @@ describe("resolveLabelBackdrops caches", () => {
 		const first = resolve(frame, shape);
 		expect(captionRegionCalls.count).toBe(1);
 
-		// The same state drawn by another canvas, whose caption box is 10 taller.
+		// The same state drawn by another canvas, whose caption hangs far below
+		// the box, its center past the frame's bottom edge at y 300.
 		const otherRegionCalls = { count: 0 };
 		const otherRegistries = createTestRegistries();
 		otherRegistries.objectLabelBackdrop.register(
@@ -145,7 +112,7 @@ describe("resolveLabelBackdrops caches", () => {
 			createTextSlotPartKindDefinition({
 				region: () => {
 					otherRegionCalls.count += 1;
-					return { x: -20, y: 25, width: 40, height: 30 };
+					return { x: -20, y: 300, width: 40, height: 20 };
 				},
 			}),
 		]);
@@ -156,19 +123,7 @@ describe("resolveLabelBackdrops caches", () => {
 		);
 
 		expect(otherRegionCalls.count).toBe(1);
-		expect(first.get("shape")?.[0].rect.height).toBe(20);
-		expect(other.get("shape")?.[0].rect.height).toBe(30);
-	});
-
-	it("measures an unchanged connector label once, its route moving or not, and again once the text measurement moves", () => {
-		resolve(frame, connector(100));
-		resolve(frame, connector(110));
-		resolve(frame, connector(120));
-		expect(labelMeasureCalls.count).toBe(1);
-
-		advanceTextMeasurementGeneration();
-		const backdrops = resolve(frame, connector(120));
-		expect(labelMeasureCalls.count).toBe(2);
-		expect(backdrops.get("connector")).toHaveLength(1);
+		expect(first.get("shape")).toHaveLength(1);
+		expect(other.has("shape")).toBe(false);
 	});
 });

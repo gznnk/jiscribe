@@ -26,11 +26,7 @@ const isSameLayer = (
 	otherLayer: LabelBackdropLayer,
 ): boolean =>
 	layer.fill === otherLayer.fill &&
-	layer.fillOpacity === otherLayer.fillOpacity &&
-	layer.rect.x === otherLayer.rect.x &&
-	layer.rect.y === otherLayer.rect.y &&
-	layer.rect.width === otherLayer.rect.width &&
-	layer.rect.height === otherLayer.rect.height;
+	layer.fillOpacity === otherLayer.fillOpacity;
 
 const isSameLayers = (
 	layers: readonly LabelBackdropLayer[],

@@ -170,11 +170,7 @@ describe("useLabelBackdropStore", () => {
 		});
 		expect(probeRenders.get("shape")).toHaveLength(1);
 		expect(latestLayers("shape")).toEqual([
-			{
-				rect: { x: 0, y: 0, width: 20, height: 20 },
-				fill: "#ff0000",
-				fillOpacity: 0.5,
-			},
+			{ fill: "#ff0000", fillOpacity: 0.5 },
 		]);
 	});
 
@@ -221,27 +217,35 @@ describe("useLabelBackdropStore", () => {
 	});
 
 	it("works the layers out again on any new objects outside a drag (undo, typing, a sync)", () => {
+		// The frame spans x 0..200; the caption's box starts at x 160, so its
+		// center sits at 160 + 5 per character.
 		const render = mountHost();
 		render({
-			objects: toObjects(frame("frame", 100), captioned("shape", 100)),
+			objects: toObjects(frame("frame", 100), captioned("shape", 180)),
 			rootIds: ROOT_IDS,
 			probeIds: ["shape"],
 		});
-		// A character typed into the caption's draft widens its box.
-		render({
-			objects: toObjects(frame("frame", 100), captioned("shape", 100, "Hi!")),
-			rootIds: ROOT_IDS,
-			probeIds: ["shape"],
-		});
-		expect(latestLayers("shape")[0].rect.width).toBe(30);
+		expect(latestLayers("shape")).toHaveLength(1);
 
-		// Undone: back to the two-character caption.
+		// Typed into the caption's draft, the box widens and its center (205)
+		// leaves the frame.
 		render({
-			objects: toObjects(frame("frame", 100), captioned("shape", 100)),
+			objects: toObjects(
+				frame("frame", 100),
+				captioned("shape", 180, "Hi there!"),
+			),
 			rootIds: ROOT_IDS,
 			probeIds: ["shape"],
 		});
-		expect(latestLayers("shape")[0].rect.width).toBe(20);
+		expect(latestLayers("shape")).toBe(NO_LABEL_BACKDROP_LAYERS);
+
+		// Undone: back to the two-character caption, its center (170) inside.
+		render({
+			objects: toObjects(frame("frame", 100), captioned("shape", 180)),
+			rootIds: ROOT_IDS,
+			probeIds: ["shape"],
+		});
+		expect(latestLayers("shape")).toHaveLength(1);
 	});
 
 	it("gives a label pasted onto a frame its layers on its first render", () => {
@@ -294,17 +298,22 @@ describe("useLabelBackdropStore", () => {
 	});
 
 	it("works the layers out again when a face lands, the objects unchanged", () => {
-		const objects = toObjects(frame("frame", 100), captioned("shape", 100));
+		// The frame spans x 0..200; the 8-character caption's box starts at
+		// x 156, its center at 196 in 10-wide glyphs and 204 in 12-wide ones.
+		const objects = toObjects(
+			frame("frame", 100),
+			captioned("shape", 176, "Hi there"),
+		);
 		const render = mountHost();
 		render({ objects, rootIds: ROOT_IDS, probeIds: ["shape"] });
-		expect(latestLayers("shape")[0].rect.width).toBe(20);
+		expect(latestLayers("shape")).toHaveLength(1);
 
 		// What the canvas does when web fonts land (useDocFonts): measurements
 		// answer differently, and the nonce moves.
 		glyphWidth.value = 12;
 		advanceTextMeasurementGeneration();
 		render({ objects, rootIds: ROOT_IDS, fontsNonce: 1, probeIds: ["shape"] });
-		expect(latestLayers("shape")[0].rect.width).toBe(24);
+		expect(latestLayers("shape")).toBe(NO_LABEL_BACKDROP_LAYERS);
 	});
 
 	it("works the layers out again when a connector label's editor opens, the objects unchanged", () => {

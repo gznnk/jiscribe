@@ -8,13 +8,9 @@ import {
 	readTextSlotContent,
 } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 import { TEXT_STYLE_FALLBACK } from "@jiscribe/doc/text/style/textStyleFallback";
-import {
-	convertBoundingBoxToRect,
-	convertRectToBoundingBox,
-} from "@jiscribe/geometry";
 import type { Rect } from "@jiscribe/geometry";
 import type React from "react";
-import { memo, useMemo } from "react";
+import { memo } from "react";
 
 import {
 	LABEL_BACKDROP_SHAPE_RENDERING,
@@ -57,11 +53,6 @@ const LabelTextFillComponent: React.FC<LabelTextFillProps> = ({
 	const documentSurface = useDocumentSurface();
 	const isAuto = isAutoLabelFill(labelFill);
 	const layers = useLabelBackdropLayers(isAuto ? ownerId : undefined);
-	// The layers' origin, a flipped shape's region running backwards.
-	const layerBox = useMemo(
-		() => convertBoundingBoxToRect(convertRectToBoundingBox(region)),
-		[region],
-	);
 	const style = useObjectTextStyleDefaultsRegistry().resolveTextSlotStyle(
 		objectType,
 		BODY_TEXT_SLOT_ID,
@@ -95,11 +86,7 @@ const LabelTextFillComponent: React.FC<LabelTextFillProps> = ({
 				style={{ fill: resolveLabelFill(labelFill, documentSurface) }}
 			/>
 			{layers.length > 0 && (
-				<LabelBackdropLayers
-					box={layerBox}
-					layers={layers}
-					isShown={isLegible}
-				/>
+				<LabelBackdropLayers box={region} layers={layers} isShown={isLegible} />
 			)}
 		</>
 	);
