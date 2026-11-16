@@ -5,7 +5,10 @@ import type * as ResolveConnectorPointsModule from "../../../rendering/objects/c
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { createCowObjects } from "../cowObjects";
-import { resolveLabelBackdrops } from "../resolveLabelBackdrops";
+import {
+	resolveLabelBackdropPass,
+	resolveLabelBackdrops,
+} from "../resolveLabelBackdrops";
 import type { LabelBackdropDrag } from "../resolveLabelBackdrops";
 
 /**
@@ -196,5 +199,28 @@ describe("resolveLabelBackdrops mid-drag", () => {
 		expect(resolveFrame({ objects: dropped })).toEqual(
 			resolveFrame({ objects: fresh }),
 		);
+	});
+
+	it("says when a center was taken from the drag, and only then", () => {
+		const startObjects = startDrag();
+		const passOf = (frameObjects: {
+			objects: Record<string, ObjectState>;
+			drag?: LabelBackdropDrag;
+		}) =>
+			resolveLabelBackdropPass(
+				frameObjects.objects,
+				ROOT_IDS,
+				registries,
+				undefined,
+				undefined,
+				frameObjects.drag,
+			).isApproximate;
+
+		expect(passOf(dragFrame(startObjects, ["a", "b"], 20))).toBe(true);
+		expect(
+			passOf(dragFrame(startObjects, ["b"], 20, new Set(["frame", "a", "b"]))),
+		).toBe(true);
+		expect(passOf(dragFrame(startObjects, ["b"], 20))).toBe(false);
+		expect(passOf({ objects: startObjects })).toBe(false);
 	});
 });

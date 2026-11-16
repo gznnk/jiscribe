@@ -5,7 +5,7 @@ import { createLabelBackdropStore } from "./utils/createLabelBackdropStore";
 import { useConstant } from "../../foundation/hooks/useConstant";
 import type { LabelBackdropStore } from "../../rendering/objects/LabelBackdropStoreContext";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
-import { resolveLabelBackdrops } from "../utils/resolveLabelBackdrops";
+import { resolveLabelBackdropPass } from "../utils/resolveLabelBackdrops";
 import type {
 	LabelBackdropDrag,
 	LabelBackdropRegistries,
@@ -27,10 +27,12 @@ type UseLabelBackdropStoreParams = {
 	/** What a running export draws, or null while none runs (useSnapshotRenderScope). */
 	snapshotRenderScope: SnapshotRenderScope | null;
 	/**
-	 * The drag under way, null while none is: read, not compared, so a frame
-	 * whose objects stand works nothing out. Its ending is compared, so the
-	 * centers a drag took from the start route or held off screen are worked out
-	 * exactly once it is over.
+	 * The drag under way, null while none is (or once it can move nothing, an
+	 * Escaped marquee's inert drag). Read, not compared: a drag starting, a frame
+	 * whose objects stand and a drag ending work nothing out, unless the last
+	 * pass took a center from the drag (a connector shifted with the move, an
+	 * off-screen one's kept), which the first render without one works out
+	 * exactly.
 	 */
 	drag: LabelBackdropDrag | null;
 	registries: LabelBackdropRegistries;
@@ -42,8 +44,6 @@ type BackdropInputs = {
 	rootIds: readonly string[];
 	fontsNonce: number;
 	labelEditOwnerId: string | null;
-	/** Whether a drag was under way. */
-	isDragging: boolean;
 	/** The export's set, or null for the whole tree (no export, or one drawing `"all"`). */
 	renderScope: ReadonlySet<string> | null;
 };
@@ -56,7 +56,6 @@ const isSameInputs = (
 	inputs.rootIds === otherInputs.rootIds &&
 	inputs.fontsNonce === otherInputs.fontsNonce &&
 	inputs.labelEditOwnerId === otherInputs.labelEditOwnerId &&
-	inputs.isDragging === otherInputs.isDragging &&
 	inputs.renderScope === otherInputs.renderScope;
 
 /**
@@ -68,9 +67,11 @@ const isSameInputs = (
  * changed the document — an edit, undo, a paste, an external sync, a typed
  * character, every frame of a drag that moves or reshapes something — is picked
  * up without naming it. A drag that changes no object (a pan, a marquee) leaves
- * the inputs as they were, and works nothing out. A running export's scope is
- * an input too, so it is worked out for what it draws and the whole document
- * again once it ends.
+ * the inputs as they were, and works nothing out at its start, on its frames or
+ * at its end. A pass that took a center from the drag is the one exception: the
+ * first render with no drag works the layers out again, exact, whatever its
+ * inputs. A running export's scope is an input too, so it is worked out for
+ * what it draws and the whole document again once it ends.
  *
  * The new layers are written without notifying, so the labels rendered after
  * this in the same pass read them. Labels a memo skips are notified in a
@@ -91,6 +92,8 @@ export const useLabelBackdropStore = ({
 		createLabelBackdropStore,
 	);
 	const lastInputsRef = useRef<BackdropInputs | null>(null);
+	// Whether the last pass took a center from the drag, to be settled once it is over.
+	const wasApproximateRef = useRef(false);
 	const hasPendingNotifyRef = useRef(false);
 
 	const renderScope =
@@ -102,24 +105,24 @@ export const useLabelBackdropStore = ({
 		rootIds,
 		fontsNonce,
 		labelEditOwnerId,
-		isDragging: drag !== null,
 		renderScope,
 	};
 	if (
 		lastInputsRef.current === null ||
-		!isSameInputs(lastInputsRef.current, inputs)
+		!isSameInputs(lastInputsRef.current, inputs) ||
+		(drag === null && wasApproximateRef.current)
 	) {
 		lastInputsRef.current = inputs;
-		const hasChanged = store.replaceLayers(
-			resolveLabelBackdrops(
-				objects,
-				rootIds,
-				registries,
-				renderScope ?? undefined,
-				labelEditOwnerId ?? undefined,
-				drag ?? undefined,
-			),
+		const pass = resolveLabelBackdropPass(
+			objects,
+			rootIds,
+			registries,
+			renderScope ?? undefined,
+			labelEditOwnerId ?? undefined,
+			drag ?? undefined,
 		);
+		wasApproximateRef.current = pass.isApproximate;
+		const hasChanged = store.replaceLayers(pass.layersByOwnerId);
 		if (hasChanged) {
 			hasPendingNotifyRef.current = true;
 		}

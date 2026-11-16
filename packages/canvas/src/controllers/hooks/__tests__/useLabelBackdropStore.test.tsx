@@ -28,11 +28,11 @@ vi.mock("../../utils/resolveLabelBackdrops", async (importOriginal) => {
 	const actual = await importOriginal<typeof ResolveLabelBackdropsModule>();
 	return {
 		...actual,
-		resolveLabelBackdrops: (
-			...args: Parameters<typeof actual.resolveLabelBackdrops>
+		resolveLabelBackdropPass: (
+			...args: Parameters<typeof actual.resolveLabelBackdropPass>
 		) => {
 			passCalls.count += 1;
-			return actual.resolveLabelBackdrops(...args);
+			return actual.resolveLabelBackdropPass(...args);
 		},
 	};
 });
@@ -192,6 +192,54 @@ const dragFrame = (
 	return view;
 };
 
+/**
+ * A labelled connector between two rects, on the frame, and the frames of a
+ * move of both rects: the connector is shifted with them (MovePreview), so its
+ * label's center is taken from the drag.
+ */
+const connectorMove = () => {
+	const rect = (id: string, cx: number) =>
+		({
+			id,
+			type: "rect",
+			cx,
+			cy: 100,
+			width: 20,
+			height: 20,
+			rotation: 0,
+			scaleX: 1,
+			scaleY: 1,
+		}) as unknown as ObjectState;
+	const connector = {
+		id: "connector",
+		type: "connector",
+		points: [],
+		routing: "straight",
+		source: { owner: { id: "a" }, anchor: { kind: "center" } },
+		target: { owner: { id: "b" }, anchor: { kind: "center" } },
+		label: { text: "go" },
+	} as unknown as ObjectState;
+	const startObjects = toObjects(
+		frame("frame", 100),
+		rect("a", 40),
+		rect("b", 140),
+		connector,
+	);
+	const rootIds = ["frame", "a", "b", "connector"];
+	const moveFrame = (dx: number) => ({
+		objects: dragFrame(startObjects, rect("a", 40 + dx), rect("b", 140 + dx)),
+		drag: {
+			movePreview: {
+				delta: { x: dx, y: 0 },
+				translatedIds: new Set(["a", "b"]),
+				startObjects,
+			},
+			visibleIds: new Set(rootIds),
+		} satisfies ResolveLabelBackdropsModule.LabelBackdropDrag,
+	});
+	return { startObjects, rootIds, moveFrame };
+};
+
 /** The layers a probe last rendered with. */
 const latestLayers = (ownerId: string): readonly LabelBackdropLayer[] =>
 	probeRenders.get(ownerId)!.at(-1)!;
@@ -279,7 +327,7 @@ describe("useLabelBackdropStore", () => {
 		const passesBefore = passCalls.count;
 		const rendersBefore = probeRenders.get("shape")!.length;
 
-		// Every frame of a pan re-renders the canvas on the very same objects.
+		// The canvas re-renders on the very same inputs, no drag passed.
 		render({ objects: base, rootIds: ROOT_IDS, probeIds: ["shape"] });
 		render({ objects: base, rootIds: ROOT_IDS, probeIds: ["shape"] });
 
@@ -418,18 +466,72 @@ describe("useLabelBackdropStore", () => {
 		expect(latestLayers("connector")).toHaveLength(1);
 	});
 
-	it("works the layers out again when a drag ends, even on the objects its last frame drew", () => {
+	it("works nothing out at a pan's start, on its frames or at its end", () => {
 		const base = toObjects(frame("frame", 100), captioned("shape", 100));
-		const drag: ResolveLabelBackdropsModule.LabelBackdropDrag = {
+		const pan: ResolveLabelBackdropsModule.LabelBackdropDrag = {
 			movePreview: undefined,
 			visibleIds: new Set(ROOT_IDS),
 		};
 		const render = mountHost();
-		render({ objects: base, rootIds: ROOT_IDS, drag, probeIds: ["shape"] });
+		render({ objects: base, rootIds: ROOT_IDS, probeIds: ["shape"] });
 		const passesBefore = passCalls.count;
 
+		// The pan starts, scrolls the view twice (new visible sets), and ends.
+		render({
+			objects: base,
+			rootIds: ROOT_IDS,
+			drag: pan,
+			probeIds: ["shape"],
+		});
+		render({
+			objects: base,
+			rootIds: ROOT_IDS,
+			drag: { ...pan, visibleIds: new Set(["frame"]) },
+			probeIds: ["shape"],
+		});
+		render({
+			objects: base,
+			rootIds: ROOT_IDS,
+			drag: { ...pan, visibleIds: new Set() },
+			probeIds: ["shape"],
+		});
 		render({ objects: base, rootIds: ROOT_IDS, probeIds: ["shape"] });
+
+		expect(passCalls.count).toBe(passesBefore);
+	});
+
+	it("works a move that shifted a connector out exactly once, at the drop, even on the objects its last frame drew", () => {
+		const { startObjects, rootIds, moveFrame } = connectorMove();
+		const render = mountHost();
+		render({ objects: startObjects, rootIds, probeIds: ["connector"] });
+		const frame1 = moveFrame(20);
+		render({ ...frame1, rootIds, probeIds: ["connector"] });
+		const passesBefore = passCalls.count;
+
+		// The drop on the very objects of the last frame, then a plain re-render.
+		render({ objects: frame1.objects, rootIds, probeIds: ["connector"] });
+		render({ objects: frame1.objects, rootIds, probeIds: ["connector"] });
 		expect(passCalls.count).toBe(passesBefore + 1);
+	});
+
+	it("works nothing out at the drop of a move that took no center from the drag", () => {
+		const base = toObjects(frame("frame", 100), captioned("shape", 100));
+		const moved = dragFrame(base, captioned("shape", 120));
+		const drag: ResolveLabelBackdropsModule.LabelBackdropDrag = {
+			movePreview: {
+				delta: { x: 20, y: 0 },
+				translatedIds: new Set(["shape"]),
+				startObjects: base,
+			},
+			visibleIds: new Set(ROOT_IDS),
+		};
+		const render = mountHost();
+		render({ objects: base, rootIds: ROOT_IDS, probeIds: ["shape"] });
+		render({ objects: moved, rootIds: ROOT_IDS, drag, probeIds: ["shape"] });
+		const passesBefore = passCalls.count;
+
+		render({ objects: moved, rootIds: ROOT_IDS, probeIds: ["shape"] });
+		expect(passCalls.count).toBe(passesBefore);
 	});
 
 	it("works out an export's scope when only the scope changes, and the whole tree after it", () => {

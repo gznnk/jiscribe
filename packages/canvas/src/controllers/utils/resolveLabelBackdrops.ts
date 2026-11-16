@@ -82,7 +82,10 @@ export type LabelBackdropDrag = {
 
 /**
  * The center a connector's label was last given, per connector state, which a
- * drag leaves as it is: what an off-screen connector answers mid-drag.
+ * drag leaves as it is: what an off-screen connector answers mid-drag. Keyed on
+ * the connector alone, which holds because every pass outside a drag works each
+ * center out again and overwrites it, and only an off-screen connector mid-drag
+ * reads it.
  */
 const connectorCenterCache = new WeakMap<ConnectorState, Point>();
 
@@ -189,6 +192,7 @@ const resolveConnectorLabelCenter = (
 	registries: LabelBackdropRegistries,
 	isLabelEdited: boolean,
 	drag: LabelBackdropDrag | undefined,
+	approximation: { isApproximate: boolean },
 ): Point | null => {
 	if (!isConnectorState(obj)) {
 		return null;
@@ -204,6 +208,7 @@ const resolveConnectorLabelCenter = (
 	if (drag !== undefined && !drag.visibleIds.has(obj.id)) {
 		const lastCenter = connectorCenterCache.get(obj);
 		if (lastCenter !== undefined) {
+			approximation.isApproximate = true;
 			return lastCenter;
 		}
 	}
@@ -233,6 +238,9 @@ const resolveConnectorLabelCenter = (
 	);
 	if (anchor === null) {
 		return null;
+	}
+	if (isShifted) {
+		approximation.isApproximate = true;
 	}
 	const center = isShifted
 		? { x: anchor.x + movePreview.delta.x, y: anchor.y + movePreview.delta.y }
@@ -357,9 +365,43 @@ export const resolveLabelBackdrops = (
 	renderScope?: ReadonlySet<string>,
 	labelEditOwnerId?: string,
 	drag?: LabelBackdropDrag,
-): ReadonlyMap<string, readonly LabelBackdropLayer[]> => {
+): ReadonlyMap<string, readonly LabelBackdropLayer[]> =>
+	resolveLabelBackdropPass(
+		objects,
+		rootIds,
+		registries,
+		renderScope,
+		labelEditOwnerId,
+		drag,
+	).layersByOwnerId;
+
+/** What one pass of {@link resolveLabelBackdropPass} answers. */
+export type LabelBackdropPass = {
+	/** As {@link resolveLabelBackdrops} returns it. */
+	layersByOwnerId: ReadonlyMap<string, readonly LabelBackdropLayer[]>;
+	/**
+	 * True when some center was taken from `drag` rather than worked out
+	 * exactly — a connector's shifted with the move, or an off-screen one's kept
+	 * — so the pass has to run again once the drag is over.
+	 */
+	isApproximate: boolean;
+};
+
+/**
+ * {@link resolveLabelBackdrops}, also saying whether the drag's shortcuts were
+ * taken; every parameter as there.
+ */
+export const resolveLabelBackdropPass = (
+	objects: Record<string, ObjectState>,
+	rootIds: readonly string[],
+	registries: LabelBackdropRegistries,
+	renderScope?: ReadonlySet<string>,
+	labelEditOwnerId?: string,
+	drag?: LabelBackdropDrag,
+): LabelBackdropPass => {
 	const layersByOwnerId = new Map<string, readonly LabelBackdropLayer[]>();
 	const paintedRegions: PaintedRegion[] = [];
+	const approximation = { isApproximate: false };
 
 	const visit = (id: string): void => {
 		if (renderScope !== undefined && !renderScope.has(id)) {
@@ -381,6 +423,7 @@ export const resolveLabelBackdrops = (
 					id === labelEditOwnerId,
 					// An export draws what is off screen, so it judges everything exactly.
 					renderScope === undefined ? drag : undefined,
+					approximation,
 				)
 			: resolveCaptionCenter(obj, registries);
 		if (center !== null && paintedRegions.length > 0) {
@@ -394,5 +437,5 @@ export const resolveLabelBackdrops = (
 	};
 
 	rootIds.forEach(visit);
-	return layersByOwnerId;
+	return { layersByOwnerId, isApproximate: approximation.isApproximate };
 };
