@@ -110,6 +110,8 @@ type HostProps = {
 	probeIds: string[];
 	/** The connector whose label is open in the editor. */
 	labelEditOwnerId?: string | null;
+	/** The drag under way. */
+	drag?: ResolveLabelBackdropsModule.LabelBackdropDrag | null;
 };
 
 /** What each probe answered, every render recorded in order. */
@@ -129,6 +131,7 @@ const Host = ({
 	rootIds,
 	snapshotRenderScope = null,
 	labelEditOwnerId = null,
+	drag = null,
 	fontsNonce = 0,
 	probeIds,
 }: HostProps) => {
@@ -138,6 +141,7 @@ const Host = ({
 		rootIds,
 		fontsNonce,
 		snapshotRenderScope,
+		drag,
 		registries,
 	});
 	return (
@@ -268,7 +272,7 @@ describe("useLabelBackdropStore", () => {
 		expect(latestLayers("shape")[0].fillOpacity).toBe(0.9);
 	});
 
-	it("works nothing out for a drag that changes no object (a pan, a marquee)", () => {
+	it("works nothing out on a render whose inputs are the same references", () => {
 		const base = toObjects(frame("frame", 100), captioned("shape", 100));
 		const render = mountHost();
 		render({ objects: base, rootIds: ROOT_IDS, probeIds: ["shape"] });
@@ -283,7 +287,7 @@ describe("useLabelBackdropStore", () => {
 		expect(probeRenders.get("shape")).toHaveLength(rendersBefore);
 	});
 
-	it("works the layers out again on any new objects outside a drag (undo, typing, a sync)", () => {
+	it("works the layers out again on any new objects (undo, typing, a sync)", () => {
 		// The frame spans x 0..200; the caption's box starts at x 160, so its
 		// center sits at 160 + 5 per character.
 		const render = mountHost();
@@ -412,6 +416,20 @@ describe("useLabelBackdropStore", () => {
 			probeIds: ["connector"],
 		});
 		expect(latestLayers("connector")).toHaveLength(1);
+	});
+
+	it("works the layers out again when a drag ends, even on the objects its last frame drew", () => {
+		const base = toObjects(frame("frame", 100), captioned("shape", 100));
+		const drag: ResolveLabelBackdropsModule.LabelBackdropDrag = {
+			movePreview: undefined,
+			visibleIds: new Set(ROOT_IDS),
+		};
+		const render = mountHost();
+		render({ objects: base, rootIds: ROOT_IDS, drag, probeIds: ["shape"] });
+		const passesBefore = passCalls.count;
+
+		render({ objects: base, rootIds: ROOT_IDS, probeIds: ["shape"] });
+		expect(passCalls.count).toBe(passesBefore + 1);
 	});
 
 	it("works out an export's scope when only the scope changes, and the whole tree after it", () => {

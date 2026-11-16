@@ -659,6 +659,10 @@ const CanvasComponent = ({
 		rootIds: state.rootIds,
 		fontsNonce,
 		snapshotRenderScope,
+		// Mid-drag, a connector the drawing does not route is not routed for its
+		// label either (resolveLabelBackdrops).
+		drag:
+			state.drag === null ? null : { movePreview, visibleIds: culledObjectIds },
 		registries,
 	});
 

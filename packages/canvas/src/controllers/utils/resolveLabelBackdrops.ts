@@ -18,6 +18,8 @@ import type { BoundingBox, Point, TransformedFrame } from "@jiscribe/geometry";
 
 import type { ConnectorRouteRegistries } from "./VisualExtentRegistries";
 import { isTransparentColor } from "../../foundation/color/isTransparentColor";
+import { isConnectorShiftedWithOwners } from "../../rendering/layers/content/MovePreview";
+import type { MovePreview } from "../../rendering/layers/content/MovePreview";
 import {
 	listConnectorPathPoints,
 	resolveConnectorPointsCached,
@@ -38,7 +40,10 @@ import type { FillStyleState } from "../../states/objects/base/FillStyleState";
 import type { LabelTextStyleState } from "../../states/objects/base/LabelTextStyleState";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { TextStyleState } from "../../states/objects/base/TextStyleState";
-import { isConnectorState } from "../../states/objects/connector/ConnectorState";
+import {
+	isConnectorState,
+	type ConnectorState,
+} from "../../states/objects/connector/ConnectorState";
 import { isGroupState } from "../../states/objects/primitives/group/GroupState";
 
 /**
@@ -56,6 +61,30 @@ export type LabelBackdropRegistries = ConnectorRouteRegistries & {
 	/** Places a caption's box, as createFrameObject hands it to LabelTextFill. */
 	objectPartKind: Pick<ObjectPartKindRegistry, "get">;
 };
+
+/**
+ * The drag under way, which a connector label's center is worked out against
+ * without routing what the drawing does not route either.
+ */
+export type LabelBackdropDrag = {
+	/**
+	 * The move drag's preview, if the drag is a move: a connector both of whose
+	 * owners it translates is drawn from its start route shifted by the delta
+	 * (isConnectorShiftedWithOwners), and its center is taken the same way.
+	 */
+	movePreview: MovePreview | undefined;
+	/**
+	 * The ids drawn this frame (viewport culling, calcVisibleObjectIds): a
+	 * connector outside it keeps the center it last had until the drag ends.
+	 */
+	visibleIds: ReadonlySet<string>;
+};
+
+/**
+ * The center a connector's label was last given, per connector state, which a
+ * drag leaves as it is: what an off-screen connector answers mid-drag.
+ */
+const connectorCenterCache = new WeakMap<ConnectorState, Point>();
 
 /** One painted backdrop region met so far on the walk, in the form a label's center is tested against. */
 type PaintedRegion = {
@@ -159,6 +188,7 @@ const resolveConnectorLabelCenter = (
 	objects: Record<string, ObjectState>,
 	registries: LabelBackdropRegistries,
 	isLabelEdited: boolean,
+	drag: LabelBackdropDrag | undefined,
 ): Point | null => {
 	if (!isConnectorState(obj)) {
 		return null;
@@ -171,10 +201,23 @@ const resolveConnectorLabelCenter = (
 	) {
 		return null;
 	}
+	if (drag !== undefined && !drag.visibleIds.has(obj.id)) {
+		const lastCenter = connectorCenterCache.get(obj);
+		if (lastCenter !== undefined) {
+			return lastCenter;
+		}
+	}
+	// Moved with both its owners: the start route, which the cache already holds
+	// for the whole drag, shifted by the delta, as the drawing takes it.
+	const movePreview = drag?.movePreview;
+	const isShifted =
+		movePreview !== undefined &&
+		isConnectorShiftedWithOwners(obj, movePreview, objects);
+	const ownerObjects = isShifted ? movePreview.startObjects : objects;
 	const resolved = resolveConnectorPointsCached(
 		obj,
-		resolveEndpointOwner(objects, obj.source),
-		resolveEndpointOwner(objects, obj.target),
+		resolveEndpointOwner(ownerObjects, obj.source),
+		resolveEndpointOwner(ownerObjects, obj.target),
 		registries.objectOutline,
 		registries.objectAnchorRegion,
 		registries.objectExtraConnectPoints,
@@ -183,11 +226,19 @@ const resolveConnectorLabelCenter = (
 	if (!resolved) {
 		return null;
 	}
-	return calcConnectorLabelAnchor(
+	const anchor = calcConnectorLabelAnchor(
 		listConnectorPathPoints(resolved),
 		label.position,
 		label.offset,
 	);
+	if (anchor === null) {
+		return null;
+	}
+	const center = isShifted
+		? { x: anchor.x + movePreview.delta.x, y: anchor.y + movePreview.delta.y }
+		: anchor;
+	connectorCenterCache.set(obj, center);
+	return center;
 };
 
 /** The painted regions a backdrop frame adds, the transparent ones dropped. */
@@ -292,6 +343,10 @@ const collectLayersAt = (
  *   (graftConnectorLabelDraft): its label is taken even while empty, the
  *   editor drawing a box for it all the same.
  *   Omitted = an empty label is taken for no connector
+ * @param drag - The drag under way, outside an export's scope; omitted when
+ *   none is. A connector moved with both its owners is then judged from its
+ *   start route shifted by the move's delta, and one off screen by the center it
+ *   last had, so neither is routed per frame; the pass after the drop is exact
  * @returns The layers by the id of the object owning the label, bottom first,
  *   each painted over the label's whole box; a label on no backdrop has no entry
  */
@@ -301,6 +356,7 @@ export const resolveLabelBackdrops = (
 	registries: LabelBackdropRegistries,
 	renderScope?: ReadonlySet<string>,
 	labelEditOwnerId?: string,
+	drag?: LabelBackdropDrag,
 ): ReadonlyMap<string, readonly LabelBackdropLayer[]> => {
 	const layersByOwnerId = new Map<string, readonly LabelBackdropLayer[]>();
 	const paintedRegions: PaintedRegion[] = [];
@@ -323,6 +379,8 @@ export const resolveLabelBackdrops = (
 					objects,
 					registries,
 					id === labelEditOwnerId,
+					// An export draws what is off screen, so it judges everything exactly.
+					renderScope === undefined ? drag : undefined,
 				)
 			: resolveCaptionCenter(obj, registries);
 		if (center !== null && paintedRegions.length > 0) {

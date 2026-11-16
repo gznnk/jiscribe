@@ -6,7 +6,10 @@ import { useConstant } from "../../foundation/hooks/useConstant";
 import type { LabelBackdropStore } from "../../rendering/objects/LabelBackdropStoreContext";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { resolveLabelBackdrops } from "../utils/resolveLabelBackdrops";
-import type { LabelBackdropRegistries } from "../utils/resolveLabelBackdrops";
+import type {
+	LabelBackdropDrag,
+	LabelBackdropRegistries,
+} from "../utils/resolveLabelBackdrops";
 import type { SnapshotRenderScope } from "../utils/SnapshotRenderScope";
 
 type UseLabelBackdropStoreParams = {
@@ -23,6 +26,13 @@ type UseLabelBackdropStoreParams = {
 	fontsNonce: number;
 	/** What a running export draws, or null while none runs (useSnapshotRenderScope). */
 	snapshotRenderScope: SnapshotRenderScope | null;
+	/**
+	 * The drag under way, null while none is: read, not compared, so a frame
+	 * whose objects stand works nothing out. Its ending is compared, so the
+	 * centers a drag took from the start route or held off screen are worked out
+	 * exactly once it is over.
+	 */
+	drag: LabelBackdropDrag | null;
 	registries: LabelBackdropRegistries;
 };
 
@@ -32,6 +42,8 @@ type BackdropInputs = {
 	rootIds: readonly string[];
 	fontsNonce: number;
 	labelEditOwnerId: string | null;
+	/** Whether a drag was under way. */
+	isDragging: boolean;
 	/** The export's set, or null for the whole tree (no export, or one drawing `"all"`). */
 	renderScope: ReadonlySet<string> | null;
 };
@@ -44,6 +56,7 @@ const isSameInputs = (
 	inputs.rootIds === otherInputs.rootIds &&
 	inputs.fontsNonce === otherInputs.fontsNonce &&
 	inputs.labelEditOwnerId === otherInputs.labelEditOwnerId &&
+	inputs.isDragging === otherInputs.isDragging &&
 	inputs.renderScope === otherInputs.renderScope;
 
 /**
@@ -71,6 +84,7 @@ export const useLabelBackdropStore = ({
 	rootIds,
 	fontsNonce,
 	snapshotRenderScope,
+	drag,
 	registries,
 }: UseLabelBackdropStoreParams): LabelBackdropStore => {
 	const store = useConstant<WritableLabelBackdropStore>(
@@ -88,6 +102,7 @@ export const useLabelBackdropStore = ({
 		rootIds,
 		fontsNonce,
 		labelEditOwnerId,
+		isDragging: drag !== null,
 		renderScope,
 	};
 	if (
@@ -102,6 +117,7 @@ export const useLabelBackdropStore = ({
 				registries,
 				renderScope ?? undefined,
 				labelEditOwnerId ?? undefined,
+				drag ?? undefined,
 			),
 		);
 		if (hasChanged) {

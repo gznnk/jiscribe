@@ -1052,3 +1052,39 @@ describe("ObjectEventHandler - move preview", () => {
 		).toEqual(["group-1", "rect-1", "rect-2"]);
 	});
 });
+
+describe("ObjectEventHandler - a drag frame that moves nothing", () => {
+	const dragFrame = (
+		state: CanvasControllerState,
+		delta: { x: number; y: number },
+		shift = false,
+	) =>
+		ObjectEventHandler.handle(state, makeDragEvent(delta, shift), registries);
+
+	it("hands back the previous frame's objects and preview when the delta stands", () => {
+		const first = dragFrame(makeDragState(), { x: 30, y: 12 });
+		const second = dragFrame(first, { x: 30, y: 12 });
+
+		expect(second).not.toBe(first);
+		expect(second.objects).toBe(first.objects);
+		expect(second.drag?.kind === "move" && second.drag.movePreview).toBe(
+			first.drag?.kind === "move" && first.drag.movePreview,
+		);
+	});
+
+	it("hands back the previous objects for a move along the locked axis's normal", () => {
+		// Shift locks Y: moving the pointer up and down leaves the delta at x 30.
+		const first = dragFrame(makeDragState(), { x: 30, y: 2 }, true);
+		const second = dragFrame(first, { x: 30, y: 8 }, true);
+
+		expect(second.objects).toBe(first.objects);
+	});
+
+	it("moves again, into new objects, once the delta changes", () => {
+		const first = dragFrame(makeDragState(), { x: 30, y: 12 });
+		const second = dragFrame(first, { x: 31, y: 12 });
+
+		expect(second.objects).not.toBe(first.objects);
+		expect(movedRect(second)).toMatchObject({ cx: 31, cy: 12 });
+	});
+});
