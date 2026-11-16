@@ -16,13 +16,16 @@
 // parts shared by several shapes live in each layer's shared/.
 // (See packages/canvas/docs/13-authoring-plugins.md.)
 export * from "./schema/actor/ActorDoc";
+export * from "./schema/bot/BotDoc";
 export * from "./schema/browserWindow/BrowserWindowDoc";
+export * from "./schema/clock/ClockDoc";
 export * from "./schema/cloud/CloudDoc";
 export * from "./schema/envelope/EnvelopeDoc";
 export * from "./schema/file/FileDoc";
 export * from "./schema/folder/FolderDoc";
 export * from "./schema/gear/GearDoc";
 export * from "./schema/laptop/LaptopDoc";
+export * from "./schema/lightning/LightningDoc";
 export * from "./schema/lock/LockDoc";
 export * from "./schema/package/PackageDoc";
 export * from "./schema/queue/QueueDoc";
@@ -32,13 +35,16 @@ export * from "./schema/smartphone/SmartphoneDoc";
 export * from "./schema/terminalWindow/TerminalWindowDoc";
 
 // The outlines are declared on the doc definitions (./doc), so they live in schema/.
+export { botOutline } from "./schema/bot/botOutline";
 export { browserWindowOutline } from "./schema/browserWindow/browserWindowOutline";
+export { clockOutline } from "./schema/clock/clockOutline";
 export { cloudOutline } from "./schema/cloud/cloudOutline";
 export { envelopeOutline } from "./schema/envelope/envelopeOutline";
 export { fileOutline } from "./schema/file/fileOutline";
 export { folderOutline } from "./schema/folder/folderOutline";
 export { gearOutline } from "./schema/gear/gearOutline";
 export { laptopOutline } from "./schema/laptop/laptopOutline";
+export { lightningOutline } from "./schema/lightning/lightningOutline";
 export { lockOutline } from "./schema/lock/lockOutline";
 export { packageOutline } from "./schema/package/packageOutline";
 export { queueOutline } from "./schema/queue/queueOutline";
@@ -48,15 +54,19 @@ export { smartphoneOutline } from "./schema/smartphone/smartphoneOutline";
 export { terminalWindowOutline } from "./schema/terminalWindow/terminalWindowOutline";
 export { calcGearPoints } from "./schema/gear/calcGearPoints";
 export { calcLaptopPoints } from "./schema/laptop/calcLaptopPoints";
+export { calcLightningPoints } from "./schema/lightning/calcLightningPoints";
 
 export * from "./state/actor/ActorState";
+export * from "./state/bot/BotState";
 export * from "./state/browserWindow/BrowserWindowState";
+export * from "./state/clock/ClockState";
 export * from "./state/cloud/CloudState";
 export * from "./state/envelope/EnvelopeState";
 export * from "./state/file/FileState";
 export * from "./state/folder/FolderState";
 export * from "./state/gear/GearState";
 export * from "./state/laptop/LaptopState";
+export * from "./state/lightning/LightningState";
 export * from "./state/lock/LockState";
 export * from "./state/package/PackageState";
 export * from "./state/queue/QueueState";
@@ -66,13 +76,16 @@ export * from "./state/smartphone/SmartphoneState";
 export * from "./state/terminalWindow/TerminalWindowState";
 
 export * from "./presentation/Actor";
+export * from "./presentation/Bot";
 export * from "./presentation/BrowserWindow";
+export * from "./presentation/Clock";
 export * from "./presentation/Cloud";
 export * from "./presentation/Envelope";
 export * from "./presentation/File";
 export * from "./presentation/Folder";
 export * from "./presentation/Gear";
 export * from "./presentation/Laptop";
+export * from "./presentation/Lightning";
 export * from "./presentation/Lock";
 export * from "./presentation/Package";
 export * from "./presentation/Queue";
@@ -86,13 +99,16 @@ export { generalStencilCategory } from "./stencil/GeneralStencilCategory";
 
 export {
 	actorDefinition,
+	botDefinition,
 	browserWindowDefinition,
+	clockDefinition,
 	cloudDefinition,
 	envelopeDefinition,
 	fileDefinition,
 	folderDefinition,
 	gearDefinition,
 	laptopDefinition,
+	lightningDefinition,
 	lockDefinition,
 	packageDefinition,
 	queueDefinition,
@@ -103,7 +119,9 @@ export {
 } from "./definition";
 export {
 	actorDocDefinition,
+	botDocDefinition,
 	browserWindowDocDefinition,
+	clockDocDefinition,
 	cloudDocDefinition,
 	envelopeDocDefinition,
 	fileDocDefinition,
@@ -111,6 +129,7 @@ export {
 	gearDocDefinition,
 	generalDocPlugin,
 	laptopDocDefinition,
+	lightningDocDefinition,
 	lockDocDefinition,
 	packageDocDefinition,
 	queueDocDefinition,

@@ -8,11 +8,15 @@ import { createFrameObjectDoc } from "@jiscribe/canvas-sdk/doc";
 import type { CanvasDocPlugin, ObjectDocDefinition } from "@jiscribe/doc";
 
 import { ACTOR_DOC_DEFAULTS, ActorFeatures } from "./schema/actor/ActorDoc";
+import { BOT_DOC_DEFAULTS, BotFeatures } from "./schema/bot/BotDoc";
+import { botOutline } from "./schema/bot/botOutline";
 import {
 	BROWSER_WINDOW_DOC_DEFAULTS,
 	BrowserWindowFeatures,
 } from "./schema/browserWindow/BrowserWindowDoc";
 import { browserWindowOutline } from "./schema/browserWindow/browserWindowOutline";
+import { CLOCK_DOC_DEFAULTS, ClockFeatures } from "./schema/clock/ClockDoc";
+import { clockOutline } from "./schema/clock/clockOutline";
 import { CLOUD_DOC_DEFAULTS, CloudFeatures } from "./schema/cloud/CloudDoc";
 import { cloudOutline } from "./schema/cloud/cloudOutline";
 import {
@@ -28,6 +32,11 @@ import { GEAR_DOC_DEFAULTS, GearFeatures } from "./schema/gear/GearDoc";
 import { gearOutline } from "./schema/gear/gearOutline";
 import { LAPTOP_DOC_DEFAULTS, LaptopFeatures } from "./schema/laptop/LaptopDoc";
 import { laptopOutline } from "./schema/laptop/laptopOutline";
+import {
+	LIGHTNING_DOC_DEFAULTS,
+	LightningFeatures,
+} from "./schema/lightning/LightningDoc";
+import { lightningOutline } from "./schema/lightning/lightningOutline";
 import { LOCK_DOC_DEFAULTS, LockFeatures } from "./schema/lock/LockDoc";
 import { lockOutline } from "./schema/lock/lockOutline";
 import {
@@ -63,7 +72,7 @@ import {
 
 /**
  * Every shape here shares the rect geometry (x/y/width/height) of RectDoc and
- * only swaps the rendering, so the sentence saying so is factored out of the 15
+ * only swaps the rendering, so the sentence saying so is factored out of the 18
  * descriptions rather than repeated in each.
  */
 const RECT_GEOMETRY_NOTE =
@@ -76,8 +85,20 @@ const BELOW_LABEL_NOTE =
 export const actorDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: ActorFeatures,
 	defaults: ACTOR_DOC_DEFAULTS,
-	description: `Actor (stick figure) shape, typically used for users/roles in use-case diagrams or stakeholders in business diagrams. ${RECT_GEOMETRY_NOTE} The stick figure fills the whole box. "fill" paints the head circle only — the limbs are strokes and take no fill. ${BELOW_LABEL_NOTE} A portrait aspect ratio (e.g. 80x100) looks best.`,
+	description: `Actor (stick figure) shape, typically used for users/roles in use-case diagrams or stakeholders in business diagrams. ${RECT_GEOMETRY_NOTE} The stick figure fills the whole box. "fill" paints the head circle only — the limbs are strokes and take no fill. ${BELOW_LABEL_NOTE} A portrait aspect ratio (e.g. 80x100) looks best. Prefer "bot" for an AI agent or an automated bot rather than a person.`,
 	summary: "user, role, stakeholder",
+});
+
+/**
+ * The antenna encloses nothing, so `outline` traces the head with a post standing
+ * on it in place of the antenna (botOutline).
+ */
+export const botDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
+	features: BotFeatures,
+	defaults: BOT_DOC_DEFAULTS,
+	outline: botOutline,
+	description: `Robot head shape (a rounded head with an antenna and two eyes), typically used for AI agents, LLMs and automation bots. ${RECT_GEOMETRY_NOTE} The head spans the full width, with the antenna standing above it. "fill" paints the head only — the antenna and the eyes are strokes and take no fill. ${BELOW_LABEL_NOTE} A square aspect ratio (e.g. 100x100) looks best. Prefer "actor" for a person or a human role.`,
+	summary: "AI agent, LLM, automation bot",
 });
 
 /**
@@ -159,7 +180,7 @@ export const envelopeDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: EnvelopeFeatures,
 	defaults: ENVELOPE_DOC_DEFAULTS,
 	outline: envelopeOutline,
-	description: `Closed envelope shape, typically used for a single message or event. ${RECT_GEOMETRY_NOTE} ${BELOW_LABEL_NOTE} A landscape aspect ratio (e.g. 120x84) looks best. Prefer "queue" for the buffer messages sit in rather than for one message.`,
+	description: `Closed envelope shape, typically used for a single message or event. ${RECT_GEOMETRY_NOTE} ${BELOW_LABEL_NOTE} A landscape aspect ratio (e.g. 120x84) looks best. Prefer "queue" for the buffer messages sit in rather than for one message, and "lightning" for the event or trigger that sets work off rather than the message it carries.`,
 	summary: "message, event",
 });
 
@@ -182,6 +203,32 @@ export const gearDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	description: `Gear shape, typically used for services, batch jobs and daemons — work that runs on its own rather than being called through a UI. ${RECT_GEOMETRY_NOTE} ${BELOW_LABEL_NOTE} A square aspect ratio (e.g. 100x100) looks best; a stretched box gives a stretched gear.`,
 	summary: "service, batch job, daemon",
 });
+
+/**
+ * `outline` follows the face: a round drawing never reaches a corner of its box
+ * (clockOutline).
+ */
+export const clockDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
+	features: ClockFeatures,
+	defaults: CLOCK_DOC_DEFAULTS,
+	outline: clockOutline,
+	description: `Clock shape (a round face with hour and minute hands), typically used for schedulers, cron jobs, periodic runs, timers and timeouts. ${RECT_GEOMETRY_NOTE} The face fills the whole box. "fill" paints the face only — the hands and the quarter marks are strokes and take no fill. ${BELOW_LABEL_NOTE} A square aspect ratio (e.g. 100x100) looks best. Distinct from the flowchart "delay", a notation shape for a waiting step in a flow: a clock is the thing that keeps the time.`,
+	summary: "scheduler, cron, timer, timeout",
+});
+
+/**
+ * The bolt touches each box edge at a single point, so `outline` is what keeps a
+ * connector from stopping in mid-air (lightningOutline).
+ */
+export const lightningDocDefinition: ObjectDocDefinition = createFrameObjectDoc(
+	{
+		features: LightningFeatures,
+		defaults: LIGHTNING_DOC_DEFAULTS,
+		outline: lightningOutline,
+		description: `Lightning bolt shape, typically used for events, triggers and webhooks — something that happens and sets work off. ${RECT_GEOMETRY_NOTE} "fill" paints the bolt. ${BELOW_LABEL_NOTE} A portrait aspect ratio (e.g. 70x100) looks best. Prefer "envelope" for a single message as a thing that is sent, and "queue" for the buffer messages sit in.`,
+		summary: "event, trigger, webhook",
+	},
+);
 
 /**
  * The shackle encloses nothing, so there is no silhouette to copy; `outline`
@@ -239,13 +286,16 @@ export const generalDocPlugin: CanvasDocPlugin = {
 	id: "general-shapes",
 	objects: {
 		actor: actorDocDefinition,
+		bot: botDocDefinition,
 		browserWindow: browserWindowDocDefinition,
+		clock: clockDocDefinition,
 		cloud: cloudDocDefinition,
 		envelope: envelopeDocDefinition,
 		file: fileDocDefinition,
 		folder: folderDocDefinition,
 		gear: gearDocDefinition,
 		laptop: laptopDocDefinition,
+		lightning: lightningDocDefinition,
 		lock: lockDocDefinition,
 		package: packageDocDefinition,
 		queue: queueDocDefinition,

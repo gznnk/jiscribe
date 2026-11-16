@@ -1,28 +1,12 @@
 import { describe, it, expect } from "vitest";
 
 import { gearOutline } from "../gear/gearOutline";
-
-const angleOf = (point: { x: number; y: number }): number =>
-	Math.atan2(point.y, point.x);
+import { expectStarShapedAboutCenter } from "./support/expectStarShapedAboutCenter";
 
 describe("gearOutline", () => {
 	it("is star-shaped about the center, so a connector endpoint moves continuously", () => {
-		// Strictly increasing angles mean a ray from the center crosses the rim
-		// exactly once — the property that lets the outline follow the teeth
-		// instead of falling back to a smooth approximation.
-		const points = gearOutline({ width: 100, height: 100 });
-		const unwrapped = points.map(angleOf).map((angle, index, all) => {
-			let turns = 0;
-			for (let i = 1; i <= index; i++) {
-				if (all[i] < all[i - 1]) {
-					turns++;
-				}
-			}
-			return angle + turns * Math.PI * 2;
-		});
-		for (let i = 1; i < unwrapped.length; i++) {
-			expect(unwrapped[i]).toBeGreaterThan(unwrapped[i - 1]);
-		}
+		// Following the teeth exactly is only safe because the rim is star-shaped.
+		expectStarShapedAboutCenter(gearOutline({ width: 100, height: 100 }));
 	});
 
 	it("reaches the box edge at a tooth but never a box corner", () => {

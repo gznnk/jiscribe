@@ -1,4 +1,4 @@
-<!-- jiscribe guide 0.12.2+27a40528 -->
+<!-- jiscribe guide 0.12.2+d5467391 -->
 
 # The Jiscribe file format
 
@@ -78,17 +78,20 @@ shape" here and below means every object type except `text` / `polyline` /
 | `document`              | `x`,`y`,`width`,`height`                                       |
 | `multiDocument`         | `x`,`y`,`width`,`height`                                       |
 | `actor`                 | `x`,`y`,`width`,`height`                                       |
+| `bot`                   | `x`,`y`,`width`,`height`                                       |
 | `browserWindow`         | `x`,`y`,`width`,`height`                                       |
 | `terminalWindow`        | `x`,`y`,`width`,`height`                                       |
 | `smartphone`            | `x`,`y`,`width`,`height`                                       |
 | `laptop`                | `x`,`y`,`width`,`height`                                       |
 | `server`                | `x`,`y`,`width`,`height`                                       |
 | `gear`                  | `x`,`y`,`width`,`height`                                       |
+| `clock`                 | `x`,`y`,`width`,`height`                                       |
 | `package`               | `x`,`y`,`width`,`height`                                       |
 | `folder`                | `x`,`y`,`width`,`height`                                       |
 | `file`                  | `x`,`y`,`width`,`height`                                       |
 | `envelope`              | `x`,`y`,`width`,`height`                                       |
 | `queue`                 | `x`,`y`,`width`,`height`                                       |
+| `lightning`             | `x`,`y`,`width`,`height`                                       |
 | `lock`                  | `x`,`y`,`width`,`height`                                       |
 | `shield`                | `x`,`y`,`width`,`height`                                       |
 | `lucideIcon`            | `x`,`y`,`width`,`height`                                       |

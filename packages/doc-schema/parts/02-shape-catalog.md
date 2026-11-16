@@ -8,8 +8,9 @@ rather than a `rect` with a label on it.
 
 ## Pictograms are symbols, not frames
 
-`browserWindow` / `terminalWindow` / `smartphone` / `laptop` / `server` / `gear` /
-`package` / `folder` / `file` / `envelope` / `queue` / `lock` / `shield` are
+`bot` / `browserWindow` / `terminalWindow` / `smartphone` / `laptop` / `server` /
+`gear` / `clock` / `package` / `folder` / `file` / `envelope` / `queue` /
+`lightning` / `lock` / `shield` are
 **pictograms**: symbols that stand for a thing in a diagram. Every detail they
 draw — a title bar, a screen, teeth, a lid — is a fraction of the bounding box,
 so they read at around their default size (roughly 100–160px) and distort when
@@ -31,5 +32,5 @@ where its text actually goes.
 - For `cloud`, text is placed in a reduced central region inside the bumps, so give the shape generous width/height.
 - For `document` and `callout`, text sits above the bottom wave/tail band.
 - For `multiDocument`, text is confined to the front (bottom-left) sheet, so give the shape generous size.
-- For `actor`, `server`, `package`, `envelope`, `queue`, `gear`, `lock`, `extract`, `cross`, `awsIcon`, `azureIcon` and `gcpIcon`, the drawing fills the whole box and the text is drawn as a label below it, auto-sized to the text itself — so the box does not need to be widened for a long name, and omitting the text leaves a bare figure. The label is painted on `labelFill` (default `"auto"`, the page's color, or the fill of the container / AWS group its center lies in), so a connector running under it is hidden there; set `"transparent"` to let it show through.
+- For `actor`, `bot`, `server`, `package`, `envelope`, `queue`, `lightning`, `gear`, `clock`, `lock`, `extract`, `cross`, `awsIcon`, `azureIcon` and `gcpIcon`, the drawing fills the whole box and the text is drawn as a label below it, auto-sized to the text itself — so the box does not need to be widened for a long name, and omitting the text leaves a bare figure. The label is painted on `labelFill` (default `"auto"`, the page's color, or the fill of the container / AWS group its center lies in), so a connector running under it is hidden there; set `"transparent"` to let it show through.
 - **`record` is the exception**: its text is a set of named slots, and the typography lives inside each slot rather than on the shape (see "`record` — a titled box with compartments").

@@ -27,9 +27,9 @@ describe("the standard set's caption text types", () => {
 		(type) => !labelTypes.includes(type),
 	);
 
-	it("are the sixteen shapes drawing a caption sized from its own text, fifteen of them over a background", () => {
-		expect(captionTypes).toHaveLength(16);
-		expect(labelTypes).toHaveLength(15);
+	it("are the nineteen shapes drawing a caption sized from its own text, eighteen of them over a background", () => {
+		expect(captionTypes).toHaveLength(19);
+		expect(labelTypes).toHaveLength(18);
 		expect(labelTypes).toEqual(
 			expect.arrayContaining([
 				"server",

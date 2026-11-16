@@ -118,6 +118,9 @@
 					"$ref": "#/$defs/ActorDoc"
 				},
 				{
+					"$ref": "#/$defs/BotDoc"
+				},
+				{
 					"$ref": "#/$defs/BrowserWindowDoc"
 				},
 				{
@@ -136,6 +139,9 @@
 					"$ref": "#/$defs/GearDoc"
 				},
 				{
+					"$ref": "#/$defs/ClockDoc"
+				},
+				{
 					"$ref": "#/$defs/PackageDoc"
 				},
 				{
@@ -149,6 +155,9 @@
 				},
 				{
 					"$ref": "#/$defs/QueueDoc"
+				},
+				{
+					"$ref": "#/$defs/LightningDoc"
 				},
 				{
 					"$ref": "#/$defs/LockDoc"
@@ -304,6 +313,9 @@
 					"$ref": "#/$defs/ActorDoc"
 				},
 				{
+					"$ref": "#/$defs/BotDoc"
+				},
+				{
 					"$ref": "#/$defs/BrowserWindowDoc"
 				},
 				{
@@ -322,6 +334,9 @@
 					"$ref": "#/$defs/GearDoc"
 				},
 				{
+					"$ref": "#/$defs/ClockDoc"
+				},
+				{
 					"$ref": "#/$defs/PackageDoc"
 				},
 				{
@@ -335,6 +350,9 @@
 				},
 				{
 					"$ref": "#/$defs/QueueDoc"
+				},
+				{
+					"$ref": "#/$defs/LightningDoc"
 				},
 				{
 					"$ref": "#/$defs/LockDoc"
@@ -959,7 +977,7 @@
 			}
 		},
 		"ActorDoc": {
-			"description": "Actor (stick figure) shape, typically used for users/roles in use-case diagrams or stakeholders in business diagrams. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. The stick figure fills the whole box. \"fill\" paints the head circle only — the limbs are strokes and take no fill. Text is drawn as a label below the box, auto-sized to the text itself, so the box may be kept small without making the text unreadable. A portrait aspect ratio (e.g. 80x100) looks best.",
+			"description": "Actor (stick figure) shape, typically used for users/roles in use-case diagrams or stakeholders in business diagrams. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. The stick figure fills the whole box. \"fill\" paints the head circle only — the limbs are strokes and take no fill. Text is drawn as a label below the box, auto-sized to the text itself, so the box may be kept small without making the text unreadable. A portrait aspect ratio (e.g. 80x100) looks best. Prefer \"bot\" for an AI agent or an automated bot rather than a person.",
 			"type": "object",
 			"allOf": [
 				{
@@ -971,6 +989,22 @@
 					"description": "Must be \"actor\".",
 					"type": "string",
 					"const": "actor"
+				}
+			}
+		},
+		"BotDoc": {
+			"description": "Robot head shape (a rounded head with an antenna and two eyes), typically used for AI agents, LLMs and automation bots. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. The head spans the full width, with the antenna standing above it. \"fill\" paints the head only — the antenna and the eyes are strokes and take no fill. Text is drawn as a label below the box, auto-sized to the text itself, so the box may be kept small without making the text unreadable. A square aspect ratio (e.g. 100x100) looks best. Prefer \"actor\" for a person or a human role.",
+			"type": "object",
+			"allOf": [
+				{
+					"$ref": "#/$defs/LabelBoxShapeDoc"
+				}
+			],
+			"properties": {
+				"type": {
+					"description": "Must be \"bot\".",
+					"type": "string",
+					"const": "bot"
 				}
 			}
 		},
@@ -1240,6 +1274,22 @@
 				}
 			}
 		},
+		"ClockDoc": {
+			"description": "Clock shape (a round face with hour and minute hands), typically used for schedulers, cron jobs, periodic runs, timers and timeouts. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. The face fills the whole box. \"fill\" paints the face only — the hands and the quarter marks are strokes and take no fill. Text is drawn as a label below the box, auto-sized to the text itself, so the box may be kept small without making the text unreadable. A square aspect ratio (e.g. 100x100) looks best. Distinct from the flowchart \"delay\", a notation shape for a waiting step in a flow: a clock is the thing that keeps the time.",
+			"type": "object",
+			"allOf": [
+				{
+					"$ref": "#/$defs/LabelBoxShapeDoc"
+				}
+			],
+			"properties": {
+				"type": {
+					"description": "Must be \"clock\".",
+					"type": "string",
+					"const": "clock"
+				}
+			}
+		},
 		"PackageDoc": {
 			"description": "Isometric box shape, typically used for libraries, build artifacts and deployment units. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. Text is drawn as a label below the box, auto-sized to the text itself, so the box may be kept small without making the text unreadable. The hexagon is a cube in isometric projection, so it reads as a cube only when the box is slightly taller than wide (e.g. 95x110); a square box widens it. Prefer \"server\" for something that runs rather than something that is deployed.",
 			"type": "object",
@@ -1289,7 +1339,7 @@
 			}
 		},
 		"EnvelopeDoc": {
-			"description": "Closed envelope shape, typically used for a single message or event. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. Text is drawn as a label below the box, auto-sized to the text itself, so the box may be kept small without making the text unreadable. A landscape aspect ratio (e.g. 120x84) looks best. Prefer \"queue\" for the buffer messages sit in rather than for one message.",
+			"description": "Closed envelope shape, typically used for a single message or event. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. Text is drawn as a label below the box, auto-sized to the text itself, so the box may be kept small without making the text unreadable. A landscape aspect ratio (e.g. 120x84) looks best. Prefer \"queue\" for the buffer messages sit in rather than for one message, and \"lightning\" for the event or trigger that sets work off rather than the message it carries.",
 			"type": "object",
 			"allOf": [
 				{
@@ -1317,6 +1367,22 @@
 					"description": "Must be \"queue\".",
 					"type": "string",
 					"const": "queue"
+				}
+			}
+		},
+		"LightningDoc": {
+			"description": "Lightning bolt shape, typically used for events, triggers and webhooks — something that happens and sets work off. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. \"fill\" paints the bolt. Text is drawn as a label below the box, auto-sized to the text itself, so the box may be kept small without making the text unreadable. A portrait aspect ratio (e.g. 70x100) looks best. Prefer \"envelope\" for a single message as a thing that is sent, and \"queue\" for the buffer messages sit in.",
+			"type": "object",
+			"allOf": [
+				{
+					"$ref": "#/$defs/LabelBoxShapeDoc"
+				}
+			],
+			"properties": {
+				"type": {
+					"description": "Must be \"lightning\".",
+					"type": "string",
+					"const": "lightning"
 				}
 			}
 		},
@@ -4401,7 +4467,7 @@
 			}
 		},
 		"OwnerRef": {
-			"description": "Reference to an object on the canvas by ID. The referenced object must be connectable: rect / markdown / ellipse / text / diamond / stadium / parallelogram / hexagon / cloud / document / multiDocument / actor / browserWindow / terminalWindow / smartphone / laptop / server / gear / package / folder / file / envelope / queue / lock / shield / lucideIcon / callout / note / brace / bracketWithStem / bracket / db / storedData / subroutine / trapezoid / manualInput / card / delay / loopLimit / display / extract / cross / offPageConnector / record / umlPackage / umlComponent / erEntity / awsIcon / awsGroup / azureIcon / gcpIcon / container / sticky / table / image (NOT polyline / polygon / group / svg / connector).",
+			"description": "Reference to an object on the canvas by ID. The referenced object must be connectable: rect / markdown / ellipse / text / diamond / stadium / parallelogram / hexagon / cloud / document / multiDocument / actor / bot / browserWindow / terminalWindow / smartphone / laptop / server / gear / clock / package / folder / file / envelope / queue / lightning / lock / shield / lucideIcon / callout / note / brace / bracketWithStem / bracket / db / storedData / subroutine / trapezoid / manualInput / card / delay / loopLimit / display / extract / cross / offPageConnector / record / umlPackage / umlComponent / erEntity / awsIcon / awsGroup / azureIcon / gcpIcon / container / sticky / table / image (NOT polyline / polygon / group / svg / connector).",
 			"type": "object",
 			"required": ["id"],
 			"additionalProperties": false,
