@@ -174,7 +174,7 @@ component は、文字と同じく `LabelTextFill`（キットが再エクスポ
 色・不透明度を持つ（`ObjectLabelBackdropRegion`）。第 2 引数は core が `createFrameObject` と同じく解決した
 本体の塗り（`fillColor` は `"auto"` をテーマの面の色に解決済み、と `fillAlpha`）なので、型は既定値を
 書き写さない。何も塗らない領域（透明な色・不透明度 0）は捨てられる。数えるのは宣言した型だけで、塗った
-四角は下地にならない。ドラッグ中は読まれない。例外はドラッグ中に取った書き出しで、描く範囲について求める。
+四角は下地にならない。描くものが変わるたびに読まれ、図形を動かす・変形するドラッグでは毎フレーム読まれるので、軽く保つ。
 
 スロット同士を並べてレイアウトする型（表のセル、record の区画）は、`"textSlot"` の
 部分種別を自分で宣言し、`createTextSlotPartKindDefinition({ regions })` を

@@ -659,7 +659,6 @@ const CanvasComponent = ({
 		rootIds: state.rootIds,
 		fontsNonce,
 		snapshotRenderScope,
-		isDragging: state.drag !== null,
 		registries,
 	});
 

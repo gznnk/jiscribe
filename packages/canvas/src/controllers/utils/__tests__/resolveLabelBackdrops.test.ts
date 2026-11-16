@@ -8,6 +8,7 @@ import type { GroupState } from "../../../states/objects/primitives/group/GroupS
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { createTextSlotPartKindDefinition } from "../../selection/partKinds/textSlotPartKind";
 import { buildIdsWithAncestors } from "../buildIdsWithAncestors";
+import { createCowObjects } from "../cowObjects";
 import { resolveLabelBackdrops } from "../resolveLabelBackdrops";
 
 /** Where a probe caption's box sits in its shape's local space: 40 × 20, hung under a 40 × 40 box. */
@@ -379,6 +380,29 @@ describe("resolveLabelBackdrops", () => {
 			"connector",
 		);
 		expect(edited.get("connector")).toEqual([RED_LAYER]);
+	});
+
+	it("reads a drag's copy-on-write view: lookups by id, a group's children, and an object the frame replaced", () => {
+		const base = Object.fromEntries(
+			[
+				group("group", ["frame", "shape"]),
+				frame("frame", 100, 100, 200, 200, { parentId: "group" }),
+				captioned("shape", 100, 80, { parentId: "group" }),
+				captioned("outside", 500, 80),
+			].map((obj) => [obj.id, obj]),
+		);
+		// One frame of a drag: "shape" dragged out of the frame, "outside" into it.
+		const view = createCowObjects(base);
+		view.shape = captioned("shape", 500, 80, { parentId: "group" });
+		view.outside = captioned("outside", 100, 80);
+
+		const backdrops = resolveLabelBackdrops(
+			view,
+			["group", "outside"],
+			registries,
+		);
+		expect(backdrops.has("shape")).toBe(false);
+		expect(backdrops.get("outside")).toEqual([RED_LAYER]);
 	});
 
 	it("counts only the frames inside the render scope", () => {

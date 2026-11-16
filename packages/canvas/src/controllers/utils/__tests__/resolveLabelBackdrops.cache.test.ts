@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { createTextSlotPartKindDefinition } from "../../selection/partKinds/textSlotPartKind";
+import { createCowObjects } from "../cowObjects";
 import { resolveLabelBackdrops } from "../resolveLabelBackdrops";
 
 /**
@@ -93,6 +94,22 @@ describe("resolveLabelBackdrops caches", () => {
 		advanceTextMeasurementGeneration();
 		resolve(frame, shape);
 		expect(captionRegionCalls.count).toBe(3);
+	});
+
+	it("places only the dragged caption again on each frame of a drag, the untouched one never", () => {
+		const still = { ...captioned(60), id: "still" } as ObjectState;
+		const base = { frame, shape: captioned(100), still };
+		const rootIds = ["frame", "shape", "still"];
+		resolveLabelBackdrops(base, rootIds, registries);
+		expect(captionRegionCalls.count).toBe(2);
+
+		// Each frame of the drag hands a new state for "shape" alone.
+		for (const cx of [110, 120, 130]) {
+			const view = createCowObjects<ObjectState>(base);
+			view.shape = captioned(cx);
+			resolveLabelBackdrops(view, rootIds, registries);
+		}
+		expect(captionRegionCalls.count).toBe(5);
 	});
 
 	it("places a caption again through a canvas whose part kind places it elsewhere", () => {

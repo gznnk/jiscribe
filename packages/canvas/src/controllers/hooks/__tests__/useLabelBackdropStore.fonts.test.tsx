@@ -137,7 +137,6 @@ const Host = () => {
 		rootIds,
 		fontsNonce,
 		snapshotRenderScope: null,
-		isDragging: false,
 		registries,
 	});
 	return (

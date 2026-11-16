@@ -4,7 +4,7 @@ import { advanceTextMeasurementGeneration } from "@jiscribe/doc/text/measure/tex
 import type { Rect } from "@jiscribe/geometry";
 import { act, memo } from "react";
 import { createRoot } from "react-dom/client";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { LabelBackdropLayer } from "../../../rendering/objects/LabelBackdropStoreContext";
 import {
@@ -16,8 +16,26 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { createTextSlotPartKindDefinition } from "../../selection/partKinds/textSlotPartKind";
 import { buildIdsWithAncestors } from "../../utils/buildIdsWithAncestors";
+import { createCowObjects } from "../../utils/cowObjects";
+import type * as ResolveLabelBackdropsModule from "../../utils/resolveLabelBackdrops";
 import type { SnapshotRenderScope } from "../../utils/SnapshotRenderScope";
 import { useLabelBackdropStore } from "../useLabelBackdropStore";
+
+/** How often the pass ran, every call passed through. */
+const passCalls = vi.hoisted(() => ({ count: 0 }));
+
+vi.mock("../../utils/resolveLabelBackdrops", async (importOriginal) => {
+	const actual = await importOriginal<typeof ResolveLabelBackdropsModule>();
+	return {
+		...actual,
+		resolveLabelBackdrops: (
+			...args: Parameters<typeof actual.resolveLabelBackdrops>
+		) => {
+			passCalls.count += 1;
+			return actual.resolveLabelBackdrops(...args);
+		},
+	};
+});
 
 // Without this React treats every `act` below as unsupported and warns, the
 // flushes being correct all the same.
@@ -86,7 +104,6 @@ const captioned = (id: string, cx: number, text = "Hi"): ObjectState =>
 type HostProps = {
 	objects: Record<string, ObjectState>;
 	rootIds: string[];
-	isDragging?: boolean;
 	snapshotRenderScope?: SnapshotRenderScope | null;
 	fontsNonce?: number;
 	/** The labels mounted under the store, each reading its own layers. */
@@ -110,7 +127,6 @@ const Probe = memo(ProbeComponent);
 const Host = ({
 	objects,
 	rootIds,
-	isDragging = false,
 	snapshotRenderScope = null,
 	labelEditOwnerId = null,
 	fontsNonce = 0,
@@ -122,7 +138,6 @@ const Host = ({
 		rootIds,
 		fontsNonce,
 		snapshotRenderScope,
-		isDragging,
 		registries,
 	});
 	return (
@@ -135,6 +150,10 @@ const Host = ({
 };
 
 let unmount: (() => void) | null = null;
+
+beforeEach(() => {
+	passCalls.count = 0;
+});
 
 afterEach(() => {
 	unmount?.();
@@ -153,6 +172,21 @@ const mountHost = () => {
 
 const toObjects = (...objects: ObjectState[]): Record<string, ObjectState> =>
 	Object.fromEntries(objects.map((obj) => [obj.id, obj]));
+
+/**
+ * One frame of a drag over `base`: the copy-on-write view a drag handler hands
+ * the reducer (createCowObjects), with `moved` written over it.
+ */
+const dragFrame = (
+	base: Record<string, ObjectState>,
+	...moved: ObjectState[]
+): Record<string, ObjectState> => {
+	const view = createCowObjects(base);
+	for (const obj of moved) {
+		view[obj.id] = obj;
+	}
+	return view;
+};
 
 /** The layers a probe last rendered with. */
 const latestLayers = (ownerId: string): readonly LabelBackdropLayer[] =>
@@ -174,46 +208,79 @@ describe("useLabelBackdropStore", () => {
 		]);
 	});
 
-	it("keeps the layers through a drag and works them out at its end, objects unchanged by the end", () => {
+	it("follows a captioned shape dragged across a frame's border, frame by frame", () => {
+		// The frame spans x 0..200; the caption's center sits at cx - 10.
+		const base = toObjects(frame("frame", 100), captioned("shape", 180));
 		const render = mountHost();
+		render({ objects: base, rootIds: ROOT_IDS, probeIds: ["shape"] });
+		expect(latestLayers("shape")).toHaveLength(1);
+
 		render({
-			objects: toObjects(frame("frame", 100), captioned("shape", 100)),
+			objects: dragFrame(base, captioned("shape", 230)),
 			rootIds: ROOT_IDS,
 			probeIds: ["shape"],
 		});
-		// The frame dragged away: nothing is worked out while the drag lasts.
-		const draggedAway = toObjects(frame("frame", 600), captioned("shape", 100));
+		expect(latestLayers("shape")).toBe(NO_LABEL_BACKDROP_LAYERS);
+
 		render({
-			objects: draggedAway,
+			objects: dragFrame(base, captioned("shape", 200)),
 			rootIds: ROOT_IDS,
-			isDragging: true,
 			probeIds: ["shape"],
 		});
 		expect(latestLayers("shape")).toHaveLength(1);
-
-		// The drag ends on the very objects its last frame drew.
-		render({ objects: draggedAway, rootIds: ROOT_IDS, probeIds: ["shape"] });
-		expect(latestLayers("shape")).toBe(NO_LABEL_BACKDROP_LAYERS);
 	});
 
-	it("picks up a frame's opacity a menu slider's drag changed, once it ends", () => {
+	it("follows a frame dragged away and resized back under a label, frame by frame", () => {
+		const base = toObjects(frame("frame", 100), captioned("shape", 100));
 		const render = mountHost();
-		render({
-			objects: toObjects(frame("frame", 100), captioned("shape", 100)),
-			rootIds: ROOT_IDS,
-			probeIds: ["shape"],
-		});
-		const slid = toObjects(frame("frame", 100, 0.9), captioned("shape", 100));
-		render({
-			objects: slid,
-			rootIds: ROOT_IDS,
-			isDragging: true,
-			probeIds: ["shape"],
-		});
-		expect(latestLayers("shape")[0].fillOpacity).toBe(0.5);
+		render({ objects: base, rootIds: ROOT_IDS, probeIds: ["shape"] });
+		expect(latestLayers("shape")).toHaveLength(1);
 
-		render({ objects: slid, rootIds: ROOT_IDS, probeIds: ["shape"] });
+		// Moved to span x 400..600: the caption's center (90) is left behind.
+		render({
+			objects: dragFrame(base, frame("frame", 500)),
+			rootIds: ROOT_IDS,
+			probeIds: ["shape"],
+		});
+		expect(latestLayers("shape")).toBe(NO_LABEL_BACKDROP_LAYERS);
+
+		// Its left edge pulled out to x 0 again by a resize.
+		render({
+			objects: dragFrame(base, {
+				...frame("frame", 300),
+				width: 600,
+			} as ObjectState),
+			rootIds: ROOT_IDS,
+			probeIds: ["shape"],
+		});
+		expect(latestLayers("shape")).toHaveLength(1);
+	});
+
+	it("follows a frame's opacity a menu slider's drag changes, frame by frame", () => {
+		const base = toObjects(frame("frame", 100), captioned("shape", 100));
+		const render = mountHost();
+		render({ objects: base, rootIds: ROOT_IDS, probeIds: ["shape"] });
+		render({
+			objects: dragFrame(base, frame("frame", 100, 0.9)),
+			rootIds: ROOT_IDS,
+			probeIds: ["shape"],
+		});
 		expect(latestLayers("shape")[0].fillOpacity).toBe(0.9);
+	});
+
+	it("works nothing out for a drag that changes no object (a pan, a marquee)", () => {
+		const base = toObjects(frame("frame", 100), captioned("shape", 100));
+		const render = mountHost();
+		render({ objects: base, rootIds: ROOT_IDS, probeIds: ["shape"] });
+		const passesBefore = passCalls.count;
+		const rendersBefore = probeRenders.get("shape")!.length;
+
+		// Every frame of a pan re-renders the canvas on the very same objects.
+		render({ objects: base, rootIds: ROOT_IDS, probeIds: ["shape"] });
+		render({ objects: base, rootIds: ROOT_IDS, probeIds: ["shape"] });
+
+		expect(passCalls.count).toBe(passesBefore);
+		expect(probeRenders.get("shape")).toHaveLength(rendersBefore);
 	});
 
 	it("works the layers out again on any new objects outside a drag (undo, typing, a sync)", () => {
@@ -268,27 +335,29 @@ describe("useLabelBackdropStore", () => {
 		expect(latestLayers("pasted")).toHaveLength(1);
 	});
 
-	it("keeps an unchanged label's layers and does not re-render it, and takes a lost backdrop away", () => {
+	it("keeps an unchanged label's layers and does not re-render it while another is dragged away", () => {
+		const base = toObjects(
+			frame("frame", 100),
+			captioned("shape", 100),
+			captioned("other", 60),
+		);
 		const render = mountHost();
 		render({
-			objects: toObjects(
-				frame("frame", 100),
-				captioned("shape", 100),
-				captioned("other", 60),
-			),
+			objects: base,
 			rootIds: [...ROOT_IDS, "other"],
 			probeIds: ["shape", "other"],
 		});
 		const otherLayers = latestLayers("other");
 		const otherRenderCount = probeRenders.get("other")!.length;
 
-		// "shape" leaves the frame; "other" stays where it was.
+		// "shape" dragged out of the frame over two frames; "other" stays.
 		render({
-			objects: toObjects(
-				frame("frame", 100),
-				captioned("shape", 600),
-				captioned("other", 60),
-			),
+			objects: dragFrame(base, captioned("shape", 150)),
+			rootIds: [...ROOT_IDS, "other"],
+			probeIds: ["shape", "other"],
+		});
+		render({
+			objects: dragFrame(base, captioned("shape", 600)),
 			rootIds: [...ROOT_IDS, "other"],
 			probeIds: ["shape", "other"],
 		});
@@ -377,17 +446,21 @@ describe("useLabelBackdropStore", () => {
 		expect(latestLayers("shape")).toBe(layers);
 	});
 
-	it("works out an export's scope mid-drag, leaving out the frames outside it", () => {
-		const objects = toObjects(frame("frame", 100), captioned("shape", 100));
+	it("works out an export's scope taken mid-drag, and the whole tree after it", () => {
+		const base = toObjects(frame("frame", 100), captioned("shape", 100));
 		const render = mountHost();
-		render({ objects, rootIds: ROOT_IDS, probeIds: ["shape"] });
+		render({ objects: base, rootIds: ROOT_IDS, probeIds: ["shape"] });
+		const midDrag = dragFrame(base, captioned("shape", 110));
+		render({ objects: midDrag, rootIds: ROOT_IDS, probeIds: ["shape"] });
 		render({
-			objects,
+			objects: midDrag,
 			rootIds: ROOT_IDS,
-			isDragging: true,
-			snapshotRenderScope: buildIdsWithAncestors(["shape"], objects),
+			snapshotRenderScope: buildIdsWithAncestors(["shape"], midDrag),
 			probeIds: ["shape"],
 		});
 		expect(latestLayers("shape")).toBe(NO_LABEL_BACKDROP_LAYERS);
+
+		render({ objects: midDrag, rootIds: ROOT_IDS, probeIds: ["shape"] });
+		expect(latestLayers("shape")).toHaveLength(1);
 	});
 });

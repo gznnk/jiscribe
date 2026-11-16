@@ -184,8 +184,8 @@ with a resolved color and an opacity (`ObjectLabelBackdropRegion`); the second a
 the body fill the core resolved the way `createFrameObject` draws it (`fillColor`, `"auto"`
 already the theme surface, and `fillAlpha`), so the type repeats none of its defaults.
 A region painting nothing (a transparent color, opacity 0) is dropped. Only a type
-declaring it counts: a filled rectangle is no backdrop. It is not read while a drag is
-under way, except for an export taken mid-drag, which is worked out for what it draws.
+declaring it counts: a filled rectangle is no backdrop. It is read whenever the drawing
+changes, on every frame of a drag that moves or reshapes something, so keep it cheap.
 
 A type whose slots are laid out against each other (a table's cells, a record's
 compartments) declares the `"textSlot"` part kind itself, with

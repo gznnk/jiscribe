@@ -115,9 +115,9 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   when its center is inside, and the page's color alone when it is outside.
   Only the frames drawn before the label count, rotated or flipped ones by the
   same rule. It is worked
-  out again whenever the drawing changes, except during a drag, which keeps the
-  previous result until it ends (an export taken mid-drag is worked out all
-  the same); an export of a subset counts only the frames in it. container and
+  out again whenever the drawing changes, each frame of a drag included, so a
+  label follows a frame or a shape as it is dragged; an export of a subset
+  counts only the frames in it. container and
   awsGroup declare one; a filled rectangle is no backdrop. A connector label
   being edited is painted the same way, judged at the anchor the editor sits
   on, an empty one being created included; the box follows the text as typed.

@@ -23,8 +23,6 @@ type UseLabelBackdropStoreParams = {
 	fontsNonce: number;
 	/** What a running export draws, or null while none runs (useSnapshotRenderScope). */
 	snapshotRenderScope: SnapshotRenderScope | null;
-	/** True while any drag is under way (`state.drag !== null`). */
-	isDragging: boolean;
 	registries: LabelBackdropRegistries;
 };
 
@@ -55,11 +53,11 @@ const isSameInputs = (
  * The layers are worked out again during render, whenever an input differs
  * from the last time they were (not from the previous render), so whatever
  * changed the document — an edit, undo, a paste, an external sync, a typed
- * character — is picked up without naming it. While a drag is under way
- * nothing is worked out and the labels keep their layers; the render ending
- * the drag compares again, so a drag whose end leaves `objects` as it was
- * still has its changes picked up. A running export is the exception: its
- * scope is worked out even mid-drag, so it draws no frame outside it.
+ * character, every frame of a drag that moves or reshapes something — is picked
+ * up without naming it. A drag that changes no object (a pan, a marquee) leaves
+ * the inputs as they were, and works nothing out. A running export's scope is
+ * an input too, so it is worked out for what it draws and the whole document
+ * again once it ends.
  *
  * The new layers are written without notifying, so the labels rendered after
  * this in the same pass read them. Labels a memo skips are notified in a
@@ -73,7 +71,6 @@ export const useLabelBackdropStore = ({
 	rootIds,
 	fontsNonce,
 	snapshotRenderScope,
-	isDragging,
 	registries,
 }: UseLabelBackdropStoreParams): LabelBackdropStore => {
 	const store = useConstant<WritableLabelBackdropStore>(
@@ -93,11 +90,9 @@ export const useLabelBackdropStore = ({
 		labelEditOwnerId,
 		renderScope,
 	};
-	const isHeldByDrag = isDragging && renderScope === null;
 	if (
-		!isHeldByDrag &&
-		(lastInputsRef.current === null ||
-			!isSameInputs(lastInputsRef.current, inputs))
+		lastInputsRef.current === null ||
+		!isSameInputs(lastInputsRef.current, inputs)
 	) {
 		lastInputsRef.current = inputs;
 		const hasChanged = store.replaceLayers(

@@ -13,7 +13,7 @@ const VPC_PRESET = "awsGroupVpc";
  * the label's box where the group's fill is.
  */
 test.describe("an icon's label on a filled awsGroup", () => {
-	test("is painted on the group's fill, and back on the page once dragged out", async ({
+	test("is painted on the group's fill, and back on the page as it is dragged out", async ({
 		canvas,
 	}) => {
 		const iconId = await canvas.placeShapeFromFlyout(ICON_CATEGORY, S3_PRESET);
@@ -52,12 +52,13 @@ test.describe("an icon's label on a filled awsGroup", () => {
 			canvas.page.locator('g[data-canvas-export="flatten"] > rect'),
 		).toHaveCount(1);
 
-		// Mid-drag the label keeps what it had; the drop works it out again.
+		// The label follows the drag: out of the frame mid-drag, back on the page's
+		// color before the drop, and so it stays.
 		await canvas.dragInspecting(
 			iconCenter,
 			{ x: iconCenter.x + 500, y: iconCenter.y },
 			async () => {
-				await expect(layers).toHaveCount(1);
+				await expect(layers).toHaveCount(0);
 			},
 		);
 		await expect(layers).toHaveCount(0);
