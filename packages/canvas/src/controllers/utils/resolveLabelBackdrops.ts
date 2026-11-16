@@ -288,8 +288,9 @@ const collectLayersAt = (
  *   outside it is skipped with its subtree, as ObjectsRenderer skips it, so a
  *   frame not drawn paints under no label. Omitted = the whole tree
  * @param labelEditOwnerId - The connector whose label is open in the editor,
- *   its draft already in `objects` (graftConnectorLabelDraft): its label is
- *   taken even while empty, the editor drawing a box for it all the same.
+ *   already placed in `objects` where the editor sits
+ *   (graftConnectorLabelDraft): its label is taken even while empty, the
+ *   editor drawing a box for it all the same.
  *   Omitted = an empty label is taken for no connector
  * @returns The layers by the id of the object owning the label, bottom first,
  *   each painted over the label's whole box; a label on no backdrop has no entry

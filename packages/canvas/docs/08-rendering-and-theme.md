@@ -165,8 +165,8 @@ While it has layers, the page's color and the layers are drawn with `shape-rende
 edges land on the same pixels and no rim of the page's color shows around the box. A
 frame or a label owner that is rotated or flipped answers by the same rule, the center being taken into the
 frame's own space. A connector label's inline editor is painted the same way: the backdrops are
-worked out with its draft grafted onto the connector (`controllers/utils/graftConnectorLabelDraft.ts`, an
-empty label being created included), and the editor draws them through the same part in an SVG behind
+worked out with the label placed where the editor sits (`controllers/utils/graftConnectorLabelDraft.ts`;
+the text typed plays no part, and an empty label being created is included), and the editor draws them through the same part in an SVG behind
 its text, with its border drawn again on top.
 
 **Single rule**: "auto resolves to the role's theme token, and color is applied via CSS." Because

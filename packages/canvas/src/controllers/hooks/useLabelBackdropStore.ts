@@ -12,7 +12,8 @@ import type { SnapshotRenderScope } from "../utils/SnapshotRenderScope";
 type UseLabelBackdropStoreParams = {
 	/**
 	 * The objects as drawn, the text editor's draft included (useTextEditSession),
-	 * and a connector label's draft too (graftConnectorLabelDraft).
+	 * and a connector label under edit placed where its editor sits
+	 * (graftConnectorLabelDraft).
 	 */
 	objects: Record<string, ObjectState>;
 	/** The connector whose label is open in the editor, null when none is: its label is taken even while empty. */

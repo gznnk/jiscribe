@@ -31,8 +31,8 @@ export const useLabelBackdropInput = (
 	const labelEditPlacement = labelEditDraft?.placement;
 	return useMemo(
 		() => graftConnectorLabelDraft({ objects, selection, mode }),
-		// `mode` is read for the open edit alone, whose part the graft uses is
-		// listed instead.
+		// `mode` changes on every keystroke, so only what the graft reads of it
+		// is listed: whether a label edit is open, and its placement.
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[objects, selection, isLabelEditOpen, labelEditPlacement],
 	);
