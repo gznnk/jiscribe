@@ -6,7 +6,7 @@ import type { CanvasControllerState } from "../CanvasTypes";
 
 /** What the label backdrops are worked out from while a connector label may be open in the editor. */
 export type ConnectorLabelDraftObjects = {
-	/** `objects` with the edited connector's label replaced by the draft, or `objects` itself when no label is open. */
+	/** `objects` with the edited connector's label placed where the editor sits, or `objects` itself when no label is open. */
 	objects: Record<string, ObjectState>;
 	/** The connector whose label is open in the editor; null when none is. */
 	labelEditOwnerId: string | null;
@@ -31,12 +31,14 @@ export const resolveLabelDraftPlacement = (
 });
 
 /**
- * Grafts the connector label being edited onto its connector, for the label
- * backdrops alone (resolveLabelBackdrops): the editor draws the draft's box,
- * placed where the label being created will go, so the backdrop under it is
- * worked out at that box's center rather than the committed one's. Only the backdrop pass reads the
- * result; the drawing, the menus and hit testing keep the map
- * graftTextEditDraft gives, which leaves a label's draft out.
+ * Prepares the connector label open in the editor for the label backdrops
+ * alone (resolveLabelBackdrops), which judge a label by its anchor: the label
+ * is given the placement the editor sits at (resolveLabelDraftPlacement, the
+ * pending one of a label being created), and one being created gets a label to
+ * be found by at all, empty until committed. The draft text is left out, the
+ * backdrop not depending on it: what follows each keystroke is the editor's own
+ * box width. Only the backdrop pass reads the result; the drawing, the menus
+ * and hit testing keep the map graftTextEditDraft gives.
  *
  * @param state - The objects to graft onto (the text-edit draft map), with the
  *   editing session (`mode`) and the selection owning it
@@ -50,12 +52,12 @@ export const graftConnectorLabelDraft = (
 	if (openEdit?.kind !== "connectorLabel") {
 		return { objects: state.objects, labelEditOwnerId: null };
 	}
-	const { connector, text, placement } = openEdit;
+	const { connector, placement } = openEdit;
 	const draftConnector: ConnectorState = {
 		...connector,
 		label: {
 			...connector.label,
-			text,
+			text: connector.label?.text ?? "",
 			...resolveLabelDraftPlacement(connector, placement),
 		},
 	};

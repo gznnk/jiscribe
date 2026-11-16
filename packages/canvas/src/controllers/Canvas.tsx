@@ -44,6 +44,7 @@ import { useExportDialog } from "./hooks/useExportDialog";
 import { useGestureRecognizer } from "./hooks/useGestureRecognizer";
 import { useInitialViewOpen } from "./hooks/useInitialViewOpen";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
+import { useLabelBackdropInput } from "./hooks/useLabelBackdropInput";
 import { useLabelBackdropStore } from "./hooks/useLabelBackdropStore";
 import { useNotifySaveRequest } from "./hooks/useNotifySaveRequest";
 import { useNotifySelectionChange } from "./hooks/useNotifySelectionChange";
@@ -96,7 +97,6 @@ import { ExportDialog } from "./ui/modal/ExportDialog";
 import { ShortcutHelpModal } from "./ui/modal/ShortcutHelp/ShortcutHelpModal";
 import type { StencilCategory } from "./ui/objects/StencilCategory";
 import { collectDocFontRequests } from "./utils/collectDocFontRequests";
-import { graftConnectorLabelDraft } from "./utils/graftConnectorLabelDraft";
 import { EXPORT_FIT_PADDING } from "./utils/resolveExportOptions";
 import { resolveRenderedObjectIds } from "./utils/resolveRenderedObjectIds";
 import {
@@ -646,29 +646,13 @@ const CanvasComponent = ({
 	);
 	// Worked out from what is drawn, the edited text's draft included, so a
 	// caption growing as it is typed is judged by where its center now is. A
-	// connector label's draft is grafted for the backdrops alone, so the label
-	// editor's box is judged as placed for the text as typed so far.
-	const labelEditDraft =
-		state.mode.kind === "textEdit" && state.mode.draft.kind === "connectorLabel"
-			? state.mode.draft
-			: null;
-	const labelBackdropInput = useMemo(
-		() =>
-			graftConnectorLabelDraft({
-				objects: draftObjects,
-				selection: state.selection,
-				mode: state.mode,
-			}),
-		// Keyed on the draft's text and placement rather than on `mode`, which a
-		// shape's text edit also moves with the caret.
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[
-			draftObjects,
-			state.selection,
-			labelEditDraft?.text,
-			labelEditDraft?.placement,
-		],
-	);
+	// connector label open in the editor is placed where the editor sits, for
+	// the backdrops alone (useLabelBackdropInput).
+	const labelBackdropInput = useLabelBackdropInput({
+		objects: draftObjects,
+		selection: state.selection,
+		mode: state.mode,
+	});
 	const labelBackdropStore = useLabelBackdropStore({
 		objects: labelBackdropInput.objects,
 		labelEditOwnerId: labelBackdropInput.labelEditOwnerId,

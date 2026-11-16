@@ -59,7 +59,7 @@ describe("graftConnectorLabelDraft", () => {
 		expect(shapeEdit.labelEditOwnerId).toBeNull();
 	});
 
-	it("puts the draft text on a re-edited label, keeping its style and placement", () => {
+	it("keeps a re-edited label as committed, the draft text left out", () => {
 		const objects = {
 			connector: connector({
 				text: "go",
@@ -71,18 +71,17 @@ describe("graftConnectorLabelDraft", () => {
 		const grafted = graftConnectorLabelDraft(labelEdit(objects, "gone"));
 		expect(grafted.labelEditOwnerId).toBe("connector");
 		expect(readLabel(grafted.objects)).toEqual({
-			text: "gone",
+			text: "go",
 			fill: "auto",
 			position: 0.3,
 			offset: 4,
 		});
-		expect(readLabel(objects)?.text).toBe("go");
 	});
 
-	it("gives a label being created its pending placement, empty or not", () => {
+	it("gives a label being created an empty label at its pending placement, whatever is typed", () => {
 		const objects = { connector: connector() };
 		const grafted = graftConnectorLabelDraft(
-			labelEdit(objects, "", { position: 0.25, offset: -6 }),
+			labelEdit(objects, "typed", { position: 0.25, offset: -6 }),
 		);
 		expect(readLabel(grafted.objects)).toEqual({
 			text: "",

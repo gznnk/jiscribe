@@ -63,11 +63,15 @@ type PaintedRegion = {
 	fillOpacity: number;
 	/** The region in its frame's local coordinates, normalized. */
 	localBox: BoundingBox;
-	/** The frame's center, its flips and its rotation in radians: what takes a world point into `localBox`'s space. */
+	/** The frame's center x in world coordinates, which `localBox` is centered on. */
 	cx: number;
+	/** The frame's center y in world coordinates. */
 	cy: number;
+	/** The frame's horizontal flip (1 or -1), undone before testing against `localBox`. */
 	scaleX: number;
+	/** The frame's vertical flip (1 or -1). */
 	scaleY: number;
+	/** The frame's rotation in radians, worked out once per frame rather than per label. */
 	angleRad: number;
 };
 

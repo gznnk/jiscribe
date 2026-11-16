@@ -119,8 +119,8 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   previous result until it ends (an export taken mid-drag is worked out all
   the same); an export of a subset counts only the frames in it. container and
   awsGroup declare one; a filled rectangle is no backdrop. A connector label
-  being edited is painted the same way, for the text as typed so far, an empty
-  one being created included.
+  being edited is painted the same way, judged at the anchor the editor sits
+  on, an empty one being created included; the box follows the text as typed.
 - **`@jiscribe/geometry` exports `isPointInBoundingBox`**, whether a point lies
   inside a box or on its edge, `false` for an inverted box or a `NaN`
   coordinate.

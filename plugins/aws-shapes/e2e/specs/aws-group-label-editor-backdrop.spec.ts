@@ -95,8 +95,9 @@ const countInkPixels = async (
 
 /**
  * A connector label's editor is drawn on the same stack as the committed label:
- * the page's color, then the fill of the frame the box's center lies in, for the
- * text as typed so far (graftConnectorLabelDraft), the box itself transparent.
+ * the page's color, then the fill of the frame its anchor lies in, judged from
+ * the moment it opens empty (graftConnectorLabelDraft), over the editor's own
+ * box as it grows with the text, the box itself transparent.
  */
 test.describe("a connector label's editor on a filled awsGroup", () => {
 	test("is painted on the frame's fill from the moment it opens, and follows each keystroke", async ({

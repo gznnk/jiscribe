@@ -29,15 +29,15 @@ type LabelTextFillProps = {
 	textSlot: TextSlot;
 	/**
 	 * The shape's `labelFill` as stored; omitted or `"auto"` knocks out in the
-	 * page's color (resolveLabelFill), with the backdrops lying under the caption
-	 * painted over it.
+	 * page's color (resolveLabelFill), with the fills of the frames the caption's
+	 * center lies in painted over it.
 	 */
 	labelFill: string | undefined;
 	/** The caption's box in the shape's local coordinates, as its `"textSlot"` part kind places it. */
 	region: Rect;
 	/**
 	 * The id of the shape owning the caption, under which the surrounding
-	 * `<Canvas>` keeps the backdrops it lies on (useLabelBackdropLayers); outside
+	 * `<Canvas>` keeps the caption's backdrop layers (useLabelBackdropLayers); outside
 	 * a `<Canvas>` there are none, whatever the id.
 	 */
 	ownerId: string;
@@ -97,8 +97,8 @@ const LabelTextFillComponent: React.FC<LabelTextFillProps> = ({
  * `labelFill`: what knocks out the lines running under the caption, the way a
  * connector's label does. Drawn by createFrameObject ahead of the caption's text;
  * a component written by hand draws it itself, as it does the text, passing the
- * shape's id as `ownerId`, under which an `"auto"` caption finds the frames it
- * lies on (LabelBackdropLayers).
+ * shape's id as `ownerId`, under which an `"auto"` caption finds the frames
+ * its center lies in (LabelBackdropLayers).
  *
  * Carries no `data-kind`, so it is no object of its own (the DOM allows one per
  * object), and takes no pointer, the shape's own hit area being what grabs the

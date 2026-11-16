@@ -96,8 +96,9 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 	const color = resolveAutoColor(fontColor, "ink");
 	const knockout = resolveLabelFill(fill, documentSurface);
 	const borderColor = resolveAutoColor(stroke, "ink");
-	// Worked out by the canvas for the draft's placement (graftConnectorLabelDraft),
-	// so they follow every keystroke.
+	// Worked out by the canvas at the anchor the editor sits on
+	// (graftConnectorLabelDraft), which typing does not move; what follows each
+	// keystroke is the box below, which the layers are drawn over.
 	const layers = useLabelBackdropLayers(isAutoLabelFill(fill) ? id : undefined);
 	const hasLayers = layers.length > 0;
 
