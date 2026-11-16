@@ -1,4 +1,4 @@
-<!-- jiscribe guide 0.12.2+b8bcdfa9 -->
+<!-- jiscribe guide 0.12.2+ddbdae67 -->
 
 # Jiscribe AI Authoring Guide
 
@@ -249,17 +249,20 @@ rather than a `rect` with a label on it.
 | `document`              | report, file                                                       |
 | `multiDocument`         | report batch / file set                                            |
 | `actor`                 | user, role, stakeholder                                            |
+| `bot`                   | AI agent, LLM, automation bot                                      |
 | `browserWindow`         | web UI node (a symbol, not a frame to lay a screen out in)         |
 | `terminalWindow`        | CLI, shell session                                                 |
 | `smartphone`            | mobile client                                                      |
 | `laptop`                | desktop client, web client                                         |
 | `server`                | host, node, running process                                        |
 | `gear`                  | service, batch job, daemon                                         |
+| `clock`                 | scheduler, cron, timer, timeout                                    |
 | `package`               | library, artifact, deployment unit                                 |
 | `folder`                | directory, grouping                                                |
 | `file`                  | source file, configuration                                         |
 | `envelope`              | message, event                                                     |
 | `queue`                 | job queue, message queue                                           |
+| `lightning`             | event, trigger, webhook                                            |
 | `lock`                  | authentication, protected resource                                 |
 | `shield`                | security boundary, trust zone                                      |
 | `lucideIcon`            | Lucide icon (line-art pictogram, no text of its own)               |
@@ -302,8 +305,9 @@ rather than a `rect` with a label on it.
 
 ## Pictograms are symbols, not frames
 
-`browserWindow` / `terminalWindow` / `smartphone` / `laptop` / `server` / `gear` /
-`package` / `folder` / `file` / `envelope` / `queue` / `lock` / `shield` are
+`bot` / `browserWindow` / `terminalWindow` / `smartphone` / `laptop` / `server` /
+`gear` / `clock` / `package` / `folder` / `file` / `envelope` / `queue` /
+`lightning` / `lock` / `shield` are
 **pictograms**: symbols that stand for a thing in a diagram. Every detail they
 draw — a title bar, a screen, teeth, a lid — is a fraction of the bounding box,
 so they read at around their default size (roughly 100–160px) and distort when
@@ -325,7 +329,7 @@ where its text actually goes.
 - For `cloud`, text is placed in a reduced central region inside the bumps, so give the shape generous width/height.
 - For `document` and `callout`, text sits above the bottom wave/tail band.
 - For `multiDocument`, text is confined to the front (bottom-left) sheet, so give the shape generous size.
-- For `actor`, `server`, `package`, `envelope`, `queue`, `gear`, `lock`, `extract`, `cross`, `awsIcon`, `azureIcon` and `gcpIcon`, the drawing fills the whole box and the text is drawn as a label below it, auto-sized to the text itself — so the box does not need to be widened for a long name, and omitting the text leaves a bare figure. The label is painted on `labelFill` (default `"auto"`, the page's color), so a connector running under it is hidden there; set `"transparent"` to let it show through.
+- For `actor`, `bot`, `server`, `package`, `envelope`, `queue`, `lightning`, `gear`, `clock`, `lock`, `extract`, `cross`, `awsIcon`, `azureIcon` and `gcpIcon`, the drawing fills the whole box and the text is drawn as a label below it, auto-sized to the text itself — so the box does not need to be widened for a long name, and omitting the text leaves a bare figure. The label is painted on `labelFill` (default `"auto"`, the page's color), so a connector running under it is hidden there; set `"transparent"` to let it show through.
 - **`record` is the exception**: its text is a set of named slots, and the typography lives inside each slot rather than on the shape (see "`record` — a titled box with compartments").
 
 ## Layout
@@ -498,17 +502,20 @@ shape" here and below means every object type except `text` / `polyline` /
 | `document`              | `x`,`y`,`width`,`height`                                       |
 | `multiDocument`         | `x`,`y`,`width`,`height`                                       |
 | `actor`                 | `x`,`y`,`width`,`height`                                       |
+| `bot`                   | `x`,`y`,`width`,`height`                                       |
 | `browserWindow`         | `x`,`y`,`width`,`height`                                       |
 | `terminalWindow`        | `x`,`y`,`width`,`height`                                       |
 | `smartphone`            | `x`,`y`,`width`,`height`                                       |
 | `laptop`                | `x`,`y`,`width`,`height`                                       |
 | `server`                | `x`,`y`,`width`,`height`                                       |
 | `gear`                  | `x`,`y`,`width`,`height`                                       |
+| `clock`                 | `x`,`y`,`width`,`height`                                       |
 | `package`               | `x`,`y`,`width`,`height`                                       |
 | `folder`                | `x`,`y`,`width`,`height`                                       |
 | `file`                  | `x`,`y`,`width`,`height`                                       |
 | `envelope`              | `x`,`y`,`width`,`height`                                       |
 | `queue`                 | `x`,`y`,`width`,`height`                                       |
+| `lightning`             | `x`,`y`,`width`,`height`                                       |
 | `lock`                  | `x`,`y`,`width`,`height`                                       |
 | `shield`                | `x`,`y`,`width`,`height`                                       |
 | `lucideIcon`            | `x`,`y`,`width`,`height`                                       |

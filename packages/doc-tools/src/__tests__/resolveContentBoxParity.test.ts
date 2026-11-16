@@ -109,8 +109,11 @@ const LEGACY_INSET_BY_TYPE: Readonly<Record<string, ContentInsetCalculator>> = {
 
 	// plugins/general-shapes
 	actor: outsideTheBox,
+	bot: outsideTheBox,
+	clock: outsideTheBox,
 	envelope: outsideTheBox,
 	gear: outsideTheBox,
+	lightning: outsideTheBox,
 	lock: outsideTheBox,
 	package: outsideTheBox,
 	queue: outsideTheBox,

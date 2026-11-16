@@ -352,6 +352,16 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   `@jiscribe/standard-shapes` now carries thirteen plugins, so every host
   draws Google Cloud icons. There is no Google Cloud frame shape; the
   container plugin's frames serve.
+- **general-shapes: `clock`, `lightning` and `bot`.** Three more pictograms
+  whose drawing fills the box and whose label hangs below it
+  (`features.text: "label"`): `clock` (a face with hour and minute hands) for
+  schedulers, cron jobs, timers and timeouts, `lightning` (a bolt) for events,
+  triggers and webhooks, and `bot` (a robot head with an antenna) for AI
+  agents, LLMs and automation bots. Each declares an outline that follows its
+  drawing, so a connector aimed at the center stops on the face, the bolt or
+  the head and antenna; `bot` also hit-tests the area its antenna stands in.
+  They sit in `generalStencilCategory` after `actor` (`bot`), `gear` (`clock`)
+  and `queue` (`lightning`).
 
 ### Changed
 

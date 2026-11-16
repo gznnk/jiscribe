@@ -40,6 +40,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   its category's icon (`pubsub`, `vpc`, `iam`). The icons are Google's, shipped
   unmodified with attribution; Google publishes them with no license attached
   (THIRD-PARTY-NOTICES.txt).
+- **Clock, Lightning and Bot shapes.** The General section of the shape
+  library gains a clock (schedulers, cron jobs, timers), a lightning bolt
+  (events, triggers, webhooks) and a robot head (AI agents and bots). Like the
+  gear and the lock, each draws its label below it.
 
 ### Changed
 

@@ -6,13 +6,16 @@ import {
 
 import {
 	actorDocDefinition,
+	botDocDefinition,
 	browserWindowDocDefinition,
+	clockDocDefinition,
 	cloudDocDefinition,
 	envelopeDocDefinition,
 	fileDocDefinition,
 	folderDocDefinition,
 	gearDocDefinition,
 	laptopDocDefinition,
+	lightningDocDefinition,
 	lockDocDefinition,
 	packageDocDefinition,
 	queueDocDefinition,
@@ -22,13 +25,16 @@ import {
 	terminalWindowDocDefinition,
 } from "./doc";
 import { Actor } from "./presentation/Actor";
+import { Bot } from "./presentation/Bot";
 import { BrowserWindow } from "./presentation/BrowserWindow";
+import { Clock } from "./presentation/Clock";
 import { Cloud } from "./presentation/Cloud";
 import { Envelope } from "./presentation/Envelope";
 import { File } from "./presentation/File";
 import { Folder } from "./presentation/Folder";
 import { Gear } from "./presentation/Gear";
 import { Laptop } from "./presentation/Laptop";
+import { Lightning } from "./presentation/Lightning";
 import { Lock } from "./presentation/Lock";
 import { Package } from "./presentation/Package";
 import { Queue } from "./presentation/Queue";
@@ -37,13 +43,16 @@ import { Shield } from "./presentation/Shield";
 import { Smartphone } from "./presentation/Smartphone";
 import { TerminalWindow } from "./presentation/TerminalWindow";
 import type { ActorDoc } from "./schema/actor/ActorDoc";
+import type { BotDoc } from "./schema/bot/BotDoc";
 import type { BrowserWindowDoc } from "./schema/browserWindow/BrowserWindowDoc";
+import type { ClockDoc } from "./schema/clock/ClockDoc";
 import type { CloudDoc } from "./schema/cloud/CloudDoc";
 import type { EnvelopeDoc } from "./schema/envelope/EnvelopeDoc";
 import type { FileDoc } from "./schema/file/FileDoc";
 import type { FolderDoc } from "./schema/folder/FolderDoc";
 import type { GearDoc } from "./schema/gear/GearDoc";
 import type { LaptopDoc } from "./schema/laptop/LaptopDoc";
+import type { LightningDoc } from "./schema/lightning/LightningDoc";
 import type { LockDoc } from "./schema/lock/LockDoc";
 import type { PackageDoc } from "./schema/package/PackageDoc";
 import type { QueueDoc } from "./schema/queue/QueueDoc";
@@ -61,13 +70,16 @@ import {
 	calcWindowTextRegion,
 } from "./schema/textRegions";
 import type { ActorState } from "./state/actor/ActorState";
+import type { BotState } from "./state/bot/BotState";
 import type { BrowserWindowState } from "./state/browserWindow/BrowserWindowState";
+import type { ClockState } from "./state/clock/ClockState";
 import type { CloudState } from "./state/cloud/CloudState";
 import type { EnvelopeState } from "./state/envelope/EnvelopeState";
 import type { FileState } from "./state/file/FileState";
 import type { FolderState } from "./state/folder/FolderState";
 import type { GearState } from "./state/gear/GearState";
 import type { LaptopState } from "./state/laptop/LaptopState";
+import type { LightningState } from "./state/lightning/LightningState";
 import type { LockState } from "./state/lock/LockState";
 import type { PackageState } from "./state/package/PackageState";
 import type { QueueState } from "./state/queue/QueueState";
@@ -76,13 +88,16 @@ import type { ShieldState } from "./state/shield/ShieldState";
 import type { SmartphoneState } from "./state/smartphone/SmartphoneState";
 import type { TerminalWindowState } from "./state/terminalWindow/TerminalWindowState";
 import { ActorIcon } from "./stencil/ActorIcon";
+import { BotIcon } from "./stencil/BotIcon";
 import { BrowserWindowIcon } from "./stencil/BrowserWindowIcon";
+import { ClockIcon } from "./stencil/ClockIcon";
 import { CloudIcon } from "./stencil/CloudIcon";
 import { EnvelopeIcon } from "./stencil/EnvelopeIcon";
 import { FileIcon } from "./stencil/FileIcon";
 import { FolderIcon } from "./stencil/FolderIcon";
 import { GearIcon } from "./stencil/GearIcon";
 import { LaptopIcon } from "./stencil/LaptopIcon";
+import { LightningIcon } from "./stencil/LightningIcon";
 import { LockIcon } from "./stencil/LockIcon";
 import { PackageIcon } from "./stencil/PackageIcon";
 import { QueueIcon } from "./stencil/QueueIcon";
@@ -104,6 +119,18 @@ export const actorDefinition: ObjectTypeDefinition<ActorDoc, ActorState> =
 			objectType: "actor",
 			label: { en: "Actor", ja: "アクター" },
 			icon: ActorIcon,
+		}),
+	});
+
+/** The head fills the box's width, so the label hangs below it. */
+export const botDefinition: ObjectTypeDefinition<BotDoc, BotState> =
+	createFrameObjectDefinition<BotDoc, BotState>({
+		doc: botDocDefinition,
+		component: Bot,
+		stencils: createTypeStencils({
+			objectType: "bot",
+			label: { en: "Bot", ja: "ボット" },
+			icon: BotIcon,
 		}),
 	});
 
@@ -237,6 +264,30 @@ export const gearDefinition: ObjectTypeDefinition<GearDoc, GearState> =
 			icon: GearIcon,
 		}),
 	});
+
+export const clockDefinition: ObjectTypeDefinition<ClockDoc, ClockState> =
+	createFrameObjectDefinition<ClockDoc, ClockState>({
+		doc: clockDocDefinition,
+		component: Clock,
+		stencils: createTypeStencils({
+			objectType: "clock",
+			label: { en: "Clock", ja: "時計" },
+			icon: ClockIcon,
+		}),
+	});
+
+export const lightningDefinition: ObjectTypeDefinition<
+	LightningDoc,
+	LightningState
+> = createFrameObjectDefinition<LightningDoc, LightningState>({
+	doc: lightningDocDefinition,
+	component: Lightning,
+	stencils: createTypeStencils({
+		objectType: "lightning",
+		label: { en: "Lightning", ja: "稲妻" },
+		icon: LightningIcon,
+	}),
+});
 
 export const lockDefinition: ObjectTypeDefinition<LockDoc, LockState> =
 	createFrameObjectDefinition<LockDoc, LockState>({
