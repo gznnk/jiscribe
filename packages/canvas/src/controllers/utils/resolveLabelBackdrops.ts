@@ -16,6 +16,7 @@ import {
 } from "@jiscribe/geometry";
 import type { BoundingBox, Point, TransformedFrame } from "@jiscribe/geometry";
 
+import { calcTransformedRectBounds } from "./calcTransformedRectBounds";
 import type { ConnectorRouteRegistries } from "./VisualExtentRegistries";
 import { isTransparentColor } from "../../foundation/color/isTransparentColor";
 import { isConnectorShiftedWithOwners } from "../../rendering/layers/content/MovePreview";
@@ -105,7 +106,22 @@ type PaintedRegion = {
 	scaleY: number;
 	/** The frame's rotation in radians, worked out once per frame rather than per label. */
 	angleRad: number;
+	/**
+	 * The upright box around the region in world coordinates (its rotated
+	 * extent when the frame is rotated or flipped), widened by
+	 * WORLD_BOX_SLACK: a center outside it is outside the region, so the exact
+	 * test is skipped.
+	 */
+	worldBox: BoundingBox;
 };
+
+/**
+ * How far a region's upright world box is widened, in world units: more than
+ * the rounding its corners pick up through the transform, so a center the
+ * exact test would take (one on the region's edge included) is never turned
+ * away by the box.
+ */
+const WORLD_BOX_SLACK = 1e-6;
 
 /**
  * A caption's center as last worked out for one object state, which never
@@ -273,6 +289,7 @@ const collectPaintedRegions = (
 		if (region.fillOpacity <= 0 || isTransparentColor(region.fill)) {
 			continue;
 		}
+		const worldBox = calcTransformedRectBounds(region.rect, frame);
 		painted.push({
 			fill: region.fill,
 			fillOpacity: region.fillOpacity,
@@ -282,6 +299,12 @@ const collectPaintedRegions = (
 			scaleX: frame.scaleX,
 			scaleY: frame.scaleY,
 			angleRad,
+			worldBox: {
+				left: worldBox.left - WORLD_BOX_SLACK,
+				top: worldBox.top - WORLD_BOX_SLACK,
+				right: worldBox.right + WORLD_BOX_SLACK,
+				bottom: worldBox.bottom + WORLD_BOX_SLACK,
+			},
 		});
 	}
 	return painted;
@@ -290,14 +313,26 @@ const collectPaintedRegions = (
 /**
  * The layers of the regions painted so far that hold `center`, bottom first. A
  * point on a region's edge is inside it. The center is taken into each frame's
- * own space, so a rotated or flipped frame answers by the same rule.
+ * own space, so a rotated or flipped frame answers by the same rule; a region
+ * whose upright world box does not hold it is passed over before that.
+ *
+ * @returns The layers, or null when no region holds the center
  */
 const collectLayersAt = (
 	center: Point,
 	paintedRegions: readonly PaintedRegion[],
-): LabelBackdropLayer[] => {
-	const layers: LabelBackdropLayer[] = [];
+): LabelBackdropLayer[] | null => {
+	let layers: LabelBackdropLayer[] | null = null;
 	for (const region of paintedRegions) {
+		const { worldBox } = region;
+		if (
+			center.x < worldBox.left ||
+			center.x > worldBox.right ||
+			center.y < worldBox.top ||
+			center.y > worldBox.bottom
+		) {
+			continue;
+		}
 		const centerInFrame = calcInverseAffineTransformedPoint(
 			center.x,
 			center.y,
@@ -308,7 +343,10 @@ const collectLayersAt = (
 			region.cy,
 		);
 		if (isPointInBoundingBox(centerInFrame, region.localBox)) {
-			layers.push({ fill: region.fill, fillOpacity: region.fillOpacity });
+			(layers ??= []).push({
+				fill: region.fill,
+				fillOpacity: region.fillOpacity,
+			});
 		}
 	}
 	return layers;
@@ -428,7 +466,7 @@ export const resolveLabelBackdropPass = (
 			: resolveCaptionCenter(obj, registries);
 		if (center !== null && paintedRegions.length > 0) {
 			const layers = collectLayersAt(center, paintedRegions);
-			if (layers.length > 0) {
+			if (layers !== null) {
 				layersByOwnerId.set(id, layers);
 			}
 		}

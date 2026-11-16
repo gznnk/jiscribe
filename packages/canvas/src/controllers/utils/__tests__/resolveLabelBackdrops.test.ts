@@ -1,3 +1,8 @@
+import {
+	calcInverseAffineTransformedPoint,
+	degreesToRadians,
+	isPointInBoundingBox,
+} from "@jiscribe/geometry";
 import type { Rect } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
@@ -403,6 +408,66 @@ describe("resolveLabelBackdrops", () => {
 		);
 		expect(backdrops.has("shape")).toBe(false);
 		expect(backdrops.get("outside")).toEqual([RED_LAYER]);
+	});
+
+	it("turns away a center inside a rotated frame's upright box but outside the frame", () => {
+		// Rotated 45°, the frame's upright box spans 100 ± 70.7; (140, 140) lies in
+		// it, past the frame's edge.
+		const rotatedFrame = frame("frame", 100, 100, 100, 100, { rotation: 45 });
+		expect(
+			resolve([rotatedFrame, captioned("shape", 140, 105)]).has("shape"),
+		).toBe(false);
+	});
+
+	it("answers for every center as the exact test does, rotated, flipped or not", () => {
+		const frames = [
+			frame("frame", 100, 100, 120, 80),
+			frame("frame", 100, 100, 120, 80, { rotation: 30 }),
+			{
+				...frame("frame", 100, 100, 120, 80, { rotation: 135 }),
+				scaleX: -1,
+			} as ObjectState,
+			{ ...frame("frame", 100, 100, 120, 80), scaleY: -1 } as ObjectState,
+		];
+		for (const testedFrame of frames) {
+			const { cx, cy, width, height, rotation, scaleX, scaleY } =
+				testedFrame as ObjectState & {
+					cx: number;
+					cy: number;
+					width: number;
+					height: number;
+					rotation: number;
+					scaleX: number;
+					scaleY: number;
+				};
+			// Every 5 units over a square the frame turns in, its corners and
+			// edges among them.
+			for (let x = 0; x <= 200; x += 5) {
+				for (let y = 0; y <= 200; y += 5) {
+					const local = calcInverseAffineTransformedPoint(
+						x,
+						y,
+						scaleX,
+						scaleY,
+						degreesToRadians(rotation),
+						cx,
+						cy,
+					);
+					const isInside = isPointInBoundingBox(local, {
+						left: -width / 2,
+						top: -height / 2,
+						right: width / 2,
+						bottom: height / 2,
+					});
+					// The caption's center lies 35 below its shape's.
+					const backdrops = resolve([
+						testedFrame,
+						captioned("shape", x, y - 35),
+					]);
+					expect(backdrops.has("shape"), `(${x}, ${y})`).toBe(isInside);
+				}
+			}
+		}
 	});
 
 	it("counts only the frames inside the render scope", () => {
