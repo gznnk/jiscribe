@@ -313,8 +313,7 @@ const collectPaintedRegions = (
 /**
  * The layers of the regions painted so far that hold `center`, bottom first. A
  * point on a region's edge is inside it. The center is taken into each frame's
- * own space, so a rotated or flipped frame answers by the same rule; a region
- * whose upright world box does not hold it is passed over before that.
+ * own space, so a rotated or flipped frame answers by the same rule.
  *
  * @returns The layers, or null when no region holds the center
  */
@@ -324,13 +323,7 @@ const collectLayersAt = (
 ): LabelBackdropLayer[] | null => {
 	let layers: LabelBackdropLayer[] | null = null;
 	for (const region of paintedRegions) {
-		const { worldBox } = region;
-		if (
-			center.x < worldBox.left ||
-			center.x > worldBox.right ||
-			center.y < worldBox.top ||
-			center.y > worldBox.bottom
-		) {
+		if (!isPointInBoundingBox(center, region.worldBox)) {
 			continue;
 		}
 		const centerInFrame = calcInverseAffineTransformedPoint(
