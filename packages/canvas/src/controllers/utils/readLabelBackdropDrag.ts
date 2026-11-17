@@ -10,7 +10,6 @@ import type { CanvasDragDetail } from "../CanvasTypes";
  *   no pointer drag is under way
  * @param movePreview - Handed on as given; the caller passes one for a move
  *   drag alone
- * @param visibleIds - Handed on as given
  * @returns null for no drag and for an inert one
  */
 export const readLabelBackdropDrag = (
