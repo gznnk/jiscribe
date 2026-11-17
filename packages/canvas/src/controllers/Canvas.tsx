@@ -97,6 +97,7 @@ import { ExportDialog } from "./ui/modal/ExportDialog";
 import { ShortcutHelpModal } from "./ui/modal/ShortcutHelp/ShortcutHelpModal";
 import type { StencilCategory } from "./ui/objects/StencilCategory";
 import { collectDocFontRequests } from "./utils/collectDocFontRequests";
+import { readLabelBackdropDrag } from "./utils/readLabelBackdropDrag";
 import { EXPORT_FIT_PADDING } from "./utils/resolveExportOptions";
 import { resolveRenderedObjectIds } from "./utils/resolveRenderedObjectIds";
 import {
@@ -659,14 +660,7 @@ const CanvasComponent = ({
 		rootIds: state.rootIds,
 		fontsNonce,
 		snapshotRenderScope,
-		// Mid-drag, a connector the drawing does not route is not routed for its
-		// label either (resolveLabelBackdrops). An inert drag (not yet claimed, or
-		// an Escaped marquee) moves nothing, so it counts as none: a pass that took
-		// a center from the drag settles there rather than at the release.
-		drag:
-			state.drag === null || state.drag.kind === "inert"
-				? null
-				: { movePreview, visibleIds: culledObjectIds },
+		drag: readLabelBackdropDrag(state.drag, movePreview, culledObjectIds),
 		registries,
 	});
 
