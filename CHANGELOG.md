@@ -367,8 +367,7 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 - **Twelve shape library icons are redrawn so each reads as its shape at
   24px.** UML: the class is three empty compartments, the abstract class a solid
-  box with a slanted A (it was a dashed box), the object a box with an
-  underlined name (it was a filled title band), and the UML category shows the
+  box with a slanted A (it was a dashed box), the object a box with an underlined name over an empty body (it was a filled title band), and the UML category shows the
   class. The sticky note folds at its bottom-right corner, apart from the file
   and the note. The terminal window shows a `>_` prompt, the browser window
   three separate dots, the Markdown shape the M↓ mark, the clock two hands, the
