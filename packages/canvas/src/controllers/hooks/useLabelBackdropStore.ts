@@ -1,40 +1,51 @@
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useMemo, useRef } from "react";
 
 import type { WritableLabelBackdropStore } from "./utils/createLabelBackdropStore";
 import { createLabelBackdropStore } from "./utils/createLabelBackdropStore";
 import { useConstant } from "../../foundation/hooks/useConstant";
+import type { MovePreview } from "../../rendering/layers/content/MovePreview";
 import type { LabelBackdropStore } from "../../rendering/objects/LabelBackdropStoreContext";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
+import type { CanvasControllerState, CanvasDragDetail } from "../CanvasTypes";
+import { graftConnectorLabelDraft } from "../utils/graftConnectorLabelDraft";
+import { readLabelBackdropDrag } from "../utils/readLabelBackdropDrag";
 import { resolveLabelBackdropPass } from "../utils/resolveLabelBackdrops";
-import type {
-	LabelBackdropDrag,
-	LabelBackdropRegistries,
-} from "../utils/resolveLabelBackdrops";
+import type { LabelBackdropRegistries } from "../utils/resolveLabelBackdrops";
 import type { SnapshotRenderScope } from "../utils/SnapshotRenderScope";
 
 type UseLabelBackdropStoreParams = {
 	/**
-	 * The objects as drawn, the text editor's draft included (useTextEditSession),
-	 * and a connector label under edit placed where its editor sits
-	 * (graftConnectorLabelDraft).
+	 * The objects as drawn, the text editor's draft included
+	 * (useTextEditSession). A connector label open in the editor is placed where
+	 * its editor sits, for the backdrops alone (graftConnectorLabelDraft).
 	 */
 	objects: Record<string, ObjectState>;
-	/** The connector whose label is open in the editor, null when none is: its label is taken even while empty. */
-	labelEditOwnerId: string | null;
+	/** Read with `mode` to find the connector label open in the editor (readOpenTextEdit). */
+	selection: CanvasControllerState["selection"];
+	/**
+	 * Read only for whether a connector label's editor is open and its pending
+	 * placement: a keystroke in it works nothing out, the backdrop following
+	 * the editor's own box rather than the draft text.
+	 */
+	mode: CanvasControllerState["mode"];
 	rootIds: readonly string[];
 	/** The counter from `useDocFonts`: a face landing re-sizes the labels, and so their backdrops. */
 	fontsNonce: number;
 	/** What a running export draws, or null while none runs (useSnapshotRenderScope). */
 	snapshotRenderScope: SnapshotRenderScope | null;
 	/**
-	 * The drag under way, null while none is (or once it can move nothing, an
-	 * Escaped marquee's inert drag). Read, not compared: a drag starting, a frame
-	 * whose objects stand and a drag ending work nothing out, unless the last
-	 * pass took a center from the drag (a connector shifted with the move, an
-	 * off-screen one's kept), which the first render without one works out
-	 * exactly.
+	 * The drag under way, of which only the kind is read; null while none is.
+	 * An inert one (an Escaped marquee's) counts as none. Read, not compared: a
+	 * drag starting, a frame whose objects stand and a drag ending work nothing
+	 * out, unless the last pass took a center from the drag (a connector shifted
+	 * with the move, an off-screen one's kept), which the first render without
+	 * one works out exactly.
 	 */
-	drag: LabelBackdropDrag | null;
+	drag: Pick<CanvasDragDetail, "kind"> | null;
+	/** What a move drag translated this frame (`CanvasDragDetail`'s `movePreview`); undefined for any other drag. */
+	movePreview: MovePreview | undefined;
+	/** The ids drawn in the viewport (useVisibleObjectIds): a connector off it keeps its last center while a drag runs. */
+	visibleIds: ReadonlySet<string>;
 	registries: LabelBackdropRegistries;
 };
 
@@ -80,12 +91,15 @@ const isSameInputs = (
  * @returns The store, its identity fixed
  */
 export const useLabelBackdropStore = ({
-	objects,
-	labelEditOwnerId,
+	objects: drawnObjects,
+	selection,
+	mode,
 	rootIds,
 	fontsNonce,
 	snapshotRenderScope,
-	drag,
+	drag: dragInProgress,
+	movePreview,
+	visibleIds,
 	registries,
 }: UseLabelBackdropStoreParams): LabelBackdropStore => {
 	const store = useConstant<WritableLabelBackdropStore>(
@@ -95,6 +109,21 @@ export const useLabelBackdropStore = ({
 	// Whether the last pass took a center from the drag, to be settled once it is over.
 	const wasApproximateRef = useRef(false);
 	const hasPendingNotifyRef = useRef(false);
+
+	const labelEditDraft =
+		mode.kind === "textEdit" && mode.draft.kind === "connectorLabel"
+			? mode.draft
+			: null;
+	const isLabelEditOpen = labelEditDraft !== null;
+	const labelEditPlacement = labelEditDraft?.placement;
+	const { objects, labelEditOwnerId } = useMemo(
+		() => graftConnectorLabelDraft({ objects: drawnObjects, selection, mode }),
+		// `mode` changes on every keystroke, so only what the graft reads of it
+		// is listed: whether a label edit is open, and its placement.
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[drawnObjects, selection, isLabelEditOpen, labelEditPlacement],
+	);
+	const drag = readLabelBackdropDrag(dragInProgress, movePreview, visibleIds);
 
 	const renderScope =
 		snapshotRenderScope === null || snapshotRenderScope === "all"

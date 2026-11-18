@@ -119,6 +119,9 @@ const objects: Record<string, ObjectState> = {
 	} as unknown as ObjectState,
 };
 const rootIds = ["frame", "shape"];
+const selection = { objectIds: [], part: null };
+const mode = { kind: "normal" } as const;
+const visibleIds: ReadonlySet<string> = new Set();
 
 /** The caption's layers, every render recorded in order. */
 const renders: Array<readonly LabelBackdropLayer[]> = [];
@@ -133,11 +136,14 @@ const Host = () => {
 	const { fontsNonce } = useDocFonts({ collectRequests: () => [] });
 	const store = useLabelBackdropStore({
 		objects,
-		labelEditOwnerId: null,
+		selection,
+		mode,
 		rootIds,
 		fontsNonce,
 		snapshotRenderScope: null,
 		drag: null,
+		movePreview: undefined,
+		visibleIds,
 		registries,
 	});
 	return (

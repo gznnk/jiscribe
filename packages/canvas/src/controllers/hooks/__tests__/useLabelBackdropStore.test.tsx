@@ -6,6 +6,7 @@ import { act, memo } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { MovePreview } from "../../../rendering/layers/content/MovePreview";
 import type { LabelBackdropLayer } from "../../../rendering/objects/LabelBackdropStoreContext";
 import {
 	LabelBackdropStoreContext,
@@ -13,6 +14,10 @@ import {
 } from "../../../rendering/objects/LabelBackdropStoreContext";
 import { useLabelBackdropLayers } from "../../../rendering/objects/useLabelBackdropLayers";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import type {
+	CanvasControllerState,
+	CanvasDragDetail,
+} from "../../CanvasTypes";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { createTextSlotPartKindDefinition } from "../../selection/partKinds/textSlotPartKind";
 import { buildIdsWithAncestors } from "../../utils/buildIdsWithAncestors";
@@ -108,11 +113,22 @@ type HostProps = {
 	fontsNonce?: number;
 	/** The labels mounted under the store, each reading its own layers. */
 	probeIds: string[];
-	/** The connector whose label is open in the editor. */
-	labelEditOwnerId?: string | null;
+	selection?: CanvasControllerState["selection"];
+	/** The editing session; a connector label's editor is open while it is a `connectorLabel` text edit. */
+	mode?: CanvasControllerState["mode"];
 	/** The drag under way. */
-	drag?: ResolveLabelBackdropsModule.LabelBackdropDrag | null;
+	drag?: Pick<CanvasDragDetail, "kind"> | null;
+	movePreview?: MovePreview;
+	/** The ids in the viewport; empty unless a drag is given. */
+	visibleIds?: ReadonlySet<string>;
 };
+
+const NO_SELECTION: CanvasControllerState["selection"] = {
+	objectIds: [],
+	part: null,
+};
+const NORMAL_MODE: CanvasControllerState["mode"] = { kind: "normal" };
+const NO_VISIBLE_IDS: ReadonlySet<string> = new Set();
 
 /** What each probe answered, every render recorded in order. */
 const probeRenders = new Map<string, Array<readonly LabelBackdropLayer[]>>();
@@ -130,18 +146,24 @@ const Host = ({
 	objects,
 	rootIds,
 	snapshotRenderScope = null,
-	labelEditOwnerId = null,
+	selection = NO_SELECTION,
+	mode = NORMAL_MODE,
 	drag = null,
+	movePreview,
+	visibleIds = NO_VISIBLE_IDS,
 	fontsNonce = 0,
 	probeIds,
 }: HostProps) => {
 	const store = useLabelBackdropStore({
 		objects,
-		labelEditOwnerId,
+		selection,
+		mode,
 		rootIds,
 		fontsNonce,
 		snapshotRenderScope,
 		drag,
+		movePreview,
+		visibleIds,
 		registries,
 	});
 	return (
@@ -228,16 +250,42 @@ const connectorMove = () => {
 	const rootIds = ["frame", "a", "b", "connector"];
 	const moveFrame = (dx: number) => ({
 		objects: dragFrame(startObjects, rect("a", 40 + dx), rect("b", 140 + dx)),
-		drag: {
-			movePreview: {
-				delta: { x: dx, y: 0 },
-				translatedIds: new Set(["a", "b"]),
-				startObjects,
-			},
-			visibleIds: new Set(rootIds),
-		} satisfies ResolveLabelBackdropsModule.LabelBackdropDrag,
+		drag: { kind: "move" } as const,
+		movePreview: {
+			delta: { x: dx, y: 0 },
+			translatedIds: new Set(["a", "b"]),
+			startObjects,
+		},
+		visibleIds: new Set(rootIds),
 	});
 	return { startObjects, rootIds, moveFrame };
+};
+
+/**
+ * A connector across the frame, selected, with no label yet, and the session
+ * of a label being created on it at its middle with `text` typed: every
+ * keystroke a new `mode`, as the reducer hands it on.
+ */
+const connectorLabelEdit = () => {
+	const objects = toObjects(frame("frame", 100), {
+		id: "connector",
+		type: "connector",
+		points: [],
+		routing: "straight",
+		source: { anchor: { kind: "free", point: { x: 0, y: 100 } } },
+		target: { anchor: { kind: "free", point: { x: 200, y: 100 } } },
+	} as unknown as ObjectState);
+	const placement = { position: 0.5, offset: 0 };
+	const typing = (text: string): CanvasControllerState["mode"] => ({
+		kind: "textEdit",
+		draft: { kind: "connectorLabel", text, placement },
+	});
+	return {
+		objects,
+		rootIds: ["frame", "connector"],
+		selection: { objectIds: ["connector"], part: null },
+		typing,
+	};
 };
 
 /** The layers a probe last rendered with. */
@@ -447,12 +495,14 @@ describe("useLabelBackdropStore", () => {
 			target: { anchor: { kind: "free", point: { x: 200, y: 100 } } },
 			label: { text: "" },
 		} as unknown as ObjectState);
-		// One array for both renders, so only the edited label's owner differs.
+		// One array for both renders, so only the editing session differs.
 		const connectorRootIds = ["frame", "connector"];
+		const selection = { objectIds: ["connector"], part: null };
 		const render = mountHost();
 		render({
 			objects,
 			rootIds: connectorRootIds,
+			selection,
 			probeIds: ["connector"],
 		});
 		expect(latestLayers("connector")).toBe(NO_LABEL_BACKDROP_LAYERS);
@@ -460,18 +510,72 @@ describe("useLabelBackdropStore", () => {
 		render({
 			objects,
 			rootIds: connectorRootIds,
-			labelEditOwnerId: "connector",
+			selection,
+			mode: {
+				kind: "textEdit",
+				draft: { kind: "connectorLabel", text: "" },
+			},
 			probeIds: ["connector"],
 		});
 		expect(latestLayers("connector")).toHaveLength(1);
 	});
 
+	it("works nothing out for the keystrokes typed in a connector label's editor", () => {
+		const { objects, rootIds, selection, typing } = connectorLabelEdit();
+		const render = mountHost();
+		render({
+			objects,
+			rootIds,
+			selection,
+			mode: typing(""),
+			probeIds: ["connector"],
+		});
+		expect(latestLayers("connector")).toHaveLength(1);
+		const passesBefore = passCalls.count;
+
+		render({
+			objects,
+			rootIds,
+			selection,
+			mode: typing("H"),
+			probeIds: ["connector"],
+		});
+		render({
+			objects,
+			rootIds,
+			selection,
+			mode: typing("HTTPS"),
+			probeIds: ["connector"],
+		});
+		expect(passCalls.count).toBe(passesBefore);
+		expect(latestLayers("connector")).toHaveLength(1);
+	});
+
+	it("works the layers out once when a connector label's editor opens and once when it closes", () => {
+		const { objects, rootIds, selection, typing } = connectorLabelEdit();
+		const render = mountHost();
+		render({ objects, rootIds, selection, probeIds: ["connector"] });
+		const passesBefore = passCalls.count;
+
+		render({
+			objects,
+			rootIds,
+			selection,
+			mode: typing(""),
+			probeIds: ["connector"],
+		});
+		expect(passCalls.count).toBe(passesBefore + 1);
+		expect(latestLayers("connector")).toHaveLength(1);
+
+		// Closed uncommitted: the label being created is gone again.
+		render({ objects, rootIds, selection, probeIds: ["connector"] });
+		expect(passCalls.count).toBe(passesBefore + 2);
+		expect(latestLayers("connector")).toBe(NO_LABEL_BACKDROP_LAYERS);
+	});
+
 	it("works nothing out at a pan's start, on its frames or at its end", () => {
 		const base = toObjects(frame("frame", 100), captioned("shape", 100));
-		const pan: ResolveLabelBackdropsModule.LabelBackdropDrag = {
-			movePreview: undefined,
-			visibleIds: new Set(ROOT_IDS),
-		};
+		const pan = { kind: "pan" } as const;
 		const render = mountHost();
 		render({ objects: base, rootIds: ROOT_IDS, probeIds: ["shape"] });
 		const passesBefore = passCalls.count;
@@ -481,18 +585,21 @@ describe("useLabelBackdropStore", () => {
 			objects: base,
 			rootIds: ROOT_IDS,
 			drag: pan,
+			visibleIds: new Set(ROOT_IDS),
 			probeIds: ["shape"],
 		});
 		render({
 			objects: base,
 			rootIds: ROOT_IDS,
-			drag: { ...pan, visibleIds: new Set(["frame"]) },
+			drag: pan,
+			visibleIds: new Set(["frame"]),
 			probeIds: ["shape"],
 		});
 		render({
 			objects: base,
 			rootIds: ROOT_IDS,
-			drag: { ...pan, visibleIds: new Set() },
+			drag: pan,
+			visibleIds: new Set(),
 			probeIds: ["shape"],
 		});
 		render({ objects: base, rootIds: ROOT_IDS, probeIds: ["shape"] });
@@ -517,17 +624,20 @@ describe("useLabelBackdropStore", () => {
 	it("works nothing out at the drop of a move that took no center from the drag", () => {
 		const base = toObjects(frame("frame", 100), captioned("shape", 100));
 		const moved = dragFrame(base, captioned("shape", 120));
-		const drag: ResolveLabelBackdropsModule.LabelBackdropDrag = {
+		const render = mountHost();
+		render({ objects: base, rootIds: ROOT_IDS, probeIds: ["shape"] });
+		render({
+			objects: moved,
+			rootIds: ROOT_IDS,
+			drag: { kind: "move" },
 			movePreview: {
 				delta: { x: 20, y: 0 },
 				translatedIds: new Set(["shape"]),
 				startObjects: base,
 			},
 			visibleIds: new Set(ROOT_IDS),
-		};
-		const render = mountHost();
-		render({ objects: base, rootIds: ROOT_IDS, probeIds: ["shape"] });
-		render({ objects: moved, rootIds: ROOT_IDS, drag, probeIds: ["shape"] });
+			probeIds: ["shape"],
+		});
 		const passesBefore = passCalls.count;
 
 		render({ objects: moved, rootIds: ROOT_IDS, probeIds: ["shape"] });

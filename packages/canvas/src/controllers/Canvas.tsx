@@ -44,7 +44,6 @@ import { useExportDialog } from "./hooks/useExportDialog";
 import { useGestureRecognizer } from "./hooks/useGestureRecognizer";
 import { useInitialViewOpen } from "./hooks/useInitialViewOpen";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
-import { useLabelBackdropInput } from "./hooks/useLabelBackdropInput";
 import { useLabelBackdropStore } from "./hooks/useLabelBackdropStore";
 import { useNotifySaveRequest } from "./hooks/useNotifySaveRequest";
 import { useNotifySelectionChange } from "./hooks/useNotifySelectionChange";
@@ -97,7 +96,6 @@ import { ExportDialog } from "./ui/modal/ExportDialog";
 import { ShortcutHelpModal } from "./ui/modal/ShortcutHelp/ShortcutHelpModal";
 import type { StencilCategory } from "./ui/objects/StencilCategory";
 import { collectDocFontRequests } from "./utils/collectDocFontRequests";
-import { readLabelBackdropDrag } from "./utils/readLabelBackdropDrag";
 import { EXPORT_FIT_PADDING } from "./utils/resolveExportOptions";
 import { resolveRenderedObjectIds } from "./utils/resolveRenderedObjectIds";
 import {
@@ -646,21 +644,17 @@ const CanvasComponent = ({
 		culledObjectIds,
 	);
 	// Worked out from what is drawn, the edited text's draft included, so a
-	// caption growing as it is typed is judged by where its center now is. A
-	// connector label open in the editor is placed where the editor sits, for
-	// the backdrops alone (useLabelBackdropInput).
-	const labelBackdropInput = useLabelBackdropInput({
+	// caption growing as it is typed is judged by where its center now is.
+	const labelBackdropStore = useLabelBackdropStore({
 		objects: draftObjects,
 		selection: state.selection,
 		mode: state.mode,
-	});
-	const labelBackdropStore = useLabelBackdropStore({
-		objects: labelBackdropInput.objects,
-		labelEditOwnerId: labelBackdropInput.labelEditOwnerId,
 		rootIds: state.rootIds,
 		fontsNonce,
 		snapshotRenderScope,
-		drag: readLabelBackdropDrag(state.drag, movePreview, culledObjectIds),
+		drag: state.drag,
+		movePreview,
+		visibleIds: culledObjectIds,
 		registries,
 	});
 
