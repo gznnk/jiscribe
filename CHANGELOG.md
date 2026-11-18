@@ -365,6 +365,16 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Changed
 
+- **Twelve shape library icons are redrawn so each reads as its shape at
+  24px.** UML: the class is three empty compartments, the abstract class a solid
+  box with a slanted A (it was a dashed box), the object a box with an
+  underlined name (it was a filled title band), and the UML category shows the
+  class. The sticky note folds at its bottom-right corner, apart from the file
+  and the note. The terminal window shows a `>_` prompt, the browser window
+  three separate dots, the Markdown shape the M↓ mark, the clock two hands, the
+  smartphone one case with a home bar, the ellipse an ellipse rather than a
+  circle, the boundary a dashed frame with no dashed band, and the
+  multi-document two outlined sheets.
 - **Adding a column to an `erEntity` picks the new column instead of opening
   its name.** Add Above, Add Below and Add at Bottom leave the editor closed,
   as a table's row insertion does, and Enter opens the new column's name. Tab

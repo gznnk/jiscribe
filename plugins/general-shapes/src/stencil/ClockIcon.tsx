@@ -11,7 +11,7 @@ export const ClockIcon = createStencilIcon(
 			strokeLinecap="round"
 		/>
 		<path
-			d="M8.5 10 L12 12 L16.8 9.2"
+			d="M12 7 V12 L15 14"
 			fill="none"
 			stroke="currentColor"
 			strokeWidth="2"
