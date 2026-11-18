@@ -113,13 +113,15 @@ type HostProps = {
 	fontsNonce?: number;
 	/** The labels mounted under the store, each reading its own layers. */
 	probeIds: string[];
+	/** What is selected; nothing when not given. */
 	selection?: CanvasControllerState["selection"];
 	/** The editing session; a connector label's editor is open while it is a `connectorLabel` text edit. */
 	mode?: CanvasControllerState["mode"];
 	/** The drag under way. */
 	drag?: Pick<CanvasDragDetail, "kind"> | null;
+	/** What a move drag translated this frame; given for a move drag alone. */
 	movePreview?: MovePreview;
-	/** The ids in the viewport; empty unless a drag is given. */
+	/** The ids in the viewport; empty when not given (read only while a drag runs). */
 	visibleIds?: ReadonlySet<string>;
 };
 

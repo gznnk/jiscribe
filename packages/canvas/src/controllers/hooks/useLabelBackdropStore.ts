@@ -24,8 +24,7 @@ type UseLabelBackdropStoreParams = {
 	selection: CanvasControllerState["selection"];
 	/**
 	 * Read only for whether a connector label's editor is open and its pending
-	 * placement: a keystroke in it works nothing out, the backdrop following
-	 * the editor's own box rather than the draft text.
+	 * placement, so a keystroke in it works nothing out (graftConnectorLabelDraft).
 	 */
 	mode: CanvasControllerState["mode"];
 	rootIds: readonly string[];
