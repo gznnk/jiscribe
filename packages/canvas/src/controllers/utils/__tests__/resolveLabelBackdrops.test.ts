@@ -374,6 +374,25 @@ describe("resolveLabelBackdrops", () => {
 			"connector",
 		).layersByOwnerId;
 		expect(edited.get("connector")).toEqual([RED_LAYER]);
+
+		// Open in the editor or not, a label with a background of its own takes none.
+		const colored = [
+			frame("frame", 50, 100, 300, 200),
+			labelledConnector(
+				"connector",
+				{ x: 0, y: 100 },
+				{ x: 200, y: 100 },
+				{ text: "", fill: "#00ff00" },
+			),
+		];
+		const editedColored = resolveLabelBackdrops(
+			Object.fromEntries(colored.map((obj) => [obj.id, obj])),
+			colored.map((obj) => obj.id),
+			registries,
+			undefined,
+			"connector",
+		).layersByOwnerId;
+		expect(editedColored.has("connector")).toBe(false);
 	});
 
 	it("reads a drag's copy-on-write view: lookups by id, a group's children, and an object the frame replaced", () => {

@@ -30,7 +30,8 @@ type LabelTextFillProps = {
 	/**
 	 * The shape's `labelFill` as stored; omitted or `"auto"` knocks out in the
 	 * page's color (resolveLabelFill), with the fills of the frames the caption's
-	 * center lies in painted over it.
+	 * center lies in painted over it. Whether it has those is decided from the
+	 * stored value (resolveLabelBackdrops), not from what is passed here.
 	 */
 	labelFill: string | undefined;
 	/** The caption's box in the shape's local coordinates, as its `"textSlot"` part kind places it. */
