@@ -10,6 +10,7 @@ import { theme } from "../../../foundation/theme/themeTokens";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../states/objects/connector/ConnectorState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
+import { registerFrameLabelBackdrop } from "../../__tests__/support/registerFrameLabelBackdrop";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { createTextSlotPartKindDefinition } from "../../selection/partKinds/textSlotPartKind";
 import { buildIdsWithAncestors } from "../buildIdsWithAncestors";
@@ -20,19 +21,7 @@ import { resolveLabelBackdrops } from "../resolveLabelBackdrops";
 const CAPTION_REGION: Rect = { x: -20, y: 25, width: 40, height: 20 };
 
 const registries = createTestRegistries();
-registries.objectLabelBackdrop.register("frame", (state, style) => {
-	const { width, height } = state as ObjectState & {
-		width: number;
-		height: number;
-	};
-	return [
-		{
-			rect: { x: -width / 2, y: -height / 2, width, height },
-			fill: style.fillColor,
-			fillOpacity: style.fillAlpha,
-		},
-	];
-});
+registerFrameLabelBackdrop(registries);
 // A container-like frame: its body, then a title band over its top 30 units.
 registries.objectLabelBackdrop.register("banded", (state, style) => {
 	const { width, height } = state as ObjectState & {
@@ -174,7 +163,7 @@ const resolve = (
 		rootIds,
 		registries,
 		renderScope,
-	);
+	).layersByOwnerId;
 
 const RED_LAYER = { fill: "#ff0000", fillOpacity: 0.5 };
 
@@ -383,7 +372,7 @@ describe("resolveLabelBackdrops", () => {
 			registries,
 			undefined,
 			"connector",
-		);
+		).layersByOwnerId;
 		expect(edited.get("connector")).toEqual([RED_LAYER]);
 	});
 
@@ -405,7 +394,7 @@ describe("resolveLabelBackdrops", () => {
 			view,
 			["group", "outside"],
 			registries,
-		);
+		).layersByOwnerId;
 		expect(backdrops.has("shape")).toBe(false);
 		expect(backdrops.get("outside")).toEqual([RED_LAYER]);
 	});

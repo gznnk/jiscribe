@@ -15,10 +15,7 @@ import { calcConnectorLabelBox } from "../../../../rendering/objects/connector/g
 import { useDocumentSurface } from "../../../../rendering/objects/DocumentSurfaceContext";
 import { useLabelBackdropLayers } from "../../../../rendering/objects/useLabelBackdropLayers";
 import { resolveAutoColor } from "../../../../rendering/objects/utils/resolveAutoColor";
-import {
-	isAutoLabelFill,
-	resolveLabelFill,
-} from "../../../../rendering/objects/utils/resolveLabelFill";
+import { resolveLabelFill } from "../../../../rendering/objects/utils/resolveLabelFill";
 import { isCommitTextEditShortcut } from "../../../commands/text/CommitTextEditCommand";
 import { useCaretReporter } from "../hooks/useCaretReporter";
 import { fitTextAreaHeight } from "../utils/fitTextAreaHeight";
@@ -99,7 +96,7 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 	// Worked out by the canvas at the anchor the editor sits on
 	// (graftConnectorLabelDraft), which typing does not move; what follows each
 	// keystroke is the box below, which the layers are drawn over.
-	const layers = useLabelBackdropLayers(isAutoLabelFill(fill) ? id : undefined);
+	const layers = useLabelBackdropLayers(id);
 	const hasLayers = layers.length > 0;
 
 	// Width is the measured text's, so the box grows sideways as it is typed and

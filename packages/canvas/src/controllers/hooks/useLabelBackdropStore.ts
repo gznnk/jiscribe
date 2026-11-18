@@ -9,7 +9,7 @@ import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { CanvasControllerState, CanvasDragDetail } from "../CanvasTypes";
 import { graftConnectorLabelDraft } from "../utils/graftConnectorLabelDraft";
 import { readLabelBackdropDrag } from "../utils/readLabelBackdropDrag";
-import { resolveLabelBackdropPass } from "../utils/resolveLabelBackdrops";
+import { resolveLabelBackdrops } from "../utils/resolveLabelBackdrops";
 import type { LabelBackdropRegistries } from "../utils/resolveLabelBackdrops";
 import type { SnapshotRenderScope } from "../utils/SnapshotRenderScope";
 
@@ -141,7 +141,7 @@ export const useLabelBackdropStore = ({
 		(drag === null && wasApproximateRef.current)
 	) {
 		lastInputsRef.current = inputs;
-		const pass = resolveLabelBackdropPass(
+		const pass = resolveLabelBackdrops(
 			objects,
 			rootIds,
 			registries,

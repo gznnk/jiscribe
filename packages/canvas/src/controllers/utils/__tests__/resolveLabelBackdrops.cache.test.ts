@@ -2,6 +2,7 @@ import { advanceTextMeasurementGeneration } from "@jiscribe/doc/text/measure/tex
 import { beforeEach, describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import { registerFrameLabelBackdrop } from "../../__tests__/support/registerFrameLabelBackdrop";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { createTextSlotPartKindDefinition } from "../../selection/partKinds/textSlotPartKind";
 import { createCowObjects } from "../cowObjects";
@@ -16,19 +17,7 @@ import { resolveLabelBackdrops } from "../resolveLabelBackdrops";
 const captionRegionCalls = { count: 0 };
 
 const registries = createTestRegistries();
-registries.objectLabelBackdrop.register("frame", (state, style) => {
-	const { width, height } = state as ObjectState & {
-		width: number;
-		height: number;
-	};
-	return [
-		{
-			rect: { x: -width / 2, y: -height / 2, width, height },
-			fill: style.fillColor,
-			fillOpacity: style.fillAlpha,
-		},
-	];
-});
+registerFrameLabelBackdrop(registries);
 registries.objectPartKind.register("captioned", [
 	createTextSlotPartKindDefinition({
 		region: () => {
@@ -72,7 +61,7 @@ const resolve = (...objects: ObjectState[]) =>
 		Object.fromEntries(objects.map((obj) => [obj.id, obj])),
 		objects.map((obj) => obj.id),
 		registries,
-	);
+	).layersByOwnerId;
 
 describe("resolveLabelBackdrops caches", () => {
 	beforeEach(() => {
@@ -121,10 +110,7 @@ describe("resolveLabelBackdrops caches", () => {
 		// the box, its center past the frame's bottom edge at y 300.
 		const otherRegionCalls = { count: 0 };
 		const otherRegistries = createTestRegistries();
-		otherRegistries.objectLabelBackdrop.register(
-			"frame",
-			registries.objectLabelBackdrop.get("frame")!,
-		);
+		registerFrameLabelBackdrop(otherRegistries);
 		otherRegistries.objectPartKind.register("captioned", [
 			createTextSlotPartKindDefinition({
 				region: () => {
@@ -137,7 +123,7 @@ describe("resolveLabelBackdrops caches", () => {
 			{ frame, shape },
 			["frame", "shape"],
 			otherRegistries,
-		);
+		).layersByOwnerId;
 
 		expect(otherRegionCalls.count).toBe(1);
 		expect(first.get("shape")).toHaveLength(1);

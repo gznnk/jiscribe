@@ -54,11 +54,9 @@ const mount = (element: React.ReactElement): HTMLElement => {
 
 const renderFill = ({
 	ownerId,
-	labelFill,
 	zoom = 1,
 }: {
 	ownerId: string;
-	labelFill?: string;
 	zoom?: number;
 }) => {
 	const zoomStore = createCanvasZoomStore(zoom);
@@ -71,7 +69,7 @@ const renderFill = ({
 							<LabelTextFill
 								objectType="captioned"
 								textSlot={TEXT_SLOT}
-								labelFill={labelFill}
+								labelFill={undefined}
 								region={REGION}
 								ownerId={ownerId}
 							/>
@@ -143,18 +141,6 @@ describe("LabelTextFill backdrop", () => {
 			'g[data-canvas-export="flatten"] > rect',
 		);
 		expect(knockout?.hasAttribute("shape-rendering")).toBe(false);
-	});
-
-	it("paints no layers under a caption with a background of its own", () => {
-		const { container } = renderFill({
-			ownerId: "shape",
-			labelFill: "#00ff00",
-		});
-		const group = container.querySelector('g[data-canvas-export="flatten"]')!;
-		expect(group.children).toHaveLength(1);
-		expect((group.children[0] as SVGRectElement).style.fill).toBe(
-			"rgb(0, 255, 0)",
-		);
 	});
 
 	it("hides the page's color and the layers alike while the caption is too small to read", () => {

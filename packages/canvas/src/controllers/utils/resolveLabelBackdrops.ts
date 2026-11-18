@@ -345,6 +345,21 @@ const collectLayersAt = (
 	return layers;
 };
 
+/** What one pass of {@link resolveLabelBackdrops} answers. */
+export type LabelBackdropPass = {
+	/**
+	 * The layers by the id of the object owning the label, bottom first, each
+	 * painted over the label's whole box; a label on no backdrop has no entry.
+	 */
+	layersByOwnerId: ReadonlyMap<string, readonly LabelBackdropLayer[]>;
+	/**
+	 * True when some center was taken from `drag` rather than worked out
+	 * exactly — a connector's shifted with the move, or an off-screen one's kept
+	 * — so the pass has to run again once the drag is over.
+	 */
+	isApproximate: boolean;
+};
+
 /**
  * Works out, for every `"auto"` label of the document, the backdrop frames'
  * fills under the center of its box, so the label is painted on them rather
@@ -386,43 +401,8 @@ const collectLayersAt = (
  *   none is. A connector moved with both its owners is then judged from its
  *   start route shifted by the move's delta, and one off screen by the center it
  *   last had, so neither is routed per frame; the pass after the drop is exact
- * @returns The layers by the id of the object owning the label, bottom first,
- *   each painted over the label's whole box; a label on no backdrop has no entry
  */
 export const resolveLabelBackdrops = (
-	objects: Record<string, ObjectState>,
-	rootIds: readonly string[],
-	registries: LabelBackdropRegistries,
-	renderScope?: ReadonlySet<string>,
-	labelEditOwnerId?: string,
-	drag?: LabelBackdropDrag,
-): ReadonlyMap<string, readonly LabelBackdropLayer[]> =>
-	resolveLabelBackdropPass(
-		objects,
-		rootIds,
-		registries,
-		renderScope,
-		labelEditOwnerId,
-		drag,
-	).layersByOwnerId;
-
-/** What one pass of {@link resolveLabelBackdropPass} answers. */
-export type LabelBackdropPass = {
-	/** As {@link resolveLabelBackdrops} returns it. */
-	layersByOwnerId: ReadonlyMap<string, readonly LabelBackdropLayer[]>;
-	/**
-	 * True when some center was taken from `drag` rather than worked out
-	 * exactly — a connector's shifted with the move, or an off-screen one's kept
-	 * — so the pass has to run again once the drag is over.
-	 */
-	isApproximate: boolean;
-};
-
-/**
- * {@link resolveLabelBackdrops}, also saying whether the drag's shortcuts were
- * taken; every parameter as there.
- */
-export const resolveLabelBackdropPass = (
 	objects: Record<string, ObjectState>,
 	rootIds: readonly string[],
 	registries: LabelBackdropRegistries,

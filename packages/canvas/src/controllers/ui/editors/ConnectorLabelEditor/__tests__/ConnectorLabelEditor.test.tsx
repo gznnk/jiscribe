@@ -31,11 +31,9 @@ afterEach(() => {
 /** Mounts the editor for "connector-1" over a store holding `layers` for it, or none. */
 const renderEditor = ({
 	layers,
-	fill,
 	strokeWidth,
 }: {
 	layers: LabelBackdropLayer[] | null;
-	fill?: string;
 	strokeWidth?: number;
 }): HTMLElement => {
 	const store = createLabelBackdropStore();
@@ -52,7 +50,6 @@ const renderEditor = ({
 						id="connector-1"
 						anchor={ANCHOR}
 						text="go"
-						fill={fill}
 						stroke="#000000"
 						strokeWidth={strokeWidth}
 						onChange={() => {}}
@@ -98,11 +95,5 @@ describe("ConnectorLabelEditor backdrop", () => {
 		expect(wrapper.style.getPropertyValue(LABEL_EDITOR_BORDER_WIDTH_VAR)).toBe(
 			"",
 		);
-	});
-
-	it("ignores the backdrop for a label with a background of its own", () => {
-		const wrapper = renderEditor({ layers: LAYERS, fill: "#00ff00" });
-		expect(wrapper.style.background).toBe("rgb(0, 255, 0)");
-		expect(wrapper.querySelector("svg")).toBeNull();
 	});
 });

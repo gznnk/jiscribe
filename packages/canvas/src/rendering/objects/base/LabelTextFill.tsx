@@ -20,7 +20,7 @@ import { useDocumentSurface } from "../DocumentSurfaceContext";
 import { useObjectTextStyleDefaultsRegistry } from "../registry/ObjectTextStyleDefaultsRegistryContext";
 import { useIsTextLegible } from "../useIsTextLegible";
 import { useLabelBackdropLayers } from "../useLabelBackdropLayers";
-import { isAutoLabelFill, resolveLabelFill } from "../utils/resolveLabelFill";
+import { resolveLabelFill } from "../utils/resolveLabelFill";
 
 type LabelTextFillProps = {
 	/** The shape's type, which the caption's style defaults are looked up under. */
@@ -51,8 +51,7 @@ const LabelTextFillComponent: React.FC<LabelTextFillProps> = ({
 	ownerId,
 }) => {
 	const documentSurface = useDocumentSurface();
-	const isAuto = isAutoLabelFill(labelFill);
-	const layers = useLabelBackdropLayers(isAuto ? ownerId : undefined);
+	const layers = useLabelBackdropLayers(ownerId);
 	const style = useObjectTextStyleDefaultsRegistry().resolveTextSlotStyle(
 		objectType,
 		BODY_TEXT_SLOT_ID,

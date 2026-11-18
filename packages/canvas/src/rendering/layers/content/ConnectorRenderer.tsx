@@ -11,7 +11,7 @@ import {
 	ConnectorSegmentSlideHitAreas,
 } from "../../objects/connector/Connector";
 import { ConnectorLabel } from "../../objects/connector/ConnectorLabel";
-import { resolveConnectorLabelAnchor } from "../../objects/connector/geometry/label/connectorLabelLayout";
+import { calcConnectorLabelAnchor } from "../../objects/connector/geometry/label/calcConnectorLabelAnchor";
 
 /** Renders a connector along with its optional static label. */
 type ConnectorRendererProps = {
@@ -48,8 +48,12 @@ const ConnectorRendererComponent: React.FC<ConnectorRendererProps> = ({
 	// and does not break ConnectorLabel's memo.
 	const labelAnchor = useMemo(
 		() =>
-			resolved && label && !isEditing
-				? resolveConnectorLabelAnchor(resolved.points, label)
+			resolved && label && label.text !== "" && !isEditing
+				? calcConnectorLabelAnchor(
+						resolved.points,
+						label.position,
+						label.offset,
+					)
 				: null,
 		[resolved, label, isEditing],
 	);

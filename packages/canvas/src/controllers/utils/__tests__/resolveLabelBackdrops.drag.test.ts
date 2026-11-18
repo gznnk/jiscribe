@@ -3,12 +3,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { MovePreview } from "../../../rendering/layers/content/MovePreview";
 import type * as ResolveConnectorPointsModule from "../../../rendering/objects/connector/geometry/endpoints/resolveConnectorPoints";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import { registerFrameLabelBackdrop } from "../../__tests__/support/registerFrameLabelBackdrop";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { createCowObjects } from "../cowObjects";
-import {
-	resolveLabelBackdropPass,
-	resolveLabelBackdrops,
-} from "../resolveLabelBackdrops";
+import { resolveLabelBackdrops } from "../resolveLabelBackdrops";
 import type { LabelBackdropDrag } from "../resolveLabelBackdrops";
 
 /**
@@ -38,19 +36,7 @@ vi.mock(
 );
 
 const registries = createTestRegistries();
-registries.objectLabelBackdrop.register("frame", (state, style) => {
-	const { width, height } = state as ObjectState & {
-		width: number;
-		height: number;
-	};
-	return [
-		{
-			rect: { x: -width / 2, y: -height / 2, width, height },
-			fill: style.fillColor,
-			fillOpacity: style.fillAlpha,
-		},
-	];
-});
+registerFrameLabelBackdrop(registries);
 
 const rect = (id: string, cx: number): ObjectState =>
 	({
@@ -138,7 +124,7 @@ const resolveFrame = (frameObjects: {
 		undefined,
 		undefined,
 		frameObjects.drag,
-	);
+	).layersByOwnerId;
 
 describe("resolveLabelBackdrops mid-drag", () => {
 	beforeEach(() => {
@@ -207,7 +193,7 @@ describe("resolveLabelBackdrops mid-drag", () => {
 			objects: Record<string, ObjectState>;
 			drag?: LabelBackdropDrag;
 		}) =>
-			resolveLabelBackdropPass(
+			resolveLabelBackdrops(
 				frameObjects.objects,
 				ROOT_IDS,
 				registries,

@@ -1,3 +1,4 @@
+import { CONNECTOR_LABEL_DEFAULTS } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import type { Point } from "@jiscribe/geometry";
 import type React from "react";
 import { memo, useMemo } from "react";
@@ -9,15 +10,8 @@ import { useFontsLoadedNonceContext } from "../../FontsLoadedNonceContext";
 import { useIsTextLegible } from "../../useIsTextLegible";
 import { useLabelBackdropLayers } from "../../useLabelBackdropLayers";
 import { resolveAutoColor } from "../../utils/resolveAutoColor";
-import {
-	isAutoLabelFill,
-	resolveLabelFill,
-} from "../../utils/resolveLabelFill";
-import {
-	placeConnectorLabelBox,
-	resolveConnectorLabelBox,
-	resolveConnectorLabelMetrics,
-} from "../geometry/label/connectorLabelLayout";
+import { resolveLabelFill } from "../../utils/resolveLabelFill";
+import { resolveConnectorLabelBox } from "../geometry/label/connectorLabelLayout";
 
 type ConnectorLabelProps = {
 	/** Parent connector id (placed in a data attribute so a hit can start editing). */
@@ -49,24 +43,15 @@ const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
 	anchor,
 	text,
 	fontColor,
-	fontFamily: storedFontFamily,
-	fontSize: storedFontSize,
-	fontWeight: storedFontWeight,
+	fontFamily = CONNECTOR_LABEL_DEFAULTS.fontFamily,
+	fontSize = CONNECTOR_LABEL_DEFAULTS.fontSize,
+	fontWeight = CONNECTOR_LABEL_DEFAULTS.fontWeight,
 	fill,
 	stroke,
-	strokeWidth: storedStrokeWidth,
+	strokeWidth = 0,
 	strokeDashType = "solid",
 	disablePointerEvents = false,
 }) => {
-	// The same defaults the label's box is sized with wherever else it is
-	// worked out (resolveConnectorLabelBox).
-	const { fontFamily, fontSize, fontWeight, strokeWidth } =
-		resolveConnectorLabelMetrics({
-			fontFamily: storedFontFamily,
-			fontSize: storedFontSize,
-			fontWeight: storedFontWeight,
-			strokeWidth: storedStrokeWidth,
-		});
 	// An invalidation signal, not an argument: the box was measured against
 	// whatever face was loaded at the time, so a later arrival has to re-run this
 	// even though nothing the callback reads has changed.
@@ -74,7 +59,7 @@ const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
 	const documentSurface = useDocumentSurface();
 	// Memoized so dragging the connector (anchor changes every frame, text does not)
 	// skips the per-line measureText.
-	const boxSize = useMemo(
+	const { width, height } = useMemo(
 		() =>
 			resolveConnectorLabelBox({
 				text,
@@ -88,11 +73,15 @@ const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
 	);
 	// Laid out horizontally centered on the anchor (no rotation).
 	const box = useMemo(
-		() => placeConnectorLabelBox(anchor, boxSize),
-		[anchor, boxSize],
+		() => ({
+			x: anchor.x - width / 2,
+			y: anchor.y - height / 2,
+			width,
+			height,
+		}),
+		[anchor, width, height],
 	);
-	const isAuto = isAutoLabelFill(fill);
-	const layers = useLabelBackdropLayers(isAuto ? id : undefined);
+	const layers = useLabelBackdropLayers(id);
 
 	// A label is one plain string, so its own size is the largest it draws.
 	const isLegible = useIsTextLegible(fontSize);

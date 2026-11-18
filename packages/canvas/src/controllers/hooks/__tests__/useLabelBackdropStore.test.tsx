@@ -1,6 +1,5 @@
 // @vitest-environment jsdom
 
-import { advanceTextMeasurementGeneration } from "@jiscribe/doc/text/measure/textMeasurementSlot";
 import type { Rect } from "@jiscribe/geometry";
 import { act, memo } from "react";
 import { createRoot } from "react-dom/client";
@@ -14,6 +13,7 @@ import {
 } from "../../../rendering/objects/LabelBackdropStoreContext";
 import { useLabelBackdropLayers } from "../../../rendering/objects/useLabelBackdropLayers";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import { registerFrameLabelBackdrop } from "../../__tests__/support/registerFrameLabelBackdrop";
 import type {
 	CanvasControllerState,
 	CanvasDragDetail,
@@ -33,11 +33,11 @@ vi.mock("../../utils/resolveLabelBackdrops", async (importOriginal) => {
 	const actual = await importOriginal<typeof ResolveLabelBackdropsModule>();
 	return {
 		...actual,
-		resolveLabelBackdropPass: (
-			...args: Parameters<typeof actual.resolveLabelBackdropPass>
+		resolveLabelBackdrops: (
+			...args: Parameters<typeof actual.resolveLabelBackdrops>
 		) => {
 			passCalls.count += 1;
-			return actual.resolveLabelBackdropPass(...args);
+			return actual.resolveLabelBackdrops(...args);
 		},
 	};
 });
@@ -46,30 +46,15 @@ vi.mock("../../utils/resolveLabelBackdrops", async (importOriginal) => {
 // flushes being correct all the same.
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
-/** How wide one character measures, which a face landing changes. */
-const glyphWidth = { value: 10 };
-
-/** A probe caption's box in its shape's local space: as wide as the text has characters × glyphWidth, 20 tall, under the box. */
+/** A probe caption's box in its shape's local space: 10 wide per character, 20 tall, under the box. */
 const captionRegion = (state: ObjectState): Rect => {
 	const text = (state as ObjectState & { text: { body: { text: string } } })
 		.text.body.text;
-	return { x: -20, y: 25, width: text.length * glyphWidth.value, height: 20 };
+	return { x: -20, y: 25, width: text.length * 10, height: 20 };
 };
 
 const registries = createTestRegistries();
-registries.objectLabelBackdrop.register("frame", (state, style) => {
-	const { width, height } = state as ObjectState & {
-		width: number;
-		height: number;
-	};
-	return [
-		{
-			rect: { x: -width / 2, y: -height / 2, width, height },
-			fill: style.fillColor,
-			fillOpacity: style.fillAlpha,
-		},
-	];
-});
+registerFrameLabelBackdrop(registries);
 registries.objectPartKind.register("captioned", [
 	createTextSlotPartKindDefinition({ region: captionRegion }),
 ]);
@@ -110,7 +95,6 @@ type HostProps = {
 	objects: Record<string, ObjectState>;
 	rootIds: string[];
 	snapshotRenderScope?: SnapshotRenderScope | null;
-	fontsNonce?: number;
 	/** The labels mounted under the store, each reading its own layers. */
 	probeIds: string[];
 	/** What is selected; nothing when not given. */
@@ -153,7 +137,6 @@ const Host = ({
 	drag = null,
 	movePreview,
 	visibleIds = NO_VISIBLE_IDS,
-	fontsNonce = 0,
 	probeIds,
 }: HostProps) => {
 	const store = useLabelBackdropStore({
@@ -161,7 +144,8 @@ const Host = ({
 		selection,
 		mode,
 		rootIds,
-		fontsNonce,
+		// A face landing is useLabelBackdropStore.fonts.test.tsx's.
+		fontsNonce: 0,
 		snapshotRenderScope,
 		drag,
 		movePreview,
@@ -187,7 +171,6 @@ afterEach(() => {
 	unmount?.();
 	unmount = null;
 	probeRenders.clear();
-	glyphWidth.value = 10;
 });
 
 const mountHost = () => {
@@ -264,9 +247,11 @@ const connectorMove = () => {
 };
 
 /**
- * A connector across the frame, selected, with no label yet, and the session
- * of a label being created on it at its middle with `text` typed: every
- * keystroke a new `mode`, as the reducer hands it on.
+ * A connector across the frame, selected, its label emptied, and the session
+ * re-editing that label with `text` typed: every keystroke a new `mode`, as the
+ * reducer hands it on. The label is taken only while its editor is open, and
+ * its placement stays as it was, so opening and closing the editor is all that
+ * differs.
  */
 const connectorLabelEdit = () => {
 	const objects = toObjects(frame("frame", 100), {
@@ -276,11 +261,11 @@ const connectorLabelEdit = () => {
 		routing: "straight",
 		source: { anchor: { kind: "free", point: { x: 0, y: 100 } } },
 		target: { anchor: { kind: "free", point: { x: 200, y: 100 } } },
+		label: { text: "" },
 	} as unknown as ObjectState);
-	const placement = { position: 0.5, offset: 0 };
 	const typing = (text: string): CanvasControllerState["mode"] => ({
 		kind: "textEdit",
-		draft: { kind: "connectorLabel", text, placement },
+		draft: { kind: "connectorLabel", text },
 	});
 	return {
 		objects,
@@ -332,44 +317,6 @@ describe("useLabelBackdropStore", () => {
 		expect(latestLayers("shape")).toHaveLength(1);
 	});
 
-	it("follows a frame dragged away and resized back under a label, frame by frame", () => {
-		const base = toObjects(frame("frame", 100), captioned("shape", 100));
-		const render = mountHost();
-		render({ objects: base, rootIds: ROOT_IDS, probeIds: ["shape"] });
-		expect(latestLayers("shape")).toHaveLength(1);
-
-		// Moved to span x 400..600: the caption's center (90) is left behind.
-		render({
-			objects: dragFrame(base, frame("frame", 500)),
-			rootIds: ROOT_IDS,
-			probeIds: ["shape"],
-		});
-		expect(latestLayers("shape")).toBe(NO_LABEL_BACKDROP_LAYERS);
-
-		// Its left edge pulled out to x 0 again by a resize.
-		render({
-			objects: dragFrame(base, {
-				...frame("frame", 300),
-				width: 600,
-			} as ObjectState),
-			rootIds: ROOT_IDS,
-			probeIds: ["shape"],
-		});
-		expect(latestLayers("shape")).toHaveLength(1);
-	});
-
-	it("follows a frame's opacity a menu slider's drag changes, frame by frame", () => {
-		const base = toObjects(frame("frame", 100), captioned("shape", 100));
-		const render = mountHost();
-		render({ objects: base, rootIds: ROOT_IDS, probeIds: ["shape"] });
-		render({
-			objects: dragFrame(base, frame("frame", 100, 0.9)),
-			rootIds: ROOT_IDS,
-			probeIds: ["shape"],
-		});
-		expect(latestLayers("shape")[0].fillOpacity).toBe(0.9);
-	});
-
 	it("works nothing out on a render whose inputs are the same references", () => {
 		const base = toObjects(frame("frame", 100), captioned("shape", 100));
 		const render = mountHost();
@@ -383,38 +330,6 @@ describe("useLabelBackdropStore", () => {
 
 		expect(passCalls.count).toBe(passesBefore);
 		expect(probeRenders.get("shape")).toHaveLength(rendersBefore);
-	});
-
-	it("works the layers out again on any new objects (undo, typing, a sync)", () => {
-		// The frame spans x 0..200; the caption's box starts at x 160, so its
-		// center sits at 160 + 5 per character.
-		const render = mountHost();
-		render({
-			objects: toObjects(frame("frame", 100), captioned("shape", 180)),
-			rootIds: ROOT_IDS,
-			probeIds: ["shape"],
-		});
-		expect(latestLayers("shape")).toHaveLength(1);
-
-		// Typed into the caption's draft, the box widens and its center (205)
-		// leaves the frame.
-		render({
-			objects: toObjects(
-				frame("frame", 100),
-				captioned("shape", 180, "Hi there!"),
-			),
-			rootIds: ROOT_IDS,
-			probeIds: ["shape"],
-		});
-		expect(latestLayers("shape")).toBe(NO_LABEL_BACKDROP_LAYERS);
-
-		// Undone: back to the two-character caption, its center (170) inside.
-		render({
-			objects: toObjects(frame("frame", 100), captioned("shape", 180)),
-			rootIds: ROOT_IDS,
-			probeIds: ["shape"],
-		});
-		expect(latestLayers("shape")).toHaveLength(1);
 	});
 
 	it("gives a label pasted onto a frame its layers on its first render", () => {
@@ -468,60 +383,6 @@ describe("useLabelBackdropStore", () => {
 		expect(probeRenders.get("other")).toHaveLength(otherRenderCount);
 	});
 
-	it("works the layers out again when a face lands, the objects unchanged", () => {
-		// The frame spans x 0..200; the 8-character caption's box starts at
-		// x 156, its center at 196 in 10-wide glyphs and 204 in 12-wide ones.
-		const objects = toObjects(
-			frame("frame", 100),
-			captioned("shape", 176, "Hi there"),
-		);
-		const render = mountHost();
-		render({ objects, rootIds: ROOT_IDS, probeIds: ["shape"] });
-		expect(latestLayers("shape")).toHaveLength(1);
-
-		// What the canvas does when web fonts land (useDocFonts): measurements
-		// answer differently, and the nonce moves.
-		glyphWidth.value = 12;
-		advanceTextMeasurementGeneration();
-		render({ objects, rootIds: ROOT_IDS, fontsNonce: 1, probeIds: ["shape"] });
-		expect(latestLayers("shape")).toBe(NO_LABEL_BACKDROP_LAYERS);
-	});
-
-	it("works the layers out again when a connector label's editor opens, the objects unchanged", () => {
-		const objects = toObjects(frame("frame", 100), {
-			id: "connector",
-			type: "connector",
-			points: [],
-			routing: "straight",
-			source: { anchor: { kind: "free", point: { x: 0, y: 100 } } },
-			target: { anchor: { kind: "free", point: { x: 200, y: 100 } } },
-			label: { text: "" },
-		} as unknown as ObjectState);
-		// One array for both renders, so only the editing session differs.
-		const connectorRootIds = ["frame", "connector"];
-		const selection = { objectIds: ["connector"], part: null };
-		const render = mountHost();
-		render({
-			objects,
-			rootIds: connectorRootIds,
-			selection,
-			probeIds: ["connector"],
-		});
-		expect(latestLayers("connector")).toBe(NO_LABEL_BACKDROP_LAYERS);
-
-		render({
-			objects,
-			rootIds: connectorRootIds,
-			selection,
-			mode: {
-				kind: "textEdit",
-				draft: { kind: "connectorLabel", text: "" },
-			},
-			probeIds: ["connector"],
-		});
-		expect(latestLayers("connector")).toHaveLength(1);
-	});
-
 	it("works nothing out for the keystrokes typed in a connector label's editor", () => {
 		const { objects, rootIds, selection, typing } = connectorLabelEdit();
 		const render = mountHost();
@@ -569,7 +430,7 @@ describe("useLabelBackdropStore", () => {
 		expect(passCalls.count).toBe(passesBefore + 1);
 		expect(latestLayers("connector")).toHaveLength(1);
 
-		// Closed uncommitted: the label being created is gone again.
+		// Closed with the label still empty: it is no longer taken.
 		render({ objects, rootIds, selection, probeIds: ["connector"] });
 		expect(passCalls.count).toBe(passesBefore + 2);
 		expect(latestLayers("connector")).toBe(NO_LABEL_BACKDROP_LAYERS);
@@ -678,21 +539,31 @@ describe("useLabelBackdropStore", () => {
 		expect(latestLayers("shape")).toBe(layers);
 	});
 
-	it("works out an export's scope taken mid-drag, and the whole tree after it", () => {
-		const base = toObjects(frame("frame", 100), captioned("shape", 100));
+	it("works out an export taken mid-drag exactly, off-screen connectors included", () => {
+		const { startObjects, rootIds, moveFrame } = connectorMove();
 		const render = mountHost();
-		render({ objects: base, rootIds: ROOT_IDS, probeIds: ["shape"] });
-		const midDrag = dragFrame(base, captioned("shape", 110));
-		render({ objects: midDrag, rootIds: ROOT_IDS, probeIds: ["shape"] });
-		render({
-			objects: midDrag,
-			rootIds: ROOT_IDS,
-			snapshotRenderScope: buildIdsWithAncestors(["shape"], midDrag),
-			probeIds: ["shape"],
-		});
-		expect(latestLayers("shape")).toBe(NO_LABEL_BACKDROP_LAYERS);
+		render({ objects: startObjects, rootIds, probeIds: ["connector"] });
+		expect(latestLayers("connector")).toHaveLength(1);
 
-		render({ objects: midDrag, rootIds: ROOT_IDS, probeIds: ["shape"] });
-		expect(latestLayers("shape")).toHaveLength(1);
+		// Both rects moved far right, the connector scrolled off screen: its label
+		// keeps the center it had, inside the frame, though it now lies outside.
+		const offScreen = {
+			...moveFrame(300),
+			visibleIds: new Set(["frame", "a", "b"]),
+		};
+		render({ ...offScreen, rootIds, probeIds: ["connector"] });
+		expect(latestLayers("connector")).toHaveLength(1);
+
+		render({
+			...offScreen,
+			rootIds,
+			snapshotRenderScope: buildIdsWithAncestors(rootIds, offScreen.objects),
+			probeIds: ["connector"],
+		});
+		expect(latestLayers("connector")).toBe(NO_LABEL_BACKDROP_LAYERS);
+
+		// Back to the drag after the export, from the center the export worked out.
+		render({ ...offScreen, rootIds, probeIds: ["connector"] });
+		expect(latestLayers("connector")).toBe(NO_LABEL_BACKDROP_LAYERS);
 	});
 });

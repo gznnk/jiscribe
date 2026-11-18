@@ -151,13 +151,9 @@ An auto label lying on a frame is painted on that frame's fill too, so it blends
 than standing out in the page's color. Only a type declaring `labelBackdrop` (container, awsGroup)
 counts as a frame. `resolveLabelBackdrops` (`controllers/utils/resolveLabelBackdrops.ts`) walks the
 objects in drawing order and tests the center of each label's box against the regions the frames drawn
-before it paint, a point on a region's edge counting as inside;
-`<Canvas>` works this out again whenever what it draws changes, each frame of a drag included (a drag
-changing no object, a pan or a marquee, works nothing out at its start, on its frames or at its end;
-mid-drag a connector moved with both its owners is judged from its start route shifted by the delta, and
-one off screen by the center it last had, the way the drawing skips routing them, and a pass that did so
-is worked out again, exactly, at the first render with no drag), and hands the
-result to each label through a store it subscribes to by its owner's id
+before it paint, a point on a region's edge counting as inside.
+`<Canvas>` works this out again whenever what it draws changes, a drag's frames included
+(`useLabelBackdropStore`), and hands the result to each label through a store it subscribes to by its owner's id
 (`rendering/objects/LabelBackdropStoreContext.ts`, `useLabelBackdropLayers`). The label then draws the
 page's color and, over it, one rect over its whole box for each region holding that center
 (`rendering/objects/base/LabelBackdropLayers.tsx`), in the region's own color and opacity, so a translucent

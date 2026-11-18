@@ -11,6 +11,7 @@ import {
 } from "../../../rendering/objects/LabelBackdropStoreContext";
 import { useLabelBackdropLayers } from "../../../rendering/objects/useLabelBackdropLayers";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import { registerFrameLabelBackdrop } from "../../__tests__/support/registerFrameLabelBackdrop";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { createTextSlotPartKindDefinition } from "../../selection/partKinds/textSlotPartKind";
 import { useDocFonts } from "../useDocFonts";
@@ -58,19 +59,7 @@ const stubFontFaceSet = () => {
 };
 
 const registries = createTestRegistries();
-registries.objectLabelBackdrop.register("frame", (state, style) => {
-	const { width, height } = state as ObjectState & {
-		width: number;
-		height: number;
-	};
-	return [
-		{
-			rect: { x: -width / 2, y: -height / 2, width, height },
-			fill: style.fillColor,
-			fillOpacity: style.fillAlpha,
-		},
-	];
-});
+registerFrameLabelBackdrop(registries);
 // The caption's box starts 20 left of its shape's center and grows with its text.
 registries.objectPartKind.register("captioned", [
 	createTextSlotPartKindDefinition({

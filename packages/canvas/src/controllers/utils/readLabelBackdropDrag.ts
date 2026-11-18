@@ -3,7 +3,7 @@ import type { MovePreview } from "../../rendering/layers/content/MovePreview";
 import type { CanvasDragDetail } from "../CanvasTypes";
 
 /**
- * The drag as the label backdrops take it (resolveLabelBackdropPass's `drag`): an
+ * The drag as the label backdrops take it (resolveLabelBackdrops's `drag`): an
  * inert one counts as none.
  *
  * @param drag - The drag in progress, of which only the kind is read; null when

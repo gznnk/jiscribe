@@ -165,10 +165,7 @@ describe("ConnectorLabel legibility", () => {
 
 describe("ConnectorLabel backdrop", () => {
 	const SURFACE = "rgb(11, 18, 32)";
-	const renderOnBackdrop = (
-		layers: LabelBackdropLayer[] | null,
-		fill?: string,
-	) => {
+	const renderOnBackdrop = (layers: LabelBackdropLayer[] | null) => {
 		const store = createLabelBackdropStore();
 		if (layers !== null) {
 			store.replaceLayers(new Map([["connector-1", layers]]));
@@ -187,7 +184,6 @@ describe("ConnectorLabel backdrop", () => {
 									anchor={LABEL_ANCHOR}
 									text="label"
 									fontSize={12}
-									fill={fill}
 								/>
 							</svg>
 						</DocumentSurfaceContext>
@@ -259,15 +255,6 @@ describe("ConnectorLabel backdrop", () => {
 			(label.svg.querySelector("foreignObject > div") as HTMLElement).style
 				.background,
 		).toBe(SURFACE);
-		label.unmount();
-	});
-
-	it("ignores the backdrop for a label with a background of its own", () => {
-		const label = renderOnBackdrop(
-			[{ fill: "rgb(255, 0, 0)", fillOpacity: 0.5 }],
-			"#00ff00",
-		);
-		expect(label.svg.children).toHaveLength(1);
 		label.unmount();
 	});
 
