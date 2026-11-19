@@ -1,6 +1,6 @@
 import type { StencilCategory } from "@jiscribe/canvas";
 
-import { RecordIcon } from "./RecordIcon";
+import { ClassIcon } from "./ClassIcon";
 
 /**
  * Stencil category for the UML shapes. The uml category is not in core's
@@ -11,7 +11,7 @@ import { RecordIcon } from "./RecordIcon";
 export const umlStencilCategory: StencilCategory = {
 	id: "uml",
 	label: { en: "UML", ja: "UML" },
-	icon: RecordIcon,
+	icon: ClassIcon,
 	presetIds: [
 		"object",
 		"class",

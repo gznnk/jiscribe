@@ -1,26 +1,17 @@
 import { createStencilIcon } from "@jiscribe/canvas-sdk";
 
+/**
+ * The dash period (4.5) divides both sides (18 and 13.5), and the offset of half
+ * a dash centers one on every corner.
+ */
 export const BoundaryIcon = createStencilIcon(
-	<>
-		<rect
-			x="3"
-			y="4"
-			width="18"
-			height="16"
-			rx="1"
-			fill="none"
-			stroke="currentColor"
-			strokeWidth="2"
-			strokeDasharray="3 2"
-		/>
-		<line
-			x1="3"
-			y1="9"
-			x2="21"
-			y2="9"
-			stroke="currentColor"
-			strokeWidth="2"
-			strokeDasharray="3 2"
-		/>
-	</>,
+	<path
+		d="M3 5.25 H21 V18.75 H3 Z"
+		fill="none"
+		stroke="currentColor"
+		strokeWidth="2"
+		strokeLinejoin="round"
+		strokeDasharray="2.7 1.8"
+		strokeDashoffset="1.35"
+	/>,
 );

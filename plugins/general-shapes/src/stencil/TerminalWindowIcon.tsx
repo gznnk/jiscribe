@@ -1,5 +1,9 @@
 import { createStencilIcon } from "@jiscribe/canvas-sdk";
 
+/**
+ * The prompt sits in the body, at a size that survives 24px; the title bar the
+ * shape has is left out to make room for it.
+ */
 export const TerminalWindowIcon = createStencilIcon(
 	<>
 		<path
@@ -11,7 +15,7 @@ export const TerminalWindowIcon = createStencilIcon(
 			strokeLinecap="round"
 		/>
 		<path
-			d="M3 9 H21"
+			d="M7 9.5 L10 12 L7 14.5"
 			fill="none"
 			stroke="currentColor"
 			strokeWidth="2"
@@ -19,7 +23,7 @@ export const TerminalWindowIcon = createStencilIcon(
 			strokeLinecap="round"
 		/>
 		<path
-			d="M6 5.8 L7.4 7 L6 8.2"
+			d="M12.5 15 H16.5"
 			fill="none"
 			stroke="currentColor"
 			strokeWidth="2"
