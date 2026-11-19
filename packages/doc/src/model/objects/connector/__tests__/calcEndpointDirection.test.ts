@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
-import type { ExtraConnectPoint } from "../../../../registry/ObjectExtraConnectPointsRegistry";
-import { calcEndpointDirection } from "../endpointDirection";
+import { calcEndpointDirection } from "../calcEndpointDirection";
+import type { EndpointOwner } from "../EndpointOwner";
+import type { ExtraConnectPoint } from "../ExtraConnectPoint";
 
 /** A 100x60 frame centered at (200, 200), rotated by `rotation` degrees. */
-const frameShape = (rotation = 0, scaleX = 1, scaleY = 1): ObjectState =>
+const frameShape = (rotation = 0, scaleX = 1, scaleY = 1): EndpointOwner =>
 	({
 		id: "shape",
 		type: "rect",
@@ -16,7 +16,7 @@ const frameShape = (rotation = 0, scaleX = 1, scaleY = 1): ObjectState =>
 		rotation,
 		scaleX,
 		scaleY,
-	}) as unknown as ObjectState;
+	}) as unknown as EndpointOwner;
 
 const origin = { x: 0, y: 0 };
 // A `toward` that, used as the fallback, points left of `origin`.
@@ -122,7 +122,7 @@ describe("calcEndpointDirection", () => {
 			id: "poly",
 			type: "polyline",
 			points: [],
-		} as unknown as ObjectState;
+		} as unknown as EndpointOwner;
 		expect(calcEndpointDirection(anchor, origin, towardLeft, polyline)).toBe(
 			"left",
 		);

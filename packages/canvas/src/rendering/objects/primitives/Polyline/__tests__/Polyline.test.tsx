@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
 
+import { ARROW_SIZE } from "@jiscribe/doc/model/objects/arrows/arrowHeadDimensions";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it } from "vitest";
 
 import type { PolylineState } from "../../../../../states/objects/primitives/polyline/PolylineState";
-import { ARROW_SIZE } from "../../../arrows/ArrowConstants";
 import { Polyline } from "../Polyline";
 
 // Without this React treats every `act` below as unsupported and warns, the

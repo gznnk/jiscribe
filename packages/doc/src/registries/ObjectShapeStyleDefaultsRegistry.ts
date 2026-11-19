@@ -52,6 +52,53 @@ export const extractShapeStyleDefaults = (
 };
 
 /**
+ * The style one object is drawn with: its own set fields over its type's
+ * defaults over the shared last resort (SHAPE_STYLE_FALLBACK). The one statement
+ * of that order, which ObjectShapeStyleDefaultsRegistry.resolveShapeStyle reads
+ * through and a headless host with a type's definition in hand calls directly.
+ *
+ * @param own - The object's own style fields; a field carrying undefined does not shadow the type's default
+ * @param typeDefaults - The type's defaults, as {@link extractShapeStyleDefaults} reads them; undefined for a type declaring none
+ * @returns Every field answered, whatever the type's features say
+ */
+export const resolveShapeStyle = (
+	own: ObjectShapeStyleDefaults,
+	typeDefaults: ObjectShapeStyleDefaults | undefined,
+): ResolvedShapeStyle => {
+	return {
+		stroke: own.stroke ?? typeDefaults?.stroke ?? SHAPE_STYLE_FALLBACK.stroke,
+		strokeWidth:
+			own.strokeWidth ??
+			typeDefaults?.strokeWidth ??
+			SHAPE_STYLE_FALLBACK.strokeWidth,
+		strokeDashType:
+			own.strokeDashType ??
+			typeDefaults?.strokeDashType ??
+			SHAPE_STYLE_FALLBACK.strokeDashType,
+		strokeOpacity:
+			own.strokeOpacity ??
+			typeDefaults?.strokeOpacity ??
+			SHAPE_STYLE_FALLBACK.strokeOpacity,
+		fill: own.fill ?? typeDefaults?.fill ?? SHAPE_STYLE_FALLBACK.fill,
+		fillOpacity:
+			own.fillOpacity ??
+			typeDefaults?.fillOpacity ??
+			SHAPE_STYLE_FALLBACK.fillOpacity,
+		rx: own.rx ?? typeDefaults?.rx ?? SHAPE_STYLE_FALLBACK.rx,
+		startArrow:
+			own.startArrow ??
+			typeDefaults?.startArrow ??
+			SHAPE_STYLE_FALLBACK.startArrow,
+		endArrow:
+			own.endArrow ?? typeDefaults?.endArrow ?? SHAPE_STYLE_FALLBACK.endArrow,
+		arrowScale:
+			own.arrowScale ??
+			typeDefaults?.arrowScale ??
+			SHAPE_STYLE_FALLBACK.arrowScale,
+	};
+};
+
+/**
  * Per-type shape-style defaults: what a shape's style field falls back to when
  * the author left it unset. Registered from each type's own declaration
  * (`extractShapeStyleDefaults`) so the answer is the type's own, and read by
@@ -123,38 +170,7 @@ export class ObjectShapeStyleDefaultsRegistry {
 		type: ObjectType,
 		own: ObjectShapeStyleDefaults,
 	): ResolvedShapeStyle {
-		const typeDefaults = this.get(type);
-		return {
-			stroke: own.stroke ?? typeDefaults?.stroke ?? SHAPE_STYLE_FALLBACK.stroke,
-			strokeWidth:
-				own.strokeWidth ??
-				typeDefaults?.strokeWidth ??
-				SHAPE_STYLE_FALLBACK.strokeWidth,
-			strokeDashType:
-				own.strokeDashType ??
-				typeDefaults?.strokeDashType ??
-				SHAPE_STYLE_FALLBACK.strokeDashType,
-			strokeOpacity:
-				own.strokeOpacity ??
-				typeDefaults?.strokeOpacity ??
-				SHAPE_STYLE_FALLBACK.strokeOpacity,
-			fill: own.fill ?? typeDefaults?.fill ?? SHAPE_STYLE_FALLBACK.fill,
-			fillOpacity:
-				own.fillOpacity ??
-				typeDefaults?.fillOpacity ??
-				SHAPE_STYLE_FALLBACK.fillOpacity,
-			rx: own.rx ?? typeDefaults?.rx ?? SHAPE_STYLE_FALLBACK.rx,
-			startArrow:
-				own.startArrow ??
-				typeDefaults?.startArrow ??
-				SHAPE_STYLE_FALLBACK.startArrow,
-			endArrow:
-				own.endArrow ?? typeDefaults?.endArrow ?? SHAPE_STYLE_FALLBACK.endArrow,
-			arrowScale:
-				own.arrowScale ??
-				typeDefaults?.arrowScale ??
-				SHAPE_STYLE_FALLBACK.arrowScale,
-		};
+		return resolveShapeStyle(own, this.get(type));
 	}
 
 	clear(): void {

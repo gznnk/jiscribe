@@ -1,18 +1,19 @@
+import {
+	CIRCLE_INSET,
+	CONCAVE_TRIANGLE_INSET,
+	CROSS_INSET,
+	CROW_FOOT_MANY_INSET,
+	CROW_FOOT_ONE_INSET,
+	CROW_FOOT_ONE_MANY_INSET,
+	CROW_FOOT_ZERO_MANY_INSET,
+	CROW_FOOT_ZERO_ONE_INSET,
+	FILLED_DIAMOND_INSET,
+	FILLED_TRIANGLE_INSET,
+	HOLLOW_CIRCLE_INSET,
+	HOLLOW_DIAMOND_INSET,
+	HOLLOW_TRIANGLE_INSET,
+} from "@jiscribe/doc/model/objects/arrows/arrowHeadDimensions";
 import type { ArrowType } from "@jiscribe/doc/model/objects/types/ArrowType";
-
-import { CIRCLE_INSET } from "./shapes/Circle";
-import { CONCAVE_TRIANGLE_INSET } from "./shapes/ConcaveTriangle";
-import { CROSS_INSET } from "./shapes/Cross";
-import { CROW_FOOT_MANY_INSET } from "./shapes/CrowFootMany";
-import { CROW_FOOT_ONE_INSET } from "./shapes/CrowFootOne";
-import { CROW_FOOT_ONE_MANY_INSET } from "./shapes/CrowFootOneMany";
-import { CROW_FOOT_ZERO_MANY_INSET } from "./shapes/CrowFootZeroMany";
-import { CROW_FOOT_ZERO_ONE_INSET } from "./shapes/CrowFootZeroOne";
-import { FILLED_DIAMOND_INSET } from "./shapes/FilledDiamond";
-import { FILLED_TRIANGLE_INSET } from "./shapes/FilledTriangle";
-import { HOLLOW_CIRCLE_INSET } from "./shapes/HollowCircle";
-import { HOLLOW_DIAMOND_INSET } from "./shapes/HollowDiamond";
-import { HOLLOW_TRIANGLE_INSET } from "./shapes/HollowTriangle";
 
 /**
  * The distance (in local units) up to the "root where the line should terminate" for each arrow type.
@@ -24,8 +25,8 @@ import { HOLLOW_TRIANGLE_INSET } from "./shapes/HollowTriangle";
  *
  * `Record<ArrowType, number>` covers every type, so a missing inset definition when an
  * arrow type is added is caught as a compile error. Each value references the corresponding
- * shape's constant (keeping the shape and its inset in the same file so the inset follows
- * when the shape changes).
+ * head's constant in `@jiscribe/doc` (arrowHeadDimensions), next to the dimensions the head
+ * is drawn from, so the inset follows when the head changes.
  *
  * Types that are not shortened:
  *   - None: no arrow

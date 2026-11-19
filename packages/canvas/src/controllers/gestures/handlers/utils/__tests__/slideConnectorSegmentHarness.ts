@@ -1,3 +1,8 @@
+import { alignVertexPath } from "@jiscribe/doc/model/objects/connector/alignVertexPath";
+import {
+	calcConnectPoint,
+	calcConnectPointDirection,
+} from "@jiscribe/doc/model/objects/connector/calcConnectPoint";
 import type { ConnectPointId } from "@jiscribe/doc/model/objects/types/EndpointRef";
 import {
 	calcFrameBoxFeatures,
@@ -5,11 +10,6 @@ import {
 	type TransformedFrame,
 } from "@jiscribe/geometry";
 
-import {
-	calcConnectPoint,
-	calcConnectPointDirection,
-} from "../../../../../rendering/objects/connector/geometry/calcConnectPoint";
-import { alignVertexPath } from "../../../../../rendering/objects/connector/geometry/routing";
 import type { OrthogonalConnectorEndpoint } from "../../../../../rendering/objects/connector/geometry/routing";
 
 /**

@@ -1,28 +1,15 @@
+import { CROW_FOOT_MANY_INSET } from "@jiscribe/doc/model/objects/arrows/arrowHeadDimensions";
 import { radiansToDegrees } from "@jiscribe/geometry";
 import type React from "react";
 import { memo } from "react";
 
 import { createSvgTransform } from "../../utils/createSvgTransform";
-import type { ArrowExtent, ArrowShapeProps } from "../ArrowTypes";
+import type { ArrowShapeProps } from "../ArrowTypes";
 import { ArrowPath } from "./ArrowStyled";
 import {
 	buildCrowFootProngs,
 	buildCrowFootSpine,
-	CROW_FOOT_LENGTH,
-	CROW_FOOT_HALF_HEIGHT,
 } from "./utils/crowFootGeometry";
-
-/**
- * Inset (in local units) used to terminate the line at this arrow's base.
- * The mark draws its own spine, so the line stops where the prongs converge.
- */
-export const CROW_FOOT_MANY_INSET = CROW_FOOT_LENGTH;
-
-/** How far this head runs from its tip (local units), for the drawn extent (calcArrowReach). */
-export const CROW_FOOT_MANY_EXTENT: ArrowExtent = {
-	length: CROW_FOOT_LENGTH,
-	halfWidth: CROW_FOOT_HALF_HEIGHT,
-};
 
 /**
  * CrowFootMany arrow shape component.

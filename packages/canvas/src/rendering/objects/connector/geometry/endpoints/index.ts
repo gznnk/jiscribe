@@ -1,5 +1,5 @@
-// Public API for resolving connector endpoints (anchor -> world coordinates, outline adjustment).
-// resolveEndpoint / adjustToOutline are internal helpers and are not exported.
+// Public API for resolving connector endpoints on the canvas: the registries read, then the doc
+// layer's resolution (@jiscribe/doc/model/objects/connector) and the router.
 // React hooks are separated into rendering/layers/content/hooks/.
 export {
 	listConnectorPathPoints,

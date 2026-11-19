@@ -362,9 +362,28 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   the head and antenna; `bot` also hit-tests the area its antenna stands in.
   They sit in `generalStencilCategory` after `actor` (`bot`), `gear` (`clock`)
   and `queue` (`lightning`).
+- **`diagnoseDoc` warns about an arrowhead drawn over its line's bend**, and
+  `jiscribe diagnose` with it. A head is drawn straight back along its end's
+  segment, so where the line turns closer to the end than the head is long, the
+  head covers the corner and points off the line. A connector with stored
+  `points` is measured on the path the canvas draws, and a polyline on its
+  stored points; the warning names the end, the distance to the bend and the
+  head's length. A connector the canvas routes itself (no `points`), an end on
+  a connect point its owner's type declares and an end that cannot be resolved
+  from the document are passed over. Behind it, `@jiscribe/doc/unstable`
+  exports `resolveConnectorDocPath` (a connector's drawn path from the document
+  alone), `calcObjectTransformedFrame`, `dedupePoints`, `readArrowExtent` and
+  `calcArrowHeadLength`.
 
 ### Changed
 
+- **A connector's endpoint and vertex resolution moved from the canvas into
+  `@jiscribe/doc`** (`model/objects/connector/`), along with the arrowheads'
+  dimensions (`model/objects/arrows/`), so the document layer resolves a path
+  and measures a head by the same steps the canvas draws them with. The canvas
+  keeps the automatic route and its registries and calls those; nothing is
+  drawn differently. `ExtraConnectPoint` is now declared in `@jiscribe/doc` and
+  still exported from `@jiscribe/canvas`.
 - **Thirteen shape library icons are redrawn so each reads as its shape at
   24px.** UML: the class is three empty compartments, the abstract class a solid
   box with a slanted A (it was a dashed box), the object a box of two

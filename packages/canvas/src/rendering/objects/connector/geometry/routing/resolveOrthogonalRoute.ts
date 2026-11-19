@@ -1,3 +1,5 @@
+import { calcEndpointDirection } from "@jiscribe/doc/model/objects/connector/calcEndpointDirection";
+import type { ExtraConnectPoint } from "@jiscribe/doc/model/objects/connector/ExtraConnectPoint";
 import type { AnchorSpec } from "@jiscribe/doc/model/objects/types/EndpointRef";
 import {
 	calcFrameBoxFeatures,
@@ -5,12 +7,10 @@ import {
 	type Point,
 } from "@jiscribe/geometry";
 
-import { calcEndpointDirection } from "./endpointDirection";
 import { routeOrthogonalConnector } from "./routeOrthogonalConnector";
 import { routeSelfLoop } from "./selfLoop";
 import type { OrthogonalConnectorEndpoint } from "./types";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
-import type { ExtraConnectPoint } from "../../../registry/ObjectExtraConnectPointsRegistry";
 
 /**
  * Assembles an endpoint descriptor for the orthogonal router. Attaches the outward direction and an AABB to avoid to the resolved coordinate.

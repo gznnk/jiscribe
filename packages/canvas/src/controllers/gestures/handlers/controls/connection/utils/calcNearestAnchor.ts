@@ -1,4 +1,10 @@
 import {
+	calcConnectPoint,
+	calcEdgeAnchorPoint,
+	calcExtraConnectPoint,
+} from "@jiscribe/doc/model/objects/connector/calcConnectPoint";
+import type { ExtraConnectPoint } from "@jiscribe/doc/model/objects/connector/ExtraConnectPoint";
+import {
 	ConnectPointIds,
 	type CenterAnchorSpec,
 	type ConnectPointAnchorSpec,
@@ -16,14 +22,8 @@ import {
 	type TransformedFrame,
 } from "@jiscribe/geometry";
 
-import {
-	calcConnectPoint,
-	calcEdgeAnchorFromPoint,
-	calcEdgeAnchorPoint,
-	calcExtraConnectPoint,
-} from "../../../../../../rendering/objects/connector/geometry/calcConnectPoint";
+import { calcEdgeAnchorFromPoint } from "../../../../../../rendering/objects/connector/geometry/calcEdgeAnchorFromPoint";
 import type { ConnectionAnchors } from "../../../../../../rendering/objects/registry/ObjectConnectionAnchorsRegistry";
-import type { ExtraConnectPoint } from "../../../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 
 /**

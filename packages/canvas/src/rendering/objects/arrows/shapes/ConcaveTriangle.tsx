@@ -1,24 +1,11 @@
+import { ARROW_SIZE } from "@jiscribe/doc/model/objects/arrows/arrowHeadDimensions";
 import { radiansToDegrees } from "@jiscribe/geometry";
 import type React from "react";
 import { memo } from "react";
 
 import { ArrowPolygon } from "./ArrowStyled";
 import { createSvgTransform } from "../../utils/createSvgTransform";
-import { ARROW_SIZE } from "../ArrowConstants";
-import type { ArrowExtent, ArrowShapeProps } from "../ArrowTypes";
-
-/**
- * Inset (in local units) used to terminate the line at this arrow's base.
- * Since the concave notch (valley) at the tail sits at `-ARROW_SIZE * 0.9`,
- * stop the line there.
- */
-export const CONCAVE_TRIANGLE_INSET = ARROW_SIZE * 0.9;
-
-/** How far this head runs from its tip (local units), for the drawn extent (calcArrowReach). */
-export const CONCAVE_TRIANGLE_EXTENT: ArrowExtent = {
-	length: ARROW_SIZE,
-	halfWidth: ARROW_SIZE / 2,
-};
+import type { ArrowShapeProps } from "../ArrowTypes";
 
 /**
  * ConcaveTriangle arrow shape component.

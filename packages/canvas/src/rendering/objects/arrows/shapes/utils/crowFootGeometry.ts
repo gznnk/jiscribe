@@ -1,30 +1,13 @@
-import { ARROW_SIZE } from "../../ArrowConstants";
+import {
+	CROW_FOOT_HALF_HEIGHT,
+	CROW_FOOT_LENGTH,
+} from "@jiscribe/doc/model/objects/arrows/arrowHeadDimensions";
 
 /**
- * Shared geometry for the ER crow's foot cardinality marks.
- *
- * All five marks are laid out on the same axis as the other arrows: the tip is
- * at (0,0) and the mark trails toward -x. Each mark draws its own spine (the
- * segment from its rearmost element up to the tip) rather than relying on the
- * connector line, so the line can be inset past the whole mark. That keeps the
- * hollow "zero" circle readable without depending on the background color, the
- * same reason the other hollow arrows are inset (see `getArrowLineInset`).
+ * Path builders for the ER crow's foot cardinality marks, laid out on the
+ * dimensions `@jiscribe/doc` gives them (arrowHeadDimensions): the tip at (0,0)
+ * and the mark trailing toward -x.
  */
-
-/** Run of the crow's foot prongs along the line. */
-export const CROW_FOOT_LENGTH = ARROW_SIZE;
-
-/** Half height of the prong spread at the tip, and of the cardinality bars. */
-export const CROW_FOOT_HALF_HEIGHT = ARROW_SIZE / 2;
-
-/** Clearance between two adjacent elements of a mark (edge to edge). */
-export const CROW_FOOT_MARK_GAP = ARROW_SIZE * 0.45;
-
-/** Radius of the hollow circle denoting the "zero" (optional) lower bound. */
-export const CROW_FOOT_CIRCLE_RADIUS = ARROW_SIZE * 0.3;
-
-/** Distance from the tip to the leading bar of the marks that have no prongs. */
-export const CROW_FOOT_BAR_OFFSET = ARROW_SIZE * 0.45;
 
 /**
  * Builds the spine running up to the tip.

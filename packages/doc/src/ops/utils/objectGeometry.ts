@@ -20,6 +20,7 @@ import {
 } from "../../model/objects/types/text/TextSlot";
 import { isTextVerticalBasis } from "../../model/objects/types/text/TextVerticalBasis";
 import { calcPointDocDrawnTopLeft } from "../../model/objects/utils/pointDocDrawnTopLeft";
+import { readDocTransform } from "../../model/objects/utils/readDocTransform";
 import { roundDocCoordinate } from "../../model/objects/utils/roundDocNumbers";
 import type { ObjectDocDefinition } from "../../plugin/ObjectDocDefinition";
 import { supportsAutoHeight } from "../../plugin/supportsAutoHeight";
@@ -213,9 +214,7 @@ export const calcWorldBoundsOfLocalRect = (
 	centre: Point,
 	object: ObjectRecord,
 ): Rect => {
-	const rotation = typeof object.rotation === "number" ? object.rotation : 0;
-	const scaleX = object.flipX === true ? -1 : 1;
-	const scaleY = object.flipY === true ? -1 : 1;
+	const { rotation, scaleX, scaleY } = readDocTransform(object);
 	const rectCentre = calcAffineTransformedPoint(
 		localRect.x + localRect.width / 2,
 		localRect.y + localRect.height / 2,

@@ -1,3 +1,7 @@
+import {
+	calcConnectPoint,
+	calcConnectPointDirection,
+} from "@jiscribe/doc/model/objects/connector/calcConnectPoint";
 import type { ConnectPointId } from "@jiscribe/doc/model/objects/types/EndpointRef";
 import {
 	calcFrameBoxFeatures,
@@ -8,10 +12,6 @@ import {
 } from "@jiscribe/geometry";
 
 import { routeOrthogonalConnector } from "..";
-import {
-	calcConnectPoint,
-	calcConnectPointDirection,
-} from "../../calcConnectPoint";
 import { calcPathSignature } from "../pathSignature";
 import { countReversals } from "../routeCost";
 import type { OrthogonalConnectorEndpoint } from "../types";

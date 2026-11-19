@@ -1,24 +1,11 @@
+import { ARROW_SIZE } from "@jiscribe/doc/model/objects/arrows/arrowHeadDimensions";
 import { radiansToDegrees } from "@jiscribe/geometry";
 import type React from "react";
 import { memo } from "react";
 
 import { ArrowCircle } from "./ArrowStyled";
 import { createSvgTransform } from "../../utils/createSvgTransform";
-import { ARROW_SIZE } from "../ArrowConstants";
-import type { ArrowExtent, ArrowShapeProps } from "../ArrowTypes";
-
-/**
- * Inset (in local units) used to terminate the line at this arrow's base.
- * The circle is hollow, so the line stops at its far edge (the full diameter)
- * instead of showing through the interior.
- */
-export const HOLLOW_CIRCLE_INSET = ARROW_SIZE;
-
-/** How far this head runs from its tip (local units), for the drawn extent (calcArrowReach). */
-export const HOLLOW_CIRCLE_EXTENT: ArrowExtent = {
-	length: ARROW_SIZE,
-	halfWidth: ARROW_SIZE / 2,
-};
+import type { ArrowShapeProps } from "../ArrowTypes";
 
 /**
  * HollowCircle arrow shape component.

@@ -303,10 +303,8 @@ export type {
 	ObjectConnectionAnchorsCalculator,
 	ObjectConnectionAnchorsDeclaration,
 } from "./rendering/objects/registry/ObjectConnectionAnchorsRegistry";
-export type {
-	ExtraConnectPoint,
-	ObjectExtraConnectPointsCalculator,
-} from "./rendering/objects/registry/ObjectExtraConnectPointsRegistry";
+export type { ObjectExtraConnectPointsCalculator } from "./rendering/objects/registry/ObjectExtraConnectPointsRegistry";
+export type { ExtraConnectPoint } from "@jiscribe/doc/model/objects/connector/ExtraConnectPoint";
 export type { ObjectGeometryKeyCalculator } from "./rendering/objects/registry/ObjectGeometryKeyRegistry";
 export type { ObjectVisualBoundsCalculator } from "./rendering/objects/registry/ObjectVisualBoundsRegistry";
 export type {

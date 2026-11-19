@@ -1,8 +1,8 @@
-import type { EndpointRef } from "@jiscribe/doc/model/objects/types/EndpointRef";
 import { describe, it, expect } from "vitest";
 
-import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
-import type { ExtraConnectPoint } from "../../../../registry/ObjectExtraConnectPointsRegistry";
+import type { EndpointRef } from "../../types/EndpointRef";
+import type { EndpointOwner } from "../EndpointOwner";
+import type { ExtraConnectPoint } from "../ExtraConnectPoint";
 import { resolveEndpoint } from "../resolveEndpoint";
 
 const freeEndpoint = (x: number, y: number): EndpointRef =>
@@ -29,7 +29,7 @@ const edgeEndpoint = (
 		anchor: { kind: "edge", side, t },
 	}) as EndpointRef;
 
-const rectObj = (cx: number, cy: number): ObjectState =>
+const rectObj = (cx: number, cy: number): EndpointOwner =>
 	({
 		id: "obj-1",
 		type: "rect",
@@ -40,7 +40,7 @@ const rectObj = (cx: number, cy: number): ObjectState =>
 		rotation: 0,
 		scaleX: 1,
 		scaleY: 1,
-	}) as unknown as ObjectState;
+	}) as unknown as EndpointOwner;
 
 describe("resolveEndpoint", () => {
 	describe("FreeAnchor", () => {
@@ -85,7 +85,10 @@ describe("resolveEndpoint", () => {
 		});
 
 		it("returns null for an object that is not a TransformedFrame", () => {
-			const nonFrame = { id: "x", type: "polyline" } as unknown as ObjectState;
+			const nonFrame = {
+				id: "x",
+				type: "polyline",
+			} as unknown as EndpointOwner;
 			expect(
 				resolveEndpoint(connectPointEndpoint("topCenter"), nonFrame),
 			).toBeNull();
@@ -153,7 +156,7 @@ describe("resolveEndpoint", () => {
 			const flipped = {
 				...(rectObj(100, 100) as unknown as Record<string, unknown>),
 				scaleX: -1,
-			} as unknown as ObjectState;
+			} as unknown as EndpointOwner;
 			expect(
 				resolveEndpoint(connectPointEndpoint("tip"), flipped, null, null, [
 					leftTip,

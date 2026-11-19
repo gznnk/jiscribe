@@ -1,4 +1,3 @@
-import type { GeometryType } from "@jiscribe/doc/model/objects/types/GeometryType";
 import {
 	calcOutlinePointTowardForPolygon,
 	calcOutlinePointTowardForRotatedEllipse,
@@ -9,7 +8,8 @@ import {
 	type TransformedFrame,
 } from "@jiscribe/geometry";
 
-import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
+import type { EndpointOwner } from "./EndpointOwner";
+import type { GeometryType } from "../types/GeometryType";
 
 /** Snaps onto the outline the shape's box implies, returning null where the line misses it. */
 type OutlineSnapper = (frame: TransformedFrame, toward: Point) => Point | null;
@@ -27,7 +27,7 @@ const snapToEllipseOutline: OutlineSnapper = (frame, toward) =>
  * The outline each geometry's box implies, one entry per GeometryType so that a
  * geometry added to the union has to declare its own. `null` marks a geometry
  * whose box is no outline to snap to: `none` has no box at all, and `poly` is
- * only ever adjusted through the real polygon its registry supplies.
+ * only ever adjusted through the real polygon its type declares.
  * `point` shares the frame calculation — its box is derived from the content
  * rather than stored, but the drawn extent is the same rectangle. The
  * counterpart of `calcConnectPoint`'s table for an edge-anchored endpoint.
@@ -48,20 +48,24 @@ const outlineSnapperByGeometry: Record<GeometryType, OutlineSnapper | null> = {
  *
  * @param point - The resolved endpoint (usually the shape's center)
  * @param toward - The point used as the direction the line "heads toward" when computing the intersection with the outline
- * @param obj - State of the shape the endpoint references. null/undefined if unreferenced (in which case point is returned as-is)
- * @param outline - The shape's local outline polygon (from ObjectOutlineRegistry).
+ * @param obj - The shape the endpoint references. null/undefined if unreferenced (in which case point is returned as-is)
+ * @param outline - The shape's local outline polygon (the type's `outline`).
  *   When present, the endpoint snaps onto that true outline; omitted = rect/point/ellipse handling
  * @returns The point snapped onto the outline. null if there is no intersection, e.g. toward is inside the shape. For shapes with neither an outline nor rect/point/ellipse geometry, the original point without adjustment
  */
 export const adjustToOutline = (
 	point: Point,
 	toward: Point,
-	obj: ObjectState | null | undefined,
+	obj: EndpointOwner | null | undefined,
 	outline?: readonly Point[] | null,
 ): Point | null => {
 	if (!obj) {
 		return point;
 	}
+	// The owner carries its features descriptor, so the outline geometry is read
+	// from it directly — no type lookup. Read before the frame check narrows the
+	// owner to a bare frame.
+	const geometry = obj.features?.geometry;
 
 	// Check if object has valid TransformedFrame properties (required for both rect and ellipse)
 	if (!isTransformedFrame(obj)) {
@@ -74,10 +78,6 @@ export const adjustToOutline = (
 		return calcOutlinePointTowardForPolygon(outline, obj, toward);
 	}
 
-	// The features descriptor is stamped onto the state at construction
-	// (ObjectMapperRegistry), so the outline geometry is read from the object
-	// directly — no registry lookup.
-	const geometry = obj.features?.geometry;
 	const snapToOutline = geometry ? outlineSnapperByGeometry[geometry] : null;
 	if (!snapToOutline) {
 		return point;

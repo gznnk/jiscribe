@@ -1,25 +1,8 @@
 import {
-	EDGE_LOCAL_DIRECTIONS,
-	calcEdgeAnchorLocalOrigin,
-	calcLocalAnchorRegion,
-	calcLocalRayLanding,
-	calcRegionCenter,
-	clampAnchorRatio,
-} from "@jiscribe/doc/model/objects/connector/localAnchorRay";
-import type {
-	ConnectPointId,
-	EdgeAnchorSide,
-	EdgeAnchorSpec,
-} from "@jiscribe/doc/model/objects/types/EndpointRef";
-import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
-import {
 	calcAffineTransformedPoint,
-	calcEuclideanDistance,
-	calcInverseAffineTransformedPoint,
 	calcNonZeroSign,
 	calcRotatedPointWithTrig,
 	degreesToRadians,
-	roundToDecimal,
 	snapToDirection,
 	type OrthogonalDirection,
 	type Point,
@@ -27,17 +10,28 @@ import {
 	type TransformedFrame,
 } from "@jiscribe/geometry";
 
-import type { ObjectState } from "../../../../states/objects/base/ObjectState";
-import type { ExtraConnectPoint } from "../../registry/ObjectExtraConnectPointsRegistry";
+import type { EndpointOwner } from "./EndpointOwner";
+import type { ExtraConnectPoint } from "./ExtraConnectPoint";
+import {
+	EDGE_LOCAL_DIRECTIONS,
+	calcEdgeAnchorLocalOrigin,
+	calcLocalAnchorRegion,
+	calcLocalRayLanding,
+	calcRegionCenter,
+} from "./localAnchorRay";
+import type {
+	ConnectPointId,
+	EdgeAnchorSide,
+	EdgeAnchorSpec,
+} from "../types/EndpointRef";
 
 /**
- * The shape an anchor is resolved on: its frame, plus the features descriptor
- * stamped onto every state (see `ObjectState.features`) when the caller holds
- * one. Only `geometry` is read, and only for a shape with no outline polygon,
- * to pick the outline its box implies over the box itself. A bare frame reads
- * as a rectangle.
+ * The shape an anchor is resolved on: its frame, plus its features descriptor
+ * when the caller holds one. Only `geometry` is read, and only for a shape with
+ * no outline polygon, to pick the outline its box implies over the box itself.
+ * A bare frame reads as a rectangle.
  */
-export type AnchorFrame = TransformedFrame & Pick<ObjectState, "features">;
+export type AnchorFrame = TransformedFrame & Pick<EndpointOwner, "features">;
 
 /** Outward direction of each edge connect point in the shape's local space. */
 const CONNECT_POINT_LOCAL_DIRECTIONS: Record<ConnectPointId, Point> = {
@@ -105,10 +99,10 @@ export const calcOutwardVector = (
 /**
  * World position of one edge connect point.
  *
- * The anchor region (local rect from ObjectAnchorRegionRegistry, default = the
+ * The anchor region (local rect the type's `anchorRegion` declares, default = the
  * full bounding box) fixes only the ray origin; the outline decides where the
  * ray lands, so the anchor always sits on the drawn edge. Shapes with no
- * registered outline resolve analytically against what their geometry draws:
+ * declared outline resolve analytically against what their geometry draws:
  * the arc for an ellipse, otherwise the bounding box, which for a centered
  * origin reproduces `calcFrameKeyPoint`.
  *
@@ -117,10 +111,10 @@ export const calcOutwardVector = (
  *   when no polygon is given (a bare frame reads as a rectangle)
  * @param connectPointId - Which of the four edge anchors to resolve
  * @param outline - The shape's outline polygon in local, centered coordinates
- *   (from ObjectOutlineRegistry). Omitted, or a ray that misses it, falls back
+ *   (the type's `outline`). Omitted, or a ray that misses it, falls back
  *   to the geometry's own outline
  * @param anchorRegion - The band to center the anchors on, in the same local
- *   space (from ObjectAnchorRegionRegistry). Omitted = the full bounding box,
+ *   space (the type's `anchorRegion`). Omitted = the full bounding box,
  *   i.e. the edge midpoints
  * @returns The anchor in world coordinates
  */
@@ -177,10 +171,10 @@ export const calcConnectPointDirection = (
  *   a non-finite one reads as 0.5 (docs are validated, this only keeps a bad
  *   value from producing NaN coordinates)
  * @param outline - The shape's outline polygon in local, centered coordinates
- *   (from ObjectOutlineRegistry). Omitted, or a ray that misses it, falls back
+ *   (the type's `outline`). Omitted, or a ray that misses it, falls back
  *   to the geometry's own outline
  * @param anchorRegion - The band to spread the ratio over, in the same local
- *   space (from ObjectAnchorRegionRegistry). Omitted = the full bounding box
+ *   space (the type's `anchorRegion`). Omitted = the full bounding box
  * @returns The anchor in world coordinates
  */
 export const calcEdgeAnchorPoint = (
@@ -215,97 +209,8 @@ export const calcEdgeAnchorDirection = (
 };
 
 /**
- * The edge anchor a world position rounds to — the inverse of
- * {@link calcEdgeAnchorPoint}, used when a connection is dropped somewhere the
- * named anchors do not cover.
- *
- * The position is taken back into the shape's local space and matched against
- * the anchor region's four sides, each treated as a segment so a position past a
- * corner still picks the side it is nearest to. The outline is deliberately not
- * consulted: it decides how far out an anchor lands, not which edge it belongs
- * to, and rounding against the same rect the forward rays start from is what
- * makes the round trip stable.
- *
- * @param frame - The shape being dropped onto; its rotation and flips are undone
- *   first, so the returned `side` names the edge in local space
- * @param worldPoint - The dropped position in world coordinates; one inside the
- *   shape projects outward to the nearest side, one outside inward to it
- * @param anchorRegion - The band to measure the ratio over, in local coordinates
- *   (from ObjectAnchorRegionRegistry). Omitted = the full bounding box
- * @returns The anchor, its ratio clamped to 0..1 and rounded for storage. Sides
- *   equally near are broken in top → right → bottom → left order, and a
- *   zero-width or zero-height region yields 0.5 on the collapsed axis
- */
-export const calcEdgeAnchorFromPoint = (
-	frame: TransformedFrame,
-	worldPoint: Point,
-	anchorRegion?: Rect | null,
-): EdgeAnchorSpec => {
-	const local = calcInverseAffineTransformedPoint(
-		worldPoint.x,
-		worldPoint.y,
-		frame.scaleX,
-		frame.scaleY,
-		degreesToRadians(frame.rotation),
-		frame.cx,
-		frame.cy,
-	);
-	const region = calcLocalAnchorRegion(frame, anchorRegion);
-	const right = region.x + region.width;
-	const bottom = region.y + region.height;
-
-	const ratioX =
-		region.width > 0
-			? clampAnchorRatio((local.x - region.x) / region.width)
-			: 0.5;
-	const ratioY =
-		region.height > 0
-			? clampAnchorRatio((local.y - region.y) / region.height)
-			: 0.5;
-	// The projection onto each side, clamped to the side's own extent.
-	const alongX = region.x + region.width * ratioX;
-	const alongY = region.y + region.height * ratioY;
-
-	const candidates: Array<{ side: EdgeAnchorSide; t: number; gap: number }> = [
-		{
-			side: "top",
-			t: ratioX,
-			gap: calcEuclideanDistance(local.x, local.y, alongX, region.y),
-		},
-		{
-			side: "right",
-			t: ratioY,
-			gap: calcEuclideanDistance(local.x, local.y, right, alongY),
-		},
-		{
-			side: "bottom",
-			t: ratioX,
-			gap: calcEuclideanDistance(local.x, local.y, alongX, bottom),
-		},
-		{
-			side: "left",
-			t: ratioY,
-			gap: calcEuclideanDistance(local.x, local.y, region.x, alongY),
-		},
-	];
-
-	let nearest = candidates[0];
-	for (const candidate of candidates) {
-		if (candidate.gap < nearest.gap) {
-			nearest = candidate;
-		}
-	}
-
-	return {
-		kind: "edge",
-		side: nearest.side,
-		t: roundToDecimal(nearest.t, PRECISION.COORDINATE),
-	};
-};
-
-/**
  * World position of one extra connect point — a named anchor the shape's type
- * declares itself (ObjectExtraConnectPointsRegistry). The declared local point is
+ * declares itself ({@link ExtraConnectPoint}). The declared local point is
  * carried straight through the frame transform: unlike an edge anchor it is not
  * cast against the outline, because the type already said where its own point is.
  *
