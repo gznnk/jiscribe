@@ -1,5 +1,5 @@
 import { advanceTextMeasurementGeneration } from "@jiscribe/doc/text/measure/textMeasurementSlot";
-import { useCallback, useEffect } from "react";
+import { useEffect } from "react";
 
 import { useDocFontsPreload } from "./useDocFontsPreload";
 import { useFontsLoadedNonce } from "./useFontsLoadedNonce";
@@ -13,8 +13,8 @@ type UseDocFontsOptions = {
 	 * Called whenever the faces the document can draw with change: once when the
 	 * mount preload settles (before the flag flips, same synchronous callback) and
 	 * again for every later arrival {@link useFontsLoadedNonce} reports. The text
-	 * measurement generation has already been advanced by then, once per change,
-	 * so a re-measure it triggers is not answered from a cache.
+	 * measurement generation has already been advanced by then, so a re-measure
+	 * it triggers is not answered from a cache.
 	 */
 	onFacesChanged?: () => void;
 };
@@ -64,10 +64,10 @@ export const useDocFonts = ({
 	const fontsLoadedNonce = useFontsLoadedNonce();
 	// The nonce's events advance the generation themselves (useFontsLoadedNonce);
 	// the preload's settle does it here, before the caller re-measures.
-	const handlePreloadSettled = useCallback(() => {
+	const handlePreloadSettled = (): void => {
 		advanceTextMeasurementGeneration();
 		onFacesChangedRef.current?.();
-	}, [onFacesChangedRef]);
+	};
 	const isSettled = useDocFontsPreload(collectRequests, handlePreloadSettled);
 
 	useEffect(() => {
