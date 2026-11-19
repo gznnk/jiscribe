@@ -10,6 +10,7 @@ import type {
 
 import type { MovePreview } from "../rendering/layers/content/MovePreview";
 import type { ConnectorLabelPlacement } from "../rendering/objects/connector/geometry/label/calcConnectorLabelPlacement";
+import type { ConnectorLabelBox } from "../rendering/objects/connector/geometry/label/connectorLabelLayout";
 import type { Viewport } from "../rendering/Viewport";
 import type { CanvasState } from "../states/canvas/CanvasState";
 import type { ClipboardData } from "./commands/selection/ClipboardData";
@@ -370,7 +371,11 @@ export type CanvasDragDetail =
 			objectDimensions: { halfWidth: number; halfHeight: number };
 	  }
 	| { kind: "vertex" }
-	| { kind: "label" }
+	| {
+			kind: "label";
+			/** The dragged label's box size, measured at dragStart (resolveConnectorLabelBox) */
+			labelBox: ConnectorLabelBox;
+	  }
 	| { kind: "segment" }
 	| { kind: "selectionControl" };
 

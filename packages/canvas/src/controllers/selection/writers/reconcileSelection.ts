@@ -98,7 +98,7 @@ export const reconcileSelection = (
 		part === null || isPartSelectionLive(target, part, objectPartKind);
 	// A shape session is written back to the slot the part names, so it goes with
 	// that part; a connector label session is opened with nothing picked
-	// (startConnectorLabelEdit) and writes to the connector whatever is.
+	// (startConnectorLabelEdit) and writes to the connector whatever is picked.
 	const isTextEditLive =
 		draft === null ||
 		(isTextEditOwnerLive(target, draft) &&

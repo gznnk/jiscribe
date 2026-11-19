@@ -9,7 +9,10 @@ import { useFontsLoadedNonceContext } from "../../FontsLoadedNonceContext";
 import { useIsTextLegible } from "../../useIsTextLegible";
 import { resolveAutoColor } from "../../utils/resolveAutoColor";
 import { resolveLabelFill } from "../../utils/resolveLabelFill";
-import { resolveConnectorLabelBox } from "../geometry/label/connectorLabelLayout";
+import {
+	calcConnectorLabelRect,
+	resolveConnectorLabelBox,
+} from "../geometry/label/connectorLabelLayout";
 
 type ConnectorLabelProps = {
 	/** Parent connector id (placed in a data attribute so a hit can start editing). */
@@ -53,7 +56,7 @@ const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
 	const documentSurface = useDocumentSurface();
 	// Memoized so dragging the connector (anchor changes every frame, text does not)
 	// skips the per-line measureText.
-	const { width, height } = useMemo(
+	const labelBox = useMemo(
 		() =>
 			resolveConnectorLabelBox({
 				text,
@@ -78,11 +81,11 @@ const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
 	const background = resolveLabelFill(fill, documentSurface);
 	const borderColor = resolveAutoColor(stroke, "ink");
 
-	// Lay out horizontally centered on the anchor (no rotation).
+	const { x, y, width, height } = calcConnectorLabelRect(anchor, labelBox);
 	return (
 		<foreignObject
-			x={anchor.x - width / 2}
-			y={anchor.y - height / 2}
+			x={x}
+			y={y}
 			width={width}
 			height={height}
 			// Treat as connector so a hit resolves to the parent connector.

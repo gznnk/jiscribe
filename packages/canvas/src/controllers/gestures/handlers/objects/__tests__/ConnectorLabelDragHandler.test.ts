@@ -51,7 +51,11 @@ const labeledConnector = (
 		...(label ? { label } : {}),
 	}) as unknown as ConnectorState;
 
-/** State holding the connector, plus the drag handleGesture would have opened over `snapCandidates`. */
+/**
+ * State holding the connector, plus the drag over `snapCandidates` that
+ * handleGesture opens and this handler's dragStart claims: a label drag with the
+ * box measured when the connector has a label to grab, an inert one otherwise.
+ */
 const stateWith = (
 	connector: ConnectorState,
 	snapCandidates: SnapCandidates = { x: [], y: [] },
@@ -63,7 +67,12 @@ const stateWith = (
 		objects,
 		rootIds: [...base.rootIds, connector.id],
 		drag: {
-			kind: "inert",
+			...(connector.label?.text
+				? {
+						kind: "label",
+						labelBox: resolveConnectorLabelBox(connector.label),
+					}
+				: { kind: "inert" }),
 			snapFeedback: null,
 			axisLockFeedback: null,
 			edgeScrollEnabled: false,
@@ -196,7 +205,10 @@ describe("ConnectorLabelDragHandler - dragStart", () => {
 		expect(next.stencilLibraryOpenCategory).toBeNull();
 		expect(next.contextMenuPosition).toBeNull();
 		expect(next.drag?.edgeScrollEnabled).toBe(true);
-		expect(next.drag?.kind).toBe("label");
+		expect(next.drag).toMatchObject({
+			kind: "label",
+			labelBox: resolveConnectorLabelBox({ text: "Yes" }),
+		});
 	});
 
 	it("does not select a connector that has no label box to grab", () => {
@@ -706,5 +718,27 @@ describe("ConnectorLabelDragHandler - alignment to other objects", () => {
 			registries,
 		);
 		expect(unaligned.drag?.snapFeedback).toEqual({ x: [], y: [] });
+	});
+
+	it("aligns by the box measured at dragStart, measuring nothing on later frames", () => {
+		// A box twice the drawn width, as if the drag had started on it: aligning
+		// by it shows the frame took the box from the drag rather than measuring.
+		const startBox = {
+			width: LABEL_BOX.width * 2,
+			height: LABEL_BOX.height,
+		};
+		const state = stateWith(labeledConnector({ text: "Yes" }), {
+			x: [xCandidate(60 + startBox.width / 2 + 3)],
+			y: [],
+		});
+		const next = ConnectorLabelDragHandler.handle(
+			{
+				...state,
+				drag: { ...state.drag, labelBox: startBox },
+			} as CanvasControllerState,
+			dragEvent("drag", { x: 100, y: 0 }, { x: 60, y: 30 }),
+			registries,
+		);
+		expect(labelOf(next)).toEqual({ text: "Yes", position: 0.315, offset: 30 });
 	});
 });

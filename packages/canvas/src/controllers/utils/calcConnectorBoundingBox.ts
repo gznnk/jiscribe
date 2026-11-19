@@ -21,7 +21,10 @@ import {
 	resolveEndpointOwner,
 } from "../../rendering/objects/connector/geometry/endpoints";
 import { calcConnectorLabelAnchor } from "../../rendering/objects/connector/geometry/label/calcConnectorLabelAnchor";
-import { resolveConnectorLabelBox } from "../../rendering/objects/connector/geometry/label/connectorLabelLayout";
+import {
+	calcConnectorLabelRect,
+	resolveConnectorLabelBox,
+} from "../../rendering/objects/connector/geometry/label/connectorLabelLayout";
 import type { ObjectAnchorRegionRegistry } from "../../rendering/objects/registry/ObjectAnchorRegionRegistry";
 import type { ObjectExtraConnectPointsRegistry } from "../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import type { ObjectGeometryKeyRegistry } from "../../rendering/objects/registry/ObjectGeometryKeyRegistry";
@@ -146,10 +149,13 @@ const collectLabelCorners = (
 		return [];
 	}
 
-	const { width, height } = resolveConnectorLabelBox(label);
+	const { x, y, width, height } = calcConnectorLabelRect(
+		anchor,
+		resolveConnectorLabelBox(label),
+	);
 	return [
-		{ x: anchor.x - width / 2, y: anchor.y - height / 2 },
-		{ x: anchor.x + width / 2, y: anchor.y + height / 2 },
+		{ x, y },
+		{ x: x + width, y: y + height },
 	];
 };
 

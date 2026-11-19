@@ -7,7 +7,10 @@ import { memo, useMemo } from "react";
 
 import { theme } from "../../../../foundation/theme/themeTokens";
 import { calcConnectorLabelAnchor } from "../../../../rendering/objects/connector/geometry/label/calcConnectorLabelAnchor";
-import { resolveConnectorLabelBox } from "../../../../rendering/objects/connector/geometry/label/connectorLabelLayout";
+import {
+	calcConnectorLabelRect,
+	resolveConnectorLabelBox,
+} from "../../../../rendering/objects/connector/geometry/label/connectorLabelLayout";
 import { useFontsLoadedNonceContext } from "../../../../rendering/objects/FontsLoadedNonceContext";
 import { useIsTextLegible } from "../../../../rendering/objects/useIsTextLegible";
 import {
@@ -24,10 +27,9 @@ type ConnectorLabelPartOutlineProps = {
 
 /**
  * Outlines a connector's picked label (the `connectorLabel` part kind), drawn
- * the way ObjectPartOutline draws a part inside a shape. The box is derived the
- * way the renderer derives the label's own (ConnectorLabel): centred on
- * calcConnectorLabelAnchor, sized by resolveConnectorLabelBox, unrotated. It is
- * hidden while the label itself is, too small to read at the canvas's zoom.
+ * the way ObjectPartOutline draws a part inside a shape, over the label's box
+ * (calcConnectorLabelRect). It is hidden while the label itself is, too small
+ * to read at the canvas's zoom.
  */
 const ConnectorLabelPartOutlineComponent: React.FC<
 	ConnectorLabelPartOutlineProps
@@ -37,7 +39,7 @@ const ConnectorLabelPartOutlineComponent: React.FC<
 	const fontsLoadedNonce = useFontsLoadedNonceContext();
 	// Keyed on what sizes the box, so a drag (the placement changes every frame)
 	// skips the per-line measureText.
-	const { width, height } = useMemo(
+	const labelBox = useMemo(
 		() => resolveConnectorLabelBox(label),
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[
@@ -58,10 +60,11 @@ const ConnectorLabelPartOutlineComponent: React.FC<
 		return null;
 	}
 
+	const { x, y, width, height } = calcConnectorLabelRect(anchor, labelBox);
 	return (
 		<rect
-			x={anchor.x - width / 2}
-			y={anchor.y - height / 2}
+			x={x}
+			y={y}
 			width={width}
 			height={height}
 			// Tells a part's box from an object outline, which is drawn the same way.

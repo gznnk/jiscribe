@@ -223,7 +223,8 @@ and dragging the box moves the label along the path (`label.position` / `label.o
 one of its segments; the box then lines up with other objects the way a moved shape does, on the axes
 that keep those two snaps (all bypassed by holding Ctrl).
 With no label yet, a double click on the bare line creates one at the clicked point (projected onto
-the path and snapped the same way), carried in the `"textEdit"` mode's draft until the edit is committed.
+the path, with only `offset` snapped onto the line; no midpoint or alignment snap), carried in the
+`"textEdit"` mode's draft until the edit is committed.
 A multi-slot shape uses the nested form instead: for example, the `<g data-kind="object">` of the UML
 `record` shape (`plugins/uml-shapes/src/presentation/RecordBox.tsx`) wraps one rect per compartment the box
 has, each carrying that slot's part address as its `data-part` (`data-part="textSlot:name"`,

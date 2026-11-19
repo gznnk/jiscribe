@@ -10,6 +10,7 @@ import {
 	type ConnectorLabelPlacement,
 } from "../../../../rendering/objects/connector/geometry/label/calcConnectorLabelPlacement";
 import {
+	calcConnectorLabelRect,
 	resolveConnectorLabelBox,
 	type ConnectorLabelBox,
 } from "../../../../rendering/objects/connector/geometry/label/connectorLabelLayout";
@@ -76,7 +77,8 @@ const getLabeledConnector = (
  * Selects the connector and picks its label, so the controls and the label's
  * outline follow the label being dragged (any open text edit was committed by
  * ConnectorEventHandler before routing). An unselected connector's label can be
- * grabbed directly: the drag start doubles as the selection.
+ * grabbed directly: the drag start doubles as the selection. The label's box is
+ * measured here, once for the whole drag.
  */
 const handleDragStart = (
 	state: CanvasControllerState,
@@ -105,7 +107,11 @@ const handleDragStart = (
 		connectorLabelPart(),
 		registries.objectPartKind,
 	);
-	return claimDrag(selectedState, { kind: "label" }, { edgeScroll: true });
+	return claimDrag(
+		selectedState,
+		{ kind: "label", labelBox: resolveConnectorLabelBox(labeled.label) },
+		{ edgeScroll: true },
+	);
 };
 
 /**
@@ -143,10 +149,13 @@ const snapLabelToPath = (
 const calcLabelBoxEdges = (
 	anchor: Point,
 	labelBox: ConnectorLabelBox,
-): { x: number[]; y: number[] } => ({
-	x: [anchor.x - labelBox.width / 2, anchor.x, anchor.x + labelBox.width / 2],
-	y: [anchor.y - labelBox.height / 2, anchor.y, anchor.y + labelBox.height / 2],
-});
+): { x: number[]; y: number[] } => {
+	const { x, y, width, height } = calcConnectorLabelRect(anchor, labelBox);
+	return {
+		x: [x, x + width / 2, x + width],
+		y: [y, y + height / 2, y + height],
+	};
+};
 
 /** Whether the box edge that findSnap aligned on one axis still lies on its snap line. */
 const isAxisAligned = (
@@ -171,7 +180,7 @@ const isAxisAligned = (
  *
  * @returns The placement to write and the guides of the axes taken (empty when none is)
  */
-const alignLabelToCandidates = (
+const alignLabelToSnapCandidates = (
 	pathSnapped: PathSnappedPlacement,
 	points: readonly Point[],
 	labelBox: ConnectorLabelBox,
@@ -276,7 +285,7 @@ const alignLabelToCandidates = (
  * transform snaps use), the label snaps to its own path first — a near-zero
  * offset onto the line, a position near a midpoint onto it — and then aligns its
  * box with the other objects where that keeps the path snaps
- * (alignLabelToCandidates). Every frame writes its guides, empty ones included,
+ * (alignLabelToSnapCandidates). Every frame writes its guides, empty ones included,
  * so the previous frame's never linger.
  */
 const handleDrag = (
@@ -285,10 +294,11 @@ const handleDrag = (
 	registries: ICanvasRegistries,
 ): CanvasControllerState => {
 	const connectorId = event.targetId;
-	const snapshot = state.drag?.startSnapshot;
-	if (!connectorId || !snapshot) {
+	const drag = state.drag;
+	if (!connectorId || drag?.kind !== "label") {
 		return state;
 	}
+	const snapshot = drag.startSnapshot;
 
 	const labeled = getLabeledConnector(snapshot.objects[connectorId]);
 	if (!labeled) {
@@ -329,10 +339,10 @@ const handleDrag = (
 	let snapFeedback: SnapFeedback = { x: [], y: [] };
 	if (!isSnapSuppressed(event)) {
 		const thresholdSvg = SNAP_THRESHOLD_PX / state.viewport.zoom;
-		({ placement, snapFeedback } = alignLabelToCandidates(
+		({ placement, snapFeedback } = alignLabelToSnapCandidates(
 			snapLabelToPath(rawPlacement, points, thresholdSvg),
 			points,
-			resolveConnectorLabelBox(label),
+			drag.labelBox,
 			snapshot.snapCandidates,
 			thresholdSvg,
 		));
