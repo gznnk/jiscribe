@@ -5,14 +5,17 @@ import {
 	type ObjectPartKindDefinition,
 } from "../../../../rendering/objects/registry/ObjectPartKindRegistry";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
+import type { ConnectorState } from "../../../../states/objects/connector/ConnectorState";
 import type {
 	CanvasControllerState,
 	TextEditDraft,
 } from "../../../CanvasTypes";
 import { readTextEditDraft } from "../../../utils/readTextEditDraft";
+import { connectorLabelPartSelection } from "../../__tests__/support/connectorLabelPartSelection";
 import { selectionOf } from "../../__tests__/support/selectionOf";
 import { vertexPartSelection } from "../../__tests__/support/vertexPartSelection";
 import type { ObjectPartSelection } from "../../CanvasSelection";
+import { createConnectorLabelPartKindDefinition } from "../../partKinds/connectorLabelPartKind";
 import {
 	createTextSlotPartKindDefinition,
 	TEXT_SLOT_PART_KIND,
@@ -77,7 +80,7 @@ const connector = (id: string): ObjectState =>
  * The registry every case here reconciles against: "record" and "rect" take part
  * the way applyObjectDefinition makes every text-holding type take part,
  * "table" takes both that and cells of its own, "connector" declares its
- * waypoints, and nothing else takes part at all.
+ * waypoints and its label, and nothing else takes part at all.
  */
 const objectPartKind = createObjectPartKindRegistry();
 objectPartKind.register("record", [createTextSlotPartKindDefinition()]);
@@ -86,7 +89,10 @@ objectPartKind.register("table", [
 	createTextSlotPartKindDefinition(),
 	cellPartKind,
 ]);
-objectPartKind.register("connector", [createVertexPartKindDefinition(2)]);
+objectPartKind.register<ConnectorState>("connector", [
+	createVertexPartKindDefinition<ConnectorState>(2),
+	createConnectorLabelPartKindDefinition(),
+]);
 
 const makeState = (
 	objects: Record<string, ObjectState>,
@@ -249,6 +255,30 @@ describe("reconcileSelection", () => {
 			vertexPartSelection(7),
 		);
 		expect(reconcileSelection(state, objectPartKind).selection.part).toBeNull();
+	});
+
+	it("keeps the label picked on the selected connector while it has text", () => {
+		const state = makeState(
+			{ "c-1": { ...connector("c-1"), label: { text: "Yes" } } as ObjectState },
+			["c-1"],
+			connectorLabelPartSelection(),
+		);
+		expect(reconcileSelection(state, objectPartKind)).toBe(state);
+	});
+
+	it("clears a picked label once it is gone or emptied (undo, a blank edit, an AI edit)", () => {
+		for (const labeled of [
+			connector("c-1"),
+			{ ...connector("c-1"), label: { text: "", fill: "#fff" } } as ObjectState,
+		]) {
+			const state = makeState(
+				{ "c-1": labeled },
+				["c-1"],
+				connectorLabelPartSelection(),
+			);
+			const after = reconcileSelection(state, objectPartKind);
+			expect(after.selection).toEqual(selectionOf(["c-1"]));
+		}
 	});
 
 	it("returns the state itself when every range survived", () => {

@@ -7,6 +7,7 @@ import type { ConnectorState } from "../../../../../states/objects/connector/Con
 import { outlinedPlugin } from "../../../../__tests__/support/outlinedPlugin";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { createCanvasRegistries } from "../../../../registries/createCanvasRegistries";
+import { connectorLabelPartSelection } from "../../../../selection/__tests__/support/connectorLabelPartSelection";
 import { selectionOf } from "../../../../selection/__tests__/support/selectionOf";
 import { vertexPartSelection } from "../../../../selection/__tests__/support/vertexPartSelection";
 import { reconcileSelection } from "../../../../selection/writers/reconcileSelection";
@@ -299,6 +300,43 @@ describe("ConnectorClickHandler (through ConnectorEventHandler) - clicks while e
 		expect(labelText(next, "c1")).toBe("new");
 		expect(readTextEditDraft(next)).toBeNull();
 		expect(next.commitVersion).toBe(6);
+	});
+});
+
+describe("ConnectorClickHandler - picking the label", () => {
+	it("a click on the label box selects the connector and picks its label", () => {
+		const next = ConnectorClickHandler.handle(
+			makeState("Yes"),
+			makeEvent("click", "c1", "label"),
+			registries,
+		);
+		expect(next.selection).toEqual(
+			selectionOf(["c1"], connectorLabelPartSelection()),
+		);
+	});
+
+	it("a click on the line selects the connector with nothing picked", () => {
+		const next = ConnectorClickHandler.handle(
+			makeState("Yes"),
+			makeEvent("click", "c1"),
+			registries,
+		);
+		expect(next.selection).toEqual(selectionOf(["c1"]));
+	});
+
+	it("a click on the line of the connector whose label is picked steps back to the connector", () => {
+		const state = {
+			...makeState("Yes"),
+			selection: selectionOf(["c1"], connectorLabelPartSelection()),
+			objectMenuOpenId: "style",
+		} as unknown as CanvasControllerState;
+		const next = ConnectorClickHandler.handle(
+			state,
+			makeEvent("click", "c1"),
+			registries,
+		);
+		expect(next.selection).toEqual(selectionOf(["c1"]));
+		expect(next.objectMenuOpenId).toBeNull();
 	});
 });
 

@@ -5,7 +5,10 @@ import { memo } from "react";
 import { theme } from "../../../../foundation/theme/themeTokens";
 import { createSvgTransform } from "../../../../rendering/objects/utils/createSvgTransform";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
-import { SELECTION_OUTLINE_WIDTH } from "../utils/selectionOutline";
+import {
+	PART_SELECTION_FILL,
+	SELECTION_OUTLINE_WIDTH,
+} from "../utils/selectionOutline";
 
 type ObjectPartOutlineProps = {
 	/** The object the part belongs to; only its transform is read here. */
@@ -15,12 +18,6 @@ type ObjectPartOutlineProps = {
 	/** Whether the box is tinted inside as well as outlined; false while a text edit is open, the tint lying under the caret and the text selection. */
 	filled: boolean;
 };
-
-/**
- * The tint inside a picked part's box: the accent faded to a wash the part's own
- * fill and text still read through.
- */
-const PART_SELECTION_FILL = `color-mix(in srgb, ${theme.handleAccent} 18%, transparent)`;
 
 /**
  * Outlines one sub-part inside its object, in place of the object's own selection

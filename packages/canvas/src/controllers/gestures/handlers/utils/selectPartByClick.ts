@@ -9,8 +9,10 @@ import { closeStencilPopups } from "../../../utils/closeStencilPopups";
  * part the click's address names, or nothing at all when it names no live part
  * of that object — a click beside the parts steps the selection back up to the
  * object level. The one path from a part's DOM address to
- * `state.selection.part`, shared by the object click (ObjectEventHandler)
- * and the vertex handles (VertexControlHandler), so neither spells a kind.
+ * `state.selection.part`, shared by the object click (ObjectEventHandler),
+ * the vertex handles (VertexControlHandler) and the connector's label
+ * (ConnectorClickHandler, ConnectorLabelDragHandler, ConnectorVertexInsertHandler),
+ * so none of them spells a kind.
  *
  * @param state - Current canvas controller state, with this click's object
  *   selection already written (the part lives one level below it)

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import { connectorLabelPartSelection } from "../../../selection/__tests__/support/connectorLabelPartSelection";
 import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
 import { vertexPartSelection } from "../../../selection/__tests__/support/vertexPartSelection";
 import { TEXT_SLOT_PART_KIND } from "../../../selection/partKinds/textSlotPartKind";
@@ -64,6 +65,17 @@ describe("EscapeSelectionCommand", () => {
 		} as const;
 		const state = baseState({ selection: selectionOf(["a"]), mode });
 		expect(EscapeSelectionCommand.execute(state, registries).mode).toBe(mode);
+	});
+
+	it("steps back from a picked connector label to the connector on the first press", () => {
+		const state = baseState({
+			objects: {
+				c1: { id: "c1", type: "connector", points: [], label: { text: "Yes" } },
+			} as never,
+			selection: selectionOf(["c1"], connectorLabelPartSelection()),
+		});
+		const next = EscapeSelectionCommand.execute(state, registries);
+		expect(next.selection).toEqual(selectionOf(["c1"]));
 	});
 
 	it("drops only a picked vertex on the first press, keeping the object selected", () => {

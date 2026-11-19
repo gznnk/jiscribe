@@ -1,0 +1,1 @@
+export { ConnectorLabelPartOutline } from "./ConnectorLabelPartOutline";

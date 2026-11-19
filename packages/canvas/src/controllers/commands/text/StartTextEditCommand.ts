@@ -73,8 +73,8 @@ export const StartTextEditCommand: ExecutableCommand = {
 				objectMenuOpenId: null,
 				...closeStencilPopups(),
 				// The selection is already that one connector
-				// (getSelectedConnectorId), so only a part picked below it has to go:
-				// the label is no part, and the session's owner must be the object
+				// (getSelectedConnectorId), so only a part picked below it has to go,
+				// the picked label included: a label session's owner is the object
 				// itself (see CanvasMode).
 				selection:
 					state.selection.part === null

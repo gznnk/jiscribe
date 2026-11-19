@@ -12,6 +12,8 @@ import { createCowObjects } from "../../../../utils/cowObjects";
 import { writeDragFeedback } from "../../../../utils/writeDragFeedback";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
+import { connectorLabelPart } from "../../utils/partAddress";
+import { selectPartByClick } from "../../utils/selectPartByClick";
 import {
 	buildSnapFeedback,
 	findSnap,
@@ -44,6 +46,9 @@ import { startConnectorLabelEdit } from "../../utils/startConnectorLabelEdit";
  *   midpoint coincides with the default label placement), so a double click
  *   aimed at the line or the label box can land here; it means "double click
  *   the connector", not "insert a waypoint" (which is drag-only).
+ * - click: picks the label when the label box lies under the handle, as a click
+ *   on the box itself would (ConnectorClickHandler); anywhere else it changes
+ *   nothing. A drag from the handle still inserts a waypoint, label or not.
  */
 export class ConnectorVertexInsertHandler extends ControlStrategy {
 	supports(event: CanvasEvent): boolean {
@@ -69,8 +74,8 @@ export class ConnectorVertexInsertHandler extends ControlStrategy {
 		// The label box shares the connector's data-id with this handle, but the
 		// pressed control is excluded from the hover stack before the id-dedup
 		// (see getHoveredElements), so the box is visible here when hit.
-		if (event.type === "doubleClick") {
-			const isLabelBoxHit = event
+		const isLabelBoxHit = (): boolean =>
+			event
 				.getHovered()
 				.some(
 					(hovered) =>
@@ -78,11 +83,23 @@ export class ConnectorVertexInsertHandler extends ControlStrategy {
 						hovered.id === connectorId &&
 						hovered.action === "label",
 				);
+		if (event.type === "click") {
+			const connector = state.objects[connectorId];
+			return connector && isLabelBoxHit()
+				? selectPartByClick(
+						state,
+						connector,
+						connectorLabelPart(),
+						registries.objectPartKind,
+					)
+				: state;
+		}
+		if (event.type === "doubleClick") {
 			return startConnectorLabelEdit(
 				state,
 				connectorId,
 				event,
-				isLabelBoxHit,
+				isLabelBoxHit(),
 				registries,
 			);
 		}

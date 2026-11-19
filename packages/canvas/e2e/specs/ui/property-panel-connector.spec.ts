@@ -308,7 +308,14 @@ test.describe("Properties sidebar: connector", () => {
 		await canvas.deselect();
 		await canvas.typeTextAt(onLine, "Yes");
 		await canvas.commitText();
-		await selectConnectorAt(canvas, onLine);
+		// Selected from the bare line, a quarter of the way down the vertical leg
+		// whose middle the label sits on: a click on the label would pick the
+		// label, which narrows the sidebar to its sections alone.
+		const [, legStart] = await readPoints(canvas, connectorId);
+		await selectConnectorAt(canvas, {
+			x: onLine.x,
+			y: (legStart.y + onLine.y) / 2,
+		});
 
 		await expect(
 			canvas.page.locator(selectors.propertyPanelSection("label")),

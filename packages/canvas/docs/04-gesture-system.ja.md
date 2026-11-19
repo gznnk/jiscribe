@@ -202,9 +202,13 @@ ObjectMenu はドラッグの種類を問わず隠れるが、ObjectMenu のド�
   組み、menu 系ハンドラは `parseMenuAction` で分解する。接頭辞をどこにも二度書かない
 
 例: コネクターのラベルボックスは `data-kind="connector" data-id={connectorId} data-action="label"`。
+そのクリック（とそこからのドラッグ）はラベルをコネクターの `connectorLabel` パートとして選ぶ。
+パートの住所は action を見たハンドラが組み立てる（`connectorLabelPart`）。
 ラベルがあるコネクターは、線ではなくラベルボックスのダブルクリックだけがラベル編集を開始する。
-ラベルボックスのドラッグは経路上の移動（`label.position` / `label.offset`）になり、
-線から `SNAP_THRESHOLD_PX` 以内に落とすと `offset` は 0 に吸着する（Ctrl 押下で解除）。
+ラベルボックスのドラッグは経路上の移動（`label.position` / `label.offset`）になる。
+`SNAP_THRESHOLD_PX` 以内なら `offset` は 0（線上）に、`position` は経路全体か各セグメントの中点に
+吸着し、そのうえで図形の移動と同じく他オブジェクトへ整列する（整列は上の 2 つの吸着を崩さない軸だけ。
+いずれも Ctrl 押下で解除）。
 ラベルが無いときは線のダブルクリックがクリック点（経路へ射影し同じ吸着をかけた位置）に
 ラベルを作る。確定するまでは `"textEdit"` モードの下書きが保持し、コネクターには書き込まない。
 複数スロットを持つ図形は入れ子の形を使う: 例えば UML の `record`

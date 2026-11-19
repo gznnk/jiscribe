@@ -3,11 +3,17 @@ import type { ConnectorLabel } from "@jiscribe/doc/model/objects/connector/Conne
 import type { Point } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
+import { resolveConnectorLabelBox } from "../../../../../rendering/objects/connector/geometry/label/connectorLabelLayout";
 import type { ConnectorState } from "../../../../../states/objects/connector/ConnectorState";
 import { deepFreezeState } from "../../../../__tests__/support/deepFreezeState";
-import type { CanvasControllerState } from "../../../../CanvasTypes";
+import type {
+	CanvasControllerState,
+	SnapCandidate,
+	SnapCandidates,
+} from "../../../../CanvasTypes";
 import { createInitialControllerState } from "../../../../reducer/createInitialControllerState";
 import { createTestRegistries } from "../../../../registries/createCanvasRegistries";
+import { connectorLabelPartSelection } from "../../../../selection/__tests__/support/connectorLabelPartSelection";
 import { selectionOf } from "../../../../selection/__tests__/support/selectionOf";
 import { vertexPartSelection } from "../../../../selection/__tests__/support/vertexPartSelection";
 import { reconcileSelection } from "../../../../selection/writers/reconcileSelection";
@@ -45,8 +51,11 @@ const labeledConnector = (
 		...(label ? { label } : {}),
 	}) as unknown as ConnectorState;
 
-/** State holding the connector, plus the drag handleGesture would have opened. */
-const stateWith = (connector: ConnectorState): CanvasControllerState => {
+/** State holding the connector, plus the drag handleGesture would have opened over `snapCandidates`. */
+const stateWith = (
+	connector: ConnectorState,
+	snapCandidates: SnapCandidates = { x: [], y: [] },
+): CanvasControllerState => {
 	const base = createInitialControllerState(emptyDoc, registries);
 	const objects = { ...base.objects, [connector.id]: connector };
 	return deepFreezeState({
@@ -62,7 +71,7 @@ const stateWith = (connector: ConnectorState): CanvasControllerState => {
 				objects,
 				keyPoints: {},
 				bboxes: {},
-				snapCandidates: { x: [], y: [] },
+				snapCandidates,
 				selectedIds: [],
 				selectedIdsWithDescendants: new Set(),
 				multiSelectGroup: null,
@@ -161,7 +170,7 @@ describe("ConnectorLabelDragHandler - supports", () => {
 });
 
 describe("ConnectorLabelDragHandler - dragStart", () => {
-	it("selects the connector exclusively and enables edge scrolling", () => {
+	it("selects the connector exclusively, picks its label, and enables edge scrolling", () => {
 		const state = {
 			...stateWith(labeledConnector({ text: "Yes" })),
 			selection: selectionOf(["other"], vertexPartSelection(0)),
@@ -177,11 +186,11 @@ describe("ConnectorLabelDragHandler - dragStart", () => {
 		);
 
 		expect(next.selection.objectIds).toEqual(["c1"]);
-		// The part selection is the reducer's to drop, which it does for every
-		// gesture result (reconcileSelection).
-		expect(
-			reconcileSelection(next, registries.objectPartKind).selection.part,
-		).toBeNull();
+		expect(next.selection.part).toEqual(connectorLabelPartSelection());
+		// The pick survives the reconcile every gesture result goes through.
+		expect(reconcileSelection(next, registries.objectPartKind).selection).toBe(
+			next.selection,
+		);
 		expect(next.multiSelectGroup).toBeNull();
 		expect(next.objectMenuOpenId).toBeNull();
 		expect(next.stencilLibraryOpenCategory).toBeNull();
@@ -540,5 +549,162 @@ describe("ConnectorLabelDragHandler - dragEnd", () => {
 		expect(labelOf(afterEnd)).not.toHaveProperty("offset");
 		expect(afterEnd.objects).not.toBe(afterDrag.objects);
 		expect(afterEnd.commitVersion).toBe(afterDrag.commitVersion + 1);
+	});
+});
+
+describe("ConnectorLabelDragHandler - midpoint snap", () => {
+	it("pulls a position near the middle of the path onto it, beside the line too", () => {
+		const next = ConnectorLabelDragHandler.handle(
+			stateWith(labeledConnector({ text: "Yes" })),
+			// 4 along the path from the middle (100), 20 beside it.
+			dragEvent("drag", { x: 100, y: 0 }, { x: 104, y: 20 }),
+			registries,
+		);
+		expect(labelOf(next)).toEqual({ text: "Yes", offset: 20 });
+	});
+
+	it("pulls a position near the middle of one segment onto it", () => {
+		// (0,0)-(200,0)-(200,200): the first segment's middle is at 0.25.
+		const connector = {
+			...labeledConnector({ text: "Yes" }),
+			points: [{ x: 200, y: 0 }],
+			target: { anchor: { kind: "free", point: { x: 200, y: 200 } } },
+		} as unknown as ConnectorState;
+		const next = ConnectorLabelDragHandler.handle(
+			stateWith(connector),
+			// Grabbed at the anchor (200, 0) and dropped 5 past the first leg's middle.
+			dragEvent("drag", { x: 200, y: 0 }, { x: 105, y: 0 }),
+			registries,
+		);
+		expect(labelOf(next)).toEqual({ text: "Yes", position: 0.25 });
+	});
+
+	it("bypasses the snap while Ctrl is held", () => {
+		const next = ConnectorLabelDragHandler.handle(
+			stateWith(labeledConnector({ text: "Yes" })),
+			withCtrl(dragEvent("drag", { x: 100, y: 0 }, { x: 104, y: 20 })),
+			registries,
+		);
+		expect(labelOf(next)).toEqual({ text: "Yes", position: 0.52, offset: 20 });
+	});
+});
+
+describe("ConnectorLabelDragHandler - alignment to other objects", () => {
+	const LABEL_BOX = resolveConnectorLabelBox({ text: "Yes" });
+
+	const xCandidate = (coordinate: number): SnapCandidate => ({
+		objectId: "r1",
+		coordinate,
+		edge: "left",
+		perpendicularMin: 100,
+		perpendicularMax: 140,
+	});
+	const yCandidate = (coordinate: number): SnapCandidate => ({
+		objectId: "r1",
+		coordinate,
+		edge: "top",
+		perpendicularMin: 300,
+		perpendicularMax: 340,
+	});
+
+	/** Drags the label from the path's middle so its anchor lands on `anchor`, over the given candidates. */
+	const dragTo = (
+		anchor: Point,
+		snapCandidates: SnapCandidates,
+		mods: "none" | "ctrl" = "none",
+	): CanvasControllerState => {
+		const event = dragEvent("drag", { x: 100, y: 0 }, anchor);
+		return ConnectorLabelDragHandler.handle(
+			stateWith(labeledConnector({ text: "Yes" }), snapCandidates),
+			mods === "ctrl" ? withCtrl(event) : event,
+			registries,
+		);
+	};
+
+	it("on a horizontal line snapped onto it, takes the x alignment and refuses the y one", () => {
+		// The box's right edge 3 short of an x candidate, its top 4 below a y one.
+		const next = dragTo(
+			{ x: 60, y: 2 },
+			{
+				x: [xCandidate(60 + LABEL_BOX.width / 2 + 3)],
+				y: [yCandidate(-LABEL_BOX.height / 2 - 4)],
+			},
+		);
+		// x moves along the line (60 → 63); y would lift it off, so the line wins.
+		expect(labelOf(next)).toEqual({ text: "Yes", position: 0.315 });
+		expect(next.drag?.snapFeedback?.x.map((guide) => guide.coordinate)).toEqual(
+			[60 + LABEL_BOX.width / 2 + 3],
+		);
+		expect(next.drag?.snapFeedback?.y).toEqual([]);
+	});
+
+	it("takes the y alignment while the label sits beside the line", () => {
+		// The box's bottom edge 3 short of a y candidate.
+		const next = dragTo(
+			{ x: 60, y: 30 },
+			{ x: [], y: [yCandidate(30 + LABEL_BOX.height / 2 + 3)] },
+		);
+		expect(labelOf(next)).toEqual({ text: "Yes", position: 0.3, offset: 33 });
+		expect(next.drag?.snapFeedback?.x).toEqual([]);
+		expect(next.drag?.snapFeedback?.y.map((guide) => guide.coordinate)).toEqual(
+			[30 + LABEL_BOX.height / 2 + 3],
+		);
+	});
+
+	it("takes both axes when neither undoes a path snap", () => {
+		const next = dragTo(
+			{ x: 60, y: 30 },
+			{
+				x: [xCandidate(60 + LABEL_BOX.width / 2 + 3)],
+				y: [yCandidate(30 + LABEL_BOX.height / 2 + 3)],
+			},
+		);
+		expect(labelOf(next)).toEqual({ text: "Yes", position: 0.315, offset: 33 });
+		expect(next.drag?.snapFeedback?.x).toHaveLength(1);
+		expect(next.drag?.snapFeedback?.y).toHaveLength(1);
+	});
+
+	it("refuses an x alignment that would pull the label off the midpoint it snapped to", () => {
+		// 2 past the middle (snapped back onto it), the box's right edge then 3 short of a candidate.
+		const next = dragTo(
+			{ x: 102, y: 20 },
+			{ x: [xCandidate(100 + LABEL_BOX.width / 2 + 3)], y: [] },
+		);
+		expect(labelOf(next)).toEqual({ text: "Yes", offset: 20 });
+		expect(next.drag?.snapFeedback).toEqual({ x: [], y: [] });
+	});
+
+	it("bypasses the alignment while Ctrl is held, writing no guides", () => {
+		const next = dragTo(
+			{ x: 60, y: 30 },
+			{
+				x: [xCandidate(60 + LABEL_BOX.width / 2 + 3)],
+				y: [yCandidate(30 + LABEL_BOX.height / 2 + 3)],
+			},
+			"ctrl",
+		);
+		expect(labelOf(next)).toEqual({ text: "Yes", position: 0.3, offset: 30 });
+		expect(next.drag?.snapFeedback).toEqual({ x: [], y: [] });
+	});
+
+	it("clears the previous frame's guides on a frame that aligns nothing", () => {
+		const snapCandidates = {
+			x: [xCandidate(60 + LABEL_BOX.width / 2 + 3)],
+			y: [],
+		};
+		const state = stateWith(labeledConnector({ text: "Yes" }), snapCandidates);
+		const aligned = ConnectorLabelDragHandler.handle(
+			state,
+			dragEvent("drag", { x: 100, y: 0 }, { x: 60, y: 30 }),
+			registries,
+		);
+		expect(aligned.drag?.snapFeedback?.x).toHaveLength(1);
+
+		const unaligned = ConnectorLabelDragHandler.handle(
+			aligned,
+			dragEvent("drag", { x: 100, y: 0 }, { x: 160, y: 30 }),
+			registries,
+		);
+		expect(unaligned.drag?.snapFeedback).toEqual({ x: [], y: [] });
 	});
 });

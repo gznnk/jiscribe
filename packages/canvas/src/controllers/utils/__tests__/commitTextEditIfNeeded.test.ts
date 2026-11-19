@@ -33,7 +33,7 @@ const shapeEdit = (
 	selection: { objectIds: [objectId], part: textSlotPartSelection(slotId) },
 });
 
-/** A connector label edit; the label is no part, so nothing is picked below the object. */
+/** A connector label edit; a label session picks nothing below the object. */
 const labelEdit = (
 	connectorId: string,
 	text: string,

@@ -362,6 +362,16 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   the head and antenna; `bot` also hit-tests the area its antenna stands in.
   They sit in `generalStencilCategory` after `actor` (`bot`), `gear` (`clock`)
   and `queue` (`lightning`).
+- **canvas: a connector's label can be picked, and its drag snaps.** A click on
+  the label box (or the drag that moves it) selects the connector with its
+  label picked one level below it, the `connectorLabel` part kind: the label is
+  outlined, the ObjectMenu and the properties sidebar narrow to the label's own
+  controls, Delete takes the label away alone (as emptying it in the editor
+  does, styles kept) and Escape steps back to the connector. A click on the line
+  leaves nothing picked. While dragged, the label snaps onto the middle of the
+  route or of one of its segments as well as onto the line, and lines its box up
+  with other objects the way a moved shape does, guides included, on whichever
+  axes keep it on those snaps; Ctrl stands every snap down.
 
 ### Changed
 

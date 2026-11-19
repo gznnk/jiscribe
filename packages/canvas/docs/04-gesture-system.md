@@ -215,9 +215,13 @@ Rules:
   and the menu handlers take them apart with `parseMenuAction`, so no prefix is spelled twice.
 
 Example: a connector's label box is `data-kind="connector" data-id={connectorId} data-action="label"`.
+A click on it (or a drag from it) picks the label as the connector's `connectorLabel` part, the handler
+building the part address from the action (`connectorLabelPart`).
 With a committed label, only a double click on the label box (not the bare line) starts label editing,
-and dragging the box moves the label along the path (`label.position` / `label.offset`),
-with `offset` snapping to 0 within `SNAP_THRESHOLD_PX` of the line (bypassed by holding Ctrl).
+and dragging the box moves the label along the path (`label.position` / `label.offset`). Within
+`SNAP_THRESHOLD_PX`, `offset` snaps to 0 onto the line and `position` onto the middle of the path or of
+one of its segments; the box then lines up with other objects the way a moved shape does, on the axes
+that keep those two snaps (all bypassed by holding Ctrl).
 With no label yet, a double click on the bare line creates one at the clicked point (projected onto
 the path and snapped the same way), carried in the `"textEdit"` mode's draft until the edit is committed.
 A multi-slot shape uses the nested form instead: for example, the `<g data-kind="object">` of the UML
