@@ -1,16 +1,46 @@
 import { createStencilIcon } from "@jiscribe/canvas-sdk";
 
-import { UmlIconBodyRows, UmlIconFrame } from "./UmlIconParts";
+import { UmlIconFrame, UmlIconTitleDivider } from "./UmlIconParts";
 
 /**
- * Mark: a solid title band, which stands in for the divider. UML underlines an
- * instance name, but at 24px the band is 5px tall and an underline inside it
- * merges with the band divider, so the whole band is filled instead.
+ * Mark: two rows, each a short stroke and a longer one, for the
+ * `attribute = value` rows an instance lists.
  */
 export const ObjectIcon = createStencilIcon(
 	<>
 		<UmlIconFrame />
-		<path d="M4 4 H20 V9 H4 Z" fill="currentColor" stroke="none" />
-		<UmlIconBodyRows />
+		<UmlIconTitleDivider />
+		<line
+			x1="6"
+			y1="13"
+			x2="9.5"
+			y2="13"
+			stroke="currentColor"
+			strokeWidth="1.5"
+		/>
+		<line
+			x1="12"
+			y1="13"
+			x2="18"
+			y2="13"
+			stroke="currentColor"
+			strokeWidth="1.5"
+		/>
+		<line
+			x1="6"
+			y1="17"
+			x2="9.5"
+			y2="17"
+			stroke="currentColor"
+			strokeWidth="1.5"
+		/>
+		<line
+			x1="12"
+			y1="17"
+			x2="18"
+			y2="17"
+			stroke="currentColor"
+			strokeWidth="1.5"
+		/>
 	</>,
 );

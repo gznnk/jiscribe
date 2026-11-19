@@ -2,19 +2,11 @@ import { createStencilIcon } from "@jiscribe/canvas-sdk";
 
 import { UmlIconFrame, UmlIconTitleDivider } from "./UmlIconParts";
 
-/** Mark: a second divider, for the attribute and operation compartments a class has. */
+/** Mark: a second divider and nothing else, so the three compartments of a class are what is read. */
 export const ClassIcon = createStencilIcon(
 	<>
 		<UmlIconFrame />
 		<UmlIconTitleDivider />
-		<line
-			x1="6"
-			y1="12"
-			x2="18"
-			y2="12"
-			stroke="currentColor"
-			strokeWidth="1.5"
-		/>
 		<line
 			x1="3"
 			y1="15"
@@ -22,14 +14,6 @@ export const ClassIcon = createStencilIcon(
 			y2="15"
 			stroke="currentColor"
 			strokeWidth="2"
-		/>
-		<line
-			x1="6"
-			y1="18"
-			x2="14"
-			y2="18"
-			stroke="currentColor"
-			strokeWidth="1.5"
 		/>
 	</>,
 );
