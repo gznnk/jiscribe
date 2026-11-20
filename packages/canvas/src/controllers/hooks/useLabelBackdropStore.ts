@@ -8,9 +8,11 @@ import type { LabelBackdropStore } from "../../rendering/objects/LabelBackdropSt
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { CanvasControllerState, CanvasDragDetail } from "../CanvasTypes";
 import { graftConnectorLabelDraft } from "../utils/graftConnectorLabelDraft";
-import { readLabelBackdropDrag } from "../utils/readLabelBackdropDrag";
 import { resolveLabelBackdrops } from "../utils/resolveLabelBackdrops";
-import type { LabelBackdropRegistries } from "../utils/resolveLabelBackdrops";
+import type {
+	LabelBackdropDrag,
+	LabelBackdropRegistries,
+} from "../utils/resolveLabelBackdrops";
 import type { SnapshotRenderScope } from "../utils/SnapshotRenderScope";
 
 type UseLabelBackdropStoreParams = {
@@ -122,7 +124,11 @@ export const useLabelBackdropStore = ({
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[drawnObjects, selection, isLabelEditOpen, labelEditPlacement],
 	);
-	const drag = readLabelBackdropDrag(dragInProgress, movePreview, visibleIds);
+	// An inert drag (an Escaped marquee's) moves nothing, so it counts as none.
+	const drag: LabelBackdropDrag | null =
+		dragInProgress === null || dragInProgress.kind === "inert"
+			? null
+			: { movePreview, visibleIds };
 
 	const renderScope =
 		snapshotRenderScope === null || snapshotRenderScope === "all"

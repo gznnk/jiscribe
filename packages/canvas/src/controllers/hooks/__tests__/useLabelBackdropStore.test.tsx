@@ -484,6 +484,24 @@ describe("useLabelBackdropStore", () => {
 		expect(passCalls.count).toBe(passesBefore + 1);
 	});
 
+	it("counts an inert drag as none, settling a pass that took a center from the drag", () => {
+		const { startObjects, rootIds, moveFrame } = connectorMove();
+		const render = mountHost();
+		render({ objects: startObjects, rootIds, probeIds: ["connector"] });
+		const frame1 = moveFrame(20);
+		render({ ...frame1, rootIds, probeIds: ["connector"] });
+		const passesBefore = passCalls.count;
+
+		// The pointer still down, the drag dropped to inert (an Escaped marquee's).
+		render({
+			objects: frame1.objects,
+			rootIds,
+			drag: { kind: "inert" },
+			probeIds: ["connector"],
+		});
+		expect(passCalls.count).toBe(passesBefore + 1);
+	});
+
 	it("works nothing out at the drop of a move that took no center from the drag", () => {
 		const base = toObjects(frame("frame", 100), captioned("shape", 100));
 		const moved = dragFrame(base, captioned("shape", 120));
