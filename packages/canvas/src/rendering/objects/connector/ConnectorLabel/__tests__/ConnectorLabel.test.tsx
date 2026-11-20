@@ -5,10 +5,14 @@ import { createRoot } from "react-dom/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createCanvasZoomStore } from "../../../../../controllers/hooks/utils/createCanvasZoomStore";
+import { createLabelBackdropStore } from "../../../../../controllers/hooks/utils/createLabelBackdropStore";
 import { CanvasZoomStoreContext } from "../../../CanvasZoomStoreContext";
 import { DocumentSurfaceContext } from "../../../DocumentSurfaceContext";
 import { FontsLoadedNonceContext } from "../../../FontsLoadedNonceContext";
+import type { LabelBackdropLayer } from "../../../LabelBackdropStoreContext";
+import { LabelBackdropStoreContext } from "../../../LabelBackdropStoreContext";
 import type * as ConnectorLabelLayoutModule from "../../geometry/label/connectorLabelLayout";
+import { resolveConnectorLabelBox } from "../../geometry/label/connectorLabelLayout";
 import { ConnectorLabel } from "../ConnectorLabel";
 
 /**
@@ -156,5 +160,113 @@ describe("ConnectorLabel legibility", () => {
 		expect(hiddenElement?.getAttribute("display")).toBe("none");
 
 		act(() => root.unmount());
+	});
+});
+
+describe("ConnectorLabel backdrop", () => {
+	const SURFACE = "rgb(11, 18, 32)";
+	const renderOnBackdrop = (layers: LabelBackdropLayer[] | null) => {
+		const store = createLabelBackdropStore();
+		if (layers !== null) {
+			store.replaceLayers(new Map([["connector-1", layers]]));
+		}
+		const zoomStore = createCanvasZoomStore(1);
+		const container = document.createElement("div");
+		const root = createRoot(container);
+		act(() =>
+			root.render(
+				<CanvasZoomStoreContext value={zoomStore}>
+					<LabelBackdropStoreContext value={store}>
+						<DocumentSurfaceContext value={SURFACE}>
+							<svg>
+								<ConnectorLabel
+									id="connector-1"
+									anchor={LABEL_ANCHOR}
+									text="label"
+									fontSize={12}
+								/>
+							</svg>
+						</DocumentSurfaceContext>
+					</LabelBackdropStoreContext>
+				</CanvasZoomStoreContext>,
+			),
+		);
+		return {
+			svg: container.querySelector("svg")!,
+			zoomStore,
+			unmount: () => act(() => root.unmount()),
+		};
+	};
+	const box = resolveConnectorLabelBox({ text: "label", fontSize: 12 });
+	const left = LABEL_ANCHOR.x - box.width / 2;
+	const top = LABEL_ANCHOR.y - box.height / 2;
+
+	it("draws the knockout and the layers under a transparent box, each layer over the whole box with its corners rounded", () => {
+		const label = renderOnBackdrop([
+			{ fill: "rgb(255, 0, 0)", fillOpacity: 0.5 },
+			{ fill: "rgb(0, 0, 255)", fillOpacity: 1 },
+		]);
+		const [knockout, layerGroup, foreignObject] = [...label.svg.children];
+		expect(knockout.tagName).toBe("rect");
+		expect(knockout.getAttribute("x")).toBe(String(left));
+		expect(knockout.getAttribute("rx")).toBe("2");
+		expect((knockout as SVGRectElement).style.fill).toBe(SURFACE);
+		expect(layerGroup.tagName).toBe("g");
+		expect(layerGroup.getAttribute("pointer-events")).toBe("none");
+		// Unsmoothed alike, so no rim of the knockout shows around the layers.
+		expect(knockout.getAttribute("shape-rendering")).toBe("crispEdges");
+		expect(layerGroup.getAttribute("shape-rendering")).toBe("crispEdges");
+		const layers = [...layerGroup.children] as SVGElement[];
+		expect(
+			layers.map((layer) => ({
+				tag: layer.tagName,
+				x: layer.getAttribute("x"),
+				y: layer.getAttribute("y"),
+				width: layer.getAttribute("width"),
+				height: layer.getAttribute("height"),
+				rx: layer.getAttribute("rx"),
+				fill: layer.style.fill,
+			})),
+		).toEqual(
+			["rgb(255, 0, 0)", "rgb(0, 0, 255)"].map((fill) => ({
+				tag: "rect",
+				x: String(left),
+				y: String(top),
+				width: String(box.width),
+				height: String(box.height),
+				rx: "2",
+				fill,
+			})),
+		);
+		expect(foreignObject.tagName).toBe("foreignObject");
+		expect(
+			(foreignObject.firstElementChild as HTMLElement).style.background,
+		).toBe("transparent");
+		label.unmount();
+	});
+
+	it("keeps the knockout on the box itself, as before, on no backdrop", () => {
+		const label = renderOnBackdrop(null);
+		expect([...label.svg.children].map((child) => child.tagName)).toEqual([
+			"foreignObject",
+		]);
+		expect(label.svg.querySelector("[shape-rendering]")).toBeNull();
+		expect(
+			(label.svg.querySelector("foreignObject > div") as HTMLElement).style
+				.background,
+		).toBe(SURFACE);
+		label.unmount();
+	});
+
+	it("hides the knockout and the layers with the box while too small to read", () => {
+		const label = renderOnBackdrop([
+			{ fill: "rgb(255, 0, 0)", fillOpacity: 0.5 },
+		]);
+		// 12 × 0.3 = 3.6px
+		act(() => label.zoomStore.setZoom(0.3));
+		for (const child of label.svg.children) {
+			expect(child.getAttribute("display")).toBe("none");
+		}
+		label.unmount();
 	});
 });

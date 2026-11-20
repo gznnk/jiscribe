@@ -309,6 +309,7 @@ export type {
 } from "./rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 export type { ObjectGeometryKeyCalculator } from "./rendering/objects/registry/ObjectGeometryKeyRegistry";
 export type { ObjectVisualBoundsCalculator } from "./rendering/objects/registry/ObjectVisualBoundsRegistry";
+export type { ObjectLabelBackdropRegion } from "./rendering/objects/registry/ObjectLabelBackdropRegistry";
 export type {
 	ObjectTransformHandles,
 	ObjectTransformHandlesDeclaration,

@@ -1,3 +1,4 @@
+import { advanceTextMeasurementGeneration } from "@jiscribe/doc/text/measure/textMeasurementSlot";
 import { useEffect, useState } from "react";
 
 /**
@@ -16,6 +17,11 @@ import { useEffect, useState } from "react";
  * unicode-range split produces — typing the first JP character fetches a face
  * nothing had asked for until then.
  *
+ * Each event advances the text measurement generation before it moves the
+ * value, so the render reacting to the new value already reads fresh
+ * measurements: a cache keyed on the generation (resolveLabelBackdrops) is not
+ * answered from a size taken in the fallback face.
+ *
  * @returns A counter starting at 0, incremented once per font-loading event; only its identity matters, so use it as an effect dependency or a memo key rather than reading the value
  */
 export const useFontsLoadedNonce = (): number => {
@@ -31,6 +37,7 @@ export const useFontsLoadedNonce = (): number => {
 		let isMounted = true;
 		const bump = (): void => {
 			if (isMounted) {
+				advanceTextMeasurementGeneration();
 				setNonce((previous) => previous + 1);
 			}
 		};

@@ -14,6 +14,7 @@ import { createObjectComponentRegistry } from "../../rendering/objects/registry/
 import { createObjectConnectionAnchorsRegistry } from "../../rendering/objects/registry/ObjectConnectionAnchorsRegistry";
 import { createObjectExtraConnectPointsRegistry } from "../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import { createObjectGeometryKeyRegistry } from "../../rendering/objects/registry/ObjectGeometryKeyRegistry";
+import { createObjectLabelBackdropRegistry } from "../../rendering/objects/registry/ObjectLabelBackdropRegistry";
 import { createObjectOutlineRegistry } from "../../rendering/objects/registry/ObjectOutlineRegistry";
 import { createObjectPartKindRegistry } from "../../rendering/objects/registry/ObjectPartKindRegistry";
 import { createObjectSvgDefsRegistry } from "../../rendering/objects/registry/ObjectSvgDefsRegistry";
@@ -62,6 +63,7 @@ export const createCanvasRegistries = (
 		objectLayoutContainer: createObjectLayoutContainerRegistry(),
 		objectComponent: createObjectComponentRegistry(),
 		objectSvgDefs: createObjectSvgDefsRegistry(),
+		objectLabelBackdrop: createObjectLabelBackdropRegistry(),
 		objectVisualBounds: createObjectVisualBoundsRegistry(),
 		objectOutline: createObjectOutlineRegistry(),
 		objectAnchorRegion: createObjectAnchorRegionRegistry(),

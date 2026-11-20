@@ -1,5 +1,4 @@
 ﻿import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
-import { advanceTextMeasurementGeneration } from "@jiscribe/doc/text/measure/textMeasurementSlot";
 import {
 	memo,
 	useCallback,
@@ -45,6 +44,7 @@ import { useExportDialog } from "./hooks/useExportDialog";
 import { useGestureRecognizer } from "./hooks/useGestureRecognizer";
 import { useInitialViewOpen } from "./hooks/useInitialViewOpen";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
+import { useLabelBackdropStore } from "./hooks/useLabelBackdropStore";
 import { useNotifySaveRequest } from "./hooks/useNotifySaveRequest";
 import { useNotifySelectionChange } from "./hooks/useNotifySelectionChange";
 import { useNotifySidebarsChange } from "./hooks/useNotifySidebarsChange";
@@ -428,10 +428,9 @@ const CanvasComponent = ({
 	const { fontsNonce, isContentHidden } = useDocFonts({
 		collectRequests: () =>
 			collectDocFontRequests(state.objects, registries.objectTextStyleDefaults),
+		// The generation is already advanced (useDocFonts), so the re-measure is
+		// not answered from a measurement cached against the fallback face.
 		onFacesChanged: () => {
-			// First, so the re-measure is not answered from a measurement cached
-			// against the fallback face.
-			advanceTextMeasurementGeneration();
 			dispatch({ type: "REMEASURE_TEXT" });
 		},
 	});
@@ -644,6 +643,20 @@ const CanvasComponent = ({
 		snapshotRenderScope,
 		culledObjectIds,
 	);
+	// Worked out from what is drawn, the edited text's draft included, so a
+	// caption growing as it is typed is judged by where its center now is.
+	const labelBackdropStore = useLabelBackdropStore({
+		objects: draftObjects,
+		selection: state.selection,
+		mode: state.mode,
+		rootIds: state.rootIds,
+		fontsNonce,
+		snapshotRenderScope,
+		drag: state.drag,
+		movePreview,
+		visibleIds: culledObjectIds,
+		registries,
+	});
 
 	const canvasHandle = useCanvasHandle({
 		dispatch,
@@ -711,6 +724,7 @@ const CanvasComponent = ({
 			registries={registries}
 			fontsNonce={fontsNonce}
 			zoomStore={canvasZoomStore}
+			labelBackdropStore={labelBackdropStore}
 			lookupResolvedImage={lookupResolvedImage}
 			documentSurface={documentSurface}
 			viewportElementRef={canvasRef}

@@ -22,6 +22,7 @@ import type { CanvasControllerState } from "../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 import { TEXT_SLOT_PART_KIND } from "../../../selection/partKinds/textSlotPartKind";
 import type { TextFormat } from "../../../style/TextFormat";
+import { resolveLabelDraftPlacement } from "../../../utils/graftConnectorLabelDraft";
 import { readOpenTextEdit } from "../../../utils/readOpenTextEdit";
 import { ConnectorLabelEditor } from "../ConnectorLabelEditor";
 import { resolveTextEditLineBreaks } from "../ObjectTextEditLineBreaksRegistry";
@@ -93,17 +94,18 @@ function renderConnectorLabelEditor(
 	}
 
 	const points = listConnectorPathPoints(resolved);
-	const anchor = calcConnectorLabelAnchor(
-		points,
-		pendingPlacement?.position ?? connector.label?.position,
-		pendingPlacement?.offset ?? connector.label?.offset,
+	const { position, offset } = resolveLabelDraftPlacement(
+		connector,
+		pendingPlacement,
 	);
+	const anchor = calcConnectorLabelAnchor(points, position, offset);
 	if (!anchor) {
 		return null;
 	}
 
 	return (
 		<ConnectorLabelEditor
+			id={connector.id}
 			anchor={anchor}
 			text={text}
 			fontColor={connector.label?.fontColor}

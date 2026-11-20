@@ -98,10 +98,12 @@ describe("createFrameObjectDefinition", () => {
 			outline,
 			anchorRegion,
 		});
+		const labelBackdrop = () => [];
 		const definition = createFrameObjectDefinition<DemoDoc, DemoState>({
 			doc: docDefinition,
 			component: DemoComponent,
 			stencils: [],
+			labelBackdrop,
 		});
 
 		expect(definition.features).toBe(DemoFeatures);
@@ -112,6 +114,7 @@ describe("createFrameObjectDefinition", () => {
 		expect(definition.outline).toBe(outline);
 		expect(definition.anchorRegion).toBe(anchorRegion);
 		expect(definition.stencils).toEqual([]);
+		expect(definition.labelBackdrop).toBe(labelBackdrop);
 	});
 
 	it("carries an explicit denial across untouched", () => {
