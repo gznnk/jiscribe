@@ -124,7 +124,6 @@ export const useLabelBackdropStore = ({
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[drawnObjects, selection, isLabelEditOpen, labelEditPlacement],
 	);
-	// An inert drag (an Escaped marquee's) moves nothing, so it counts as none.
 	const drag: LabelBackdropDrag | null =
 		dragInProgress === null || dragInProgress.kind === "inert"
 			? null
