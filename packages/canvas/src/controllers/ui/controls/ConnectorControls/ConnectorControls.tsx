@@ -120,7 +120,7 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 				<ConnectorLabelPartOutline
 					points={resolved.points}
 					label={label}
-					isTextEditing={openEdit !== null}
+					isTextEditing={openEdit?.kind === "connectorLabel"}
 				/>
 			)}
 

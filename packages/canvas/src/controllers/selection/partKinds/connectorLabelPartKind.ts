@@ -39,8 +39,8 @@ export const isConnectorLabelPart = (
 /**
  * The pick of a connector's label, as the writers that open its editor state it
  * (startConnectorLabelEdit, StartTextEditCommand): one collapsed range over
- * {@link CONNECTOR_LABEL_PART_ID}. Written directly rather than through
- * selectPartByClick, whose `has` refuses a label still being created.
+ * {@link CONNECTOR_LABEL_PART_ID}. Valid for a label still being created,
+ * which `has` refuses.
  *
  * @returns A part selection to put in `CanvasSelection.part`
  */

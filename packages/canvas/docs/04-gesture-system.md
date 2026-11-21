@@ -217,8 +217,8 @@ Rules:
 Example: a connector's label box is `data-kind="connector" data-id={connectorId} data-action="label"`.
 A click on it (or a drag from it, or a right click) picks the label as the connector's `connectorLabel`
 part, the handler building the part address from the action (`connectorLabelPart`). Opening the label's
-editor picks it too, and the pick outlasts a commit that leaves text; any other press on the connector
-(the line, left or right button, or a segment grabbed) steps back to the connector itself.
+editor picks it too, and the pick outlasts a commit that leaves text; a press on the line (left or
+right button) or a segment grabbed steps back to the connector itself.
 With a committed label, only a double click on the label box (not the bare line) starts label editing,
 and dragging the box moves the label along the path (`label.position` / `label.offset`). Within
 `SNAP_THRESHOLD_PX`, `offset` snaps to 0 onto the line and `position` onto the middle of the path or of

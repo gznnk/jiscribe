@@ -66,7 +66,7 @@ const collectInvariantViolations = (state: CanvasControllerState): string[] => {
 				readTextEditDraft(state)?.kind === "connectorLabel";
 			if (
 				!isConnectorState(owner) ||
-				(!isLabelEditOpen && !(owner as ConnectorState).label?.text)
+				(!isLabelEditOpen && !owner.label?.text)
 			) {
 				violations.push(
 					`selection.part picks a label ${objectId} does not have, with no label edit open`,

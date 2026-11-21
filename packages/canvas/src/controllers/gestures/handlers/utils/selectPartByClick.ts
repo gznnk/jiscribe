@@ -10,8 +10,9 @@ import { closeStencilPopups } from "../../../utils/closeStencilPopups";
  * of that object — a click beside the parts steps the selection back up to the
  * object level. The one path from a part's DOM address to
  * `state.selection.part`, shared by the object click (ObjectEventHandler),
- * the vertex handles (VertexControlHandler) and the connector's label
- * (ConnectorClickHandler, ConnectorLabelDragHandler, ConnectorVertexInsertHandler),
+ * the vertex handles (VertexControlHandler), the connector's label
+ * (ConnectorClickHandler, ConnectorLabelDragHandler, ConnectorVertexInsertHandler)
+ * and the right click or long press on a connector (selectContextMenuTarget),
  * so none of them spells a kind.
  *
  * @param state - Current canvas controller state, with this click's object
