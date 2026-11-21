@@ -97,7 +97,7 @@ export { CONNECTOR_LABEL_DEFAULTS } from "./model/objects/connector/ConnectorDoc
 export { SHAPE_STYLE_FALLBACK } from "./model/objects/utils/shapeStyleFallback";
 // The order a style field is resolved in (own, then the type's, then the last
 // resort), for a headless host sizing what the canvas draws from a definition.
-export { resolveShapeStyle } from "./registries/ObjectShapeStyleDefaultsRegistry";
+export { resolveShapeStyle } from "./model/objects/utils/shapeStyleFallback";
 
 // line-height shared by display (TextOverlayFrame) and editing (TextEditor). Shapes that
 // carry their own per-row dimensions must derive row height from this value, or their rows

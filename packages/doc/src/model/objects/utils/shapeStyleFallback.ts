@@ -14,7 +14,7 @@ import type { StrokeStyleDoc } from "../base/StrokeStyleDoc";
 
 /**
  * One shape's style fields with every step of the resolution already taken, as
- * `ObjectShapeStyleDefaultsRegistry.resolveShapeStyle` returns it: the four Doc
+ * {@link resolveShapeStyle} returns it: the four Doc
  * groups flattened, each field required — so a field added to any of them fails
  * to compile until {@link SHAPE_STYLE_FALLBACK} gives it a last resort.
  *
@@ -45,3 +45,58 @@ export const SHAPE_STYLE_FALLBACK = {
 	endArrow: DEFAULT_ARROW,
 	arrowScale: DEFAULT_ARROW_SCALE,
 } as const satisfies ResolvedShapeStyle;
+
+/**
+ * The shape-style fields one object may set: whichever of the four style groups
+ * it carries, each optional. What every side that resolves a shape style hands
+ * over, and the shape a type's own defaults are held in — a type holding only
+ * the fields its creation defaults actually set.
+ */
+export type ObjectShapeStyleDefaults = Readonly<Partial<ResolvedShapeStyle>>;
+
+/**
+ * The style one object is drawn with: its own set fields over its type's
+ * defaults over the shared last resort (SHAPE_STYLE_FALLBACK). The one statement
+ * of that order, which ObjectShapeStyleDefaultsRegistry.resolveShapeStyle reads
+ * through and a headless host with a type's definition in hand calls directly.
+ *
+ * @param own - The object's own style fields; a field carrying undefined does not shadow the type's default
+ * @param typeDefaults - The type's defaults, as extractShapeStyleDefaults reads them; undefined for a type declaring none
+ * @returns Every field answered, whatever the type's features say
+ */
+export const resolveShapeStyle = (
+	own: ObjectShapeStyleDefaults,
+	typeDefaults: ObjectShapeStyleDefaults | undefined,
+): ResolvedShapeStyle => {
+	return {
+		stroke: own.stroke ?? typeDefaults?.stroke ?? SHAPE_STYLE_FALLBACK.stroke,
+		strokeWidth:
+			own.strokeWidth ??
+			typeDefaults?.strokeWidth ??
+			SHAPE_STYLE_FALLBACK.strokeWidth,
+		strokeDashType:
+			own.strokeDashType ??
+			typeDefaults?.strokeDashType ??
+			SHAPE_STYLE_FALLBACK.strokeDashType,
+		strokeOpacity:
+			own.strokeOpacity ??
+			typeDefaults?.strokeOpacity ??
+			SHAPE_STYLE_FALLBACK.strokeOpacity,
+		fill: own.fill ?? typeDefaults?.fill ?? SHAPE_STYLE_FALLBACK.fill,
+		fillOpacity:
+			own.fillOpacity ??
+			typeDefaults?.fillOpacity ??
+			SHAPE_STYLE_FALLBACK.fillOpacity,
+		rx: own.rx ?? typeDefaults?.rx ?? SHAPE_STYLE_FALLBACK.rx,
+		startArrow:
+			own.startArrow ??
+			typeDefaults?.startArrow ??
+			SHAPE_STYLE_FALLBACK.startArrow,
+		endArrow:
+			own.endArrow ?? typeDefaults?.endArrow ?? SHAPE_STYLE_FALLBACK.endArrow,
+		arrowScale:
+			own.arrowScale ??
+			typeDefaults?.arrowScale ??
+			SHAPE_STYLE_FALLBACK.arrowScale,
+	};
+};
