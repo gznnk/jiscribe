@@ -1,4 +1,4 @@
-import { CROSS_ARM } from "@jiscribe/doc/model/objects/arrows/arrowHeadDimensions";
+import { CROSS_ARM } from "@jiscribe/doc/model/objects/utils/arrowHeadDimensions";
 import { radiansToDegrees } from "@jiscribe/geometry";
 import type React from "react";
 import { memo } from "react";

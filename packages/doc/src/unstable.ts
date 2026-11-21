@@ -183,5 +183,5 @@ export { dedupePoints } from "./model/objects/connector/dedupePoints";
 export {
 	calcArrowHeadLength,
 	readArrowExtent,
-} from "./model/objects/arrows/arrowExtents";
-export type { ArrowExtent } from "./model/objects/arrows/arrowHeadDimensions";
+} from "./model/objects/utils/arrowExtents";
+export type { ArrowExtent } from "./model/objects/utils/arrowHeadDimensions";

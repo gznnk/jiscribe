@@ -1,4 +1,4 @@
-import { CROW_FOOT_MANY_INSET } from "@jiscribe/doc/model/objects/arrows/arrowHeadDimensions";
+import { CROW_FOOT_MANY_INSET } from "@jiscribe/doc/model/objects/utils/arrowHeadDimensions";
 import { radiansToDegrees } from "@jiscribe/geometry";
 import type React from "react";
 import { memo } from "react";

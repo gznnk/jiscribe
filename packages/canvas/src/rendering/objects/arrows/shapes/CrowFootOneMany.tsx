@@ -1,7 +1,7 @@
 import {
 	CROW_FOOT_ONE_MANY_BAR_DISTANCE,
 	CROW_FOOT_ONE_MANY_INSET,
-} from "@jiscribe/doc/model/objects/arrows/arrowHeadDimensions";
+} from "@jiscribe/doc/model/objects/utils/arrowHeadDimensions";
 import { radiansToDegrees } from "@jiscribe/geometry";
 import type React from "react";
 import { memo } from "react";

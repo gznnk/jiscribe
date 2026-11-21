@@ -2,7 +2,7 @@ import {
 	CROW_FOOT_BAR_OFFSET,
 	CROW_FOOT_CIRCLE_RADIUS,
 	CROW_FOOT_ZERO_ONE_CIRCLE_NEAR_EDGE,
-} from "@jiscribe/doc/model/objects/arrows/arrowHeadDimensions";
+} from "@jiscribe/doc/model/objects/utils/arrowHeadDimensions";
 import { radiansToDegrees } from "@jiscribe/geometry";
 import type React from "react";
 import { memo } from "react";

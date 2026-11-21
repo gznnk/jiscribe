@@ -1,4 +1,4 @@
-import { ARROW_SIZE } from "@jiscribe/doc/model/objects/arrows/arrowHeadDimensions";
+import { ARROW_SIZE } from "@jiscribe/doc/model/objects/utils/arrowHeadDimensions";
 import { describe, expect, it } from "vitest";
 
 import { calcArrowReach } from "../calcArrowReach";

@@ -1,5 +1,5 @@
-import { readArrowExtent } from "@jiscribe/doc/model/objects/arrows/arrowExtents";
 import type { ArrowType } from "@jiscribe/doc/model/objects/types/ArrowType";
+import { readArrowExtent } from "@jiscribe/doc/model/objects/utils/arrowExtents";
 
 /**
  * How far (world units) an arrowhead's drawing reaches from its tip in any
