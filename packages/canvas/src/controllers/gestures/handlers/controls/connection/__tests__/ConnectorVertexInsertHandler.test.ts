@@ -3,7 +3,9 @@ import { describe, expect, it } from "vitest";
 
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { createTestRegistries } from "../../../../../registries/createCanvasRegistries";
+import { connectorLabelPartSelection } from "../../../../../selection/__tests__/support/connectorLabelPartSelection";
 import { selectionOf } from "../../../../../selection/__tests__/support/selectionOf";
+import { vertexPartSelection } from "../../../../../selection/__tests__/support/vertexPartSelection";
 import { readTextEditDraft } from "../../../../../utils/readTextEditDraft";
 import type { CanvasEvent } from "../../../../registry/GestureHandlerTypes";
 import { VertexControlHandler } from "../../vertex/VertexControlHandler";
@@ -263,6 +265,81 @@ describe("moving a connector waypoint via VertexControlHandler (reuse check)", (
 	});
 });
 
+describe("ConnectorVertexInsertHandler - click over the label picks it", () => {
+	/** State whose connector carries the label "Yes". */
+	const makeLabeledState = (): CanvasControllerState => {
+		const state = makeState([]);
+		(state.objects["conn-1"] as unknown as { label?: { text: string } }).label =
+			{ text: "Yes" };
+		return state;
+	};
+
+	/** click on the waypoint-insert handle, with a stubbed hover stack. */
+	const clickEvent = (
+		hovered: { id: string; kind: string; action?: string }[],
+	): CanvasEvent =>
+		({
+			type: "click",
+			targetKind: "control",
+			targetId: "conn-1",
+			targetAction: "waypoint-insert:0",
+			button: 0,
+			last: { x: 50, y: 50 },
+			getHovered: () => hovered,
+			mods: { shift: false, alt: false, ctrl: false, meta: false },
+		}) as unknown as CanvasEvent;
+
+	it("picks the label when its box lies under the handle", () => {
+		const next = insertHandler.handle(
+			makeLabeledState(),
+			clickEvent([{ id: "conn-1", kind: "connector", action: "label" }]),
+			registries,
+		);
+		expect(next.selection).toEqual(
+			selectionOf(["conn-1"], connectorLabelPartSelection()),
+		);
+		expect(pointsOf(next)).toEqual([]);
+	});
+
+	it("changes nothing when no label box lies under the handle", () => {
+		const state = makeLabeledState();
+		expect(
+			insertHandler.handle(
+				state,
+				clickEvent([{ id: "conn-2", kind: "connector", action: "label" }]),
+				registries,
+			),
+		).toBe(state);
+	});
+});
+
+describe("VertexControlHandler - a waypoint click while the label is picked", () => {
+	it("moves the pick from the label to the waypoint", () => {
+		const state = {
+			...makeState([{ x: 50, y: 0 }]),
+			selection: selectionOf(["conn-1"], connectorLabelPartSelection()),
+		} as unknown as CanvasControllerState;
+		(state.objects["conn-1"] as unknown as { label?: { text: string } }).label =
+			{ text: "Yes" };
+		const next = new VertexControlHandler().handle(
+			state,
+			{
+				type: "click",
+				targetKind: "control",
+				targetId: "conn-1",
+				targetPart: "vertex:0",
+				button: 0,
+				last: { x: 50, y: 0 },
+				mods: { shift: false, alt: false, ctrl: false, meta: false },
+			} as unknown as CanvasEvent,
+			registries,
+		);
+		expect(next.selection).toEqual(
+			selectionOf(["conn-1"], vertexPartSelection(0)),
+		);
+	});
+});
+
 describe("ConnectorVertexInsertHandler - doubleClick starts label editing", () => {
 	/** State whose connector carries a committed label. */
 	const makeLabeledState = (labelText: string): CanvasControllerState => {
@@ -299,7 +376,9 @@ describe("ConnectorVertexInsertHandler - doubleClick starts label editing", () =
 			kind: "connectorLabel",
 			text: "",
 		});
-		expect(next.selection).toEqual({ objectIds: ["conn-1"], part: null });
+		expect(next.selection).toEqual(
+			selectionOf(["conn-1"], connectorLabelPartSelection()),
+		);
 		// No waypoint is inserted by the double click
 		expect(pointsOf(next)).toEqual([]);
 	});
@@ -314,7 +393,9 @@ describe("ConnectorVertexInsertHandler - doubleClick starts label editing", () =
 			kind: "connectorLabel",
 			text: "Yes",
 		});
-		expect(next.selection).toEqual({ objectIds: ["conn-1"], part: null });
+		expect(next.selection).toEqual(
+			selectionOf(["conn-1"], connectorLabelPartSelection()),
+		);
 	});
 
 	it("with a committed label elsewhere (box not in the hover stack), selects without opening the editor", () => {
@@ -324,7 +405,7 @@ describe("ConnectorVertexInsertHandler - doubleClick starts label editing", () =
 			registries,
 		);
 		expect(readTextEditDraft(next)).toBeNull();
-		expect(next.selection.objectIds).toEqual(["conn-1"]);
+		expect(next.selection).toEqual(selectionOf(["conn-1"]));
 	});
 
 	it("a hover stack entry of another connector's label does not count as a label hit", () => {

@@ -19,6 +19,7 @@ import type {
 	CanvasDragDetail,
 } from "../../CanvasTypes";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
+import { connectorLabelPartSelection } from "../../selection/__tests__/support/connectorLabelPartSelection";
 import { createTextSlotPartKindDefinition } from "../../selection/partKinds/textSlotPartKind";
 import { buildIdsWithAncestors } from "../../utils/buildIdsWithAncestors";
 import { createCowObjects } from "../../utils/cowObjects";
@@ -270,7 +271,10 @@ const connectorLabelEdit = () => {
 	return {
 		objects,
 		rootIds: ["frame", "connector"],
-		selection: { objectIds: ["connector"], part: null },
+		selection: {
+			objectIds: ["connector"],
+			part: connectorLabelPartSelection(),
+		},
 		typing,
 	};
 };

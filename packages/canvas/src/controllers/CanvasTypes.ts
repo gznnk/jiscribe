@@ -10,6 +10,7 @@ import type {
 
 import type { MovePreview } from "../rendering/layers/content/MovePreview";
 import type { ConnectorLabelPlacement } from "../rendering/objects/connector/geometry/label/calcConnectorLabelPlacement";
+import type { ConnectorLabelBox } from "../rendering/objects/connector/geometry/label/connectorLabelLayout";
 import type { Viewport } from "../rendering/Viewport";
 import type { CanvasState } from "../states/canvas/CanvasState";
 import type { ClipboardData } from "./commands/selection/ClipboardData";
@@ -370,7 +371,11 @@ export type CanvasDragDetail =
 			objectDimensions: { halfWidth: number; halfHeight: number };
 	  }
 	| { kind: "vertex" }
-	| { kind: "label" }
+	| {
+			kind: "label";
+			/** The dragged label's box size, measured at dragStart (resolveConnectorLabelBox) */
+			labelBox: ConnectorLabelBox;
+	  }
 	| { kind: "segment" }
 	| { kind: "selectionControl" };
 
@@ -467,7 +472,9 @@ export type TextEditDraft =
  *   text shape (a one-body type's slot is its `body`); nothing else there, no
  *   pick or a pick of another kind included, keeps the session alive
  * - a `"connectorLabel"` draft means that one id is a connector, with
- *   `selection.part` null
+ *   `selection.part` its label picked (one collapsed connectorLabel range),
+ *   held while the session is open even for a label not yet in the document
+ *   (reconcileSelection); the session itself goes with the connector alone
  *
  * And one duty: a writer that moves `selection.objectIds` while a session is
  * open runs commitTextEditIfNeeded first (SET_SELECTION, the press handlers).

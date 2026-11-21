@@ -4,8 +4,10 @@ import { describe, expect, it } from "vitest";
 import { deepFreezeState } from "../../../__tests__/support/deepFreezeState";
 import { createInitialControllerState } from "../../../reducer/createInitialControllerState";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import { connectorLabelPartSelection } from "../../../selection/__tests__/support/connectorLabelPartSelection";
 import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
 import { textSlotPartSelection } from "../../../selection/__tests__/support/textSlotPartSelection";
+import { vertexPartSelection } from "../../../selection/__tests__/support/vertexPartSelection";
 import type { ObjectPartSelection } from "../../../selection/CanvasSelection";
 import {
 	createTextSlotPartKindDefinition,
@@ -120,10 +122,11 @@ describe("StartTextEditCommand", () => {
 			text: "",
 			placement: DEFAULT_LABEL_PLACEMENT,
 		});
-		// The connector itself owns the session, with nothing picked below it.
+		// The connector owns the session, its label picked below it before the
+		// document holds one.
 		expect(after.selection).toEqual({
 			objectIds: ["connector-1"],
-			part: null,
+			part: connectorLabelPartSelection(),
 		});
 
 		// The placement rides through the commit, so the revived label sits at the
@@ -153,6 +156,25 @@ describe("StartTextEditCommand", () => {
 		expect(
 			readTextEditDraft(StartTextEditCommand.execute(state, registries)),
 		).not.toHaveProperty("placement");
+	});
+
+	it("re-editing a connector label picks the label in place of a waypoint picked before", () => {
+		const base = stateWithConnectorSelected("connector-1");
+		const state = deepFreezeState({
+			...base,
+			objects: {
+				...base.objects,
+				"connector-1": {
+					...base.objects["connector-1"],
+					label: { text: "Yes" },
+				},
+			},
+			selection: selectionOf(["connector-1"], vertexPartSelection(0)),
+		} as typeof base);
+
+		expect(StartTextEditCommand.execute(state, registries).selection).toEqual(
+			selectionOf(["connector-1"], connectorLabelPartSelection()),
+		);
 	});
 
 	describe("a shape with slots", () => {

@@ -9,8 +9,11 @@ import type {
 
 export const SNAP_THRESHOLD_PX = 8;
 
-/** Epsilon for absorbing floating-point error (SVG units) */
-const SNAP_EPSILON = 0.5;
+/**
+ * Epsilon for absorbing floating-point error (SVG units): how far apart two
+ * coordinates may be and still count as on the same snap line.
+ */
+export const SNAP_EPSILON = 0.5;
 
 /**
  * Shared empty set representing "no exclusions". Used as the default when excludeIds is

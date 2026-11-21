@@ -6,6 +6,7 @@ import { resolveTextObjectFont } from "../../../states/objects/primitives/text/r
 import type { TextSlots } from "../../../states/objects/types/TextSlots";
 import { createObjectContentResizerRegistry } from "../../../states/registry/ObjectContentResizerRegistry";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
+import { connectorLabelPartSelection } from "../../selection/__tests__/support/connectorLabelPartSelection";
 import { textSlotPartSelection } from "../../selection/__tests__/support/textSlotPartSelection";
 import { graftTextEditDraft } from "../graftTextEditDraft";
 
@@ -48,7 +49,7 @@ const labelEdit = (
 	text: string,
 ): GraftInput => ({
 	objects,
-	selection: { objectIds: [connectorId], part: null },
+	selection: { objectIds: [connectorId], part: connectorLabelPartSelection() },
 	mode: { kind: "textEdit", draft: { kind: "connectorLabel", text } },
 });
 

@@ -29,6 +29,9 @@ const TOLERANCE_PX = 2;
 /** Allowed label-height gap between editing and after commit (subpixel rounding). */
 const HEIGHT_TOLERANCE_PX = 2;
 
+/** Allowed gap per edge between the label editor and its outline: half the outline's stroke, plus subpixel rounding. */
+const OUTLINE_STROKE_TOLERANCE_PX = 1.5;
+
 function parsePoints(attr: string | null): Vec[] {
 	if (!attr) {
 		throw new Error("cannot read the points attribute");
@@ -156,6 +159,34 @@ async function setupConnectorWithLabel(
 	await canvas.typeTextAt(onLine, text);
 	await canvas.commitText();
 	return { connectorId, onLine };
+}
+
+/**
+ * Asserts the picked label's outline lies over the open label editor's box:
+ * the same box, give or take the stroke the outline is drawn with.
+ */
+async function expectOutlineOverEditor(canvas: CanvasDriver): Promise<void> {
+	const editorBounds = await canvas.page
+		.locator(selectors.textEditor)
+		.boundingBox();
+	const outlineBounds = await canvas.page
+		.locator(selectors.partOutline)
+		.boundingBox();
+	if (!editorBounds || !outlineBounds) {
+		throw new Error("cannot read the label editor or its outline");
+	}
+	expect(Math.abs(outlineBounds.x - editorBounds.x)).toBeLessThanOrEqual(
+		OUTLINE_STROKE_TOLERANCE_PX,
+	);
+	expect(Math.abs(outlineBounds.y - editorBounds.y)).toBeLessThanOrEqual(
+		OUTLINE_STROKE_TOLERANCE_PX,
+	);
+	expect(
+		Math.abs(outlineBounds.width - editorBounds.width),
+	).toBeLessThanOrEqual(OUTLINE_STROKE_TOLERANCE_PX * 2);
+	expect(
+		Math.abs(outlineBounds.height - editorBounds.height),
+	).toBeLessThanOrEqual(OUTLINE_STROKE_TOLERANCE_PX * 2);
 }
 
 test.describe("connector label", () => {
@@ -964,5 +995,232 @@ test.describe("connector label", () => {
 
 		expect(editing?.y).toBeCloseTo(committed?.y ?? 0, 3);
 		expect(editing?.height).toBeCloseTo(committed?.height ?? 0, 3);
+	});
+
+	test("picks the label on a click: outlines it and narrows the menu to the label's controls, and a click on the line steps back", async ({
+		canvas,
+	}) => {
+		const { connectorId, onLine } = await setupConnectorWithLabel(
+			canvas,
+			"Yes",
+		);
+		const partOutline = canvas.page.locator(selectors.partOutline);
+
+		await canvas.clickAt(onLine);
+		await expect(partOutline).toHaveCount(1);
+		// A stroke alone: the label shows through untinted.
+		await expect(partOutline).toHaveCSS("fill", "none");
+		await expect(
+			canvas.page.locator(selectors.objectMenuToggle("label-bg-color")),
+		).toBeVisible();
+		await expect(
+			canvas.page.locator(selectors.objectMenuToggle("line-style")),
+		).toHaveCount(0);
+		// The outline is centred on the label as it is drawn (its stroke widens it
+		// by the same amount on every side).
+		const labelBounds = await labelBoxOf(canvas, connectorId).boundingBox();
+		const outlineBounds = await partOutline.boundingBox();
+		if (!labelBounds || !outlineBounds) {
+			throw new Error("cannot read the label box or its outline");
+		}
+		expect(outlineBounds.x + outlineBounds.width / 2).toBeCloseTo(
+			labelBounds.x + labelBounds.width / 2,
+			0,
+		);
+		expect(outlineBounds.y + outlineBounds.height / 2).toBeCloseTo(
+			labelBounds.y + labelBounds.height / 2,
+			0,
+		);
+
+		// Separation wait so the next click does not pair with the last into a double click.
+		await canvas.page.waitForTimeout(400);
+		await canvas.clickAt(await bareLinePoint(canvas, connectorId));
+		await expect(partOutline).toHaveCount(0);
+		await expect(
+			canvas.page.locator(selectors.objectMenuToggle("line-style")),
+		).toBeVisible();
+	});
+
+	test("steps back from the picked label to the connector with Escape", async ({
+		canvas,
+	}) => {
+		const { onLine } = await setupConnectorWithLabel(canvas, "Yes");
+
+		await canvas.clickAt(onLine);
+		await expect(canvas.page.locator(selectors.partOutline)).toHaveCount(1);
+		await canvas.page.keyboard.press("Escape");
+		await expect(canvas.page.locator(selectors.partOutline)).toHaveCount(0);
+		await expect(
+			canvas.page.locator(selectors.objectMenuToggle("line-style")),
+		).toBeVisible();
+	});
+
+	test("deletes only the picked label with Delete, and one Undo brings it back", async ({
+		canvas,
+	}) => {
+		const { connectorId, onLine } = await setupConnectorWithLabel(
+			canvas,
+			"Yes",
+		);
+		const labelLocator = canvas.page.locator(
+			`foreignObject[data-kind=connector][data-id="${connectorId}"]`,
+		);
+
+		await canvas.clickAt(onLine);
+		await expect(canvas.page.locator(selectors.partOutline)).toHaveCount(1);
+		await canvas.deleteSelection();
+
+		await expect(labelLocator).toHaveCount(0);
+		await expect(canvas.objectById(connectorId)).toHaveCount(1);
+		// The connector stays selected, with nothing picked below it.
+		await expect(
+			canvas.page.locator(selectors.objectMenuToggle("line-style")),
+		).toBeVisible();
+		await expect(canvas.page.locator(selectors.partOutline)).toHaveCount(0);
+
+		await canvas.deselect();
+		await canvas.undo();
+		await expect(labelLocator).toContainText("Yes");
+	});
+
+	test("outlines a label being created while it is typed, the outline growing with the editor", async ({
+		canvas,
+	}) => {
+		const connectorId = await setupConnector(canvas);
+		const partOutline = canvas.page.locator(selectors.partOutline);
+
+		// The empty editor already has a box, and the outline is drawn over it.
+		await canvas.typeTextAt(await pointOnConnector(canvas, connectorId), "");
+		await expect(partOutline).toHaveCount(1);
+		await expect(partOutline).toHaveCSS("fill", "none");
+		await expectOutlineOverEditor(canvas);
+		const emptyWidth = (await partOutline.boundingBox())?.width ?? 0;
+
+		await canvas.page.keyboard.type("A longer label");
+		await expect
+			.poll(async () => (await partOutline.boundingBox())?.width ?? 0)
+			.toBeGreaterThan(emptyWidth + 40);
+		await expectOutlineOverEditor(canvas);
+	});
+
+	test("keeps the label picked once its edit is committed", async ({
+		canvas,
+	}) => {
+		const connectorId = await setupConnector(canvas);
+
+		await canvas.typeTextAt(await pointOnConnector(canvas, connectorId), "Yes");
+		await canvas.page.keyboard.press("ControlOrMeta+Enter");
+		await expect(canvas.page.locator(selectors.textEditor)).toHaveCount(0);
+
+		await expect(canvas.page.locator(selectors.partOutline)).toHaveCount(1);
+		await expect(
+			canvas.page.locator(selectors.objectMenuToggle("label-bg-color")),
+		).toBeVisible();
+		await expect(
+			canvas.page.locator(selectors.objectMenuToggle("line-style")),
+		).toHaveCount(0);
+	});
+
+	test("steps back to the connector when the label is committed empty", async ({
+		canvas,
+	}) => {
+		const { connectorId } = await setupConnectorWithLabel(canvas, "Yes");
+		const labelLocator = canvas.page.locator(
+			`foreignObject[data-kind=connector][data-id="${connectorId}"]`,
+		);
+
+		await labelBoxOf(canvas, connectorId).dblclick();
+		await expect(canvas.page.locator(selectors.partOutline)).toHaveCount(1);
+		await canvas.textEditorSurface().fill("");
+		await canvas.page.keyboard.press("ControlOrMeta+Enter");
+
+		await expect(labelLocator).toHaveCount(0);
+		await expect(canvas.page.locator(selectors.partOutline)).toHaveCount(0);
+		await expect(
+			canvas.page.locator(selectors.objectMenuToggle("line-style")),
+		).toBeVisible();
+	});
+
+	test("steps back to the connector when a label being created is cancelled, and keeps an existing one picked", async ({
+		canvas,
+	}) => {
+		const connectorId = await setupConnector(canvas);
+		const partOutline = canvas.page.locator(selectors.partOutline);
+
+		await canvas.typeTextAt(await pointOnConnector(canvas, connectorId), "Yes");
+		await canvas.cancelText();
+		await expect(partOutline).toHaveCount(0);
+		await expect(
+			canvas.page.locator(selectors.objectMenuToggle("line-style")),
+		).toBeVisible();
+
+		await canvas.typeTextAt(await pointOnConnector(canvas, connectorId), "Yes");
+		await canvas.page.keyboard.press("ControlOrMeta+Enter");
+		await labelBoxOf(canvas, connectorId).dblclick();
+		await canvas.textEditorSurface().fill("Changed");
+		await canvas.cancelText();
+		await expect(labelBoxOf(canvas, connectorId)).toContainText("Yes");
+		await expect(partOutline).toHaveCount(1);
+	});
+
+	test("takes Delete and Backspace into the label being edited, not into deleting the picked label", async ({
+		canvas,
+	}) => {
+		const { connectorId } = await setupConnectorWithLabel(canvas, "Yes");
+
+		await labelBoxOf(canvas, connectorId).dblclick();
+		await expect(canvas.textEditorSurface()).toHaveValue("Yes");
+		await canvas.page.keyboard.press("Backspace");
+		await canvas.page.keyboard.press("Home");
+		await canvas.page.keyboard.press("Delete");
+
+		await expect(canvas.page.locator(selectors.textEditor)).toBeVisible();
+		await expect(canvas.textEditorSurface()).toHaveValue("e");
+		await canvas.page.keyboard.press("ControlOrMeta+Enter");
+		await expect(labelBoxOf(canvas, connectorId)).toContainText("e");
+	});
+
+	test("deletes the whole connector from the menu of a right click on its line, even with the label picked", async ({
+		canvas,
+	}) => {
+		const connectorId = await setupConnector(canvas);
+		await canvas.typeTextAt(await pointOnConnector(canvas, connectorId), "Yes");
+		await canvas.page.keyboard.press("ControlOrMeta+Enter");
+		await expect(canvas.page.locator(selectors.partOutline)).toHaveCount(1);
+
+		await canvas.openContextMenu(await bareLinePoint(canvas, connectorId));
+		await canvas.clickContextMenuCommand("delete");
+
+		await expect(canvas.objectById(connectorId)).toHaveCount(0);
+	});
+
+	test("deletes only the label from the menu of a right click on its box", async ({
+		canvas,
+	}) => {
+		const connectorId = await setupConnector(canvas);
+		const labelLocator = canvas.page.locator(
+			`foreignObject[data-kind=connector][data-id="${connectorId}"]`,
+		);
+		await canvas.typeTextAt(await pointOnConnector(canvas, connectorId), "Yes");
+		await canvas.page.keyboard.press("ControlOrMeta+Enter");
+		// Back to the connector alone, so it is the right click that picks the label.
+		await canvas.page.keyboard.press("Escape");
+		await expect(canvas.page.locator(selectors.partOutline)).toHaveCount(0);
+
+		const labelBounds = await labelBoxOf(canvas, connectorId).boundingBox();
+		if (!labelBounds) {
+			throw new Error("cannot read the label box");
+		}
+		await canvas.openContextMenu(
+			canvas.toContent({
+				x: labelBounds.x + labelBounds.width / 2,
+				y: labelBounds.y + labelBounds.height / 2,
+			}),
+		);
+		await expect(canvas.page.locator(selectors.partOutline)).toHaveCount(1);
+		await canvas.clickContextMenuCommand("delete");
+
+		await expect(labelLocator).toHaveCount(0);
+		await expect(canvas.objectById(connectorId)).toHaveCount(1);
 	});
 });

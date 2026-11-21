@@ -1,3 +1,7 @@
+import {
+	CONNECTOR_LABEL_PART_ID,
+	CONNECTOR_LABEL_PART_KIND,
+} from "../../../selection/partKinds/connectorLabelPartKind";
 import { TEXT_SLOT_PART_KIND } from "../../../selection/partKinds/textSlotPartKind";
 import { VERTEX_PART_KIND } from "../../../selection/partKinds/vertexPartKind";
 
@@ -10,6 +14,7 @@ import { VERTEX_PART_KIND } from "../../../selection/partKinds/vertexPartKind";
  *   as a key of the object's own `text`
  * - `vertex:{index}` — one vertex of a poly-geometry shape, the id spelled as
  *   the decimal index into its `points`
+ * - `connectorLabel:label` — a connector's label, the one id its kind holds
  *
  * The `kind` is a namespace `ObjectPartKindRegistry` answers for, spelled as an
  * identifier (`ObjectPartKindRegistry.register`), so the first `:` is the
@@ -19,7 +24,10 @@ import { VERTEX_PART_KIND } from "../../../selection/partKinds/vertexPartKind";
  * The element that draws a part builds its address with the per-kind builder
  * below ({@link textSlotPart}, re-exported from `@jiscribe/canvas` for plugins;
  * {@link vertexPart}), and the click path takes it apart with
- * {@link parsePartAddress} (selectPartByClick), so no reader spells a kind.
+ * {@link parsePartAddress} (selectPartByClick), so no reader spells a kind. The
+ * label box is drawn by the rendering layer, which cannot import a builder from
+ * here, so it carries `data-action="label"` instead and the handlers reading
+ * that build its address ({@link connectorLabelPart}).
  */
 
 const PART_ADDRESS_SEPARATOR = ":";
@@ -103,3 +111,12 @@ export const readTextSlotPart = (
  */
 export const vertexPart = (index: number): string =>
 	formatPartAddress(VERTEX_PART_KIND, String(index));
+
+/**
+ * The address of a connector's label, for the handlers that know a press hit
+ * the label box (`data-action="label"`) to hand to selectPartByClick.
+ *
+ * @returns The part address, `connectorLabel:label`
+ */
+export const connectorLabelPart = (): string =>
+	formatPartAddress(CONNECTOR_LABEL_PART_KIND, CONNECTOR_LABEL_PART_ID);

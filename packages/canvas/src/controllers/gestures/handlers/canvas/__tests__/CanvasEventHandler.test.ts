@@ -7,8 +7,11 @@ import type {
 	SnapEdge,
 } from "../../../../CanvasTypes";
 import { createTestRegistries } from "../../../../registries/createCanvasRegistries";
+import { connectorLabelPartSelection } from "../../../../selection/__tests__/support/connectorLabelPartSelection";
 import { selectionOf } from "../../../../selection/__tests__/support/selectionOf";
 import { textSlotPartSelection } from "../../../../selection/__tests__/support/textSlotPartSelection";
+import { vertexPartSelection } from "../../../../selection/__tests__/support/vertexPartSelection";
+import type { ObjectPartSelection } from "../../../../selection/CanvasSelection";
 import { readTextEditDraft } from "../../../../utils/readTextEditDraft";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { CanvasEventHandler } from "../CanvasEventHandler";
@@ -765,6 +768,92 @@ describe("CanvasEventHandler", () => {
 			);
 
 			expect(nextState.selection.objectIds).toEqual(["line"]);
+		});
+
+		describe("on a selected connector, picking into it as a left click does", () => {
+			/** A labelled connector with one waypoint, selected with `part` picked below it. */
+			const makeConnectorState = (
+				part: ObjectPartSelection | null,
+			): CanvasControllerState =>
+				makeTwoRectState({
+					objects: {
+						line: {
+							id: "line",
+							type: "connector",
+							points: [{ x: 50, y: 50 }],
+							label: { text: "Yes" },
+						},
+					},
+					rootIds: ["line"],
+					selection: selectionOf(["line"], part),
+				} as unknown as Partial<CanvasControllerState>);
+
+			it("picks the label when its box is right-clicked", () => {
+				const nextState = CanvasEventHandler.handle(
+					makeConnectorState(null),
+					makeRightClickEvent({
+						targetKind: "connector",
+						targetId: "line",
+						targetAction: "label",
+					}),
+					registries,
+				);
+
+				expect(nextState.selection).toEqual(
+					selectionOf(["line"], connectorLabelPartSelection()),
+				);
+				expect(nextState.contextMenuPosition).not.toBeNull();
+			});
+
+			it("picks the label when its box is long-pressed", () => {
+				const nextState = CanvasEventHandler.handle(
+					makeConnectorState(null),
+					makeRightClickEvent({
+						type: "longPress",
+						button: 0,
+						pointerType: "touch",
+						targetKind: "connector",
+						targetId: "line",
+						targetAction: "label",
+					}),
+					registries,
+				);
+
+				expect(nextState.selection).toEqual(
+					selectionOf(["line"], connectorLabelPartSelection()),
+				);
+			});
+
+			it.each([
+				["the label", connectorLabelPartSelection()],
+				["a waypoint", vertexPartSelection(0)],
+			])(
+				"drops %s picked when the line is right-clicked, so the menu acts on the connector",
+				(_, part) => {
+					const nextState = CanvasEventHandler.handle(
+						makeConnectorState(part),
+						makeRightClickEvent({ targetKind: "connector", targetId: "line" }),
+						registries,
+					);
+
+					expect(nextState.selection).toEqual(selectionOf(["line"]));
+				},
+			);
+
+			it("keeps the pick when one of its handles is right-clicked", () => {
+				const state = makeConnectorState(connectorLabelPartSelection());
+				const nextState = CanvasEventHandler.handle(
+					state,
+					makeRightClickEvent({
+						targetKind: "control",
+						targetId: "line",
+						targetAction: "endpoint:source",
+					}),
+					registries,
+				);
+
+				expect(nextState.selection).toBe(state.selection);
+			});
 		});
 
 		it("selects an unselected shape on a touch long press too", () => {

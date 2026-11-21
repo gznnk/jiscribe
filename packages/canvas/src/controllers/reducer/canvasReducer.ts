@@ -529,11 +529,13 @@ export const createCanvasReducer =
 					);
 				}
 
-				// On cancel, close only the session: nothing reaches the document
-				return {
-					...state,
-					mode: NORMAL_MODE,
-				};
+				// On cancel, close only the session: nothing reaches the document.
+				// The label pick a session held alive goes with it when there is no
+				// label behind it (a label being created).
+				return reconcileSelection(
+					{ ...state, mode: NORMAL_MODE },
+					registries.objectPartKind,
+				);
 			}
 
 			case "STEP_TEXT_EDIT": {

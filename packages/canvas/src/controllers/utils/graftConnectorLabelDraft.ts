@@ -15,8 +15,9 @@ export type ConnectorLabelDraftObjects = {
 /**
  * Where a connector label open in the editor sits: the pending placement of a
  * label being created, else the label's own. The one rule the editor's anchor
- * (TextEditorLayer) and the point its backdrop is worked out at
- * ({@link graftConnectorLabelDraft}) both follow, so the two cannot part.
+ * (TextEditorLayer), the point its backdrop is worked out at
+ * ({@link graftConnectorLabelDraft}) and the picked label's outline
+ * (ConnectorControls) all follow, so none of them can part from the others.
  *
  * @param connector - The connector whose label is edited; its `label` may be absent for a label being created
  * @param pendingPlacement - The draft's placement (`TextEditDraft.placement`), set only while a label is being created; it wins over leftovers of a deleted label

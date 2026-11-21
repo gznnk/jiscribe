@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import { createObjectPartKindRegistry } from "../../../../../../rendering/objects/registry/ObjectPartKindRegistry";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
+import { createTestRegistries } from "../../../../../registries/createCanvasRegistries";
+import { connectorLabelPartSelection } from "../../../../../selection/__tests__/support/connectorLabelPartSelection";
 import { selectionOf } from "../../../../../selection/__tests__/support/selectionOf";
 import type { ObjectPartSelection } from "../../../../../selection/CanvasSelection";
 import {
@@ -182,5 +184,64 @@ describe("getMenuSections", () => {
 			}),
 		).toEqual(["text", "insert"]);
 		expect(sectionIdsUnder(NAME_TEXT_SLOT_PICK)).toEqual(["text"]);
+	});
+});
+
+describe("getMenuSections - a connector's picked label", () => {
+	const registries = createTestRegistries();
+	const connectorState = (part: ObjectPartSelection | null) =>
+		({
+			mode: { kind: "normal" },
+			objects: {
+				c1: {
+					id: "c1",
+					type: "connector",
+					points: [],
+					label: { text: "Yes" },
+				},
+			},
+			selection: selectionOf(["c1"], part),
+		}) as unknown as CanvasControllerState;
+	const itemKeysOf = (sections: ObjectMenuSection[]): string[] =>
+		sections.flatMap((section) =>
+			section.items.map((item) =>
+				item.type === "custom" ? item.id : item.type,
+			),
+		);
+
+	it("keeps the label items alone, dropping the line's arrows, colour, style and routing", () => {
+		const unpicked = itemKeysOf(
+			getMenuSections(
+				connectorState(null),
+				registries.objectMenu,
+				registries.objectPartKind,
+			),
+		);
+		expect(unpicked).toEqual(
+			expect.arrayContaining([
+				"arrowHead",
+				"connector-routing",
+				"lineColor",
+				"lineStyle",
+			]),
+		);
+
+		expect(
+			itemKeysOf(
+				getMenuSections(
+					connectorState(connectorLabelPartSelection()),
+					registries.objectMenu,
+					registries.objectPartKind,
+				),
+			),
+		).toEqual([
+			"label-bg-color",
+			"label-border-color",
+			"label-border-style",
+			"label-font-family",
+			"label-font-size",
+			"label-font-color",
+			"label-bold",
+		]);
 	});
 });

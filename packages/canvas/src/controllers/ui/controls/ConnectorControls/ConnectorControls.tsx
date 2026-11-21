@@ -9,7 +9,11 @@ import { resolveEndpointOwner } from "../../../../rendering/objects/connector/ge
 import type { CanvasState } from "../../../../states/canvas/CanvasState";
 import type { ConnectorState } from "../../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { isConnectorLabelPart } from "../../../selection/partKinds/connectorLabelPartKind";
 import { readSelectedVertexIndex } from "../../../selection/readers/readSelectedVertexIndex";
+import { resolveLabelDraftPlacement } from "../../../utils/graftConnectorLabelDraft";
+import { readOpenTextEdit } from "../../../utils/readOpenTextEdit";
+import { ConnectorLabelPartOutline } from "../../feedback/ConnectorLabelPartOutline";
 import { VertexControls, VertexInsertControls } from "../VertexControls";
 
 // Handle colors may hold var(--jiscribe-*), so they are applied via style
@@ -26,10 +30,12 @@ type ConnectorControlsProps = {
 	zoom?: number;
 	/**
 	 * What the canvas is pointed at, `state.selection` as it stands: a picked
-	 * waypoint of this very connector rings its handle, anything else leaves the
-	 * handles plain
+	 * waypoint of this very connector rings its handle, its picked label is
+	 * outlined, anything else leaves the handles plain
 	 */
 	selection: CanvasControllerState["selection"];
+	/** The canvas's mode, read for this connector's label open in the editor, whose outline follows the draft. */
+	mode: CanvasControllerState["mode"];
 };
 
 /**
@@ -41,6 +47,8 @@ type ConnectorControlsProps = {
  * - Waypoint insert handles (lines drawn straight only): the midpoint of each segment of the resolved path
  *   [source, ...waypoints, target]. Drag to add a new waypoint
  *   (data-id=<id> + data-action="waypoint-insert:<segment>" → ConnectorVertexInsertHandler)
+ * - The outline of the label while it is picked (ConnectorLabelPartOutline), beneath the handles;
+ *   while the label is open in the editor, over the draft as the editor lays it out
  *
  * The two shapes are edited differently because a point means a different thing in each. Under
  * straight a point is a bend the user places and then moves freely, so it gets a handle; under
@@ -59,6 +67,7 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 	objects,
 	zoom = 1,
 	selection,
+	mode,
 }) => {
 	const resolved = useResolvedConnectorPoints(
 		connectorState,
@@ -95,8 +104,26 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 		connectorState.id,
 	);
 
+	const openEdit = readOpenTextEdit({ mode, selection, objects });
+	const label =
+		openEdit?.kind === "connectorLabel"
+			? {
+					...connectorState.label,
+					text: openEdit.text,
+					...resolveLabelDraftPlacement(connectorState, openEdit.placement),
+				}
+			: connectorState.label;
+
 	return (
 		<g data-layer="connector-controls">
+			{isConnectorLabelPart(selection.part) && label && (
+				<ConnectorLabelPartOutline
+					points={resolved.points}
+					label={label}
+					isTextEditing={openEdit?.kind === "connectorLabel"}
+				/>
+			)}
+
 			{/* Waypoint insert handles (segment midpoints of the endpoint-inclusive path). Drawn beneath the endpoint handles */}
 			{!isOrthogonal && (
 				<VertexInsertControls

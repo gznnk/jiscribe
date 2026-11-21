@@ -8,6 +8,7 @@ import { LINE_HIT_STROKE_WIDTH } from "../../../../rendering/objects/utils/hitSt
 import type { ConnectorState } from "../../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
+import { createConnectorLabelPartSelection } from "../../../selection/partKinds/connectorLabelPartKind";
 import { collectConnectorPoints } from "../../../utils/calcConnectorBoundingBox";
 import { closeStencilPopups } from "../../../utils/closeStencilPopups";
 import type { CanvasEvent } from "../../registry/GestureHandlerTypes";
@@ -68,7 +69,8 @@ const calcPendingLabelPlacement = (
  * connector, then starts editing depending on whether a committed label exists:
  * no label → editing starts with the clicked point as the pending placement;
  * label present → editing starts only when the label box itself was hit,
- * otherwise the double click just selects.
+ * otherwise the double click just selects. Editing picks the label below the
+ * connector (see CanvasMode); a double click that just selects picks nothing.
  *
  * Reached from two targets: the connector itself (ConnectorClickHandler, label
  * hit = targetAction "label") and the waypoint-insert handle sitting on the path
@@ -123,7 +125,12 @@ export const startConnectorLabelEdit = (
 			: null;
 	return {
 		...selectedState,
-		// The owner is the selection written just above (see CanvasMode).
+		// The owner is the connector written just above, its label picked below
+		// it (see CanvasMode).
+		selection: {
+			objectIds: selectedState.selection.objectIds,
+			part: createConnectorLabelPartSelection(),
+		},
 		mode: {
 			kind: "textEdit",
 			draft: {

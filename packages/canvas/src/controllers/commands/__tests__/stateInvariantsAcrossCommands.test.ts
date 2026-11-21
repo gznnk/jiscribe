@@ -13,8 +13,10 @@ import type { GroupState } from "../../../states/objects/primitives/group/GroupS
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { selectionOf } from "../../selection/__tests__/support/selectionOf";
+import { CONNECTOR_LABEL_PART_KIND } from "../../selection/partKinds/connectorLabelPartKind";
 import { TEXT_SLOT_PART_KIND } from "../../selection/partKinds/textSlotPartKind";
 import { reconcileSelection } from "../../selection/writers/reconcileSelection";
+import { readTextEditDraft } from "../../utils/readTextEditDraft";
 
 const registries = createTestRegistries();
 
@@ -39,8 +41,8 @@ const collectInvariantViolations = (state: CanvasControllerState): string[] => {
 		}
 	}
 
-	// A slot selection the reducer's reconciliation keeps must name a live slot of
-	// the sole selected object. A command alone may leave a stale one behind — the
+	// A part selection the reducer's reconciliation keeps must name a live slot,
+	// or the label, of the sole selected object. A command alone may leave a stale one behind — the
 	// reducer clears it after the command runs (reconcileSelection) — so
 	// the invariant is pinned on the reconciled state, not the raw one. What this
 	// catches is a command turning a stale selection into a live one.
@@ -57,7 +59,20 @@ const collectInvariantViolations = (state: CanvasControllerState): string[] => {
 		}
 		const objectId = objectIds[0];
 		const owner = state.objects[objectId];
-		if (!isTextStyleState(owner) || owner.text?.[slotId] === undefined) {
+		if (part.kind === CONNECTOR_LABEL_PART_KIND) {
+			// A label being created is picked while its editor is open, before the
+			// document holds it (see CanvasMode).
+			const isLabelEditOpen =
+				readTextEditDraft(state)?.kind === "connectorLabel";
+			if (
+				!isConnectorState(owner) ||
+				(!isLabelEditOpen && !owner.label?.text)
+			) {
+				violations.push(
+					`selection.part picks a label ${objectId} does not have, with no label edit open`,
+				);
+			}
+		} else if (!isTextStyleState(owner) || owner.text?.[slotId] === undefined) {
 			violations.push(
 				`selection.part resolves to slot ${slotId} which ${objectId} does not have`,
 			);
