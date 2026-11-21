@@ -50,7 +50,8 @@ export type OpenTextEdit =
  * @throws When the state breaks one of the invariants `CanvasMode` documents
  *   — the owner is not a lone selected object, a shape session's object holds no
  *   slot to edit or its `selection.part` is no textSlot pick naming a slot the
- *   object holds, a label session's owner is no connector. Unreachable for a
+ *   object holds, a label session's owner is no connector (its label pick is
+ *   not checked: the session does not depend on it). Unreachable for a
  *   state the reducer has handed on, which closes such a session on the way out
  *   (`reconcileSelection`); returning null instead would make the editor vanish
  *   with nothing to trace it back to

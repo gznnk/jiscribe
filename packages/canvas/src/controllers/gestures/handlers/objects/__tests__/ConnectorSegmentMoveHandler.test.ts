@@ -12,6 +12,7 @@ import type {
 } from "../../../../CanvasTypes";
 import { createInitialControllerState } from "../../../../reducer/createInitialControllerState";
 import { createTestRegistries } from "../../../../registries/createCanvasRegistries";
+import { connectorLabelPartSelection } from "../../../../selection/__tests__/support/connectorLabelPartSelection";
 import { selectionOf } from "../../../../selection/__tests__/support/selectionOf";
 import { vertexPartSelection } from "../../../../selection/__tests__/support/vertexPartSelection";
 import type {
@@ -234,6 +235,26 @@ describe("ConnectorSegmentMoveHandler - supports", () => {
 });
 
 describe("ConnectorSegmentMoveHandler - dragStart", () => {
+	it("drops the label picked on the connector it grabs, a left press beside the label box", () => {
+		const connector = {
+			...connectorWithVertices(),
+			label: { text: "Yes" },
+		} as ConnectorState;
+		const state = {
+			...stateWith(connector),
+			selection: selectionOf(["c1"], connectorLabelPartSelection()),
+		} as unknown as CanvasControllerState;
+
+		const next = ConnectorSegmentMoveHandler.handle(
+			state,
+			dragEvent("dragStart", { x: 150, y: 0 }, { x: 150, y: 0 }),
+			registries,
+		);
+
+		expect(next.drag?.kind).toBe("segment");
+		expect(next.selection).toEqual(selectionOf(["c1"]));
+	});
+
 	it("selects the connector exclusively and enables edge scrolling", () => {
 		const state = {
 			...stateWith(connectorWithVertices()),
@@ -267,7 +288,7 @@ describe("ConnectorSegmentMoveHandler - dragStart", () => {
 				...connectorWithVertices(),
 				label: { text: "Yes" },
 			} as ConnectorState),
-			selection: selectionOf(["c1"]),
+			selection: selectionOf(["c1"], connectorLabelPartSelection()),
 			mode: {
 				kind: "textEdit",
 				draft: { kind: "connectorLabel", text: "No" },

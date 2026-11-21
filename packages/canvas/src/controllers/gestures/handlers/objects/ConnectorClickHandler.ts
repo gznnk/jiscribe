@@ -24,6 +24,7 @@ import { startConnectorLabelEdit } from "../utils/startConnectorLabelEdit";
  *   clicked point as its placement (carried in the textEdit mode until committed).
  * - Committed label: only a double click on the label box (targetAction "label")
  *   starts editing; a double click on the bare line just selects.
+ * Either way, opening the editor picks the label too (startConnectorLabelEdit).
  *
  * While editing, the static label box is not rendered and the editor overlay
  * (data-gesture="none") sits in its place, so any click that reaches this handler

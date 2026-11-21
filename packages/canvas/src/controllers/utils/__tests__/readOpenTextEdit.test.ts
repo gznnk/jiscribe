@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState, TextEditDraft } from "../../CanvasTypes";
+import { connectorLabelPartSelection } from "../../selection/__tests__/support/connectorLabelPartSelection";
 import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { textSlotPartSelection } from "../../selection/__tests__/support/textSlotPartSelection";
 import { vertexPartSelection } from "../../selection/__tests__/support/vertexPartSelection";
@@ -90,7 +91,7 @@ describe("readOpenTextEdit", () => {
 					text: "Yes",
 					placement: { position: 0.25, offset: 12 },
 				},
-				selectionOf(["c1"]),
+				selectionOf(["c1"], connectorLabelPartSelection()),
 			),
 		);
 		expect(openEdit).toEqual({
@@ -99,6 +100,14 @@ describe("readOpenTextEdit", () => {
 			text: "Yes",
 			placement: { position: 0.25, offset: 12 },
 		});
+	});
+
+	it("leaves a connector label session's pick unchecked, the session going with the connector alone", () => {
+		expect(
+			readOpenTextEdit(
+				input({ kind: "connectorLabel", text: "Yes" }, selectionOf(["c1"])),
+			),
+		).toMatchObject({ kind: "connectorLabel", connector });
 	});
 
 	describe("throws on a broken invariant rather than letting the editor vanish", () => {

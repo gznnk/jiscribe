@@ -393,12 +393,68 @@ describe("reconcileSelection", () => {
 			).toBeNull();
 		});
 
-		it("keeps a connector label while its connector is the selection", () => {
+		it("keeps a connector label, picked below its connector, while the connector is the selection", () => {
 			const state = editing(
-				makeState({ "c-1": connector("c-1") }, ["c-1"], null),
-				{ kind: "connectorLabel", text: "Yes" },
+				makeState(
+					{
+						"c-1": {
+							...connector("c-1"),
+							label: { text: "Yes" },
+						} as ObjectState,
+					},
+					["c-1"],
+					connectorLabelPartSelection(),
+				),
+				{ kind: "connectorLabel", text: "Yes, and more" },
 			);
 			expect(reconcileSelection(state, objectPartKind)).toBe(state);
+		});
+
+		it("keeps the pick of a label being created, which the document does not hold until committed", () => {
+			for (const unlabeled of [
+				connector("c-1"),
+				{
+					...connector("c-1"),
+					label: { text: "", fill: "#fff" },
+				} as ObjectState,
+			]) {
+				const state = editing(
+					makeState(
+						{ "c-1": unlabeled },
+						["c-1"],
+						connectorLabelPartSelection(),
+					),
+					{ kind: "connectorLabel", text: "" },
+				);
+				expect(reconcileSelection(state, objectPartKind)).toBe(state);
+			}
+		});
+
+		it("still judges a label pick naming any other id by the document", () => {
+			const state = editing(
+				makeState({ "c-1": connector("c-1") }, ["c-1"], {
+					...connectorLabelPartSelection(),
+					ranges: [{ anchorId: "label", focusId: "other" }],
+				}),
+				{ kind: "connectorLabel", text: "" },
+			);
+			const after = reconcileSelection(state, objectPartKind);
+			expect(after.selection.part).toBeNull();
+			expect(readTextEditDraft(after)).toBe(readTextEditDraft(state));
+		});
+
+		it("does not hold a label pick alive for a shape's session", () => {
+			const state = editing(
+				makeState(
+					{ "c-1": connector("c-1") },
+					["c-1"],
+					connectorLabelPartSelection(),
+				),
+				{ kind: "shape", text: "edited" },
+			);
+			expect(
+				reconcileSelection(state, objectPartKind).selection.part,
+			).toBeNull();
 		});
 
 		it("discards a connector label once its connector is gone", () => {
@@ -421,7 +477,7 @@ describe("reconcileSelection", () => {
 			).toBeNull();
 		});
 
-		it("keeps a connector label when a part is dropped, it sitting on none", () => {
+		it("keeps a connector label when a vertex pick is dropped, the session going with the connector alone", () => {
 			const state = editing(
 				makeState({ "c-1": connector("c-1") }, ["c-1"], vertexPartSelection(7)),
 				{ kind: "connectorLabel", text: "Yes" },

@@ -388,12 +388,17 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   They sit in `generalStencilCategory` after `actor` (`bot`), `gear` (`clock`)
   and `queue` (`lightning`).
 - **canvas: a connector's label can be picked, and its drag snaps.** A click on
-  the label box (or the drag that moves it) selects the connector with its
-  label picked one level below it, the `connectorLabel` part kind: the label is
-  outlined, the ObjectMenu and the properties sidebar narrow to the label's own
-  controls, Delete takes the label away alone (as emptying it in the editor
-  does, styles kept) and Escape steps back to the connector. A click on the line
-  leaves nothing picked. While dragged, the label snaps onto the middle of the
+  the label box (or the drag that moves it, or a right click) selects the
+  connector with its label picked one level below it, the `connectorLabel` part
+  kind: the label is outlined (a stroke, nothing filled in), the ObjectMenu and
+  the properties sidebar narrow to the label's own controls, Delete takes the
+  label away alone (as emptying it in the editor does, styles kept) and Escape
+  steps back to the connector. Editing the label picks it too, the outline
+  following the editor's box as it grows, and the pick stays once text is
+  committed; a label committed empty, or one being created and cancelled,
+  leaves the connector selected. A click or right click on the line, or a
+  segment grabbed, leaves nothing picked, so the context menu's Delete removes
+  the connector rather than its label. While dragged, the label snaps onto the middle of the
   route or of one of its segments as well as onto the line, and lines its box up
   with other objects the way a moved shape does, guides included, on whichever
   axes keep it on those snaps; Ctrl stands every snap down.

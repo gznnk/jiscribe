@@ -26,8 +26,8 @@ const CONNECTOR_LABEL_STYLE_INTENT_KINDS: ReadonlySet<string> = new Set(
  *
  * @param part - The parts picked one level below the object
  *   (`CanvasSelection.part`), taken as it stands (the reducer has already
- *   dropped one naming a label that is gone, reconcileSelection); null when
- *   none are
+ *   dropped one naming a label that is gone and not open in the editor,
+ *   reconcileSelection); null when none are
  * @returns True only while the label is picked; false when nothing is picked
  *   below the connector, or what is picked is a vertex
  */
@@ -35,6 +35,21 @@ export const isConnectorLabelPart = (
 	part: ObjectPartSelection | null,
 ): part is ObjectPartSelection =>
 	part !== null && part.kind === CONNECTOR_LABEL_PART_KIND;
+
+/**
+ * The pick of a connector's label, as the writers that open its editor state it
+ * (startConnectorLabelEdit, StartTextEditCommand): one collapsed range over
+ * {@link CONNECTOR_LABEL_PART_ID}. Written directly rather than through
+ * selectPartByClick, whose `has` refuses a label still being created.
+ *
+ * @returns A part selection to put in `CanvasSelection.part`
+ */
+export const createConnectorLabelPartSelection = (): ObjectPartSelection => ({
+	kind: CONNECTOR_LABEL_PART_KIND,
+	ranges: [
+		{ anchorId: CONNECTOR_LABEL_PART_ID, focusId: CONNECTOR_LABEL_PART_ID },
+	],
+});
 
 /**
  * The `connectorLabel` part definition the connector type registers: its label

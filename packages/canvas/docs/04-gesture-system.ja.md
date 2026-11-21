@@ -202,8 +202,10 @@ ObjectMenu はドラッグの種類を問わず隠れるが、ObjectMenu のド�
   組み、menu 系ハンドラは `parseMenuAction` で分解する。接頭辞をどこにも二度書かない
 
 例: コネクターのラベルボックスは `data-kind="connector" data-id={connectorId} data-action="label"`。
-そのクリック（とそこからのドラッグ）はラベルをコネクターの `connectorLabel` パートとして選ぶ。
-パートの住所は action を見たハンドラが組み立てる（`connectorLabelPart`）。
+そのクリック（とそこからのドラッグ、右クリック）はラベルをコネクターの `connectorLabel` パートとして選ぶ。
+パートの住所は action を見たハンドラが組み立てる（`connectorLabelPart`）。ラベルの編集を開いても
+ラベルが選ばれ、テキストを残して確定した後も選ばれたまま残る。コネクター上のそれ以外への操作
+（線の左クリック・右クリック、セグメントを掴む）はコネクター自身の選択へ戻る。
 ラベルがあるコネクターは、線ではなくラベルボックスのダブルクリックだけがラベル編集を開始する。
 ラベルボックスのドラッグは経路上の移動（`label.position` / `label.offset`）になる。
 `SNAP_THRESHOLD_PX` 以内なら `offset` は 0（線上）に、`position` は経路全体か各セグメントの中点に

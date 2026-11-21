@@ -225,7 +225,7 @@ describe("ConnectorLabelDragHandler - dragStart", () => {
 		// still open when the drag starts.
 		const state = {
 			...stateWith(labeledConnector({ text: "Yes" })),
-			selection: selectionOf(["c1"]),
+			selection: selectionOf(["c1"], connectorLabelPartSelection()),
 			mode: {
 				kind: "textEdit",
 				draft: { kind: "connectorLabel", text: "No" },

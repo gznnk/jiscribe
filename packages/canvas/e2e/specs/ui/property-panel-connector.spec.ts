@@ -383,6 +383,30 @@ test.describe("Properties sidebar: connector", () => {
 		await expect(labelBox).toHaveCSS("font-size", "28px");
 	});
 
+	test("narrows to the Label sections while the label is re-edited, whose rows still style it", async ({
+		canvas,
+	}) => {
+		const connectorId = await setupLabelledConnector(canvas);
+		await expect(
+			canvas.page.locator(selectors.propertyPanelSection("line")),
+		).toBeVisible();
+
+		// The edit picks the label, as a click on it does.
+		await labelBoxOf(canvas, connectorId).dblclick();
+		await expect(canvas.page.locator(selectors.textEditor)).toBeVisible();
+		await expect(
+			canvas.page.locator(selectors.propertyPanelSection("line")),
+		).toHaveCount(0);
+		await expect(
+			canvas.page.locator(selectors.propertyPanelSection("label")),
+		).toBeVisible();
+
+		await canvas.page.click(
+			selectors.propertyPanelSet("label.fontWeight", "bold"),
+		);
+		await expect(canvas.textEditorSurface()).toHaveCSS("font-weight", "700");
+	});
+
 	test("swaps the two ends from the Arrow row, and undo puts them back", async ({
 		canvas,
 	}) => {

@@ -472,7 +472,9 @@ export type TextEditDraft =
  *   text shape (a one-body type's slot is its `body`); nothing else there, no
  *   pick or a pick of another kind included, keeps the session alive
  * - a `"connectorLabel"` draft means that one id is a connector, with
- *   `selection.part` null
+ *   `selection.part` its label picked (one collapsed connectorLabel range),
+ *   held while the session is open even for a label not yet in the document
+ *   (reconcileSelection); the session itself goes with the connector alone
  *
  * And one duty: a writer that moves `selection.objectIds` while a session is
  * open runs commitTextEditIfNeeded first (SET_SELECTION, the press handlers).

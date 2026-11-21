@@ -13,27 +13,34 @@ import {
 } from "../../../../rendering/objects/connector/geometry/label/connectorLabelLayout";
 import { useFontsLoadedNonceContext } from "../../../../rendering/objects/FontsLoadedNonceContext";
 import { useIsTextLegible } from "../../../../rendering/objects/useIsTextLegible";
-import {
-	PART_SELECTION_FILL,
-	SELECTION_OUTLINE_WIDTH,
-} from "../utils/selectionOutline";
+import { SELECTION_OUTLINE_WIDTH } from "../utils/selectionOutline";
 
 type ConnectorLabelPartOutlineProps = {
 	/** The connector's resolved path, the one its label is drawn along (world coordinates). */
 	points: readonly Point[];
-	/** The picked label; one with empty text draws no box and so no outline. */
+	/**
+	 * The picked label; while it is open in the editor, the draft's text at the
+	 * placement the editor sits at. Outside the editor one with empty text draws
+	 * no box and so no outline.
+	 */
 	label: ConnectorLabel;
+	/**
+	 * Whether the label is open in the editor: the outline then follows the
+	 * editor's box, drawn for an empty draft (the minimum box) and at any zoom,
+	 * as the editor is.
+	 */
+	isTextEditing: boolean;
 };
 
 /**
- * Outlines a connector's picked label (the `connectorLabel` part kind), drawn
- * the way ObjectPartOutline draws a part inside a shape, over the label's box
- * (calcConnectorLabelRect). It is hidden while the label itself is, too small
- * to read at the canvas's zoom.
+ * Outlines a connector's picked label (the `connectorLabel` part kind), a
+ * stroke over the label's box (calcConnectorLabelRect) with nothing inside, so
+ * it reads the same over the label and over its editor. Outside the editor it
+ * is hidden while the label itself is, too small to read at the canvas's zoom.
  */
 const ConnectorLabelPartOutlineComponent: React.FC<
 	ConnectorLabelPartOutlineProps
-> = ({ points, label }) => {
+> = ({ points, label, isTextEditing }) => {
 	// An invalidation signal, as in ConnectorLabel: a face arriving later
 	// re-measures the box the label is drawn in, and the outline goes with it.
 	const fontsLoadedNonce = useFontsLoadedNonceContext();
@@ -56,7 +63,10 @@ const ConnectorLabelPartOutlineComponent: React.FC<
 	);
 
 	const anchor = calcConnectorLabelAnchor(points, label.position, label.offset);
-	if (label.text === "" || !isLegible || anchor === null) {
+	if (
+		anchor === null ||
+		(!isTextEditing && (label.text === "" || !isLegible))
+	) {
 		return null;
 	}
 
@@ -72,7 +82,7 @@ const ConnectorLabelPartOutlineComponent: React.FC<
 			strokeWidth={SELECTION_OUTLINE_WIDTH}
 			pointerEvents="none"
 			// The color may hold var(--jiscribe-*), so it is applied via style.
-			style={{ fill: PART_SELECTION_FILL, stroke: theme.handleAccent }}
+			style={{ fill: "none", stroke: theme.handleAccent }}
 		/>
 	);
 };

@@ -5,6 +5,7 @@ import { describe, it, expect } from "vitest";
 import type { ConnectorLabelPlacement } from "../../../rendering/objects/connector/geometry/label/calcConnectorLabelPlacement";
 import type { TextSlots } from "../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../CanvasTypes";
+import { connectorLabelPartSelection } from "../../selection/__tests__/support/connectorLabelPartSelection";
 import { textSlotPartSelection } from "../../selection/__tests__/support/textSlotPartSelection";
 import { commitTextEditIfNeeded } from "../commitTextEditIfNeeded";
 import { readTextEditDraft } from "../readTextEditDraft";
@@ -33,7 +34,7 @@ const shapeEdit = (
 	selection: { objectIds: [objectId], part: textSlotPartSelection(slotId) },
 });
 
-/** A connector label edit; a label session picks nothing below the object. */
+/** A connector label edit as its two halves: the draft, and the connector owning it with its label picked. */
 const labelEdit = (
 	connectorId: string,
 	text: string,
@@ -47,7 +48,7 @@ const labelEdit = (
 			...(placement && { placement }),
 		},
 	},
-	selection: { objectIds: [connectorId], part: null },
+	selection: { objectIds: [connectorId], part: connectorLabelPartSelection() },
 });
 
 // object with keyed text slots (passes isTextStyleState)

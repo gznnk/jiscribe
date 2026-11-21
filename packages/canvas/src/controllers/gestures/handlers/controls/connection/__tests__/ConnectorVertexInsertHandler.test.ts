@@ -376,7 +376,9 @@ describe("ConnectorVertexInsertHandler - doubleClick starts label editing", () =
 			kind: "connectorLabel",
 			text: "",
 		});
-		expect(next.selection).toEqual({ objectIds: ["conn-1"], part: null });
+		expect(next.selection).toEqual(
+			selectionOf(["conn-1"], connectorLabelPartSelection()),
+		);
 		// No waypoint is inserted by the double click
 		expect(pointsOf(next)).toEqual([]);
 	});
@@ -391,7 +393,9 @@ describe("ConnectorVertexInsertHandler - doubleClick starts label editing", () =
 			kind: "connectorLabel",
 			text: "Yes",
 		});
-		expect(next.selection).toEqual({ objectIds: ["conn-1"], part: null });
+		expect(next.selection).toEqual(
+			selectionOf(["conn-1"], connectorLabelPartSelection()),
+		);
 	});
 
 	it("with a committed label elsewhere (box not in the hover stack), selects without opening the editor", () => {
@@ -401,7 +405,7 @@ describe("ConnectorVertexInsertHandler - doubleClick starts label editing", () =
 			registries,
 		);
 		expect(readTextEditDraft(next)).toBeNull();
-		expect(next.selection.objectIds).toEqual(["conn-1"]);
+		expect(next.selection).toEqual(selectionOf(["conn-1"]));
 	});
 
 	it("a hover stack entry of another connector's label does not count as a label hit", () => {

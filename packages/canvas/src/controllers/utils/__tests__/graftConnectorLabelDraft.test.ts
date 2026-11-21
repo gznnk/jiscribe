@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../states/objects/connector/ConnectorState";
+import { connectorLabelPartSelection } from "../../selection/__tests__/support/connectorLabelPartSelection";
 import { textSlotPartSelection } from "../../selection/__tests__/support/textSlotPartSelection";
 import { graftConnectorLabelDraft } from "../graftConnectorLabelDraft";
 
@@ -30,7 +31,7 @@ const labelEdit = (
 	placement?: { position: number; offset: number },
 ): GraftInput => ({
 	objects,
-	selection: { objectIds: ["connector"], part: null },
+	selection: { objectIds: ["connector"], part: connectorLabelPartSelection() },
 	mode: {
 		kind: "textEdit",
 		draft: { kind: "connectorLabel", text, placement },

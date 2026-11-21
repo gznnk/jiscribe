@@ -54,7 +54,7 @@ const makeEditState = (
 ): CanvasControllerState =>
 	({
 		...makeState(labelText),
-		selection: selectionOf([editingId]),
+		selection: selectionOf([editingId], connectorLabelPartSelection()),
 		mode: {
 			kind: "textEdit",
 			draft: { kind: "connectorLabel", text: pendingText },

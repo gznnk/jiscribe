@@ -16,6 +16,7 @@ import {
 	createCanvasRegistries,
 	createTestRegistries,
 } from "../../registries/createCanvasRegistries";
+import { connectorLabelPartSelection } from "../../selection/__tests__/support/connectorLabelPartSelection";
 import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { textSlotPartSelection } from "../../selection/__tests__/support/textSlotPartSelection";
 import { useTextEditSession } from "../useTextEditSession";
@@ -139,7 +140,7 @@ describe("useTextEditSession derived state", () => {
 
 	it("names the connector for a label edit but no slot", () => {
 		const canvasState = createTestState(twoRectsWithConnectorDoc, {
-			selection: selectionOf(["conn-1"]),
+			selection: selectionOf(["conn-1"], connectorLabelPartSelection()),
 			mode: {
 				kind: "textEdit",
 				draft: { kind: "connectorLabel", text: "label" },
