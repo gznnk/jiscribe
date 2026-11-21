@@ -1,3 +1,10 @@
+import {
+	calcConnectPoint,
+	calcExtraConnectPoint,
+	calcOutwardVector,
+	type AnchorFrame,
+} from "@jiscribe/doc/model/objects/connector/calcConnectPoint";
+import type { ExtraConnectPoint } from "@jiscribe/doc/model/objects/connector/ExtraConnectPoint";
 import type { ConnectPointId } from "@jiscribe/doc/model/objects/types/EndpointRef";
 import { calcNonZeroSign, degreesToRadians } from "@jiscribe/geometry";
 import type { Point, Rect } from "@jiscribe/geometry";
@@ -5,14 +12,7 @@ import { memo } from "react";
 
 import { useCanvasTheme } from "../../../../foundation/theme/CanvasThemeContext";
 import { theme } from "../../../../foundation/theme/themeTokens";
-import {
-	calcConnectPoint,
-	calcExtraConnectPoint,
-	calcOutwardVector,
-	type AnchorFrame,
-} from "../../../../rendering/objects/connector/geometry/calcConnectPoint";
 import type { ConnectionAnchors as ResolvedConnectionAnchors } from "../../../../rendering/objects/registry/ObjectConnectionAnchorsRegistry";
-import type { ExtraConnectPoint } from "../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 
 // Anchor colors may hold var(--jiscribe-*), so they are applied via style
 // (fill/stroke) rather than SVG presentation attributes.

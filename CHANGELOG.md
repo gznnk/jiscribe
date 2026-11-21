@@ -93,11 +93,36 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   over a box painted in `labelFill`, which `set_style` / `add_objects`, the
   ObjectMenu and the properties sidebar (a `label-style` section, built-in item
   `labelBackgroundColor`) set; omitted or `"auto"` knocks out what lies behind
-  in the page's color, the way a connector's label does. The field is
+  in the page's color, with the fill of any frame it lies on painted over it
+  (`labelBackdrop`, below), the way a connector's label does. The field is
   `LABEL_TEXT_KEYS` (`@jiscribe/doc`), held by a `"label"` type alone; on any
   other type, a connector included, `setStyle` reports it as not taken. A
   component written without `createFrameObject` draws the box itself with
-  `LabelTextFill` (`@jiscribe/canvas/unstable`, and so `@jiscribe/canvas-sdk`).
+  `LabelTextFill` (`@jiscribe/canvas/unstable`, and so `@jiscribe/canvas-sdk`),
+  passing the shape's id as its required `ownerId`, under which an `"auto"`
+  caption finds the frames it lies on.
+- **`labelBackdrop`: a frame's fill under the `"auto"` labels lying on it.**
+  `ObjectTypeDefinition` takes `labelBackdrop`, returning the regions a frame
+  paints, bottom first (`ObjectLabelBackdropRegion`, from `@jiscribe/canvas`: a
+  rect in the shape's local coordinates, a resolved color and an opacity); it is
+  handed the body fill the core resolved (`fillColor` / `fillAlpha`, as
+  `createFrameObject` draws it), and `createFrameObjectDefinition` passes it
+  through. An `"auto"` caption background or connector label `fill` lying on such
+  a frame is painted in the page's color and then, over the whole box, in each
+  region the center of the label's box lies in (its edge included), so the label
+  blends into a filled container or awsGroup instead of standing out as a
+  page-colored box. A label straddling a frame's edge takes the frame's fill
+  when its center is inside, and the page's color alone when it is outside.
+  Only the frames drawn before the label count, rotated or flipped ones by the
+  same rule. It is worked out again whenever the drawing changes, each frame of
+  a drag included, so a label follows a frame or a shape as it is dragged; an
+  export of a subset counts only the frames in it. container and awsGroup
+  declare one; a filled rectangle is no backdrop. A connector label being
+  edited is painted the same way, judged at the anchor the editor sits on, an
+  empty one being created included; the box follows the text as typed.
+- **`@jiscribe/geometry` exports `isPointInBoundingBox`**, whether a point lies
+  inside a box or on its edge, `false` for an inverted box or a `NaN`
+  coordinate.
 - **A type can measure the text body it draws itself.** `ObjectTypeDefinition`
   takes `textMeasurer` (`ObjectTextMeasurer`, returning an
   `ObjectTextMeasurement`), which `CanvasHandle.measure.textSlot` calls in place
@@ -372,9 +397,38 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   route or of one of its segments as well as onto the line, and lines its box up
   with other objects the way a moved shape does, guides included, on whichever
   axes keep it on those snaps; Ctrl stands every snap down.
+- **`diagnoseDoc` warns about an arrowhead drawn over its line's bend**, and
+  `jiscribe diagnose` with it. A head is drawn straight back along its end's
+  segment, so where the line turns closer to the end than the head is long, the
+  head covers the corner and points off the line. A connector with stored
+  `points` is measured on the path the canvas draws, and a polyline on its
+  stored points; the warning names the end, the distance to the bend and the
+  head's length. A connector the canvas routes itself (no `points`), an end on
+  a connect point its owner's type declares and an end that cannot be resolved
+  from the document are passed over. Behind it, `@jiscribe/doc/unstable`
+  exports `resolveConnectorDocPath` (a connector's drawn path from the document
+  alone), `calcObjectTransformedFrame`, `dedupePoints`, `readArrowExtent` and
+  `calcArrowHeadLength`.
 
 ### Changed
 
+- **A connector's endpoint and vertex resolution moved from the canvas into
+  `@jiscribe/doc`** (`model/objects/connector/`), along with the arrowheads'
+  dimensions (`model/objects/utils/`), so the document layer resolves a path
+  and measures a head by the same steps the canvas draws them with. The canvas
+  keeps the automatic route and its registries and calls those; nothing is
+  drawn differently. `ExtraConnectPoint` is now declared in `@jiscribe/doc` and
+  still exported from `@jiscribe/canvas`.
+- **Thirteen shape library icons are redrawn so each reads as its shape at
+  24px.** UML: the class is three empty compartments, the abstract class a solid
+  box with a slanted A (it was a dashed box), the object a box of two
+  `attribute = value` rows (it was a filled title band), the enum three short
+  rows without bullets, and the UML category shows the class. The sticky note
+  folds at its bottom-right corner, apart from the file and the note. The
+  terminal window shows a `>_` prompt, the browser window three separate dots,
+  the Markdown shape the M↓ mark, the clock two hands, the smartphone one case
+  with a home bar, the ellipse an ellipse rather than a circle, the boundary a
+  dashed frame with no dashed band, and the multi-document two outlined sheets.
 - **Adding a column to an `erEntity` picks the new column instead of opening
   its name.** Add Above, Add Below and Add at Bottom leave the editor closed,
   as a table's row insertion does, and Enter opens the new column's name. Tab
@@ -382,11 +436,13 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 - **The label below a pictogram, an icon or a flowchart marker is painted on
   the page's color.** The twelve `"label"` shapes hanging their label below the
   box draw a box in `labelFill` behind it, so a connector or a shape lying under
-  it is hidden where the label is, in images exported too. Set `labelFill` to
-  `"transparent"` for the old look, or reorder the objects. The group markers
-  create with `labelFill: "transparent"`, and look as they did; one saved
-  before this release carries no `labelFill`, so its label is painted on the
-  page's color too. Set its `labelFill` to `"transparent"` for the old look.
+  it is hidden where the label is, in images exported too, with the fill of any
+  frame it lies on painted over it (`labelBackdrop`, under Added). Set
+  `labelFill` to `"transparent"` for the old look, or reorder the objects. The
+  group markers create with `labelFill: "transparent"`, and look as they did;
+  one saved before this release carries no `labelFill`, so its label is painted
+  on the page's color too. Set its `labelFill` to `"transparent"` for the old
+  look.
 - **The group markers (brace, bracket, bracketWithStem) are `"label"` types,
   and awsGroup an `"innerLabel"` one.** Their label is sized from its own text
   as before; they now take no `verticalAlign` (a `verticalAlign` in an existing
@@ -730,7 +786,8 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   own opaque `background` every default label was a box of another colour, in the
   viewer and in PNG / SVG export alike. A default label now knocks the line out
   in the document's opaque `background`, and otherwise in the theme's canvas
-  colour; its inline editor, the label-fill swatches and export follow it.
+  colour; its inline editor, the label-fill swatches and export follow it. A
+  frame's fill goes over it (`labelBackdrop`, under Added).
 - **A `set:` style action that changes nothing is no longer committed.** The
   ObjectMenu's and the properties sidebar's swatches wrote through it whether
   or not the value was already in place, and every write was a commit: a

@@ -14,7 +14,9 @@ const COINCIDENT_EPSILON = 0.5;
  *
  * Because only the immediately preceding point is compared, a point that moves away and
  * later returns to the same coordinate is not collapsed and remains.
- * The input is not mutated; each point is returned as a freshly cloned object.
+ *
+ * @param points - The drawn path in world coordinates, in drawing order; an empty list answers an empty list
+ * @returns The points kept, each a fresh object; the first of every run within 0.5px of its predecessor survives
  */
 export const dedupePoints = (points: readonly Point[]): Point[] => {
 	const result: Point[] = [];

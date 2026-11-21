@@ -3,6 +3,7 @@ import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
 import type { ICanvasRegistries } from "./ICanvasRegistries";
 import type { CanvasPlugin } from "../../plugin/CanvasPlugin";
 import type { ObjectComponentRegistry } from "../../rendering/objects/registry/ObjectComponentRegistry";
+import type { ObjectLabelBackdropRegistry } from "../../rendering/objects/registry/ObjectLabelBackdropRegistry";
 import type { ObjectSvgDefsRegistry } from "../../rendering/objects/registry/ObjectSvgDefsRegistry";
 import type { ObjectTextMeasurerRegistry } from "../../rendering/objects/registry/ObjectTextMeasurerRegistry";
 import type { ObjectStateValidatorRegistry } from "../../states/registry/ObjectStateValidatorRegistry";
@@ -39,6 +40,8 @@ export type CanvasRegistries = Omit<ICanvasRegistries, "command"> & {
 
 	objectComponent: ObjectComponentRegistry;
 	objectSvgDefs: ObjectSvgDefsRegistry;
+	/** Per-type backdrops: what a frame paints under the `"auto"` labels lying on it. */
+	objectLabelBackdrop: ObjectLabelBackdropRegistry;
 
 	// --- Text ---
 

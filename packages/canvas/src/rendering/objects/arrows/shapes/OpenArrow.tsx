@@ -1,27 +1,11 @@
+import { ARROW_SIZE } from "@jiscribe/doc/model/objects/utils/arrowHeadDimensions";
 import { radiansToDegrees } from "@jiscribe/geometry";
 import type React from "react";
 import { memo } from "react";
 
-import { createSvgTransform } from "../../utils/createSvgTransform";
-import { ARROW_SIZE } from "../ArrowConstants";
 import { ArrowGroup, ArrowPolygon, ArrowPolyline } from "./ArrowStyled";
-import type { ArrowExtent, ArrowShapeProps } from "../ArrowTypes";
-
-/**
- * How far short of the tip (in stroke widths) the line stops once the head is
- * scaled below ARROW_OUTLINE_THINNING_SCALE and its outline thins: where the V's
- * arms stand one stroke width apart, so the line's end sits between them instead
- * of showing past the thinner arms. Read by calcArrowLineEndWedge, which
- * calcArrowLineInset stops the line by.
- */
-export const OPEN_ARROW_THIN_OUTLINE_LINE_INSET =
-	0.5 / Math.tan(Math.atan2(ARROW_SIZE / 2, ARROW_SIZE));
-
-/** How far this head runs from its tip (local units), for the drawn extent (calcArrowReach). */
-export const OPEN_ARROW_EXTENT: ArrowExtent = {
-	length: ARROW_SIZE,
-	halfWidth: ARROW_SIZE / 2,
-};
+import { createSvgTransform } from "../../utils/createSvgTransform";
+import type { ArrowShapeProps } from "../ArrowTypes";
 
 /**
  * OpenArrow arrow shape component.

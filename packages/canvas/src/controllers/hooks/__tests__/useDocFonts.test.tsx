@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { readTextMeasurementGeneration } from "@jiscribe/doc/text/measure/textMeasurementSlot";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -111,6 +112,24 @@ describe("useDocFonts", () => {
 		expect(onFacesChanged).toHaveBeenCalledTimes(2);
 		// The content stays visible: the gate only ever opens once.
 		expect(probe.latest()).toEqual({ fontsNonce: 2, isContentHidden: false });
+		probe.unmount();
+	});
+
+	it("advances the text measurement generation once per change, before the callback", async () => {
+		const stub = stubFontFaceSet();
+		const generationsAtCallback: number[] = [];
+		const start = readTextMeasurementGeneration();
+		const probe = renderHook(() => {
+			generationsAtCallback.push(readTextMeasurementGeneration());
+		});
+
+		await act(async () => {
+			stub.resolveAll();
+		});
+		act(() => stub.fireLoadingDone());
+
+		expect(generationsAtCallback).toEqual([start + 1, start + 2]);
+		expect(readTextMeasurementGeneration()).toBe(start + 2);
 		probe.unmount();
 	});
 

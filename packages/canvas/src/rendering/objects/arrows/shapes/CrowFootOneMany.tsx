@@ -1,33 +1,19 @@
+import {
+	CROW_FOOT_ONE_MANY_BAR_DISTANCE,
+	CROW_FOOT_ONE_MANY_INSET,
+} from "@jiscribe/doc/model/objects/utils/arrowHeadDimensions";
 import { radiansToDegrees } from "@jiscribe/geometry";
 import type React from "react";
 import { memo } from "react";
 
 import { createSvgTransform } from "../../utils/createSvgTransform";
-import type { ArrowExtent, ArrowShapeProps } from "../ArrowTypes";
+import type { ArrowShapeProps } from "../ArrowTypes";
 import { ArrowPath } from "./ArrowStyled";
 import {
 	buildCrowFootBar,
 	buildCrowFootProngs,
 	buildCrowFootSpine,
-	CROW_FOOT_LENGTH,
-	CROW_FOOT_MARK_GAP,
-	CROW_FOOT_HALF_HEIGHT,
 } from "./utils/crowFootGeometry";
-
-/** Distance from the tip to the bar standing behind the prongs. */
-const BAR_DISTANCE = CROW_FOOT_LENGTH + CROW_FOOT_MARK_GAP;
-
-/**
- * Inset (in local units) used to terminate the line at this arrow's base.
- * The mark draws its own spine, so the line stops at the rear bar.
- */
-export const CROW_FOOT_ONE_MANY_INSET = BAR_DISTANCE;
-
-/** How far this head runs from its tip (local units), for the drawn extent (calcArrowReach). */
-export const CROW_FOOT_ONE_MANY_EXTENT: ArrowExtent = {
-	length: BAR_DISTANCE,
-	halfWidth: CROW_FOOT_HALF_HEIGHT,
-};
 
 /**
  * CrowFootOneMany arrow shape component.
@@ -50,7 +36,7 @@ const CrowFootOneManyArrowComponent: React.FC<ArrowShapeProps> = ({
 	const d = [
 		buildCrowFootSpine(CROW_FOOT_ONE_MANY_INSET),
 		buildCrowFootProngs(),
-		buildCrowFootBar(BAR_DISTANCE),
+		buildCrowFootBar(CROW_FOOT_ONE_MANY_BAR_DISTANCE),
 	].join(" ");
 
 	return (

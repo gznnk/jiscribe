@@ -1,20 +1,22 @@
 import { createStencilIcon } from "@jiscribe/canvas-sdk";
 
-import {
-	UmlIconBodyRows,
-	UmlIconFrame,
-	UmlIconTitleDivider,
-} from "./UmlIconParts";
+import { UmlIconFrame, UmlIconTitleDivider } from "./UmlIconParts";
 
 /**
- * Mark: a dashed outline for the type that has no instances. The dash pattern
- * sums to 5.4, which divides the 70.3 perimeter of the frame close to evenly so
- * the corners do not land mid-dash.
+ * Mark: a slanted A in the body, after UML's convention of setting an abstract
+ * type's name in italics. The shape itself marks it with the stereotype.
  */
 export const AbstractClassIcon = createStencilIcon(
 	<>
-		<UmlIconFrame strokeDasharray="3.24 2.16" />
+		<UmlIconFrame />
 		<UmlIconTitleDivider />
-		<UmlIconBodyRows />
+		<path
+			d="M8.5 18.5 L13.5 11.5 L15.5 18.5 M10.6 16 H14.8"
+			fill="none"
+			stroke="currentColor"
+			strokeWidth="1.5"
+			strokeLinejoin="round"
+			strokeLinecap="round"
+		/>
 	</>,
 );

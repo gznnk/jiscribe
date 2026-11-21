@@ -48,7 +48,7 @@ const switchingMeasurement: TextMeasurement = {
 resetTextMeasurementForTests();
 offerTextMeasurement(switchingMeasurement);
 
-/** What the browser host does when a face finishes loading (Canvas, useDocFonts). */
+/** What the browser host does when a face finishes loading (useFontsLoadedNonce, useDocFonts). */
 const loadWiderFace = (): void => {
 	characterWidthRatio = 0.9;
 	advanceTextMeasurementGeneration();
