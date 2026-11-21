@@ -2,6 +2,7 @@ import {
 	CONNECTOR_DOC_DEFAULTS,
 	ConnectorFeatures,
 } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
+import type { ExtraConnectPoint } from "@jiscribe/doc/model/objects/connector/ExtraConnectPoint";
 import { defaultRoutingForAnchors } from "@jiscribe/doc/model/objects/types/ConnectorRouting";
 import {
 	isFreeEndpointRef,
@@ -18,7 +19,6 @@ import { isSameConnectorEndpoints } from "./utils/isSameConnectorEndpoints";
 import { snapFreeEndpointStraight } from "./utils/snapFreeEndpointStraight";
 import { readCachedObjectOutline } from "../../../../../rendering/objects/connector/geometry/endpoints/readCachedObjectOutline";
 import { resolveEndpointOwner } from "../../../../../rendering/objects/connector/geometry/endpoints/resolveEndpointOwner";
-import type { ExtraConnectPoint } from "../../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../../states/objects/connector/ConnectorState";
 import type {

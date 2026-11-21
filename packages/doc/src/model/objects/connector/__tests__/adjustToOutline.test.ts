@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 
-import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import { adjustToOutline } from "../adjustToOutline";
+import type { EndpointOwner } from "../EndpointOwner";
 
 const rectObj = (
 	id: string,
@@ -9,7 +9,7 @@ const rectObj = (
 	cy: number,
 	width: number,
 	height: number,
-): ObjectState =>
+): EndpointOwner =>
 	({
 		id,
 		type: "rect",
@@ -21,7 +21,7 @@ const rectObj = (
 		rotation: 0,
 		scaleX: 1,
 		scaleY: 1,
-	}) as unknown as ObjectState;
+	}) as unknown as EndpointOwner;
 
 const ellipseObj = (
 	id: string,
@@ -29,7 +29,7 @@ const ellipseObj = (
 	cy: number,
 	width: number,
 	height: number,
-): ObjectState =>
+): EndpointOwner =>
 	({
 		id,
 		type: "ellipse",
@@ -41,7 +41,7 @@ const ellipseObj = (
 		rotation: 0,
 		scaleX: 1,
 		scaleY: 1,
-	}) as unknown as ObjectState;
+	}) as unknown as EndpointOwner;
 
 const framedObj = (
 	type: string,
@@ -50,7 +50,7 @@ const framedObj = (
 	cy: number,
 	width: number,
 	height: number,
-): ObjectState =>
+): EndpointOwner =>
 	({
 		id: `${type}-1`,
 		type,
@@ -62,7 +62,7 @@ const framedObj = (
 		rotation: 0,
 		scaleX: 1,
 		scaleY: 1,
-	}) as unknown as ObjectState;
+	}) as unknown as EndpointOwner;
 
 const point = (x: number, y: number) => ({ x, y });
 
@@ -84,7 +84,7 @@ describe("adjustToOutline", () => {
 			id: "g1",
 			type: "group",
 			childIds: [],
-		} as unknown as ObjectState;
+		} as unknown as EndpointOwner;
 		const p = point(0, 0);
 		const toward = point(100, 0);
 		expect(adjustToOutline(p, toward, groupObj)).toEqual(p);
@@ -147,7 +147,7 @@ describe("adjustToOutline", () => {
 			type: "connector",
 			source: { anchor: { kind: "free", point: { x: 0, y: 0 } } },
 			target: { anchor: { kind: "free", point: { x: 100, y: 0 } } },
-		} as unknown as ObjectState;
+		} as unknown as EndpointOwner;
 		const p = point(0, 0);
 		const toward = point(200, 0);
 		expect(adjustToOutline(p, toward, connObj)).toEqual(p);

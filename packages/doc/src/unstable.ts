@@ -95,6 +95,9 @@ export { CONNECTOR_LABEL_DEFAULTS } from "./model/objects/connector/ConnectorDoc
 // resolves to, for a host that shows a shape style with nothing selected to
 // resolve it from.
 export { SHAPE_STYLE_FALLBACK } from "./model/objects/utils/shapeStyleFallback";
+// The order a style field is resolved in (own, then the type's, then the last
+// resort), for a headless host sizing what the canvas draws from a definition.
+export { resolveShapeStyle } from "./model/objects/utils/shapeStyleFallback";
 
 // line-height shared by display (TextOverlayFrame) and editing (TextEditor). Shapes that
 // carry their own per-row dimensions must derive row height from this value, or their rows
@@ -164,3 +167,21 @@ export {
 	resetTextMeasurementForTests,
 } from "./text/measure/textMeasurementSlot";
 export type { TextWidthMeasurer } from "./text/measure/textWidthMeasurer";
+
+// A connector's drawn path from the document alone, for a headless check that
+// looks at how the line runs (`@jiscribe/doc-tools`'s diagnoseDoc): the frame each
+// owner is drawn in, the path resolved through the same steps the canvas draws
+// it by, and the collapsing of near-identical points the drawing applies before
+// it aims an arrowhead.
+export { calcObjectTransformedFrame } from "./ops/utils/objectFrame";
+export { resolveConnectorDocPath } from "./ops/utils/connectorPath";
+export { dedupePoints } from "./model/objects/connector/dedupePoints";
+
+// How far each arrowhead runs from its tip, which the canvas draws the heads and
+// stops its lines by: for a headless check of whether a head fits on the end
+// segment it is drawn along.
+export {
+	calcArrowHeadLength,
+	readArrowExtent,
+} from "./model/objects/utils/arrowExtents";
+export type { ArrowExtent } from "./model/objects/utils/arrowHeadDimensions";

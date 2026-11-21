@@ -1,5 +1,3 @@
-import type { AnchorSpec } from "@jiscribe/doc/model/objects/types/EndpointRef";
-import { isConnectPointId } from "@jiscribe/doc/model/objects/types/EndpointRef";
 import {
 	isTransformedFrame,
 	snapToDirection,
@@ -7,13 +5,15 @@ import {
 	type Point,
 } from "@jiscribe/geometry";
 
-import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
-import type { ExtraConnectPoint } from "../../../registry/ObjectExtraConnectPointsRegistry";
 import {
 	calcConnectPointDirection,
 	calcEdgeAnchorDirection,
 	calcExtraConnectPointDirection,
-} from "../calcConnectPoint";
+} from "./calcConnectPoint";
+import type { EndpointOwner } from "./EndpointOwner";
+import type { ExtraConnectPoint } from "./ExtraConnectPoint";
+import type { AnchorSpec } from "../types/EndpointRef";
+import { isConnectPointId } from "../types/EndpointRef";
 
 /**
  * Determines an endpoint's outward direction — the direction the line has to leave it in.
@@ -30,8 +30,7 @@ import {
  * @param point - The resolved endpoint coordinate
  * @param toward - The point the line heads to next (fallback basis when there is no shape info)
  * @param obj - The shape referenced by the endpoint. Used only when connectPoint and a frame shape
- * @param extraConnectPoints - The shape's declared extra anchors (from
- *   ObjectExtraConnectPointsRegistry). Omitted, or an id absent from it, falls back to the
+ * @param extraConnectPoints - The shape's declared extra anchors. Omitted, or an id absent from it, falls back to the
  *   direction toward `toward`
  * @returns The orthogonal direction in which the line exits at that endpoint
  */
@@ -39,7 +38,7 @@ export const calcEndpointDirection = (
 	anchor: AnchorSpec,
 	point: Point,
 	toward: Point,
-	obj: ObjectState | null | undefined,
+	obj: EndpointOwner | null | undefined,
 	extraConnectPoints?: readonly ExtraConnectPoint[] | null,
 ): OrthogonalDirection => {
 	if (anchor.kind === "edge" && obj && isTransformedFrame(obj)) {

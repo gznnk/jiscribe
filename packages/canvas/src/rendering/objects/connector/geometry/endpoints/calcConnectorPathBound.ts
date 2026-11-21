@@ -1,7 +1,8 @@
 import { isConnectorDrawnOrthogonal } from "@jiscribe/doc/model/objects/connector/isConnectorDrawnOrthogonal";
+import { resolveConnectorEnds } from "@jiscribe/doc/model/objects/connector/resolveConnectorEnds";
 import { calcPolyBoundingBox, type BoundingBox } from "@jiscribe/geometry";
 
-import { resolveConnectorEnds } from "./resolveConnectorPoints";
+import { readEndpointOwnerShape } from "./resolveConnectorPoints";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../../states/objects/connector/ConnectorState";
 import type { ObjectAnchorRegionRegistry } from "../../../registry/ObjectAnchorRegionRegistry";
@@ -37,11 +38,18 @@ export const calcConnectorPathBound = (
 ): BoundingBox | null => {
 	const ends = resolveConnectorEnds(
 		connectorState,
-		sourceObj,
-		targetObj,
-		outlineRegistry,
-		anchorRegionRegistry,
-		extraConnectPointsRegistry,
+		readEndpointOwnerShape(
+			sourceObj,
+			outlineRegistry,
+			anchorRegionRegistry,
+			extraConnectPointsRegistry,
+		),
+		readEndpointOwnerShape(
+			targetObj,
+			outlineRegistry,
+			anchorRegionRegistry,
+			extraConnectPointsRegistry,
+		),
 	);
 	if (!ends) {
 		return null;

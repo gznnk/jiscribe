@@ -29,6 +29,7 @@ import {
 import type { Dimensions, Rect } from "@jiscribe/geometry";
 import { standardObjectDocDefinitions } from "@jiscribe/standard-shapes/doc";
 
+import { findArrowHeadsOverBends } from "./arrowHeadBends";
 import {
 	calcConnectorLabelFit,
 	indexObjectsById,
@@ -750,6 +751,44 @@ const diagnoseConnectorConnectPoints = (
 	});
 };
 
+/** How each end a head sits on is named in a finding: a connector's by the object it leaves or enters, a polyline's by its point. */
+const ARROW_END_NAMES = {
+	connector: { startArrow: "source end", endArrow: "target end" },
+	polyline: { startArrow: "first point", endArrow: "last point" },
+} as const;
+
+/**
+ * The findings about a connector's or a polyline's arrowheads drawn over the
+ * line's first bend from their end, one per such head
+ * ({@link import("./arrowHeadBends").findArrowHeadsOverBends}); empty for any
+ * other object.
+ *
+ * A warning rather than an error: the line is all there, only its head points
+ * off it. The fix named is the bend's position, never redrawing the route —
+ * `route_connectors` shortens an end segment in a narrow gap itself, so it can
+ * be what put the bend there.
+ */
+const diagnoseArrowHeadBends = (
+	object: ObjectDoc,
+	objectsById: ReadonlyMap<string, ObjectDoc>,
+): Diagnostic[] =>
+	findArrowHeadsOverBends(object, objectsById).map(
+		({ end, arrow, bendDistance, headLength }) => {
+			const isConnector = object.type === "connector";
+			const endName =
+				ARROW_END_NAMES[isConnector ? "connector" : "polyline"][end];
+			const headText = headLength.toFixed(1);
+			const fix = isConnector
+				? `move that bend at least ${headText}px from the end (update_connectors), or move the shapes further apart`
+				: `move that bend at least ${headText}px from the end`;
+			return {
+				severity: "warning",
+				objectId: object.id,
+				message: `${end} (${arrow}) is drawn ${headText}px back along the line, but the line bends ${bendDistance.toFixed(1)}px from its ${endName}, so the arrowhead covers the bend: ${fix}`,
+			};
+		},
+	);
+
 /** The finding a whole-document check keyed to this object, as a list to spread. */
 const readFinding = (
 	findings: ReadonlyMap<ObjectDoc, Diagnostic>,
@@ -798,6 +837,14 @@ const readFinding = (
  * ER entity no longer has — is drawn at the owner's center, and is a warning
  * ({@link diagnoseConnectorConnectPoints}).
  *
+ * An arrowhead longer than the stretch of line it is drawn along — a connector's
+ * or a polyline's end segment shorter than the head before the line bends — is
+ * drawn across the bend and points off the line, and is a warning
+ * ({@link diagnoseArrowHeadBends}). Passed over are a connector the canvas routes
+ * itself (one with no stored `points`), an end on a connect point its owner's
+ * type declares, and an end that cannot be resolved from the document alone (an
+ * owner missing or outside the shipped set).
+ *
  * What a reader cannot see as drawn is a warning too: an svg whose markup
  * refers to an id an svg drawn before it also defines, the two sharing one page
  * ({@link import("./svgIdCollisions").diagnoseSvgIdCollisions}). Whether an
@@ -834,7 +881,7 @@ const readFinding = (
  *
  * @param doc - A parsed document, as `validateDoc` returns; group children are checked along with the objects at the root
  * @param options - Omitted, every `"source"` body is left unchecked; see {@link DiagnoseDocOptions}
- * @returns One error per overflowing object (a measured `"source"` body included) and per message a type's declared overflow check returns, in document order, plus a warning per text whose lines start where typesetting forbids, per frame-placed body reaching outside its type's declared region, per connector whose label does not fit between its shapes, per connector end naming a connect point its owner does not offer, per point-geometry object whose type declares no size, and per svg referring to an id an earlier svg defines — all of these on their object, in document order — then per `"source"` type with text left unmeasured and per font stack measured by estimate (none of these with an `objectId`; the objects are listed in the message); empty when everything fits
+ * @returns One error per overflowing object (a measured `"source"` body included) and per message a type's declared overflow check returns, in document order, plus a warning per text whose lines start where typesetting forbids, per frame-placed body reaching outside its type's declared region, per connector whose label does not fit between its shapes, per connector end naming a connect point its owner does not offer, per arrowhead drawn over its line's first bend, per point-geometry object whose type declares no size, and per svg referring to an id an earlier svg defines — all of these on their object, in document order — then per `"source"` type with text left unmeasured and per font stack measured by estimate (none of these with an `objectId`; the objects are listed in the message); empty when everything fits
  */
 export const diagnoseDoc = (
 	doc: CanvasDoc,
@@ -853,6 +900,7 @@ export const diagnoseDoc = (
 			...diagnoseConnectorLabel(object, objectsById),
 			...diagnoseConnectorLabelLineStarts(object),
 			...diagnoseConnectorConnectPoints(object, objectsById),
+			...diagnoseArrowHeadBends(object, objectsById),
 			...readFinding(svgIdCollisions, object),
 		]),
 		...diagnoseUncheckedSourceText(objects, measuredSourceText),

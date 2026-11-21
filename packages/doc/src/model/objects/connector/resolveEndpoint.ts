@@ -1,5 +1,3 @@
-import type { EndpointRef } from "@jiscribe/doc/model/objects/types/EndpointRef";
-import { isConnectPointId } from "@jiscribe/doc/model/objects/types/EndpointRef";
 import {
 	isCenterPoint,
 	isTransformedFrame,
@@ -7,13 +5,15 @@ import {
 	type Rect,
 } from "@jiscribe/geometry";
 
-import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
-import type { ExtraConnectPoint } from "../../../registry/ObjectExtraConnectPointsRegistry";
 import {
 	calcConnectPoint,
 	calcEdgeAnchorPoint,
 	calcExtraConnectPoint,
-} from "../calcConnectPoint";
+} from "./calcConnectPoint";
+import type { EndpointOwner } from "./EndpointOwner";
+import type { ExtraConnectPoint } from "./ExtraConnectPoint";
+import type { EndpointRef } from "../types/EndpointRef";
+import { isConnectPointId } from "../types/EndpointRef";
 
 /**
  * Resolves an EndpointRef to a Point coordinate. It takes a single target
@@ -35,24 +35,24 @@ import {
  *
  * @param endpoint - The endpoint reference to resolve. Carries the anchor kind
  *   (free / center / connectPoint)
- * @param obj - State of the shape the endpoint references. null/undefined when
+ * @param obj - The shape the endpoint references. null/undefined when
  *   unreferenced (free) or not found
- * @param outline - The shape's local outline polygon (from ObjectOutlineRegistry).
+ * @param outline - The shape's local outline polygon (the type's `outline`).
  *   When present, a connectPoint or edge anchor snaps onto the true edge; omitted =
  *   the edge the shape's geometry draws (the box for a rect, the arc for an
  *   ellipse). Not consulted for extra points
- * @param anchorRegion - The shape's local anchor region (from
- *   ObjectAnchorRegionRegistry). Centers the edge anchors on that band, and
+ * @param anchorRegion - The shape's local anchor region (the type's
+ *   `anchorRegion`). Centers the edge anchors on that band, and
  *   spreads an edge anchor's ratio over it, instead of the bounding box;
  *   omitted = full bounding box
- * @param extraConnectPoints - The shape's declared extra anchors (from
- *   ObjectExtraConnectPointsRegistry), in local coordinates; omitted = the four
+ * @param extraConnectPoints - The shape's declared extra anchors, in local
+ *   coordinates; omitted = the four
  *   edge anchors only
  * @returns The resolved coordinate, or null if it cannot be resolved
  */
 export const resolveEndpoint = (
 	endpoint: EndpointRef,
-	obj: ObjectState | null | undefined,
+	obj: EndpointOwner | null | undefined,
 	outline?: readonly Point[] | null,
 	anchorRegion?: Rect | null,
 	extraConnectPoints?: readonly ExtraConnectPoint[] | null,

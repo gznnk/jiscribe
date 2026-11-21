@@ -1,23 +1,11 @@
+import { ARROW_SIZE } from "@jiscribe/doc/model/objects/utils/arrowHeadDimensions";
 import { radiansToDegrees } from "@jiscribe/geometry";
 import type React from "react";
 import { memo } from "react";
 
 import { ArrowPolygon } from "./ArrowStyled";
 import { createSvgTransform } from "../../utils/createSvgTransform";
-import { ARROW_SIZE } from "../ArrowConstants";
-import type { ArrowExtent, ArrowShapeProps } from "../ArrowTypes";
-
-/**
- * Inset (in local units) used to terminate the line at this arrow's base.
- * Since the base sits at `-ARROW_SIZE`, stop the line at the base.
- */
-export const FILLED_TRIANGLE_INSET = ARROW_SIZE;
-
-/** How far this head runs from its tip (local units), for the drawn extent (calcArrowReach). */
-export const FILLED_TRIANGLE_EXTENT: ArrowExtent = {
-	length: ARROW_SIZE,
-	halfWidth: ARROW_SIZE / 2,
-};
+import type { ArrowShapeProps } from "../ArrowTypes";
 
 /**
  * FilledTriangle arrow shape component.
