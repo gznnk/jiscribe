@@ -163,7 +163,7 @@ async function setupConnectorWithLabel(
 
 /**
  * Asserts the picked label's outline frames the open label editor's box: the
- * same box, moved out by no more than the stroke the outline is drawn with.
+ * same box, within the stroke the outline is drawn with on every side.
  */
 async function expectOutlineOverEditor(canvas: CanvasDriver): Promise<void> {
 	const editorBounds = await canvas.page
