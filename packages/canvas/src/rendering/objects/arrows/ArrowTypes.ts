@@ -1,3 +1,5 @@
+import type { ArrowLineEndWedge } from "@jiscribe/doc/model/objects/utils/arrowOutlineThinning";
+
 /**
  * Common props for arrow shape components
  */
@@ -28,15 +30,4 @@ export type ArrowShapeProps = {
 	lineEndWedge?: ArrowLineEndWedge;
 	dataKind?: string;
 	dataId?: string;
-};
-
-/**
- * Where a line stopped short of a head's tip ends, in the head's local units
- * (the tip at (0,0), the line trailing toward -x).
- */
-export type ArrowLineEndWedge = {
-	/** Distance from the tip back to the line's end. */
-	inset: number;
-	/** Half the line's width. */
-	lineHalfWidth: number;
 };

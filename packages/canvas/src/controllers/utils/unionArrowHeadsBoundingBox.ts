@@ -1,9 +1,9 @@
+import { calcArrowReach } from "@jiscribe/doc/model/objects/utils/arrowExtents";
 import { unionBoundingBoxes } from "@jiscribe/geometry";
 import type { BoundingBox, Point } from "@jiscribe/geometry";
 
 import { pickShapeStyleFields } from "./pickShapeStyleFields";
 import type { VisualExtentRegistries } from "./VisualExtentRegistries";
-import { calcArrowReach } from "../../rendering/objects/arrows";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 
 /** How far (world units) each end's head reaches from its tip; 0 for an end with none. */

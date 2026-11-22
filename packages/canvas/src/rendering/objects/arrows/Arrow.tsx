@@ -1,8 +1,9 @@
 import type { ArrowType } from "@jiscribe/doc/model/objects/types/ArrowType";
+import type { ArrowLineEndWedge } from "@jiscribe/doc/model/objects/utils/arrowOutlineThinning";
 import type React from "react";
 import { memo } from "react";
 
-import type { ArrowLineEndWedge, ArrowShapeProps } from "./ArrowTypes";
+import type { ArrowShapeProps } from "./ArrowTypes";
 import { CircleArrow } from "./shapes/Circle";
 import { ConcaveTriangleArrow } from "./shapes/ConcaveTriangle";
 import { CrossArrow } from "./shapes/Cross";

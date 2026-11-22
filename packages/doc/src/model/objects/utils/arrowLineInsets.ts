@@ -1,4 +1,3 @@
-import type { ArrowType } from "@jiscribe/doc/model/objects/types/ArrowType";
 import {
 	CIRCLE_INSET,
 	CONCAVE_TRIANGLE_INSET,
@@ -13,7 +12,9 @@ import {
 	HOLLOW_CIRCLE_INSET,
 	HOLLOW_DIAMOND_INSET,
 	HOLLOW_TRIANGLE_INSET,
-} from "@jiscribe/doc/model/objects/utils/arrowHeadDimensions";
+} from "./arrowHeadDimensions";
+import { calcArrowLineEndWedge } from "./arrowOutlineThinning";
+import type { ArrowType } from "../types/ArrowType";
 
 /**
  * The distance (in local units) up to the "root where the line should terminate" for each arrow type.
@@ -25,8 +26,8 @@ import {
  *
  * `Record<ArrowType, number>` covers every type, so a missing inset definition when an
  * arrow type is added is caught as a compile error. Each value references the corresponding
- * head's constant in `@jiscribe/doc` (arrowHeadDimensions), next to the dimensions the head
- * is drawn from, so the inset follows when the head changes.
+ * head's constant in arrowHeadDimensions, next to the dimensions the head is drawn from,
+ * so the inset follows when the head changes.
  *
  * Types that are not shortened:
  *   - None: no arrow
@@ -60,3 +61,25 @@ const ARROW_LINE_INSETS: Record<ArrowType, number> = {
  */
 export const getArrowLineInset = (type: ArrowType | undefined): number =>
 	type === undefined ? 0 : ARROW_LINE_INSETS[type];
+
+/**
+ * How far short of the tip (world units) a line stops under the head at that
+ * end: the type's own inset (getArrowLineInset) plus the inset of the wedge the
+ * head fills past the line's end (calcArrowLineEndWedge), both at the head's
+ * scale.
+ *
+ * @param type - The end's mark; undefined and "None" stop nothing short
+ * @param strokeWidth - The line's resolved stroke width (world units)
+ * @param arrowScale - The resolved factor on the head's size (`arrowScale`, 1 when unset)
+ * @returns The distance to pull the line's end back along its last segment
+ */
+export const calcArrowLineInset = (
+	type: ArrowType | undefined,
+	strokeWidth: number,
+	arrowScale: number,
+): number => {
+	// The wedge a head fills past the line's end is what decides how far short
+	// the line stops, so the two cannot disagree.
+	const wedgeInset = calcArrowLineEndWedge(type, arrowScale)?.inset ?? 0;
+	return (getArrowLineInset(type) + wedgeInset) * strokeWidth * arrowScale;
+};

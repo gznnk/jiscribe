@@ -1,7 +1,8 @@
 // The dimensions every arrowhead is laid out by, in the head's local units: the
 // tip at (0,0) and the head trailing toward -x, drawn at `strokeWidth ×
-// arrowScale` world units per local unit. The canvas draws the heads from these
-// and stops its lines by them; the doc layer measures by them, so the two cannot
+// arrowScale` world units per local unit. The canvas draws the heads from these;
+// where a line stops short of a head (arrowLineInsets) and how far a head runs
+// (arrowExtents) are measured by them too, so drawing and measuring cannot
 // disagree about how long a head is.
 
 /** Arrow size constant: the length of a triangle head along the line, its base's full width. */
@@ -66,8 +67,8 @@ export const CROSS_ARM = ARROW_SIZE * 0.4;
 // --- Line insets -----------------------------------------------------------
 //
 // Where the line stops short of each head's tip (local units), so it does not
-// show through a hollow head or past a narrow tip (the canvas's
-// getArrowLineInset). OpenArrow is stopped short only once its outline thins
+// show through a hollow head or past a narrow tip (getArrowLineInset in
+// arrowLineInsets). OpenArrow is stopped short only once its outline thins
 // (OPEN_ARROW_THIN_OUTLINE_LINE_INSET).
 
 /**
@@ -148,8 +149,8 @@ export const CROW_FOOT_ZERO_ONE_INSET =
  * How far short of the tip (in stroke widths) the line stops once an OpenArrow
  * head is scaled below ARROW_OUTLINE_THINNING_SCALE and its outline thins: where
  * the V's arms stand one stroke width apart, so the line's end sits between them
- * instead of showing past the thinner arms. Read by the canvas's
- * calcArrowLineEndWedge, which calcArrowLineInset stops the line by.
+ * instead of showing past the thinner arms. Read by calcArrowLineEndWedge
+ * (arrowOutlineThinning), which calcArrowLineInset stops the line by.
  */
 export const OPEN_ARROW_THIN_OUTLINE_LINE_INSET =
 	0.5 / Math.tan(Math.atan2(ARROW_SIZE / 2, ARROW_SIZE));
