@@ -7,6 +7,7 @@ import { deriveGridLineColor } from "./layers/background/deriveGridLineColor";
 import { Grid } from "./layers/background/Grid";
 import type { MovePreview } from "./layers/content/MovePreview";
 import { ObjectsRenderer } from "./layers/content/ObjectsRenderer";
+import { calcViewportSvgBox } from "./Viewport";
 import type { Viewport } from "./Viewport";
 import type { CanvasState } from "../states/canvas/CanvasState";
 
@@ -93,9 +94,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
 	return (
 		<Svg
 			ref={svgRef}
-			width={width}
-			height={height}
-			viewBox={`${minX} ${minY} ${width / zoom} ${height / zoom}`}
+			{...calcViewportSvgBox(viewport)}
 			style={
 				background !== undefined ? { backgroundColor: background } : undefined
 			}

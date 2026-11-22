@@ -1,22 +1,18 @@
-import { isConnectorDrawnOrthogonal } from "@jiscribe/doc/model/objects/connector/isConnectorDrawnOrthogonal";
+import type { EndpointOwnerShape } from "@jiscribe/doc/model/objects/connector/EndpointOwner";
+import type { ExtraConnectPoint } from "@jiscribe/doc/model/objects/connector/ExtraConnectPoint";
+import {
+	resolveConnectorEnds,
+	resolveStoredConnectorWaypoints,
+} from "@jiscribe/doc/model/objects/connector/resolveConnectorEnds";
 import { isTransformedFrame, type Point, type Rect } from "@jiscribe/geometry";
 
-import { adjustToOutline } from "./adjustToOutline";
 import { readCachedObjectOutline } from "./readCachedObjectOutline";
-import { resolveEndpoint } from "./resolveEndpoint";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../../states/objects/connector/ConnectorState";
 import type { ObjectAnchorRegionRegistry } from "../../../registry/ObjectAnchorRegionRegistry";
-import type {
-	ExtraConnectPoint,
-	ObjectExtraConnectPointsRegistry,
-} from "../../../registry/ObjectExtraConnectPointsRegistry";
+import type { ObjectExtraConnectPointsRegistry } from "../../../registry/ObjectExtraConnectPointsRegistry";
 import type { ObjectOutlineRegistry } from "../../../registry/ObjectOutlineRegistry";
-import {
-	alignVertexPath,
-	calcEndpointDirection,
-	resolveOrthogonalRoute,
-} from "../routing";
+import { resolveOrthogonalRoute } from "../routing";
 
 /**
  * Reads a shape's local outline polygon from the registry (readCachedObjectOutline),
@@ -81,115 +77,32 @@ const resolveExtraConnectPoints = (
 };
 
 /**
- * The two endpoints of a connector as they are drawn, before any route between
- * them: each anchor resolved on its owner, and a center anchor snapped onto the
- * outline toward the point the line heads to next (the first or last stored
- * vertex, otherwise the opposite endpoint). The first half of
- * {@link resolveConnectorPoints}, which routes from exactly these points.
+ * One end's owner with what its type registers on this canvas about where an
+ * end lands on it, read once from the registries (the outline through
+ * readCachedObjectOutline) for the doc-side resolution to take as values.
  *
- * @param connectorState - The connector whose endpoints are resolved; its `points` aim a center anchor
- * @param sourceObj - The owner shape of the source endpoint; null/undefined for a free endpoint or a missing owner
- * @param targetObj - The owner shape of the target endpoint; null/undefined for a free endpoint or a missing owner
- * @param outlineRegistry - Per-canvas ObjectOutlineRegistry, as for resolveConnectorPoints
- * @param anchorRegionRegistry - Per-canvas ObjectAnchorRegionRegistry, as for resolveConnectorPoints
- * @param extraConnectPointsRegistry - Per-canvas ObjectExtraConnectPointsRegistry, as for resolveConnectorPoints
- * @returns The endpoints in world coordinates with each owner's declared extra anchors (read
- *   once here for the route), or null exactly when resolveConnectorPoints returns null
+ * @param obj - The owner shape; null/undefined for a free endpoint or a missing owner, which reads every declaration as absent
+ * @param outlineRegistry - Per-canvas ObjectOutlineRegistry; omitted = the outline the owner's geometry implies
+ * @param anchorRegionRegistry - Per-canvas ObjectAnchorRegionRegistry; omitted = the full bounding box
+ * @param extraConnectPointsRegistry - Per-canvas ObjectExtraConnectPointsRegistry; omitted = the four edge anchors only
  */
-export const resolveConnectorEnds = (
-	connectorState: ConnectorState,
-	sourceObj: ObjectState | null | undefined,
-	targetObj: ObjectState | null | undefined,
+export const readEndpointOwnerShape = (
+	obj: ObjectState | null | undefined,
 	outlineRegistry?: Pick<ObjectOutlineRegistry, "get"> | null,
 	anchorRegionRegistry?: Pick<ObjectAnchorRegionRegistry, "get"> | null,
 	extraConnectPointsRegistry?: Pick<
 		ObjectExtraConnectPointsRegistry,
 		"get"
 	> | null,
-): {
-	source: Point;
-	target: Point;
-	sourceExtraConnectPoints: readonly ExtraConnectPoint[] | null;
-	targetExtraConnectPoints: readonly ExtraConnectPoint[] | null;
-} | null => {
-	const sourceOutline = resolveOutline(sourceObj, outlineRegistry);
-	const targetOutline = resolveOutline(targetObj, outlineRegistry);
-	const sourceAnchorRegion = resolveAnchorRegion(
-		sourceObj,
-		anchorRegionRegistry,
-	);
-	const targetAnchorRegion = resolveAnchorRegion(
-		targetObj,
-		anchorRegionRegistry,
-	);
-	const sourceExtraConnectPoints = resolveExtraConnectPoints(
-		sourceObj,
+): EndpointOwnerShape => ({
+	owner: obj,
+	outline: resolveOutline(obj, outlineRegistry),
+	anchorRegion: resolveAnchorRegion(obj, anchorRegionRegistry),
+	extraConnectPoints: resolveExtraConnectPoints(
+		obj,
 		extraConnectPointsRegistry,
-	);
-	const targetExtraConnectPoints = resolveExtraConnectPoints(
-		targetObj,
-		extraConnectPointsRegistry,
-	);
-
-	// Resolve endpoints to coordinates
-	let sourcePoint = resolveEndpoint(
-		connectorState.source,
-		sourceObj,
-		sourceOutline,
-		sourceAnchorRegion,
-		sourceExtraConnectPoints,
-	);
-	let targetPoint = resolveEndpoint(
-		connectorState.target,
-		targetObj,
-		targetOutline,
-		targetAnchorRegion,
-		targetExtraConnectPoints,
-	);
-
-	if (!sourcePoint || !targetPoint) {
-		return null;
-	}
-
-	const waypoints = connectorState.points ?? [];
-
-	// Outline adjustment for center anchors aims toward "the point the line heads to next".
-	// Use the first/last waypoint if present, otherwise the opposite endpoint.
-	const sourceToward = waypoints[0] ?? targetPoint;
-	const targetToward = waypoints[waypoints.length - 1] ?? sourcePoint;
-
-	// Adjust to outline for center anchors (true outline when available, else rect/ellipse)
-	if (connectorState.source.anchor.kind === "center") {
-		sourcePoint = adjustToOutline(
-			sourcePoint,
-			sourceToward,
-			sourceObj,
-			sourceOutline,
-		);
-		if (!sourcePoint) {
-			return null;
-		}
-	}
-
-	if (connectorState.target.anchor.kind === "center") {
-		targetPoint = adjustToOutline(
-			targetPoint,
-			targetToward,
-			targetObj,
-			targetOutline,
-		);
-		if (!targetPoint) {
-			return null;
-		}
-	}
-
-	return {
-		source: sourcePoint,
-		target: targetPoint,
-		sourceExtraConnectPoints,
-		targetExtraConnectPoints,
-	};
-};
+	),
+});
 
 /**
  * Pure function that resolves both endpoints of a connector to actual coordinates. It handles
@@ -199,7 +112,9 @@ export const resolveConnectorEnds = (
  * `waypoints` returns the intermediate points of the drawn path (in world coordinates) in
  * source → target order: the connector's own vertices when it has any (with the two next to the
  * endpoints aligned to them), otherwise the corners the router chose. Endpoint outline adjustment
- * aims toward the adjacent point (or the opposite endpoint if there is none).
+ * aims toward the adjacent point (or the opposite endpoint if there is none). Everything but the
+ * router's choice is resolved by the doc layer (resolveConnectorEnds,
+ * resolveStoredConnectorWaypoints), which a headless consumer calls the same way.
  *
  * @param connectorState - The connector state to resolve. Carries both endpoints, routing, and manual points
  * @param sourceObj - The owner shape of the source endpoint. null/undefined if unreferenced (free endpoint) or not found
@@ -224,75 +139,48 @@ export const resolveConnectorPoints = (
 		"get"
 	> | null,
 ): { source: Point; target: Point; waypoints: Point[] } | null => {
-	const ends = resolveConnectorEnds(
-		connectorState,
+	const sourceShape = readEndpointOwnerShape(
 		sourceObj,
+		outlineRegistry,
+		anchorRegionRegistry,
+		extraConnectPointsRegistry,
+	);
+	const targetShape = readEndpointOwnerShape(
 		targetObj,
 		outlineRegistry,
 		anchorRegionRegistry,
 		extraConnectPointsRegistry,
 	);
+	const ends = resolveConnectorEnds(connectorState, sourceShape, targetShape);
 	if (!ends) {
 		return null;
 	}
 
-	// Intermediate waypoints. The polyline passes through source → ...waypoints → target.
-	const waypoints = connectorState.points ?? [];
-
-	// A self-loop (both endpoints on the same shape) degenerates as a straight line, so it uses the
-	// dedicated rectangular loop route regardless of the routing setting — which is why the branch
-	// asks how the line is drawn, not what `routing` says (see isConnectorDrawnOrthogonal). Vertices
-	// override the route itself: a path the author shaped by hand is no longer degenerate.
-	if (isConnectorDrawnOrthogonal(connectorState)) {
-		// With vertices, `points` **is** the path: the corners are drawn exactly as stored, with only
-		// the two next to the endpoints sliding along to keep their segment axis-aligned
-		// (see alignVertexPath). Nothing is routed, so nothing is avoided — a shape moved across the
-		// route is simply crossed.
-		if (waypoints.length > 0) {
-			return {
-				source: ends.source,
-				target: ends.target,
-				waypoints: alignVertexPath(
-					waypoints,
-					ends.source,
-					ends.target,
-					calcEndpointDirection(
-						connectorState.source.anchor,
-						ends.source,
-						waypoints[0],
-						sourceObj,
-						ends.sourceExtraConnectPoints,
-					),
-					calcEndpointDirection(
-						connectorState.target.anchor,
-						ends.target,
-						waypoints[waypoints.length - 1],
-						targetObj,
-						ends.targetExtraConnectPoints,
-					),
-				),
-			};
-		}
-
-		// No vertices: the whole path is the router's to choose.
-		const path = resolveOrthogonalRoute(
-			connectorState.source.anchor,
-			connectorState.target.anchor,
-			ends.source,
-			ends.target,
-			sourceObj,
-			targetObj,
-			ends.sourceExtraConnectPoints,
-			ends.targetExtraConnectPoints,
-		);
-		return {
-			source: path[0],
-			target: path[path.length - 1],
-			waypoints: path.slice(1, -1),
-		};
+	const waypoints = resolveStoredConnectorWaypoints(
+		connectorState,
+		ends,
+		sourceShape,
+		targetShape,
+	);
+	if (waypoints !== null) {
+		return { source: ends.source, target: ends.target, waypoints };
 	}
 
-	return { source: ends.source, target: ends.target, waypoints };
+	const path = resolveOrthogonalRoute(
+		connectorState.source.anchor,
+		connectorState.target.anchor,
+		ends.source,
+		ends.target,
+		sourceObj,
+		targetObj,
+		sourceShape.extraConnectPoints,
+		targetShape.extraConnectPoints,
+	);
+	return {
+		source: path[0],
+		target: path[path.length - 1],
+		waypoints: path.slice(1, -1),
+	};
 };
 
 /**

@@ -4,6 +4,7 @@ import {
 } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import { calcTextBlockSize } from "@jiscribe/doc/text/block/calcTextBlockSize";
 import type { TextMeasureFont } from "@jiscribe/doc/text/measure/TextMeasureFont";
+import type { Point, Rect } from "@jiscribe/geometry";
 
 /** The label's font, in the shape the shared measurement takes it (see TextMeasureFont). */
 export type ConnectorLabelFont = TextMeasureFont;
@@ -37,9 +38,10 @@ export const calcConnectorLabelBox = (
  * Label box dimensions for a stored label, resolving the style defaults the
  * renderer applies (see CONNECTOR_LABEL_DEFAULTS).
  *
- * The single derivation shared by the renderer (ConnectorLabel.tsx) and the
- * connector extent (calcConnectorBoundingBox), so the drawn box and the box the
- * bbox reserves cannot drift apart.
+ * The single derivation of the box's size, for the renderer and every reader
+ * that has to agree with what it draws (the connector's extent, the picked
+ * label's outline, the label drag's alignment, auto layout); placed with
+ * {@link calcConnectorLabelRect}.
  *
  * @param label - Stored label; an omitted `fontFamily` / `fontSize` / `fontWeight`
  *   falls back to CONNECTOR_LABEL_DEFAULTS and an omitted `strokeWidth` means no border
@@ -56,3 +58,21 @@ export const resolveConnectorLabelBox = (
 		},
 		label.strokeWidth ?? 0,
 	);
+
+/**
+ * Where a label box lies in world coordinates: centered on its anchor and never
+ * rotated, which is how the label is drawn.
+ *
+ * @param anchor - The label's anchor on the path (calcConnectorLabelAnchor), world coordinates
+ * @param labelBox - The box size (resolveConnectorLabelBox), world units
+ * @returns The box as a top-left corner plus size
+ */
+export const calcConnectorLabelRect = (
+	anchor: Point,
+	labelBox: ConnectorLabelBox,
+): Rect => ({
+	x: anchor.x - labelBox.width / 2,
+	y: anchor.y - labelBox.height / 2,
+	width: labelBox.width,
+	height: labelBox.height,
+});

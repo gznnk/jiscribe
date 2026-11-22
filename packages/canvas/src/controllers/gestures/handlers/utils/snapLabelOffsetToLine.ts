@@ -3,7 +3,8 @@ import type { ConnectorLabelPlacement } from "../../../../rendering/objects/conn
 /**
  * Pulls a label placed just beside the line back onto it, so the common
  * "label sits on the line" placement does not need pixel-perfect aiming.
- * Only `offset` snaps: `position` is a free ratio with no distinguished value.
+ * Only `offset` is touched; a label drag snaps `position` separately
+ * (snapLabelPositionToMidpoints).
  *
  * @param placement Raw placement from calcConnectorLabelPlacement
  * @param thresholdSvg Snap threshold in SVG units, chosen by the caller

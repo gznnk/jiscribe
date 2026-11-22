@@ -1,7 +1,7 @@
 # general-shapes 追加候補メモ
 
 会員規則: 記法（flowchart / UML 等）に属さない、実物・人・場を表す汎用ピクトグラム。
-装飾系は入れない。収載済みは actor / cloud と第1群の13図形（下記）。
+装飾系は入れない。収載済みは actor / cloud と第1群の13図形、第2群の clock / lightning / bot（下記）。
 
 flowchart-shapes に既にある db・document・multiDocument・storedData・display・delay
 とは重複させない（円筒や書類はそちらの領分）。
@@ -24,10 +24,14 @@ flowchart-shapes に既にある db・document・multiDocument・storedData・di
 - **lock / shield** — lock は保護対象、shield は境界（テキストは上半分に入る）
 - **smartphone / laptop** — クライアント種別の描き分け。テキストは画面の中
 
-## 第2群: 汎用マーカー（中優先）
+## 第2群: 汎用マーカー（clock / lightning / bot は実装済み）
 
-- **clock** — スケジューラ、定期実行（flowchart の delay は記法図形なので棲み分け可能）
-- **lightning** — イベント、トリガー
+- **clock** — スケジューラ、cron、定期実行、タイマー・タイムアウト（flowchart の
+  delay は記法図形なので description で棲み分けを明示してある）
+- **lightning** — イベント、トリガー、Webhook。envelope（1通のメッセージ）・queue
+  （バッファ）との使い分けを description で明示してある
+- **bot** — AI エージェント、LLM、自動化ボット。角丸の頭部＋アンテナ＋目で、耳は
+  描かない。actor（人間）との使い分けを description で明示してある
 - check / warning 類 — 図形より「アイコン機能」として持つ方が筋かもしれず保留
 
 ## 第3群: 入れない（装飾系、サンプルの実務密度方針と衝突）

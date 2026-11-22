@@ -3,6 +3,7 @@ import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
 import { isSameRichText } from "@jiscribe/doc/model/objects/types/text/RichText";
 
 import { applyLabelPlacement } from "./applyLabelPlacement";
+import { clearConnectorLabel } from "./clearConnectorLabel";
 import { NORMAL_MODE } from "./normalMode";
 import { readOpenTextEdit } from "./readOpenTextEdit";
 import type { ConnectorLabelPlacement } from "../../rendering/objects/connector/geometry/label/calcConnectorLabelPlacement";
@@ -27,11 +28,8 @@ function clearTextEdit(state: CanvasControllerState): CanvasControllerState {
 
 /**
  * Commits a connector's label edit. The text is written back to `label.text` (nested).
- * When cleared to an empty string the styles are not discarded: the label is kept with only its
- * text emptied, so re-entering text can restore them. The placement is dropped, because it
- * describes a label that no longer exists and would otherwise pin the next one to the old spot.
- * A label left holding nothing but text is not worth keeping, so it is removed entirely
- * (leaving no empty-label junk = back to no label).
+ * Cleared to an empty string, the label is taken away the way Delete takes a
+ * picked one away (clearConnectorLabel).
  *
  * @param state - the current canvas controller state
  * @param connector - the connector whose label is being updated
@@ -56,23 +54,7 @@ function commitConnectorLabel(
 
 	let nextConnector: ConnectorState;
 	if (text === "") {
-		// If any style remains, keep the label and empty only its text.
-		const {
-			text: _clearedText,
-			position: _clearedPosition,
-			offset: _clearedOffset,
-			...labelStyles
-		} = connector.label ?? {};
-		if (Object.keys(labelStyles).length === 0) {
-			// A label with no style left is removed entirely, reverting to no label.
-			const { label: _removed, ...rest } = connector;
-			nextConnector = rest as ConnectorState;
-		} else {
-			nextConnector = {
-				...connector,
-				label: { ...labelStyles, text: "" },
-			} as ConnectorState;
-		}
+		nextConnector = clearConnectorLabel(connector);
 	} else {
 		const label: ConnectorLabel = { ...connector.label, text };
 		nextConnector = {

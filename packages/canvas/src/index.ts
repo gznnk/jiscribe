@@ -278,11 +278,11 @@ export type {
 // Per-type stroke / fill defaults: the registry a canvas resolves an unset
 // stroke, width, dash or fill through, reachable as
 // `CanvasRegistries["objectShapeStyleDefaults"]`.
+export type { ObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
 export type {
 	ObjectShapeStyleDefaults,
-	ObjectShapeStyleDefaultsRegistry,
-} from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
-export type { ResolvedShapeStyle } from "@jiscribe/doc/model/objects/utils/shapeStyleFallback";
+	ResolvedShapeStyle,
+} from "@jiscribe/doc/model/objects/utils/shapeStyleFallback";
 export type {
 	ObjectTextEditOverflowResolver,
 	TextEditOverflow,
@@ -303,12 +303,11 @@ export type {
 	ObjectConnectionAnchorsCalculator,
 	ObjectConnectionAnchorsDeclaration,
 } from "./rendering/objects/registry/ObjectConnectionAnchorsRegistry";
-export type {
-	ExtraConnectPoint,
-	ObjectExtraConnectPointsCalculator,
-} from "./rendering/objects/registry/ObjectExtraConnectPointsRegistry";
+export type { ObjectExtraConnectPointsCalculator } from "./rendering/objects/registry/ObjectExtraConnectPointsRegistry";
+export type { ExtraConnectPoint } from "@jiscribe/doc/model/objects/connector/ExtraConnectPoint";
 export type { ObjectGeometryKeyCalculator } from "./rendering/objects/registry/ObjectGeometryKeyRegistry";
 export type { ObjectVisualBoundsCalculator } from "./rendering/objects/registry/ObjectVisualBoundsRegistry";
+export type { ObjectLabelBackdropRegion } from "./rendering/objects/registry/ObjectLabelBackdropRegistry";
 export type {
 	ObjectTransformHandles,
 	ObjectTransformHandlesDeclaration,

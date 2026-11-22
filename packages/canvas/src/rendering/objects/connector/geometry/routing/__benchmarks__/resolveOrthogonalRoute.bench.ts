@@ -1,4 +1,8 @@
 import {
+	calcConnectPoint,
+	type AnchorFrame,
+} from "@jiscribe/doc/model/objects/connector/calcConnectPoint";
+import {
 	ConnectPointIds,
 	type ConnectPointId,
 } from "@jiscribe/doc/model/objects/types/EndpointRef";
@@ -6,7 +10,6 @@ import type { Point } from "@jiscribe/geometry";
 import { bench, describe } from "vitest";
 
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
-import { calcConnectPoint, type AnchorFrame } from "../../calcConnectPoint";
 import { resolveOrthogonalRoute } from "../resolveOrthogonalRoute";
 
 // The router avoids only the two shapes a connector joins (routeOrthogonalConnector), so

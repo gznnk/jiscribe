@@ -5,6 +5,7 @@ import {
 	getFirstTextSlotId,
 	readRichTextSlot,
 } from "../../../states/objects/types/TextSlots";
+import { createConnectorLabelPartSelection } from "../../selection/partKinds/connectorLabelPartKind";
 import { isTextSlotPart } from "../../selection/partKinds/textSlotPartKind";
 import { getSelectedConnectorId } from "../../selection/readers/getSelectedConnectorId";
 import { readActivePartFocusId } from "../../selection/readers/readActivePartFocusId";
@@ -73,13 +74,12 @@ export const StartTextEditCommand: ExecutableCommand = {
 				objectMenuOpenId: null,
 				...closeStencilPopups(),
 				// The selection is already that one connector
-				// (getSelectedConnectorId), so only a part picked below it has to go:
-				// the label is no part, and the session's owner must be the object
-				// itself (see CanvasMode).
-				selection:
-					state.selection.part === null
-						? state.selection
-						: { ...state.selection, part: null },
+				// (getSelectedConnectorId); its label is picked below it in place of
+				// whatever was (see CanvasMode).
+				selection: {
+					objectIds: state.selection.objectIds,
+					part: createConnectorLabelPartSelection(),
+				},
 				mode: {
 					kind: "textEdit",
 					draft: {

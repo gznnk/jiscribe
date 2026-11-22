@@ -6,6 +6,7 @@ import type {
 	CanvasMode,
 	DragStartSnapshot,
 } from "../../../../CanvasTypes";
+import { connectorLabelPartSelection } from "../../../../selection/__tests__/support/connectorLabelPartSelection";
 import { textSlotPartSelection } from "../../../../selection/__tests__/support/textSlotPartSelection";
 import type { CanvasSelection } from "../../../../selection/CanvasSelection";
 import { commitTextEditIntoDragSnapshot } from "../commitTextEditIntoDragSnapshot";
@@ -69,7 +70,10 @@ const editingLabel = (connectorId: string, text: string) => ({
 		kind: "textEdit",
 		draft: { kind: "connectorLabel", text },
 	} as CanvasMode,
-	selection: { objectIds: [connectorId], part: null } as CanvasSelection,
+	selection: {
+		objectIds: [connectorId],
+		part: connectorLabelPartSelection(),
+	} as CanvasSelection,
 });
 
 const bodyTextOf = (object: ObjectState | undefined): string =>

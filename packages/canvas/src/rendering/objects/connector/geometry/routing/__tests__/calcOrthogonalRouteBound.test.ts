@@ -1,3 +1,4 @@
+import { calcConnectPoint } from "@jiscribe/doc/model/objects/connector/calcConnectPoint";
 import type {
 	ConnectPointId,
 	AnchorSpec,
@@ -6,7 +7,6 @@ import type { Point, TransformedFrame } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
-import { calcConnectPoint } from "../../calcConnectPoint";
 import { calcOrthogonalRouteBound } from "../calcOrthogonalRouteBound";
 import { resolveOrthogonalRoute } from "../resolveOrthogonalRoute";
 

@@ -1,8 +1,8 @@
 import { ARROW_OUTLINE_THINNING_SCALE } from "@jiscribe/doc/model/objects/base/ArrowStyleDoc";
 import type { ArrowType } from "@jiscribe/doc/model/objects/types/ArrowType";
+import { OPEN_ARROW_THIN_OUTLINE_LINE_INSET } from "@jiscribe/doc/model/objects/utils/arrowHeadDimensions";
 
 import type { ArrowLineEndWedge } from "./ArrowTypes";
-import { OPEN_ARROW_THIN_OUTLINE_LINE_INSET } from "./shapes/OpenArrow";
 
 /**
  * The wedge an OpenArrow fills between the line's end and its tip once its

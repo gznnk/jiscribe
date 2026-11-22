@@ -3,7 +3,7 @@ name: jiscribe
 description: Use when creating or editing a Jiscribe canvas diagram — a .jis / .jiscribe file, or a flowchart, architecture diagram, sticky-note board or chart the user wants drawn on a Jiscribe canvas.
 ---
 
-<!-- jiscribe guide 0.12.2+0b337867 -->
+<!-- jiscribe guide 0.12.2+1778c098 -->
 
 # Drawing on a Jiscribe canvas
 
@@ -23,7 +23,7 @@ To read or write a `.jis` file directly with your own file tools instead of thos
 - Colors (`stroke` / `fontColor` / `fill`): a CSS color string, or `"auto"` to follow the editor theme. `"auto"` is the default for `stroke` / `fontColor` (resolved to the theme foreground) and adapts to light/dark; `fill` defaults to `"transparent"`. Prefer `"auto"` (or omit the field) unless a specific color is needed.
 - Stroke: `stroke` (color, default `"auto"`), `strokeWidth` (default 2), `strokeDashType`: `"solid"`/`"dashed"`/`"dotted"`, `strokeOpacity` (0–1, default 1)
 - Fill: `fill` (default `"transparent"`), `fillOpacity` (0–1, default 1)
-- Text (every box shape, and `text`): `text`, `textAlign`: `"left"`/`"center"`/`"right"`, `verticalAlign`: `"top"`/`"middle"`/`"bottom"`, `fontColor` (default `"auto"`), `fontSize` (default 16). Where inside a shape the text lands differs by type — see "Where text is drawn". A shape that draws its text as a label below the box takes no `verticalAlign` (the label's box is sized from its text, leaving nothing to align within) and takes `labelFill` instead: the color painted behind the label, default `"auto"`, which knocks out connectors running under it in the page's color.
+- Text (every box shape, and `text`): `text`, `textAlign`: `"left"`/`"center"`/`"right"`, `verticalAlign`: `"top"`/`"middle"`/`"bottom"`, `fontColor` (default `"auto"`), `fontSize` (default 16). Where inside a shape the text lands differs by type — see "Where text is drawn". A shape that draws its text as a label below the box takes no `verticalAlign` (the label's box is sized from its text, leaving nothing to align within) and takes `labelFill` instead: the color painted behind the label, default `"auto"`, which knocks out connectors running under it in the page's color, or in the fill of the container / AWS group its center lies in.
 
 ## Arrows and relationship notation
 
@@ -255,17 +255,20 @@ rather than a `rect` with a label on it.
 | `document`              | report, file                                                       |
 | `multiDocument`         | report batch / file set                                            |
 | `actor`                 | user, role, stakeholder                                            |
+| `bot`                   | AI agent, LLM, automation bot                                      |
 | `browserWindow`         | web UI node (a symbol, not a frame to lay a screen out in)         |
 | `terminalWindow`        | CLI, shell session                                                 |
 | `smartphone`            | mobile client                                                      |
 | `laptop`                | desktop client, web client                                         |
 | `server`                | host, node, running process                                        |
 | `gear`                  | service, batch job, daemon                                         |
+| `clock`                 | scheduler, cron, timer, timeout                                    |
 | `package`               | library, artifact, deployment unit                                 |
 | `folder`                | directory, grouping                                                |
 | `file`                  | source file, configuration                                         |
 | `envelope`              | message, event                                                     |
 | `queue`                 | job queue, message queue                                           |
+| `lightning`             | event, trigger, webhook                                            |
 | `lock`                  | authentication, protected resource                                 |
 | `shield`                | security boundary, trust zone                                      |
 | `lucideIcon`            | Lucide icon (line-art pictogram, no text of its own)               |
@@ -308,8 +311,9 @@ rather than a `rect` with a label on it.
 
 ## Pictograms are symbols, not frames
 
-`browserWindow` / `terminalWindow` / `smartphone` / `laptop` / `server` / `gear` /
-`package` / `folder` / `file` / `envelope` / `queue` / `lock` / `shield` are
+`bot` / `browserWindow` / `terminalWindow` / `smartphone` / `laptop` / `server` /
+`gear` / `clock` / `package` / `folder` / `file` / `envelope` / `queue` /
+`lightning` / `lock` / `shield` are
 **pictograms**: symbols that stand for a thing in a diagram. Every detail they
 draw — a title bar, a screen, teeth, a lid — is a fraction of the bounding box,
 so they read at around their default size (roughly 100–160px) and distort when
@@ -331,7 +335,7 @@ where its text actually goes.
 - For `cloud`, text is placed in a reduced central region inside the bumps, so give the shape generous width/height.
 - For `document` and `callout`, text sits above the bottom wave/tail band.
 - For `multiDocument`, text is confined to the front (bottom-left) sheet, so give the shape generous size.
-- For `actor`, `server`, `package`, `envelope`, `queue`, `gear`, `lock`, `extract`, `cross`, `awsIcon`, `azureIcon` and `gcpIcon`, the drawing fills the whole box and the text is drawn as a label below it, auto-sized to the text itself — so the box does not need to be widened for a long name, and omitting the text leaves a bare figure. The label is painted on `labelFill` (default `"auto"`, the page's color), so a connector running under it is hidden there; set `"transparent"` to let it show through.
+- For `actor`, `bot`, `server`, `package`, `envelope`, `queue`, `lightning`, `gear`, `clock`, `lock`, `extract`, `cross`, `awsIcon`, `azureIcon` and `gcpIcon`, the drawing fills the whole box and the text is drawn as a label below it, auto-sized to the text itself — so the box does not need to be widened for a long name, and omitting the text leaves a bare figure. The label is painted on `labelFill` (default `"auto"`, the page's color, or the fill of the container / AWS group its center lies in), so a connector running under it is hidden there; set `"transparent"` to let it show through.
 - **`record` is the exception**: its text is a set of named slots, and the typography lives inside each slot rather than on the shape (see "`record` — a titled box with compartments").
 
 ## Layout

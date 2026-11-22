@@ -40,15 +40,3 @@ export type ArrowLineEndWedge = {
 	/** Half the line's width. */
 	lineHalfWidth: number;
 };
-
-/**
- * How far an arrowhead's drawing runs from its tip (local units), its outline
- * left out: the axis the shapes are laid out on has the tip at (0,0) and the
- * head trailing toward -x.
- */
-export type ArrowExtent = {
-	/** Distance from the tip to the rearmost point of the head. */
-	length: number;
-	/** Half the head's spread across the line. */
-	halfWidth: number;
-};

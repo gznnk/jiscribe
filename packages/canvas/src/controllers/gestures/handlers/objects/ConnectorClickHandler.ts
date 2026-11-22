@@ -6,12 +6,16 @@ import type {
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
 import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
+import { connectorLabelPart } from "../utils/partAddress";
+import { selectPartByClick } from "../utils/selectPartByClick";
 import { startConnectorLabelEdit } from "../utils/startConnectorLabelEdit";
 
 /**
  * Handles click events on connectors.
  * A connector is selected on its own: selecting one replaces whatever was
- * selected, and selecting a shape replaces it in turn.
+ * selected, and selecting a shape replaces it in turn. A click on the label box
+ * also picks the label one level below the connector (the `connectorLabel`
+ * part kind); a click on the line leaves nothing picked.
  *
  * Label editing (label.text) starts on a double click, with the edit target
  * depending on whether a label exists:
@@ -20,6 +24,7 @@ import { startConnectorLabelEdit } from "../utils/startConnectorLabelEdit";
  *   clicked point as its placement (carried in the textEdit mode until committed).
  * - Committed label: only a double click on the label box (targetAction "label")
  *   starts editing; a double click on the bare line just selects.
+ * Either way, opening the editor picks the label too (startConnectorLabelEdit).
  *
  * While editing, the static label box is not rendered and the editor overlay
  * (data-gesture="none") sits in its place, so any click that reaches this handler
@@ -69,9 +74,19 @@ export const ConnectorClickHandler: GestureHandler = {
 			nextState = { ...nextState, contextMenuPosition: null };
 		}
 
-		// A click selects the connector (clearing shape selection to enforce exclusivity)
+		// A click selects the connector (clearing shape selection to enforce
+		// exclusivity), then picks the label when the click landed on its box.
 		if (event.type === "click" && connectorId) {
 			nextState = selectConnectorAlone(nextState, connectorId);
+			const connector = nextState.objects[connectorId];
+			if (connector) {
+				nextState = selectPartByClick(
+					nextState,
+					connector,
+					event.targetAction === "label" ? connectorLabelPart() : undefined,
+					registries.objectPartKind,
+				);
+			}
 		}
 
 		return nextState;

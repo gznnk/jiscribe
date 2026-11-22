@@ -1,3 +1,6 @@
+import { calcEdgeAnchorDirection } from "@jiscribe/doc/model/objects/connector/calcConnectPoint";
+import type { ExtraConnectPoint } from "@jiscribe/doc/model/objects/connector/ExtraConnectPoint";
+import { resolveEndpoint } from "@jiscribe/doc/model/objects/connector/resolveEndpoint";
 import type { EndpointRef } from "@jiscribe/doc/model/objects/types/EndpointRef";
 import {
 	isTransformedFrame,
@@ -5,9 +8,6 @@ import {
 	type Point,
 } from "@jiscribe/geometry";
 
-import { calcEdgeAnchorDirection } from "../../../../../../rendering/objects/connector/geometry/calcConnectPoint";
-import { resolveEndpoint } from "../../../../../../rendering/objects/connector/geometry/endpoints/resolveEndpoint";
-import type { ExtraConnectPoint } from "../../../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 
 /**

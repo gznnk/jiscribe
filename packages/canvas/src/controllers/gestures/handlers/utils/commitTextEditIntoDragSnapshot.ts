@@ -20,8 +20,8 @@ import { readOpenTextEdit } from "../../../utils/readOpenTextEdit";
  *   menu drag leaves the edit open
  *
  * At a dragStart the commit lands ahead of the drag's first frame: handleGesture
- * froze the drag's start snapshot before routing, and every frame is rebuilt
- * from it, so the committed object is written into `startSnapshot.objects` as
+ * froze the drag's start snapshot before routing, and a frame that moves is
+ * rebuilt from it, so the committed object is written into `startSnapshot.objects` as
  * well; left out, the next frame would put the old text back.
  *
  * Only `objects` is patched: a commit writes a shape's text slot, or a

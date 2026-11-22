@@ -6,6 +6,7 @@ import type { GroupState } from "../../../../states/objects/primitives/group/Gro
 import type { PolylineState } from "../../../../states/objects/primitives/polyline/PolylineState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import { connectorLabelPartSelection } from "../../../selection/__tests__/support/connectorLabelPartSelection";
 import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
 import { vertexPartSelection } from "../../../selection/__tests__/support/vertexPartSelection";
 import type { CanvasSelection } from "../../../selection/CanvasSelection";
@@ -226,6 +227,50 @@ describe("DeleteCommand", () => {
 			expect(group.cy).toBe(5);
 			expect(group.width).toBe(10);
 			expect(group.height).toBe(10);
+		});
+	});
+
+	describe("connector label deletion", () => {
+		const labeledConnector = (label: ConnectorState["label"]): ConnectorState =>
+			({
+				id: "c1",
+				type: "connector",
+				points: [],
+				source: { anchor: { kind: "free", point: { x: 0, y: 0 } } },
+				target: { anchor: { kind: "free", point: { x: 200, y: 0 } } },
+				label,
+			}) as unknown as ConnectorState;
+
+		it("takes the picked label away in one commit, leaving the connector selected with nothing picked", () => {
+			const state = makeState({
+				objects: {
+					c1: labeledConnector({ text: "Yes", position: 0.25, fill: "#fff" }),
+				},
+				rootIds: ["c1"],
+				selection: selectionOf(["c1"], connectorLabelPartSelection()),
+			});
+
+			expect(DeleteCommand.canExecute(state, registries)).toBe(true);
+			const next = DeleteCommand.execute(state, registries);
+
+			expect((next.objects["c1"] as ConnectorState).label).toEqual({
+				text: "",
+				fill: "#fff",
+			});
+			expect(next.rootIds).toEqual(["c1"]);
+			expect(next.selection).toEqual(selectionOf(["c1"]));
+			expect(next.commitVersion).toBe(1);
+		});
+
+		it("removes a label left with no style outright", () => {
+			const state = makeState({
+				objects: { c1: labeledConnector({ text: "Yes" }) },
+				rootIds: ["c1"],
+				selection: selectionOf(["c1"], connectorLabelPartSelection()),
+			});
+			const next = DeleteCommand.execute(state, registries);
+			expect(next.objects["c1"]).not.toHaveProperty("label");
+			expect(next.objects["c1"]).toBeDefined();
 		});
 	});
 

@@ -1,14 +1,19 @@
 import { CONNECTOR_LABEL_DEFAULTS } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import type { BoundingBox, Point } from "@jiscribe/geometry";
 import type React from "react";
-import { memo, useCallback, useLayoutEffect } from "react";
+import { memo, useCallback, useLayoutEffect, useMemo } from "react";
 
 import {
+	ConnectorLabelEditorBackdrop,
 	ConnectorLabelEditorWrapper,
 	ConnectorLabelTextArea,
+	LABEL_EDITOR_BORDER_WIDTH_VAR,
 } from "./ConnectorLabelEditorStyled";
+import { LabelBackdropLayers } from "../../../../rendering/objects/base/LabelBackdropLayers";
+import { LABEL_BOX_CORNER_RADIUS } from "../../../../rendering/objects/connector/ConnectorLabel/ConnectorLabelStyled";
 import { calcConnectorLabelBox } from "../../../../rendering/objects/connector/geometry/label/connectorLabelLayout";
 import { useDocumentSurface } from "../../../../rendering/objects/DocumentSurfaceContext";
+import { useLabelBackdropLayers } from "../../../../rendering/objects/useLabelBackdropLayers";
 import { resolveAutoColor } from "../../../../rendering/objects/utils/resolveAutoColor";
 import { resolveLabelFill } from "../../../../rendering/objects/utils/resolveLabelFill";
 import { isCommitTextEditShortcut } from "../../../commands/text/CommitTextEditCommand";
@@ -42,6 +47,11 @@ const readTextAreaCaretTarget = (
 });
 
 type ConnectorLabelEditorProps = {
+	/**
+	 * The connector whose label is edited, under which the surrounding `<Canvas>`
+	 * keeps the backdrops the draft's box lies on (useLabelBackdropLayers).
+	 */
+	id: string;
 	/** Label anchor (world coordinates on the route). The editor is centered here. */
 	anchor: Point;
 	text: string;
@@ -62,6 +72,7 @@ type ConnectorLabelEditorProps = {
 };
 
 const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
+	id,
 	anchor,
 	text,
 	fontColor,
@@ -80,15 +91,25 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 	const documentSurface = useDocumentSurface();
 	// Resolve auto (theme-following) to the theme foreground (ink). Use the same resolver as the rendering side to match colors.
 	const color = resolveAutoColor(fontColor, "ink");
-	const background = resolveLabelFill(fill, documentSurface);
+	const knockout = resolveLabelFill(fill, documentSurface);
 	const borderColor = resolveAutoColor(stroke, "ink");
+	// Worked out by the canvas at the anchor the editor sits on
+	// (graftConnectorLabelDraft), which typing does not move; what follows each
+	// keystroke is the box below, which the layers are drawn over.
+	const layers = useLabelBackdropLayers(id);
+	const hasLayers = layers.length > 0;
 
 	// Width is the measured text's, so the box grows sideways as it is typed and
-	// the textarea never wraps. Height follows the textarea's scrollHeight.
-	const { width } = calcConnectorLabelBox(
+	// the textarea never wraps. Height follows the textarea's scrollHeight; the
+	// measured one is what the backdrop's layers are drawn over, which it matches.
+	const { width, height } = calcConnectorLabelBox(
 		text,
 		{ fontSize, fontFamily, fontWeight },
 		strokeWidth,
+	);
+	const backdropBox = useMemo(
+		() => ({ x: 0, y: 0, width, height }),
+		[width, height],
 	);
 
 	// The wrapper is centered on the anchor, which is already a world coordinate,
@@ -164,18 +185,35 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 			ref={wrapperRef}
 			data-testid="text-editor"
 			data-gesture="none"
+			hasBackdrop={hasLayers}
 			style={{
 				left: anchor.x,
 				top: anchor.y,
 				width,
-				background,
+				// On a backdrop, the knockout is drawn with the frames' fills under the
+				// text instead, as the committed label does (ConnectorLabel).
+				background: hasLayers ? "transparent" : knockout,
 				border:
 					strokeWidth > 0
 						? `${strokeWidth}px ${strokeDashType} ${borderColor}`
 						: "none",
+				...(hasLayers && {
+					[LABEL_EDITOR_BORDER_WIDTH_VAR]: `${strokeWidth}px`,
+				}),
 			}}
 			onPointerDown={handleWrapperPointerDown}
 		>
+			{hasLayers && (
+				<ConnectorLabelEditorBackdrop>
+					<LabelBackdropLayers
+						box={backdropBox}
+						layers={layers}
+						cornerRadius={LABEL_BOX_CORNER_RADIUS}
+						isShown
+						knockout={knockout}
+					/>
+				</ConnectorLabelEditorBackdrop>
+			)}
 			<ConnectorLabelTextArea
 				data-gesture="native-wheel"
 				value={text}
@@ -192,5 +230,11 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 	);
 };
 
-/** In-place textarea overlay for editing a connector's label, anchored on the connector route. */
+/**
+ * In-place textarea overlay for editing a connector's label, anchored on the
+ * connector route. An `"auto"` label lying on a frame's backdrop is drawn on the
+ * same stack as the committed label (LabelBackdropLayers in an SVG behind the
+ * text, the box's own background transparent and its border drawn again on
+ * top); elsewhere the box keeps its own background.
+ */
 export const ConnectorLabelEditor = memo(ConnectorLabelEditorComponent);

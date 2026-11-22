@@ -59,7 +59,7 @@ source embedding). Take all of it from `@jiscribe/doc` — see
 
 `controllers/selection/` keeps the selection model at its root (`CanvasSelection.ts`)
 and splits the rest by layer: `partKinds/` is what an object type declares about its
-parts (the text-slot and vertex kinds; the `ObjectPartKindRegistry` they are
+parts (the text-slot, vertex and connector-label kinds; the `ObjectPartKindRegistry` they are
 registered in sits with the rendering registries, since the renderers place text
 slots through it), `readers/` derives
 values from a selection without changing it, and `writers/` turns one state into the
@@ -120,7 +120,7 @@ The main ones are below. The full set is the bundle each `<Canvas>` owns (`Canva
 | `ObjectMapperRegistry` / `ObjectStateValidatorRegistry`, …                                         | `states/registry/`                          | Doc ↔ State mapper (+ features), State validator                                                             |
 | `GestureHandlerRegistry` / `ObjectBehaviorRegistry`                                                | `controllers/gestures/registry/`            | gesture handlers, per-type `ObjectBehavior`                                                                  |
 | `ObjectComponentRegistry` / `ObjectOutlineRegistry`, …                                             | `rendering/objects/registry/`               | render component, hit-test / snap outline                                                                    |
-| `ObjectPartKindRegistry`                                                                           | `rendering/objects/registry/`               | per-type part kinds: vertices, cells, the text slots and where each is placed                                |
+| `ObjectPartKindRegistry`                                                                           | `rendering/objects/registry/`               | per-type part kinds: vertices, cells, a connector's label, the text slots and where each is placed           |
 | `StencilRegistry` / `ObjectMenuRegistry` / `PropertyPanelRegistry` / `SelectionControlRegistry`, … | `controllers/ui/...` (colocated per domain) | StencilLibrary presets, per-type ObjectMenu, per-type properties-sidebar sections, per-type SelectionControl |
 | `ObjectStyleRegistry`                                                                              | `controllers/style/tables/`                 | per-type style tables (see [Style System](./10-style-properties.md))                                         |
 | `CommandRegistry`                                                                                  | `controllers/commands/`                     | commands (see [Command System](./05-command-system.md))                                                      |

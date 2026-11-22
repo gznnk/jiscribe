@@ -1,17 +1,15 @@
+import { calcEdgeAnchorPoint } from "@jiscribe/doc/model/objects/connector/calcConnectPoint";
+import type { ExtraConnectPoint } from "@jiscribe/doc/model/objects/connector/ExtraConnectPoint";
 import { isTransformedFrame } from "@jiscribe/geometry";
 import type { Point, Rect } from "@jiscribe/geometry";
 import { memo, useMemo } from "react";
 
-import { calcEdgeAnchorPoint } from "../../../../rendering/objects/connector/geometry/calcConnectPoint";
 import { readCachedObjectOutline } from "../../../../rendering/objects/connector/geometry/endpoints/readCachedObjectOutline";
 import type { ObjectAnchorRegionRegistry } from "../../../../rendering/objects/registry/ObjectAnchorRegionRegistry";
 import { useObjectAnchorRegionRegistry } from "../../../../rendering/objects/registry/ObjectAnchorRegionRegistryContext";
 import type { ObjectConnectionAnchorsRegistry } from "../../../../rendering/objects/registry/ObjectConnectionAnchorsRegistry";
 import { useObjectConnectionAnchorsRegistry } from "../../../../rendering/objects/registry/ObjectConnectionAnchorsRegistryContext";
-import type {
-	ExtraConnectPoint,
-	ObjectExtraConnectPointsRegistry,
-} from "../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
+import type { ObjectExtraConnectPointsRegistry } from "../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import { useObjectExtraConnectPointsRegistry } from "../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistryContext";
 import type { ObjectOutlineRegistry } from "../../../../rendering/objects/registry/ObjectOutlineRegistry";
 import { useObjectOutlineRegistry } from "../../../../rendering/objects/registry/ObjectOutlineRegistryContext";

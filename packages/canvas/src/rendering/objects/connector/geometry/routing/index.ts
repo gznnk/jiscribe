@@ -9,5 +9,3 @@ export type {
 	OrthogonalConnectorEndpoint,
 	RouteOrthogonalConnectorOptions,
 } from "./types";
-export { alignVertexPath } from "./alignVertexPath";
-export { calcEndpointDirection } from "./endpointDirection";

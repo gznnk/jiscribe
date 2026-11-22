@@ -10,9 +10,11 @@ import { selectors } from "../../support/selectors";
  * solved back into {position (arc-length ratio), offset (perpendicular
  * distance)} on the route and written back to label. Only the label box position
  * is readable from the DOM, so the correctness of that inversion is checked by
- * "the center of the grabbed label lands on the drop point". Dropping right
- * beside the line (within 8px) is the exception: offset snaps to 0, so the label
- * moves onto the line.
+ * "the center of the grabbed label lands on the drop point". The snaps are the
+ * exception: dropped right beside the line (within 8px) the label moves onto it,
+ * near a midpoint along the route onto that, and near another shape's edge or
+ * centre into line with it. The drops that check the inversion itself hold Ctrl,
+ * which stands every snap down.
  *
  * Kept separate from label editing (connector-label.spec.ts).
  */
@@ -173,24 +175,29 @@ async function expectLabelCenterNear(
 
 /**
  * Grabs the center of the label box and drags it to `to`.
- * While selected, control handles overlap the label and steal pointerdown, so
- * the selection is cleared before grabbing (an unselected label can be dragged
- * directly).
+ * While a straight connector is selected, a waypoint-insert handle can sit over
+ * the label and turn a drag from it into a waypoint insertion, so the selection
+ * is cleared before grabbing (an unselected label can be dragged directly).
+ *
+ * @param options.snap - Whether the drop snaps; false holds Ctrl through the
+ *   drag, so the label lands exactly where it is dropped
  */
 async function dragLabelTo(
 	canvas: CanvasDriver,
 	connectorId: string,
 	to: Vec,
+	{ snap = false }: { snap?: boolean } = {},
 ): Promise<void> {
 	await canvas.deselect();
 	const box = await labelBoxOf(canvas, connectorId).boundingBox();
 	if (!box) {
 		throw new Error("cannot read the position of the label box");
 	}
-	await canvas.drag(
+	await canvas.dragInspecting(
 		canvas.toContent({ x: box.x + box.width / 2, y: box.y + box.height / 2 }),
 		to,
-		10,
+		async () => {},
+		{ ctrl: !snap },
 	);
 }
 
@@ -234,7 +241,10 @@ test.describe("dragging a connector label", () => {
 		const { connectorId } = await setupConnectorWithLabel(canvas, "Yes");
 
 		const segment = longestSegment(await connectorPoints(canvas, connectorId));
-		const onLine = segmentPointAt(segment, 0.4);
+		// A sixth of the way down the route's vertical leg (y 225): no midpoint along
+		// the route, and no edge or centre of the rectangles, is within the
+		// threshold of the label box there, so only the line snap applies.
+		const onLine = segmentPointAt(segment, 1 / 6);
 		const normal = leftNormal(segment);
 		// Inside the snap threshold (SNAP_THRESHOLD_PX = 8; zoom=1, so it is world px
 		// as-is).
@@ -242,7 +252,7 @@ test.describe("dragging a connector label", () => {
 			x: onLine.x + normal.x * 5,
 			y: onLine.y + normal.y * 5,
 		};
-		await dragLabelTo(canvas, connectorId, dropPoint);
+		await dragLabelTo(canvas, connectorId, dropPoint, { snap: true });
 
 		// Sticks to the point on the line straight across, not to the drop point.
 		await expectLabelCenterNear(canvas, connectorId, onLine);
@@ -415,5 +425,41 @@ test.describe("dragging a connector label", () => {
 
 		await dragLabelTo(canvas, connectorId, createdCenter);
 		await expectLabelCenterNear(canvas, connectorId, createdCenter);
+	});
+
+	test("lines the label up with another shape while dragged, showing the guide, and lets the guide go on release", async ({
+		canvas,
+	}) => {
+		const { connectorId } = await setupConnectorWithLabel(canvas, "Yes");
+		const labelBox = await labelBoxOf(canvas, connectorId).boundingBox();
+		if (!labelBox) {
+			throw new Error("cannot read the position of the label box");
+		}
+		const grabbed = canvas.toContent({
+			x: labelBox.x + labelBox.width / 2,
+			y: labelBox.y + labelBox.height / 2,
+		});
+
+		// Beside the route's vertical leg (x 600), with the label's centre 3 below
+		// the first rectangle's bottom edge (y 250): far enough from the line to stay
+		// beside it, so nothing holds it off the edge.
+		const segment = longestSegment(await connectorPoints(canvas, connectorId));
+		const normal = leftNormal(segment);
+		const dropPoint = { x: 600 + normal.x * 40, y: 253 };
+
+		await canvas.deselect();
+		await canvas.dragInspecting(grabbed, dropPoint, async () => {
+			await expect(
+				canvas.page.locator('[data-testid="snap-guide:y"]'),
+			).toHaveCount(1);
+		});
+
+		await expect(
+			canvas.page.locator('[data-testid="snap-guide:y"]'),
+		).toHaveCount(0);
+		await expectLabelCenterNear(canvas, connectorId, {
+			x: dropPoint.x,
+			y: 250,
+		});
 	});
 });

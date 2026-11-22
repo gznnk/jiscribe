@@ -1,25 +1,11 @@
+import { ARROW_SIZE } from "@jiscribe/doc/model/objects/utils/arrowHeadDimensions";
 import { radiansToDegrees } from "@jiscribe/geometry";
 import type React from "react";
 import { memo } from "react";
 
 import { ArrowPolygon } from "./ArrowStyled";
 import { createSvgTransform } from "../../utils/createSvgTransform";
-import { ARROW_SIZE } from "../ArrowConstants";
-import type { ArrowExtent, ArrowShapeProps } from "../ArrowTypes";
-
-/**
- * Inset (in local units) for terminating the line at this arrow's base.
- * The widest point is the center (`-ARROW_SIZE/2`). Pulling the line back to the
- * trailing vertex would make it look too short, so the line is inset to the
- * center where it is hidden by the fill.
- */
-export const FILLED_DIAMOND_INSET = ARROW_SIZE / 2;
-
-/** How far this head runs from its tip (local units), for the drawn extent (calcArrowReach). */
-export const FILLED_DIAMOND_EXTENT: ArrowExtent = {
-	length: ARROW_SIZE,
-	halfWidth: ARROW_SIZE / 2,
-};
+import type { ArrowShapeProps } from "../ArrowTypes";
 
 /**
  * FilledDiamond arrow shape component.

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { ConnectorState } from "../../../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { createTestRegistries } from "../../../../registries/createCanvasRegistries";
+import { connectorLabelPartSelection } from "../../../../selection/__tests__/support/connectorLabelPartSelection";
 import { selectionOf } from "../../../../selection/__tests__/support/selectionOf";
 import { readTextEditDraft } from "../../../../utils/readTextEditDraft";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
@@ -26,7 +27,7 @@ const editingUnderOpenedDrag = (): CanvasControllerState => {
 	return {
 		objects,
 		rootIds: ["c1"],
-		selection: selectionOf(["c1"]),
+		selection: selectionOf(["c1"], connectorLabelPartSelection()),
 		multiSelectGroup: null,
 		mode: {
 			kind: "textEdit",

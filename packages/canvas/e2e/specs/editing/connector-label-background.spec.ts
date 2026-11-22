@@ -3,7 +3,7 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
 import { selectors } from "../../support/selectors";
 
 /**
- * A connector label with no `fill` knocks the line out in the page's color: the
+ * A connector label with no `fill`, on no frame, knocks the line out in the page's color: the
  * document's opaque `background`, or the theme's canvas color when the document
  * sets none or sets one that lets the theme color show through.
  *

@@ -26,8 +26,8 @@ type ConnectorControlsProps = {
 	zoom?: number;
 	/**
 	 * What the canvas is pointed at, `state.selection` as it stands: a picked
-	 * waypoint of this very connector rings its handle, anything else leaves the
-	 * handles plain
+	 * waypoint of this very connector rings its handle, anything else leaves
+	 * the handles plain
 	 */
 	selection: CanvasControllerState["selection"];
 };

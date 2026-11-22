@@ -231,6 +231,27 @@ function handleObjectDrag(
 		}
 	}
 
+	const { drag } = canvasState;
+
+	// A frame landing on the delta the previous one moved by (held by a snap, or
+	// moved along the locked axis's normal) moves nothing: the previous frame's
+	// objects, preview and multiSelectGroup stand, so everything keyed on their
+	// identity (the renderer's memos, the label backdrops) has nothing to redo.
+	const previousMovePreview =
+		drag?.kind === "move" ? drag.movePreview : undefined;
+	if (
+		drag?.kind === "move" &&
+		previousMovePreview !== undefined &&
+		previousMovePreview.startObjects === eventStartObjects &&
+		previousMovePreview.delta.x === adjustedDelta.x &&
+		previousMovePreview.delta.y === adjustedDelta.y
+	) {
+		return {
+			...canvasState,
+			drag: { ...drag, snapFeedback, axisLockFeedback },
+		};
+	}
+
 	// --- Move all selected objects by adjustedDelta (shared with nudge move) ---
 	// Dragging moves by the cumulative delta from the drag-start snapshot as the source.
 	// Parent group bounds updates are done together on dragEnd, not here.
@@ -247,7 +268,6 @@ function handleObjectDrag(
 		objectBehavior: registries.objectBehavior,
 	});
 
-	const { drag } = canvasState;
 	const nextState: CanvasControllerState = {
 		...canvasState,
 		objects: updatedObjects,

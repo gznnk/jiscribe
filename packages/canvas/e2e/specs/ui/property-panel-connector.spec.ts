@@ -308,7 +308,14 @@ test.describe("Properties sidebar: connector", () => {
 		await canvas.deselect();
 		await canvas.typeTextAt(onLine, "Yes");
 		await canvas.commitText();
-		await selectConnectorAt(canvas, onLine);
+		// Selected from the bare line, a quarter of the way down the vertical leg
+		// whose middle the label sits on: a click on the label would pick the
+		// label, which narrows the sidebar to its sections alone.
+		const [, legStart] = await readPoints(canvas, connectorId);
+		await selectConnectorAt(canvas, {
+			x: onLine.x,
+			y: (legStart.y + onLine.y) / 2,
+		});
 
 		await expect(
 			canvas.page.locator(selectors.propertyPanelSection("label")),
@@ -374,6 +381,30 @@ test.describe("Properties sidebar: connector", () => {
 		await fontSize.press("Enter");
 
 		await expect(labelBox).toHaveCSS("font-size", "28px");
+	});
+
+	test("narrows to the Label sections while the label is re-edited, whose rows still style it", async ({
+		canvas,
+	}) => {
+		const connectorId = await setupLabelledConnector(canvas);
+		await expect(
+			canvas.page.locator(selectors.propertyPanelSection("line")),
+		).toBeVisible();
+
+		// The edit picks the label, as a click on it does.
+		await labelBoxOf(canvas, connectorId).dblclick();
+		await expect(canvas.page.locator(selectors.textEditor)).toBeVisible();
+		await expect(
+			canvas.page.locator(selectors.propertyPanelSection("line")),
+		).toHaveCount(0);
+		await expect(
+			canvas.page.locator(selectors.propertyPanelSection("label")),
+		).toBeVisible();
+
+		await canvas.page.click(
+			selectors.propertyPanelSet("label.fontWeight", "bold"),
+		);
+		await expect(canvas.textEditorSurface()).toHaveCSS("font-weight", "700");
 	});
 
 	test("swaps the two ends from the Arrow row, and undo puts them back", async ({

@@ -4,8 +4,11 @@ import { createObjectPartKindRegistry } from "../../../../../../rendering/object
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
+import { createTestRegistries } from "../../../../../registries/createCanvasRegistries";
+import { connectorLabelPartSelection } from "../../../../../selection/__tests__/support/connectorLabelPartSelection";
 import { selectionOf } from "../../../../../selection/__tests__/support/selectionOf";
 import { textSlotPartSelection } from "../../../../../selection/__tests__/support/textSlotPartSelection";
+import type { ObjectPartSelection } from "../../../../../selection/CanvasSelection";
 import {
 	createTextSlotPartKindDefinition,
 	TEXT_SLOT_PART_KIND,
@@ -578,5 +581,58 @@ describe("getPropertyPanelSections", () => {
 
 		expect(sectionIdsUnder("row", "0")).toEqual(["text", "insert"]);
 		expect(sectionIdsUnder(TEXT_SLOT_PART_KIND, "body")).toEqual(["text"]);
+	});
+});
+
+describe("getPropertyPanelSections - a connector's picked label", () => {
+	const registries = createTestRegistries();
+	const connectorState = (part: ObjectPartSelection | null) =>
+		stateOf({
+			objects: {
+				c1: {
+					id: "c1",
+					type: "connector",
+					points: [],
+					label: { text: "Yes" },
+				} as unknown as ObjectState,
+			},
+			selection: selectionOf(["c1"], part),
+		});
+	const rowKeysOf = (sections: PropertyPanelSection[]): string[] =>
+		sections.flatMap((section) =>
+			section.items.map((item) =>
+				item.type === "custom" ? item.id : item.type,
+			),
+		);
+
+	it("keeps the label sections whole, dropping the line's rows", () => {
+		const unpicked = getPropertyPanelSections(
+			connectorState(null),
+			registries.propertyPanel,
+			registries.objectPartKind,
+		);
+		expect(rowKeysOf(unpicked)).toEqual(
+			expect.arrayContaining(["strokeColor", "connector-routing"]),
+		);
+
+		const picked = getPropertyPanelSections(
+			connectorState(connectorLabelPartSelection()),
+			registries.propertyPanel,
+			registries.objectPartKind,
+		);
+		expect(picked.map((section) => section.id)).toEqual([
+			"label",
+			"label-border",
+		]);
+		expect(rowKeysOf(picked)).toEqual([
+			"label-font-family",
+			"label-font-size",
+			"label-font-color",
+			"label-style",
+			"label-background",
+			"label-border-color",
+			"label-border-width",
+			"label-border-type",
+		]);
 	});
 });

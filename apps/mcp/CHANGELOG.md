@@ -48,8 +48,9 @@ covers that.
 - **`set_style` and `add_objects` take `labelFill`**, the background painted
   behind the label of a shape that draws its text below its box (actor, server,
   the AWS / Azure / Google Cloud icons, …). Omitted or `"auto"`, the label knocks
-  out what runs under it in the page's color; on any other type, a connector
-  included, `set_style` names it as not supported by the type.
+  out what runs under it in the page's color, or in the fill of the container
+  or AWS group its center lies in; on any other type, a connector included,
+  `set_style` names it as not supported by the type.
 - **`diagnose_canvas` reports images a reader cannot see, and more.** An image whose
   file is missing, or whose `src` no host accepts, is an error; an image
   reached through a link out of the diagram's directory is a warning, since
@@ -75,6 +76,13 @@ covers that.
   They take `arrowScale`, the factor on both heads of a polyline or connector
   (0.2 to 4, omitted = 1); a value outside the range is refused.
   `measure_visual_bounds` now counts the heads in.
+- **`diagnose_canvas` warns about an arrowhead drawn over its line's bend.**
+  Where a connector with `points`, or a polyline, turns closer to an end than
+  that end's head is long, the head covers the corner and points off the line;
+  the warning names the end, the two lengths and the fix: move the bend that
+  far from the end (`update_connectors`) or the shapes apart.
+  `route_connectors` can leave such a bend in a narrow gap, so it is no fix by
+  itself.
 
 ### Changed
 

@@ -1,5 +1,4 @@
 ﻿import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
-import { advanceTextMeasurementGeneration } from "@jiscribe/doc/text/measure/textMeasurementSlot";
 import {
 	memo,
 	useCallback,
@@ -19,6 +18,7 @@ import {
 	Viewport,
 	ViewportOverlay,
 	ZoomScaledOverlay,
+	WorldSvgOverlay,
 } from "./CanvasStyled";
 import type { Camera, CanvasSidebarsState } from "./CanvasTypes";
 import { isGestureOptedOut } from "./gestures/recognizer/targeting/isGestureOptedOut";
@@ -36,6 +36,7 @@ import { resolveCommandState } from "./hooks/useCommandState";
 import { useContainerResize } from "./hooks/useContainerResize";
 import { useCooperativeTouchClaim } from "./hooks/useCooperativeTouchClaim";
 import { useDevicePixelSnappedViewport } from "./hooks/useDevicePixelSnappedViewport";
+import { calcViewportSvgBox } from "../rendering/Viewport";
 import { useDocFonts } from "./hooks/useDocFonts";
 import type { ResolveImage } from "./hooks/useDocImages";
 import { useDocImages } from "./hooks/useDocImages";
@@ -45,6 +46,7 @@ import { useExportDialog } from "./hooks/useExportDialog";
 import { useGestureRecognizer } from "./hooks/useGestureRecognizer";
 import { useInitialViewOpen } from "./hooks/useInitialViewOpen";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
+import { useLabelBackdropStore } from "./hooks/useLabelBackdropStore";
 import { useNotifySaveRequest } from "./hooks/useNotifySaveRequest";
 import { useNotifySelectionChange } from "./hooks/useNotifySelectionChange";
 import { useNotifySidebarsChange } from "./hooks/useNotifySidebarsChange";
@@ -69,6 +71,7 @@ import { CanvasView } from "../rendering/CanvasView";
 import { CanvasControlLayers } from "./ui/controls/CanvasControlLayers";
 import { TextEditorLayer } from "./ui/editors/TextEditorLayer";
 import { BusyIndicator } from "./ui/feedback/BusyIndicator";
+import { ConnectorLabelPartOutlineLayer } from "./ui/feedback/ConnectorLabelPartOutlineLayer";
 import { ErrorToast } from "./ui/feedback/ErrorToast";
 import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
@@ -428,10 +431,9 @@ const CanvasComponent = ({
 	const { fontsNonce, isContentHidden } = useDocFonts({
 		collectRequests: () =>
 			collectDocFontRequests(state.objects, registries.objectTextStyleDefaults),
+		// The generation is already advanced (useDocFonts), so the re-measure is
+		// not answered from a measurement cached against the fallback face.
 		onFacesChanged: () => {
-			// First, so the re-measure is not answered from a measurement cached
-			// against the fallback face.
-			advanceTextMeasurementGeneration();
 			dispatch({ type: "REMEASURE_TEXT" });
 		},
 	});
@@ -644,6 +646,20 @@ const CanvasComponent = ({
 		snapshotRenderScope,
 		culledObjectIds,
 	);
+	// Worked out from what is drawn, the edited text's draft included, so a
+	// caption growing as it is typed is judged by where its center now is.
+	const labelBackdropStore = useLabelBackdropStore({
+		objects: draftObjects,
+		selection: state.selection,
+		mode: state.mode,
+		rootIds: state.rootIds,
+		fontsNonce,
+		snapshotRenderScope,
+		drag: state.drag,
+		movePreview,
+		visibleIds: culledObjectIds,
+		registries,
+	});
 
 	const canvasHandle = useCanvasHandle({
 		dispatch,
@@ -711,6 +727,7 @@ const CanvasComponent = ({
 			registries={registries}
 			fontsNonce={fontsNonce}
 			zoomStore={canvasZoomStore}
+			labelBackdropStore={labelBackdropStore}
 			lookupResolvedImage={lookupResolvedImage}
 			documentSurface={documentSurface}
 			viewportElementRef={canvasRef}
@@ -779,6 +796,13 @@ const CanvasComponent = ({
 									{...editorHandlers}
 								/>
 							</ZoomScaledOverlay>
+							<WorldSvgOverlay {...calcViewportSvgBox(drawnViewport)}>
+								<ConnectorLabelPartOutlineLayer
+									selection={state.selection}
+									objects={state.objects}
+									mode={state.mode}
+								/>
+							</WorldSvgOverlay>
 							{/* HTML whose position follows zoom but whose size does not */}
 							<ScrollSyncedOverlay
 								style={{ left: -minX * zoom, top: -minY * zoom }}
