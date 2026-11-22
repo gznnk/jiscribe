@@ -36,6 +36,7 @@ import { resolveCommandState } from "./hooks/useCommandState";
 import { useContainerResize } from "./hooks/useContainerResize";
 import { useCooperativeTouchClaim } from "./hooks/useCooperativeTouchClaim";
 import { useDevicePixelSnappedViewport } from "./hooks/useDevicePixelSnappedViewport";
+import { calcViewportSvgBox } from "../rendering/Viewport";
 import { useDocFonts } from "./hooks/useDocFonts";
 import type { ResolveImage } from "./hooks/useDocImages";
 import { useDocImages } from "./hooks/useDocImages";
@@ -795,11 +796,7 @@ const CanvasComponent = ({
 									{...editorHandlers}
 								/>
 							</ZoomScaledOverlay>
-							<CanvasFrontSvg
-								width={drawnViewport.width}
-								height={drawnViewport.height}
-								viewBox={`${minX} ${minY} ${drawnViewport.width / zoom} ${drawnViewport.height / zoom}`}
-							>
+							<CanvasFrontSvg {...calcViewportSvgBox(drawnViewport)}>
 								<ConnectorLabelPartOutlineLayer
 									selection={state.selection}
 									objects={state.objects}

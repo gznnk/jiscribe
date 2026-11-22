@@ -187,6 +187,33 @@ async function expectOutlineOverEditor(canvas: CanvasDriver): Promise<void> {
 	expect(
 		Math.abs(outlineBounds.height - editorBounds.height),
 	).toBeLessThanOrEqual(OUTLINE_STROKE_TOLERANCE_PX * 2);
+
+	// The editor is an opaque box, so the outline only shows if it is painted
+	// after it: in an SVG of its own (not the canvas SVG, which holds the
+	// connector's controls), later in the document than the editor.
+	const isPaintedOverEditor = await canvas.page.evaluate(
+		({ editorSelector, outlineSelector, controlsSelector }) => {
+			const editor = document.querySelector(editorSelector);
+			const outlineSvg =
+				document.querySelector<SVGElement>(outlineSelector)?.ownerSVGElement;
+			if (!editor || !outlineSvg) {
+				return false;
+			}
+			const outline = outlineSvg;
+			return (
+				outlineSvg.querySelector(controlsSelector) === null &&
+				(editor.compareDocumentPosition(outline) &
+					Node.DOCUMENT_POSITION_FOLLOWING) !==
+					0
+			);
+		},
+		{
+			editorSelector: selectors.textEditor,
+			outlineSelector: selectors.partOutline,
+			controlsSelector: '[data-layer="connector-controls"]',
+		},
+	);
+	expect(isPaintedOverEditor).toBe(true);
 }
 
 test.describe("connector label", () => {

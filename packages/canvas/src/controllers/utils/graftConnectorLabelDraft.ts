@@ -17,7 +17,7 @@ export type ConnectorLabelDraftObjects = {
  * label being created, else the label's own. The one rule the editor's anchor
  * (TextEditorLayer), the point its backdrop is worked out at
  * ({@link graftConnectorLabelDraft}) and the picked label's outline
- * (ConnectorControls) all follow, so none of them can part from the others.
+ * (ConnectorLabelPartOutlineLayer) all follow, so none of them can part from the others.
  *
  * @param connector - The connector whose label is edited; its `label` may be absent for a label being created
  * @param pendingPlacement - The draft's placement (`TextEditDraft.placement`), set only while a label is being created; it wins over leftovers of a deleted label
