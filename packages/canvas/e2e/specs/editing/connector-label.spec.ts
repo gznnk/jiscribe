@@ -29,8 +29,8 @@ const TOLERANCE_PX = 2;
 /** Allowed label-height gap between editing and after commit (subpixel rounding). */
 const HEIGHT_TOLERANCE_PX = 2;
 
-/** Allowed gap per edge between the label editor and its outline, which lies just outside it: the outline's stroke, plus subpixel rounding. */
-const OUTLINE_STROKE_TOLERANCE_PX = 2.5;
+/** Allowed gap per edge between the label editor and its outline, which lies just outside it: the outline's stroke and its 1px clearance, plus subpixel rounding. */
+const OUTLINE_STROKE_TOLERANCE_PX = 3.5;
 
 function parsePoints(attr: string | null): Vec[] {
 	if (!attr) {
@@ -163,7 +163,7 @@ async function setupConnectorWithLabel(
 
 /**
  * Asserts the picked label's outline frames the open label editor's box: the
- * same box, within the stroke the outline is drawn with on every side.
+ * same box, within the outline's stroke and clearance on every side.
  */
 async function expectOutlineOverEditor(canvas: CanvasDriver): Promise<void> {
 	const editorBounds = await canvas.page

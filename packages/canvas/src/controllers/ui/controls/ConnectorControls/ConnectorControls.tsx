@@ -121,6 +121,7 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 					points={resolved.points}
 					label={label}
 					isTextEditing={openEdit?.kind === "connectorLabel"}
+					zoom={zoom}
 				/>
 			)}
 

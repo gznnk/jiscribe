@@ -22,8 +22,8 @@ import { SELECTION_OUTLINE_WIDTH } from "../../utils/selectionOutline";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
-/** How far the outline lies outside the label box on each side: half its stroke. */
-const OUTSET = SELECTION_OUTLINE_WIDTH / 2;
+/** How far the outline's rect lies outside the label box on each side at zoom 1: half its stroke, past 1px of clearance. */
+const OUTSET = SELECTION_OUTLINE_WIDTH / 2 + 1;
 
 const unmounts: (() => void)[] = [];
 
@@ -43,7 +43,7 @@ const connectorWith = (label: ConnectorLabel | undefined): ConnectorState =>
 		...(label ? { label } : {}),
 	}) as unknown as ConnectorState;
 
-/** A canvas drawn at `zoom`, for the legibility check. */
+/** A canvas drawn at `zoom`, for the legibility check (the controls take the same zoom as a prop). */
 const zoomStoreAt = (zoom: number): CanvasZoomStore => ({
 	subscribe: () => () => {},
 	getZoom: () => zoom,
@@ -77,6 +77,7 @@ const renderPartOutlines = (
 						objects={{ c1: connector }}
 						selection={selection}
 						mode={mode}
+						zoom={zoom}
 					/>
 				</svg>
 			</CanvasZoomStoreContext.Provider>,
@@ -107,16 +108,31 @@ describe("ConnectorLabelPartOutline (through ConnectorControls)", () => {
 			10 - height / 2 - OUTSET,
 		);
 		expect(Number(outline.getAttribute("width"))).toBeCloseTo(
-			width + SELECTION_OUTLINE_WIDTH,
+			width + 2 * OUTSET,
 		);
 		expect(Number(outline.getAttribute("height"))).toBeCloseTo(
-			height + SELECTION_OUTLINE_WIDTH,
+			height + 2 * OUTSET,
 		);
 		expect(outline.getAttribute("stroke-width")).toBe(
 			String(SELECTION_OUTLINE_WIDTH),
 		);
 		expect(outline.getAttribute("pointer-events")).toBe("none");
 		expect(outline.style.fill).toBe("none");
+	});
+
+	it("keeps the clearance around the box at one screen px, whatever the zoom", () => {
+		const label = { text: "Yes" };
+		const { width } = resolveConnectorLabelBox(label);
+		const outline = renderPartOutlines(
+			connectorWith(label),
+			selectionOf(["c1"], connectorLabelPartSelection()),
+			2,
+		)[0];
+
+		// Half the stroke, in world units as the stroke is, past 1 screen px at zoom 2.
+		expect(Number(outline.getAttribute("width"))).toBeCloseTo(
+			width + 2 * (SELECTION_OUTLINE_WIDTH / 2 + 0.5),
+		);
 	});
 
 	it("draws nothing while the connector is selected with nothing, or a waypoint, picked", () => {
@@ -165,10 +181,10 @@ describe("ConnectorLabelPartOutline (through ConnectorControls)", () => {
 			10 - height / 2 - OUTSET,
 		);
 		expect(Number(outline.getAttribute("width"))).toBeCloseTo(
-			width + SELECTION_OUTLINE_WIDTH,
+			width + 2 * OUTSET,
 		);
 		expect(Number(outline.getAttribute("height"))).toBeCloseTo(
-			height + SELECTION_OUTLINE_WIDTH,
+			height + 2 * OUTSET,
 		);
 		expect(outline.style.fill).toBe("none");
 	});
@@ -190,10 +206,10 @@ describe("ConnectorLabelPartOutline (through ConnectorControls)", () => {
 		);
 		expect(Number(outline.getAttribute("y"))).toBeCloseTo(-height / 2 - OUTSET);
 		expect(Number(outline.getAttribute("width"))).toBeCloseTo(
-			width + SELECTION_OUTLINE_WIDTH,
+			width + 2 * OUTSET,
 		);
 		expect(Number(outline.getAttribute("height"))).toBeCloseTo(
-			height + SELECTION_OUTLINE_WIDTH,
+			height + 2 * OUTSET,
 		);
 	});
 
