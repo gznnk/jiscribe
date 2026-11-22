@@ -22,6 +22,9 @@ import { SELECTION_OUTLINE_WIDTH } from "../../utils/selectionOutline";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
+/** How far the outline lies outside the label box on each side: half its stroke. */
+const OUTSET = SELECTION_OUTLINE_WIDTH / 2;
+
 const unmounts: (() => void)[] = [];
 
 afterEach(() => {
@@ -97,10 +100,18 @@ describe("ConnectorLabelPartOutline (through ConnectorControls)", () => {
 		expect(outlines).toHaveLength(1);
 		const [outline] = outlines;
 		// 0.25 of 200 along, 10 to the left of travel (+y).
-		expect(Number(outline.getAttribute("x"))).toBeCloseTo(50 - width / 2);
-		expect(Number(outline.getAttribute("y"))).toBeCloseTo(10 - height / 2);
-		expect(Number(outline.getAttribute("width"))).toBeCloseTo(width);
-		expect(Number(outline.getAttribute("height"))).toBeCloseTo(height);
+		expect(Number(outline.getAttribute("x"))).toBeCloseTo(
+			50 - width / 2 - OUTSET,
+		);
+		expect(Number(outline.getAttribute("y"))).toBeCloseTo(
+			10 - height / 2 - OUTSET,
+		);
+		expect(Number(outline.getAttribute("width"))).toBeCloseTo(
+			width + SELECTION_OUTLINE_WIDTH,
+		);
+		expect(Number(outline.getAttribute("height"))).toBeCloseTo(
+			height + SELECTION_OUTLINE_WIDTH,
+		);
 		expect(outline.getAttribute("stroke-width")).toBe(
 			String(SELECTION_OUTLINE_WIDTH),
 		);
@@ -147,10 +158,18 @@ describe("ConnectorLabelPartOutline (through ConnectorControls)", () => {
 
 		expect(outlines).toHaveLength(1);
 		const [outline] = outlines;
-		expect(Number(outline.getAttribute("x"))).toBeCloseTo(50 - width / 2);
-		expect(Number(outline.getAttribute("y"))).toBeCloseTo(10 - height / 2);
-		expect(Number(outline.getAttribute("width"))).toBeCloseTo(width);
-		expect(Number(outline.getAttribute("height"))).toBeCloseTo(height);
+		expect(Number(outline.getAttribute("x"))).toBeCloseTo(
+			50 - width / 2 - OUTSET,
+		);
+		expect(Number(outline.getAttribute("y"))).toBeCloseTo(
+			10 - height / 2 - OUTSET,
+		);
+		expect(Number(outline.getAttribute("width"))).toBeCloseTo(
+			width + SELECTION_OUTLINE_WIDTH,
+		);
+		expect(Number(outline.getAttribute("height"))).toBeCloseTo(
+			height + SELECTION_OUTLINE_WIDTH,
+		);
 		expect(outline.style.fill).toBe("none");
 	});
 
@@ -166,10 +185,16 @@ describe("ConnectorLabelPartOutline (through ConnectorControls)", () => {
 		expect(outlines).toHaveLength(1);
 		const [outline] = outlines;
 		expect(width).toBeGreaterThan(0);
-		expect(Number(outline.getAttribute("x"))).toBeCloseTo(150 - width / 2);
-		expect(Number(outline.getAttribute("y"))).toBeCloseTo(-height / 2);
-		expect(Number(outline.getAttribute("width"))).toBeCloseTo(width);
-		expect(Number(outline.getAttribute("height"))).toBeCloseTo(height);
+		expect(Number(outline.getAttribute("x"))).toBeCloseTo(
+			150 - width / 2 - OUTSET,
+		);
+		expect(Number(outline.getAttribute("y"))).toBeCloseTo(-height / 2 - OUTSET);
+		expect(Number(outline.getAttribute("width"))).toBeCloseTo(
+			width + SELECTION_OUTLINE_WIDTH,
+		);
+		expect(Number(outline.getAttribute("height"))).toBeCloseTo(
+			height + SELECTION_OUTLINE_WIDTH,
+		);
 	});
 
 	it("stays drawn in the editor at a zoom too small to read the label, as the editor does", () => {

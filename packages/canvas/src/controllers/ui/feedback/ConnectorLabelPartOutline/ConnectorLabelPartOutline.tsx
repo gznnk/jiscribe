@@ -34,8 +34,8 @@ type ConnectorLabelPartOutlineProps = {
 
 /**
  * Outlines a connector's picked label (the `connectorLabel` part kind), a
- * stroke over the label's box (calcConnectorLabelRect) with nothing inside, so
- * it reads the same over the label and over its editor. Outside the editor it
+ * stroke lying just outside the label's box (calcConnectorLabelRect) with
+ * nothing inside, so it reads the same around the label and around its editor. Outside the editor it
  * is hidden while the label itself is, too small to read at the canvas's zoom.
  */
 const ConnectorLabelPartOutlineComponent: React.FC<
@@ -71,12 +71,16 @@ const ConnectorLabelPartOutlineComponent: React.FC<
 	}
 
 	const { x, y, width, height } = calcConnectorLabelRect(anchor, labelBox);
+	// Moved out by half the stroke so the whole line lies outside the box: the
+	// label's editor is an opaque HTML box over this layer, and would cover the
+	// inner half of a line centered on the edge.
+	const outset = SELECTION_OUTLINE_WIDTH / 2;
 	return (
 		<rect
-			x={x}
-			y={y}
-			width={width}
-			height={height}
+			x={x - outset}
+			y={y - outset}
+			width={width + SELECTION_OUTLINE_WIDTH}
+			height={height + SELECTION_OUTLINE_WIDTH}
 			// Tells a part's box from an object outline, which is drawn the same way.
 			data-testid="part-outline"
 			strokeWidth={SELECTION_OUTLINE_WIDTH}
