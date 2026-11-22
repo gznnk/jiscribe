@@ -21,7 +21,7 @@ import { GAP_LANE_SPACING } from "../shared/edgeSpacing";
 import { createSideAxis } from "../shared/LayoutAxis";
 import { LAYOUT_SIDES, toSideKey } from "../shared/layoutSides";
 import { calcStraightAnchorRatio, columnAt } from "../shared/straightAnchor";
-import type { LayoutEdgeAnchor, LayoutSide } from "../shared/types";
+import type { LayoutSide } from "../shared/types";
 
 /** The direction an end on `side` leaves its box in. */
 const OUTWARD_DIRECTIONS: Record<LayoutSide, RouteDirection> = {
@@ -57,30 +57,18 @@ export const isOwnWall = (
 const STUB_CHANNEL_MARGINS = 4;
 
 /**
- * The same for an end held to given places (see RoutableEdge.sourceEnds): wider, since
- * the routes to such ends gather into trunks, which read best down the middle of a
- * channel, and the shapes that give them (an ER entity's columns) carry end markers a
- * bend close to the side would run over.
- */
-const PINNED_STUB_CHANNEL_MARGINS = 6;
-
-/**
  * How far the stub of an end at `anchor` on `side` runs: {@link EDGE_ROUTE_MARGIN}
  * past the box, or past its caption on a bottom side; to the middle of the gap between
- * the side and the nearest obstacle or band facing any stretch of it, where that gap
- * is a channel no wider than `channelMargins` margins, so the routes of two rows or
+ * the side and the nearest obstacle facing any stretch of it, where that gap is a
+ * channel no wider than STUB_CHANNEL_MARGINS margins, so the routes of two rows or
  * columns of boxes bend down the middle between them; but never past half the gap to
- * an obstacle or a crossable band straight ahead of the end itself, less half a lane
- * (GAP_LANE_SPACING) once it is longer than the margin, so two facing stubs stop a
- * lane apart and a stub heading for a band stops short of it, where the route may
- * still bend. A border's side beyond the side ends the channel as an obstacle does.
+ * an obstacle straight ahead of the end itself, less half a lane (GAP_LANE_SPACING)
+ * once it is longer than the margin, so two facing stubs stop a lane apart. A
+ * border's side beyond the side ends the channel as an obstacle does.
  *
- * @param crossableBands - Stand in the stub's way as obstacles do, for every edge
  * @param borders - Rects whose sides beyond the side end the channel too
- * @param channelMargins - How wide a gap still counts as a channel, in margins (see
- *   STUB_CHANNEL_MARGINS, PINNED_STUB_CHANNEL_MARGINS)
- * @returns The length, or undefined when an obstacle or band sits on the stretch the
- *   stub must cross (between the box and the end of its caption) or right against it
+ * @returns The length, or undefined when an obstacle sits on the stretch the stub
+ *   must cross (between the box and the end of its caption) or right against it
  */
 const calcStubLength = (
 	node: RoutableNode,
@@ -88,9 +76,7 @@ const calcStubLength = (
 	anchor: Point,
 	obstacles: readonly Obstacle[],
 	excluded: ReadonlySet<Obstacle>,
-	crossableBands: readonly BoundingBox[],
 	borders: readonly BoundingBox[],
-	channelMargins: number,
 ): number | undefined => {
 	const box = convertRectToBoundingBox(node.bounds);
 	const runsThroughLabel = side === "bottom" && node.labelBounds !== undefined;
@@ -99,23 +85,11 @@ const calcStubLength = (
 		: 0;
 	let nearestGap = Infinity;
 	let facingGap = Infinity;
-	const obstacleCount = obstacles.length;
-	for (
-		let index = 0;
-		index < obstacleCount + crossableBands.length;
-		index += 1
-	) {
-		let ahead: BoundingBox;
-		if (index < obstacleCount) {
-			const obstacle = obstacles[index];
-			if (excluded.has(obstacle) || isOwnWall(obstacle, node, side)) {
-				continue;
-			}
-			ahead = obstacle.box;
-		} else {
-			ahead = crossableBands[index - obstacleCount];
+	for (const obstacle of obstacles) {
+		if (excluded.has(obstacle) || isOwnWall(obstacle, node, side)) {
+			continue;
 		}
-		const { left, top, right, bottom } = ahead;
+		const { left, top, right, bottom } = obstacle.box;
 		const isVertical = side === "top" || side === "bottom";
 		// Straight ahead of the end itself, or only of some other stretch of the side.
 		const isAheadOfEnd = isVertical
@@ -191,7 +165,7 @@ const calcStubLength = (
 	// less half a lane where something stands straight ahead, so the stub of an end
 	// facing it across the channel does not run into this one's.
 	const reach =
-		facingGap <= EDGE_ROUTE_MARGIN * channelMargins
+		facingGap <= EDGE_ROUTE_MARGIN * STUB_CHANNEL_MARGINS
 			? Math.max(EDGE_ROUTE_MARGIN, facingGap / 2)
 			: EDGE_ROUTE_MARGIN;
 	return (
@@ -253,37 +227,27 @@ export const listContendedSideKeys = (
  * The places one end of an edge may sit: on each side, the side's centre (as a side's
  * only end sits in a layered layout) and, when the other node lies wholly beyond the
  * side, the spot that runs straight to the other node's centred end (see
- * calcStraightAnchorRatio); and, when both ends are free, the spots GAP_LANE_SPACING
- * either side of this node's and the other node's centred end that run straight
- * between the two boxes with a margin clear alongside (see routeEdgesAroundNodes),
- * each a little dearer than the others, on a side of either box that another edge
- * may want too (`contendedSideKeys`). A spot whose stub is blocked is left out.
+ * calcStraightAnchorRatio); and the spots GAP_LANE_SPACING either side of this
+ * node's and the other node's centred end that run straight between the two boxes
+ * with a margin clear alongside (see routeEdgesAroundNodes), each a little dearer
+ * than the others, on a side of either box that another edge may want too
+ * (`contendedSideKeys`). A spot whose stub is blocked is left out.
  *
- * @param crossableBands - What stops a stub besides the obstacles (see calcStubLength)
  * @param borders - Rects whose sides a spot beside the centre keeps a margin off
  * @param contendedSideKeys - The sides (toSideKey) that two or more of the edges
  *   being routed have their other node wholly beyond (see listContendedSideKeys)
- * @param pinnedEnds - The only places the end may sit (see RoutableEdge.sourceEnds),
- *   which are then its candidates; undefined for an end free to sit on any side
- * @param otherPinnedEnds - The only places the other node's end may sit; a free end
- *   then runs straight to each of them lying on the side facing it, in place of the
- *   other node's centred end. Undefined when the other end is free
  */
 export const listEndCandidates = (
 	node: RoutableNode,
 	other: RoutableNode,
 	obstacles: readonly Obstacle[],
 	excluded: ReadonlySet<Obstacle>,
-	crossableBands: readonly BoundingBox[],
 	borders: readonly BoundingBox[],
 	contendedSideKeys: ReadonlySet<string>,
-	pinnedEnds?: readonly LayoutEdgeAnchor[],
-	otherPinnedEnds?: readonly LayoutEdgeAnchor[],
 ): EndCandidate[] => {
 	const toCandidate = (
 		side: LayoutSide,
 		t: number,
-		isPinned: boolean,
 		isBeside = false,
 	): EndCandidate | undefined => {
 		const anchor = calcAnchorPoint(node.bounds, { side, t });
@@ -293,9 +257,7 @@ export const listEndCandidates = (
 			anchor,
 			obstacles,
 			excluded,
-			crossableBands,
 			borders,
-			isPinned ? PINNED_STUB_CHANNEL_MARGINS : STUB_CHANNEL_MARGINS,
 		);
 		if (stubLength === undefined) {
 			return undefined;
@@ -320,15 +282,8 @@ export const listEndCandidates = (
 					? ROUTE_COSTS.labelledBottom
 					: 0) + (isBeside ? 1 : 0),
 			endKey: `${toSideKey(node.id, side)}\u0000${t}`,
-			isPinned,
 		};
 	};
-	if (pinnedEnds !== undefined) {
-		return pinnedEnds.flatMap(({ side, t }) => {
-			const candidate = toCandidate(side, t, true);
-			return candidate === undefined ? [] : [candidate];
-		});
-	}
 	const box = convertRectToBoundingBox(node.bounds);
 	const otherBox = convertRectToBoundingBox(other.bounds);
 	const isBeyond: Record<LayoutSide, boolean> = {
@@ -369,18 +324,16 @@ export const listEndCandidates = (
 					obstacle.ownerId === other.id ||
 					isOffStrip(obstacle.box),
 			) &&
-			// No route runs along a crossable band, a horizontal run inside one included.
-			(isVertical || crossableBands.every(isOffStrip)) &&
-			[...borders, ...crossableBands].every(
-				(fence) =>
-					isOffStrip(fence) ||
+			borders.every(
+				(border) =>
+					isOffStrip(border) ||
 					(isVertical
-						? [fence.left, fence.right]
-						: [fence.top, fence.bottom]
+						? [border.left, border.right]
+						: [border.top, border.bottom]
 					).every(
-						(fenceSide) =>
-							fenceSide <= column - EDGE_ROUTE_MARGIN ||
-							fenceSide >= column + EDGE_ROUTE_MARGIN,
+						(borderSide) =>
+							borderSide <= column - EDGE_ROUTE_MARGIN ||
+							borderSide >= column + EDGE_ROUTE_MARGIN,
 					),
 			)
 		);
@@ -398,41 +351,31 @@ export const listEndCandidates = (
 		if (isBeyond[side]) {
 			const otherSide = OPPOSITE_SIDES[side];
 			const axis = createSideAxis(side);
-			const otherRatios =
-				otherPinnedEnds === undefined
-					? [
-							calcCentredAnchorRatio(
-								readAnchorRange(other.anchorBodyRanges, otherSide),
-								readAnchorRange(other.anchorRanges, otherSide),
-							),
-						]
-					: otherPinnedEnds
-							.filter((end) => end.side === otherSide)
-							.map(({ t }) => t);
-			for (const otherRatio of otherRatios) {
-				const straight = calcStraightAnchorRatio(
-					node.bounds,
-					columnAt(other.bounds, otherRatio, axis),
-					usable,
+			const straight = calcStraightAnchorRatio(
+				node.bounds,
+				columnAt(
+					other.bounds,
+					calcCentredAnchorRatio(
+						readAnchorRange(other.anchorBodyRanges, otherSide),
+						readAnchorRange(other.anchorRanges, otherSide),
+					),
 					axis,
-				);
-				if (
-					straight !== undefined &&
-					ratios.every(
-						(ratio) =>
-							!isSameCoordinate(
-								columnAt(node.bounds, straight, axis),
-								columnAt(node.bounds, ratio, axis),
-							),
-					)
-				) {
-					ratios.push(straight);
-				}
+				),
+				usable,
+				axis,
+			);
+			if (
+				straight !== undefined &&
+				!isSameCoordinate(
+					columnAt(node.bounds, straight, axis),
+					columnAt(node.bounds, ratios[0], axis),
+				)
+			) {
+				ratios.push(straight);
 			}
 		}
 		if (
 			isBeyond[side] &&
-			otherPinnedEnds === undefined &&
 			(contendedSideKeys.has(toSideKey(node.id, side)) ||
 				contendedSideKeys.has(toSideKey(other.id, OPPOSITE_SIDES[side])))
 		) {
@@ -482,13 +425,13 @@ export const listEndCandidates = (
 			}
 		}
 		for (const t of ratios) {
-			const candidate = toCandidate(side, t, false);
+			const candidate = toCandidate(side, t);
 			if (candidate !== undefined) {
 				candidates.push(candidate);
 			}
 		}
 		for (const t of besideRatios) {
-			const candidate = toCandidate(side, t, false, true);
+			const candidate = toCandidate(side, t, true);
 			if (candidate !== undefined) {
 				candidates.push(candidate);
 			}

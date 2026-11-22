@@ -9,14 +9,10 @@ import {
 	LEAST_LANE_SPACING,
 	type NudgePass,
 	type RouteSegment,
-	type SegmentMember,
 	acrossOf,
-	calcOverlap,
 	calcSegmentSpan,
 	isAlongside,
 	isImmovable,
-	isOfOneBundle,
-	listSegmentMembers,
 	pairKey,
 	walkAllSegments,
 } from "./routeSegments";
@@ -113,11 +109,10 @@ type StubMobility = { canSourceMove: boolean; canTargetMove: boolean };
 
 /**
  * Whether each stub of a route may move, judged before any fold bound is applied to
- * any route: a segment merged across routes (see mergeBundledSegments) is one route's
- * stub and another's inner segment, so a bound applied for one would decide the other.
+ * it, so a bound applied for one stub does not decide the other.
  *
  * @param bySegmentIndex - The route's segments along the axis, by their index along
- *   the route, a merged one under each of its members' indices
+ *   the route
  */
 const readStubMobility = (
 	path: readonly Point[],
@@ -140,7 +135,7 @@ const readStubMobility = (
  * route decides the other.
  *
  * @param bySegmentIndex - The route's segments along the axis, by their index along
- *   the route, a merged one under each of its members' indices; updated in place
+ *   the route; updated in place
  */
 const applyFoldBounds = (
 	path: readonly Point[],
@@ -228,95 +223,16 @@ const collectRouteSegments = ({
 };
 
 /**
- * `segments` (sorted by position) with the segments of one bundle that lie on one
- * line made one: two segments of different routes merge when their routes share a
- * bundle key (see RouteToNudge.bundleKeys) and they share or touch a stretch, and
- * merging is transitive, so a chain of such pairs ends up one segment whether or not
- * its two ends share a key. The first of them in the order stands for the rest (see
- * RouteSegment.members): over the stretch they cover together, within the room every
- * one of them has (immovable when one is), with the side keys of them all.
- */
-const mergeBundledSegments = (
-	segments: readonly RouteSegment[],
-	{ routes }: NudgePass,
-): RouteSegment[] => {
-	const isBundledWith = (a: RouteSegment, b: RouteSegment): boolean =>
-		a.routeIndex !== b.routeIndex &&
-		isOfOneBundle(routes[a.routeIndex], routes[b.routeIndex]) &&
-		isAtLeast(calcOverlap(a, b), 0);
-	const parents = segments.map((_, index) => index);
-	const findRoot = (index: number): number => {
-		let root = index;
-		while (parents[root] !== root) {
-			root = parents[root];
-		}
-		return root;
-	};
-	let hasBundle = false;
-	for (let first = 0; first < segments.length; first += 1) {
-		for (
-			let second = first + 1;
-			second < segments.length &&
-			isSameCoordinate(segments[second].position, segments[first].position);
-			second += 1
-		) {
-			if (isBundledWith(segments[first], segments[second])) {
-				const rootOfFirst = findRoot(first);
-				const rootOfSecond = findRoot(second);
-				if (rootOfFirst !== rootOfSecond) {
-					parents[Math.max(rootOfFirst, rootOfSecond)] = Math.min(
-						rootOfFirst,
-						rootOfSecond,
-					);
-					hasBundle = true;
-				}
-			}
-		}
-	}
-	if (!hasBundle) {
-		return [...segments];
-	}
-	const toMember = ({
-		routeIndex,
-		segmentIndex,
-		from,
-		to,
-	}: RouteSegment): SegmentMember => ({ routeIndex, segmentIndex, from, to });
-	const merged = new Map<number, RouteSegment>();
-	segments.forEach((segment, index) => {
-		const root = findRoot(index);
-		const lead = merged.get(root);
-		if (lead === undefined) {
-			merged.set(root, { ...segment });
-			return;
-		}
-		const isFixed = isImmovable(lead) || isImmovable(segment);
-		lead.members = [...(lead.members ?? [toMember(lead)]), toMember(segment)];
-		lead.from = Math.min(lead.from, segment.from);
-		lead.to = Math.max(lead.to, segment.to);
-		lead.lowest = isFixed ? Infinity : Math.max(lead.lowest, segment.lowest);
-		lead.highest = isFixed
-			? -Infinity
-			: Math.min(lead.highest, segment.highest);
-		lead.sideKeys = [...new Set([...lead.sideKeys, ...segment.sideKeys])];
-	});
-	return [...merged.values()];
-};
-
-/**
  * Every segment running along the axis as the spreading takes it, in the current
- * order (see collectRouteSegments): the segments of one bundle on one line merged
- * (see mergeBundledSegments), then each route's fold bounds applied on what that
- * left (see applyFoldBounds).
+ * order (see collectRouteSegments), each route's fold bounds applied (see
+ * applyFoldBounds).
  */
 const collectSegments = (pass: NudgePass): RouteSegment[] => {
 	const { routes, isVertical } = pass;
-	const segments = mergeBundledSegments(collectRouteSegments(pass), pass);
+	const segments = collectRouteSegments(pass);
 	const byRoute = routes.map(() => new Map<number, RouteSegment>());
 	for (const segment of segments) {
-		for (const { routeIndex, segmentIndex } of listSegmentMembers(segment)) {
-			byRoute[routeIndex].set(segmentIndex, segment);
-		}
+		byRoute[segment.routeIndex].set(segment.segmentIndex, segment);
 	}
 	const mobilities = routes.map(({ path }, routeIndex) =>
 		readStubMobility(path, byRoute[routeIndex]),
@@ -333,13 +249,8 @@ const collectSegments = (pass: NudgePass): RouteSegment[] => {
 };
 
 const isFoldPair = (a: RouteSegment, b: RouteSegment): boolean =>
-	listSegmentMembers(a).some((memberOfA) =>
-		listSegmentMembers(b).some(
-			(memberOfB) =>
-				memberOfA.routeIndex === memberOfB.routeIndex &&
-				Math.abs(memberOfA.segmentIndex - memberOfB.segmentIndex) === 2,
-		),
-	);
+	a.routeIndex === b.routeIndex &&
+	Math.abs(a.segmentIndex - b.segmentIndex) === 2;
 
 /**
  * Whether two parallel segments, at least one movable, run closer than the lane
@@ -405,41 +316,33 @@ const listSegmentPairs = (
 		}
 	}
 	const indexByKey = new Map<string, number>();
-	segments.forEach((segment, index) => {
-		for (const { routeIndex, segmentIndex } of listSegmentMembers(segment)) {
-			indexByKey.set(`${routeIndex}:${segmentIndex}`, index);
-		}
+	segments.forEach(({ routeIndex, segmentIndex }, index) => {
+		indexByKey.set(`${routeIndex}:${segmentIndex}`, index);
 	});
 	segments.forEach((segment, index) => {
-		for (const member of listSegmentMembers(segment)) {
-			const partner = indexByKey.get(
-				`${member.routeIndex}:${member.segmentIndex + 2}`,
-			);
-			if (
-				partner === undefined ||
-				partner === index ||
-				isImmovable(segment) ||
-				isImmovable(segments[partner])
-			) {
-				continue;
-			}
-			const [first, second] =
-				index < partner ? [index, partner] : [partner, index];
-			if (pairKeys.has(pairKey(first, second, segments.length))) {
-				continue;
-			}
-			addPair({
-				first,
-				second,
-				isSwapped: false,
-				kind: "fold",
-				gap: Math.min(
-					LEAST_FOLD_GAP,
-					segments[second].position - segments[first].position,
-				),
-				endGap: undefined,
-			});
+		const partner = indexByKey.get(
+			`${segment.routeIndex}:${segment.segmentIndex + 2}`,
+		);
+		if (
+			partner === undefined ||
+			isImmovable(segment) ||
+			isImmovable(segments[partner])
+		) {
+			return;
 		}
+		const [first, second] =
+			index < partner ? [index, partner] : [partner, index];
+		addPair({
+			first,
+			second,
+			isSwapped: false,
+			kind: "fold",
+			gap: Math.min(
+				LEAST_FOLD_GAP,
+				segments[second].position - segments[first].position,
+			),
+			endGap: undefined,
+		});
 	});
 	const lowestOf = (segment: RouteSegment): number =>
 		isImmovable(segment)
@@ -889,16 +792,13 @@ export const nudgeAlong = (pass: NudgePass): void => {
 		}
 	}
 	for (const [node, position] of moves) {
-		for (const { routeIndex, segmentIndex } of listSegmentMembers(
-			segments[node],
-		)) {
-			const { path } = routes[routeIndex];
-			for (const point of [path[segmentIndex], path[segmentIndex + 1]]) {
-				if (isVertical) {
-					point.x = position;
-				} else {
-					point.y = position;
-				}
+		const { routeIndex, segmentIndex } = segments[node];
+		const { path } = routes[routeIndex];
+		for (const point of [path[segmentIndex], path[segmentIndex + 1]]) {
+			if (isVertical) {
+				point.x = position;
+			} else {
+				point.y = position;
 			}
 		}
 	}

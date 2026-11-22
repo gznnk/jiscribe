@@ -49,15 +49,12 @@ import type { LayoutEdgeAnchor } from "../shared/types";
  * rounded inward to whole px and widened again to `point` itself where that cut it off.
  *
  * @param walls - The edge's walls, in the order the route lists them
- * @param isPinned - Whether the end is held to `point` (see RoutableEdge.sourceEnds),
- *   its slide then being that spot alone
  */
 const toRouteEnd = (
 	node: RoutableNode,
 	{ side }: LayoutEdgeAnchor,
 	point: Point,
 	walls: readonly Obstacle[],
-	isPinned: boolean,
 ): RouteEnd => {
 	const axis = createSideAxis(side);
 	const across = axis.across(point);
@@ -72,14 +69,6 @@ const toRouteEnd = (
 			ownWallIndices.push(index);
 		}
 	});
-	if (isPinned) {
-		return {
-			sideKey: toSideKey(node.id, side),
-			slide: { min: across, max: across },
-			ownWallIndices,
-			isPinned: true,
-		};
-	}
 	return {
 		sideKey: toSideKey(node.id, side),
 		slide: {
@@ -149,12 +138,6 @@ const findInnermostSharedBorder = (
 		? undefined
 		: convertRectToBoundingBox(innermost);
 };
-
-/** Names the spot a pinned end is held to: the node's side and the place along it. */
-const toPinnedEndKey = (
-	node: RoutableNode,
-	{ side, t }: LayoutEdgeAnchor,
-): string => `${toSideKey(node.id, side)}\u0000${t}`;
 
 /**
  * `anchor` moved to where the nudging left its end, `point`; `anchor` itself when the
@@ -235,19 +218,16 @@ const listExcludedObstacles = (
  *
  * Each end picks among, on every side of its box, the side's centre and the spot that
  * runs straight to the other box's centred end when the other box lies wholly beyond
- * the side; where neither end is given places to sit and two or more of the edges
- * have their other box wholly beyond that side of either box, also the spots
- * GAP_LANE_SPACING
- * either side of those two that run straight between the two boxes with
- * {@link EDGE_ROUTE_MARGIN} clear of every other obstacle, border's side and crossable
- * band alongside, which lose a tie to the others, so a second edge between two
- * facing boxes runs straight beside the first. An end's stub runs
- * {@link EDGE_ROUTE_MARGIN} out, a bottom one past the box's caption first; to the
- * middle of a channel between its side and what faces it, where that is a few margins
- * wide at the most, more for an end given places to sit; and stops short of an
- * obstacle or crossable band straight ahead that is nearer (see calcStubLength for
- * the widths and how short). A box, caption or obstacle covering or overlapping an
- * edge's end box is no obstacle to that edge.
+ * the side; where two or more of the edges have their other box wholly beyond that
+ * side of either box, also the spots GAP_LANE_SPACING either side of those two that
+ * run straight between the two boxes with {@link EDGE_ROUTE_MARGIN} clear of every
+ * other obstacle and border's side alongside, which lose a tie to the others, so a
+ * second edge between two facing boxes runs straight beside the first. An end's stub
+ * runs {@link EDGE_ROUTE_MARGIN} out, a bottom one past the box's caption first; to
+ * the middle of a channel between its side and what faces it, where that is a few
+ * margins wide at the most; and stops short of an obstacle straight ahead that is
+ * nearer (see calcStubLength for the widths and how short). A box, caption or
+ * obstacle covering or overlapping an edge's end box is no obstacle to that edge.
  *
  * An edge whose two end boxes lie inside one of the borders stays strictly inside
  * the innermost such border where a route is found there, though a cheaper one runs
@@ -258,25 +238,6 @@ const listExcludedObstacles = (
  * edges ending on it alone, whose ends sit on its sides and leave outward, and every
  * other route runs through it; no label keeps off its box.
  *
- * A crossable band (`options.crossableBands`) is crossed straight over, top to bottom
- * or bottom to top: no route runs along it or bends in it, crossing its top and its
- * bottom side each costs what crossing a border's side does (once where a border's
- * side lies on one), a run alongside within the margin costs as one alongside a
- * border, no segment is nudged across its sides and no label is placed in it. It
- * holds for every edge, an end box it covers included, whose stubs it stops like any
- * other's.
- *
- * An end given places to sit (`sourceEnds` / `targetEnds`) takes the one of them that
- * gives the cheapest route and is pinned there: the nudging does not slide it, and
- * it takes no share of its side's stretch from the ends that do. The free end of
- * such an edge runs straight to each of those places on the side facing it, in place
- * of the other box's centred end. The routes drawn to one pinned place are a bundle:
- * a later route to that place runs along them for ROUTE_COSTS.bundledPerPx a px in
- * place of its length and their overlap, crossing for free what they already cross,
- * so the routes to one place gather into one trunk; their segments lying on one line
- * are then spread as one segment and no jog is taken out by moving one of them off
- * that line (see nudgeRoutes).
- *
  * Routes run on an orthogonal visibility graph (see buildRouteGraph), searched first
  * close around the two end boxes and further out only when no route is found there
  * (see EdgeRouter), so an edge takes the cheapest route near its ends even where a
@@ -285,11 +246,9 @@ const listExcludedObstacles = (
  * @param nodes - Every box an edge may end on or must go around, ids unique
  * @param edges - The edges to route, each between two different nodes; ends whose
  *   boxes overlap each other are routed but may well find no way. One given a `label`
- *   comes back with `labelPosition` and `labelOffset`; one given `sourceEnds` or
- *   `targetEnds` comes back with that end on one of them, `side` and `t` as given, or
- *   unrouted when a stub can leave none of them
- * @param options - Rects to keep out of, bands to cross only straight over, and frames
- *   to cross and run alongside sparingly
+ *   comes back with `labelPosition` and `labelOffset`
+ * @param options - Rects to keep out of, and frames to cross and run alongside
+ *   sparingly
  * @returns The edges routed and the ids of those left without a route
  * @throws Error for a repeated node id, or an edge naming a node not among `nodes`
  */
@@ -338,12 +297,6 @@ export const routeEdgesAroundNodes = (
 		box: convertRectToBoundingBox(obstacle.rect),
 	}));
 	const borders = (options.borders ?? []).map(convertRectToBoundingBox);
-	const crossableBands = (options.crossableBands ?? []).map(
-		convertRectToBoundingBox,
-	);
-	// What gives the lines their coordinates besides the obstacles, and what no
-	// segment is nudged across the sides of.
-	const fences = [...borders, ...crossableBands];
 
 	const contendedSideKeys = listContendedSideKeys(
 		edges.flatMap((edge) => {
@@ -381,44 +334,31 @@ export const routeEdgesAroundNodes = (
 				target,
 				obstacles,
 				excludedSet,
-				crossableBands,
 				borders,
 				contendedSideKeys,
-				edge.sourceEnds,
-				edge.targetEnds,
 			),
 			targets: listEndCandidates(
 				target,
 				source,
 				obstacles,
 				excludedSet,
-				crossableBands,
 				borders,
 				contendedSideKeys,
-				edge.targetEnds,
-				edge.sourceEnds,
 			),
 		});
 	}
 	const routedById = new Map<string, RoutedEdge>();
 	if (prepared.length > 0) {
-		const { origins, xs, ys } = collectOrigins(
-			obstacles,
-			fences,
-			prepared,
-			crossableBands,
-		);
+		const { origins, xs, ys } = collectOrigins(obstacles, borders, prepared);
 		const router = new EdgeRouter(
 			createRouteLines(
 				toGridLines(xs),
 				toGridLines(ys),
 				borders,
 				EDGE_ROUTE_MARGIN,
-				crossableBands,
 			),
 			obstacles,
 			origins,
-			crossableBands,
 		);
 		const toNudge: {
 			edge: RoutableEdge;
@@ -481,28 +421,8 @@ export const routeEdgesAroundNodes = (
 						{ ...targetPoint },
 					],
 					walls: walls.map(({ box }) => box),
-					source: toRouteEnd(
-						sourceNode,
-						routed.source,
-						sourcePoint,
-						walls,
-						edge.sourceEnds !== undefined,
-					),
-					target: toRouteEnd(
-						targetNode,
-						routed.target,
-						targetPoint,
-						walls,
-						edge.targetEnds !== undefined,
-					),
-					bundleKeys: [
-						...(edge.sourceEnds !== undefined
-							? [toPinnedEndKey(sourceNode, routed.source)]
-							: []),
-						...(edge.targetEnds !== undefined
-							? [toPinnedEndKey(targetNode, routed.target)]
-							: []),
-					],
+					source: toRouteEnd(sourceNode, routed.source, sourcePoint, walls),
+					target: toRouteEnd(targetNode, routed.target, targetPoint, walls),
 				},
 				sourcePoint,
 				targetPoint,
@@ -510,19 +430,16 @@ export const routeEdgesAroundNodes = (
 		}
 		nudgeRoutes(
 			toNudge.map(({ route }) => route),
-			fences,
+			borders,
 		);
 		const placements = placeRouteLabels(
 			toNudge.map(({ edge, route }) => ({
 				path: route.path,
 				label: edge.label,
 			})),
-			[
-				...obstacles
-					.filter(({ isHollow }) => isHollow !== true)
-					.map(({ rect }) => rect),
-				...(options.crossableBands ?? []),
-			],
+			obstacles
+				.filter(({ isHollow }) => isHollow !== true)
+				.map(({ rect }) => rect),
 			options.borders ?? [],
 		);
 		toNudge.forEach(

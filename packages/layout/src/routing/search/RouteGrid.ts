@@ -99,7 +99,7 @@ export type RouteLines = {
 	occupiedH: Uint16Array;
 	/** The same for each vertical unit step. */
 	occupiedV: Uint16Array;
-	/** Where the borders and the crossable bands' sides lie; absent when there are none. */
+	/** Where the borders lie; absent when there are none. */
 	borders?: BorderMarks;
 };
 
@@ -173,10 +173,7 @@ export const growBox = (box: BoundingBox, amount: number): BoundingBox => ({
 });
 
 /** The index of the first line at or past `value`, `lines.length` when none is. */
-export const findLineAtOrAfter = (
-	lines: Float64Array,
-	value: number,
-): number => {
+const findLineAtOrAfter = (lines: Float64Array, value: number): number => {
 	let low = 0;
 	let high = lines.length;
 	while (low < high) {
@@ -188,24 +185,6 @@ export const findLineAtOrAfter = (
 		}
 	}
 	return low;
-};
-
-/** The index of the last line at or before `value`, -1 when none is. */
-export const findLineAtOrBefore = (
-	lines: Float64Array,
-	value: number,
-): number => {
-	let low = 0;
-	let high = lines.length;
-	while (low < high) {
-		const middle = (low + high) >> 1;
-		if (lines[middle] <= value) {
-			low = middle + 1;
-		} else {
-			high = middle;
-		}
-	}
-	return low - 1;
 };
 
 /**
@@ -278,65 +257,17 @@ const addBorder = (
 };
 
 /**
- * Count a crossable band's top and bottom sides into the points they pass through
- * where no border's horizontal side does already (its corners left out), and weigh
- * the points within `margin` of them and alongside as addBorder does. Its short sides
- * add nothing. What lies off the lines is left out.
- */
-const addBandSides = (
-	lines: RouteLines,
-	marks: BorderMarks,
-	band: BoundingBox,
-	margin: number,
-): void => {
-	const { xs, ys } = lines;
-	const nx = xs.length;
-	const left = snapToGridResolution(band.left);
-	const right = snapToGridResolution(band.right);
-	const sideFrom = findLineAtOrAfter(xs, left);
-	const sideTo = findLineAtOrAfter(xs, right);
-	for (const y of [
-		snapToGridResolution(band.top),
-		snapToGridResolution(band.bottom),
-	]) {
-		const nearFrom = findLineAtOrAfter(ys, y - margin);
-		const nearTo = findLineAtOrAfter(ys, y + margin);
-		for (let yi = nearFrom; yi < nearTo; yi += 1) {
-			for (let xi = sideFrom; xi < Math.min(sideTo + 1, nx); xi += 1) {
-				const weight = 1 - Math.abs(ys[yi] - y) / margin;
-				const point = yi * nx + xi;
-				if (weight > marks.nearH[point]) {
-					marks.nearH[point] = weight;
-				}
-				if (
-					ys[yi] === y &&
-					xs[xi] !== left &&
-					xs[xi] !== right &&
-					marks.sidesH[point] === 0
-				) {
-					marks.sidesH[point] = 1;
-				}
-			}
-		}
-	}
-};
-
-/**
  * The lines on the given coordinates, with nothing drawn on them yet and the borders
- * and the crossable bands' sides counted in.
+ * counted in.
  *
  * @param margin - How far from a border's side a step running alongside still pays
  *   for it, in px
- * @param crossableBands - Bands whose top and bottom sides cost what a border's side
- *   does to cross and to run alongside, once where a border's side lies on one (see
- *   EdgeRoutingOptions.crossableBands)
  */
 export const createRouteLines = (
 	xLines: GridLines,
 	yLines: GridLines,
 	borders: readonly BoundingBox[],
 	margin: number,
-	crossableBands: readonly BoundingBox[],
 ): RouteLines => {
 	const xs = xLines.lines;
 	const ys = yLines.lines;
@@ -350,7 +281,7 @@ export const createRouteLines = (
 		occupiedH: new Uint16Array(ny * Math.max(nx - 1, 0)),
 		occupiedV: new Uint16Array(nx * Math.max(ny - 1, 0)),
 	};
-	if (borders.length > 0 || crossableBands.length > 0) {
+	if (borders.length > 0) {
 		const marks: BorderMarks = {
 			sidesV: new Uint8Array(nx * ny),
 			sidesH: new Uint8Array(nx * ny),
@@ -359,10 +290,6 @@ export const createRouteLines = (
 		};
 		for (const border of borders) {
 			addBorder(lines, marks, border, margin);
-		}
-		// After the borders, so a side a border lies on is counted once.
-		for (const band of crossableBands) {
-			addBandSides(lines, marks, band, margin);
 		}
 		lines.borders = marks;
 	}

@@ -58,8 +58,6 @@ export type EndCandidate = {
 	sideCost: number;
 	/** Names the end, so ends sitting at one spot share their stub for free. */
 	endKey: string;
-	/** Whether the end is held to this spot (see RoutableEdge.sourceEnds). */
-	isPinned: boolean;
 };
 
 export type PreparedEdge = {
@@ -146,8 +144,6 @@ type DrawnRoute = {
 	steps: number[];
 	/** The stub steps among them, under each end's key. */
 	stubSteps: { endKey: string; steps: number[] }[];
-	/** The keys of its pinned ends, whose bundles its steps were added to. */
-	pinnedEndKeys: string[];
 };
 
 /** A stub on the lines: its anchor's line indices and the unit steps it runs. */
@@ -166,8 +162,6 @@ type StubOnLines = {
 export class EdgeRouter {
 	private readonly lines: RouteLines;
 	private readonly obstacles: readonly Obstacle[];
-	/** The bands every graph lets a route only cross straight over; see buildRouteGraph. */
-	private readonly crossableBands: readonly BoundingBox[];
 	/** The points of interest every graph runs its lines from; see buildRouteGraph. */
 	private readonly origins: Int32Array;
 	/**
@@ -179,15 +173,6 @@ export class EdgeRouter {
 	private keptStateCount = 0;
 	/** How many stubs of each end run along each unit step, by end and then step. */
 	private readonly stubStepsByEnd = new Map<string, Map<number, number>>();
-	/**
-	 * How many of the routes drawn to each pinned end run along each unit step, stubs
-	 * included, by the end's key and then the step's toDrawnStep number: what a later
-	 * route to the same end may follow as its bundle.
-	 */
-	private readonly routeStepsByPinnedEnd = new Map<
-		string,
-		Map<number, number>
-	>();
 	/**
 	 * What each routed edge drew, for reroute to take back; by the edge itself, ids
 	 * not having to differ.
@@ -230,11 +215,9 @@ export class EdgeRouter {
 		lines: RouteLines,
 		obstacles: readonly Obstacle[],
 		origins: readonly Point[],
-		crossableBands: readonly BoundingBox[],
 	) {
 		this.lines = lines;
 		this.obstacles = obstacles;
-		this.crossableBands = crossableBands;
 		this.origins = Int32Array.from(
 			origins.flatMap(({ x, y }) => [
 				indexOfGridLine(lines.xs, x),
@@ -254,7 +237,6 @@ export class EdgeRouter {
 					.filter((obstacle) => !excludedSet.has(obstacle))
 					.map(({ box }) => box),
 				this.origins,
-				this.crossableBands,
 			);
 			const stateCount = graph.nodeXi.length * 4;
 			// Building a graph is work as searching one is: a state built counts as one searched.
@@ -496,7 +478,7 @@ export class EdgeRouter {
 		source: EndCandidate,
 		target: EndCandidate,
 	): DrawnRoute {
-		const drawn: DrawnRoute = { steps: [], stubSteps: [], pinnedEndKeys: [] };
+		const drawn: DrawnRoute = { steps: [], stubSteps: [] };
 		const mark = (
 			xi: number,
 			yi: number,
@@ -535,11 +517,6 @@ export class EdgeRouter {
 				mark(xi, yi, direction);
 				xi += STEP_X[direction];
 				yi += STEP_Y[direction];
-			}
-		}
-		for (const candidate of [source, target]) {
-			if (candidate.isPinned) {
-				drawn.pinnedEndKeys.push(candidate.endKey);
 			}
 		}
 		return drawn;
@@ -606,12 +583,6 @@ export class EdgeRouter {
 			const stubSteps = stepsOf(this.stubStepsByEnd, endKey);
 			for (const key of steps) {
 				count(stubSteps, key);
-			}
-		}
-		for (const endKey of drawn.pinnedEndKeys) {
-			const bundleSteps = stepsOf(this.routeStepsByPinnedEnd, endKey);
-			for (const key of drawn.steps) {
-				count(bundleSteps, key);
 			}
 		}
 	}
@@ -701,47 +672,6 @@ export class EdgeRouter {
 		}
 	}
 
-	/** The summed length in px of unit steps given as toDrawnStep numbers. */
-	private calcDrawnStepsLength(drawnSteps: Iterable<number>): number {
-		const { xs, ys } = this.lines;
-		let length = 0;
-		for (const drawnStep of drawnSteps) {
-			const step = drawnStep >> 1;
-			if (drawnStep % 2 === 0) {
-				const xi = step % (xs.length - 1);
-				length += xs[xi + 1] - xs[xi];
-			} else {
-				const yi = step % (ys.length - 1);
-				length += ys[yi + 1] - ys[yi];
-			}
-		}
-		return length;
-	}
-
-	/**
-	 * How many routes already drawn to one of the edge's pinned ends run along each
-	 * unit step, by toDrawnStep number; undefined when none is drawn yet.
-	 */
-	private collectBundleSteps({
-		sources,
-		targets,
-	}: PreparedEdge): Map<number, number> | undefined {
-		let bundle: Map<number, number> | undefined;
-		const seen = new Set<string>();
-		for (const { isPinned, endKey } of [...sources, ...targets]) {
-			if (!isPinned || seen.has(endKey)) {
-				continue;
-			}
-			seen.add(endKey);
-			for (const [step, total] of this.routeStepsByPinnedEnd.get(endKey) ??
-				[]) {
-				bundle ??= new Map();
-				bundle.set(step, (bundle.get(step) ?? 0) + total);
-			}
-		}
-		return bundle;
-	}
-
 	/**
 	 * The cheapest route for one edge: an A* search over (node, direction) from every
 	 * source stub tip to a virtual finish reached from every target stub tip. An edge
@@ -753,7 +683,6 @@ export class EdgeRouter {
 	 */
 	route(prepared: PreparedEdge): RoutedEdge | undefined {
 		const graph = this.graphFor(prepared.excluded);
-		const bundleSteps = this.collectBundleSteps(prepared);
 		const around = unionBoundingBoxes([
 			prepared.sourceBox,
 			prepared.targetBox,
@@ -777,17 +706,12 @@ export class EdgeRouter {
 					window.top <= sharedBorder.top &&
 					window.right >= sharedBorder.right &&
 					window.bottom >= sharedBorder.bottom;
-				const routed = this.searchWithin(
-					prepared,
-					graph,
-					{
-						left: Math.max(window.left, inside.left),
-						top: Math.max(window.top, inside.top),
-						right: Math.min(window.right, inside.right),
-						bottom: Math.min(window.bottom, inside.bottom),
-					},
-					bundleSteps,
-				);
+				const routed = this.searchWithin(prepared, graph, {
+					left: Math.max(window.left, inside.left),
+					top: Math.max(window.top, inside.top),
+					right: Math.min(window.right, inside.right),
+					bottom: Math.min(window.bottom, inside.bottom),
+				});
 				if (routed !== undefined) {
 					return routed;
 				}
@@ -803,7 +727,7 @@ export class EdgeRouter {
 				window.top <= ys[0] &&
 				window.right >= xs[xs.length - 1] &&
 				window.bottom >= ys[ys.length - 1];
-			const routed = this.searchWithin(prepared, graph, window, bundleSteps);
+			const routed = this.searchWithin(prepared, graph, window);
 			if (routed !== undefined || coversAll) {
 				return routed;
 			}
@@ -814,10 +738,9 @@ export class EdgeRouter {
 		prepared: PreparedEdge,
 		graph: RouteGraph,
 		window: BoundingBox,
-		bundleSteps: ReadonlyMap<number, number> | undefined,
 	): RoutedEdge | undefined {
 		try {
-			return this.search(prepared, graph, window, bundleSteps);
+			return this.search(prepared, graph, window);
 		} finally {
 			for (const state of this.reached) {
 				this.bestCost[state] = Infinity;
@@ -829,15 +752,11 @@ export class EdgeRouter {
 
 	/**
 	 * @param window - The search reaches no node outside it, edges included
-	 * @param bundleSteps - The steps of the edge's bundle (see collectBundleSteps): a
-	 *   link along them costs ROUTE_COSTS.bundledPerPx a px in place of its length and
-	 *   its overlap with them, and crosses for free what they already cross
 	 */
 	private search(
 		{ edge, sources, targets }: PreparedEdge,
 		graph: RouteGraph,
 		window: BoundingBox,
-		bundleSteps: ReadonlyMap<number, number> | undefined,
 	): RoutedEdge | undefined {
 		const { lines, reached, queue, bestCost, cameFrom } = this;
 		const { xs, ys } = lines;
@@ -869,76 +788,6 @@ export class EdgeRouter {
 		if (reachableTargets.length === 0) {
 			return undefined;
 		}
-		// The most the bundle can take off what is left to run: its own length, at the
-		// rate a bundled px is cheaper by.
-		const bundleSaving =
-			bundleSteps === undefined
-				? 0
-				: this.calcDrawnStepsLength(bundleSteps.keys()) *
-					(1 - ROUTE_COSTS.bundledPerPx);
-		const countBundledOn = (
-			xi: number,
-			yi: number,
-			direction: RouteDirection,
-		): number => {
-			const step = stepIndex(lines, xi, yi, direction);
-			return step < 0
-				? 0
-				: ((bundleSteps as ReadonlyMap<number, number>).get(
-						toDrawnStep(step, direction),
-					) ?? 0);
-		};
-		const bundleDiscounts = new Map<number, number>();
-		/** What the link leaving `node` in `direction` saves for running along the bundle. */
-		const bundleDiscountOf = (
-			node: number,
-			direction: RouteDirection,
-		): number => {
-			if (bundleSteps === undefined) {
-				return 0;
-			}
-			const key = node * 4 + direction;
-			const known = bundleDiscounts.get(key);
-			if (known !== undefined) {
-				return known;
-			}
-			const next = neighbours[key];
-			const steps =
-				Math.abs(nodeXi[next] - nodeXi[node]) +
-				Math.abs(nodeYi[next] - nodeYi[node]);
-			let discount = 0;
-			let atXi = nodeXi[node];
-			let atYi = nodeYi[node];
-			let wasBundled = false;
-			for (let index = 0; index < steps; index += 1) {
-				const bundled = countBundledOn(atXi, atYi, direction);
-				if (bundled > 0) {
-					const length = this.stepLength(atXi, atYi, direction);
-					discount +=
-						length * bundled * ROUTE_COSTS.overlapPerPx +
-						length * (1 - ROUTE_COSTS.bundledPerPx);
-					if (wasBundled) {
-						discount +=
-							this.countDrawnCrossingsAt(atXi, atYi, direction) *
-							ROUTE_COSTS.crossing;
-					}
-				}
-				wasBundled = bundled > 0;
-				atXi += STEP_X[direction];
-				atYi += STEP_Y[direction];
-			}
-			bundleDiscounts.set(key, discount);
-			return discount;
-		};
-		/** Whether the bundle runs straight through (xi, yi) along `direction`. */
-		const isBundledThrough = (
-			xi: number,
-			yi: number,
-			direction: RouteDirection,
-		): boolean =>
-			bundleSteps !== undefined &&
-			countBundledOn(xi, yi, direction) > 0 &&
-			countBundledOn(xi, yi, oppositeDirection(direction)) > 0;
 		const estimate = (
 			x: number,
 			y: number,
@@ -946,10 +795,9 @@ export class EdgeRouter {
 		): number => {
 			let best = Infinity;
 			for (const tip of reachableTargets) {
-				const distance = Math.abs(tip.x - x) + Math.abs(tip.y - y);
 				const remaining =
-					distance -
-					Math.min(distance * (1 - ROUTE_COSTS.bundledPerPx), bundleSaving) +
+					Math.abs(tip.x - x) +
+					Math.abs(tip.y - y) +
 					countBendsAtLeast(x, y, direction, tip.x, tip.y, tip.arrival) *
 						ROUTE_COSTS.bend;
 				if (remaining < best) {
@@ -1060,16 +908,14 @@ export class EdgeRouter {
 				}
 				let turnCost: number = ROUTE_COSTS.bend;
 				if (direction === arrival) {
-					turnCost = isBundledThrough(xi, yi, direction)
-						? 0
-						: this.countDrawnCrossingsAt(xi, yi, direction) *
-							ROUTE_COSTS.crossing;
+					turnCost =
+						this.countDrawnCrossingsAt(xi, yi, direction) *
+						ROUTE_COSTS.crossing;
 				}
 				const cost =
 					g +
 					linkCosts[node * 4 + direction] +
-					drawnCosts[node * 4 + direction] -
-					bundleDiscountOf(node, direction) +
+					drawnCosts[node * 4 + direction] +
 					turnCost;
 				const nextState = (next << 2) | direction;
 				if (cost < bestCost[nextState]) {

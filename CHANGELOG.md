@@ -44,22 +44,13 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   route runs along or crosses is taken back and found again against all the
   others, up to twice, so an early edge gives way where a later one needed the
   room. An end's stub runs to the middle of a channel between its side and
-  what faces it (up to four margins wide, six for an end given
-  `RoutableEdge.sourceEnds` / `targetEnds`), so the lines between two columns of boxes bend down the middle. A
-  route between two boxes inside one border stays inside the innermost such
-  border where it finds a way there, and a run within a third of the margin
-  of a box costs much more (`ROUTE_COSTS.hugWeight`). A
-  band given as one of `EdgeRoutingOptions.crossableBands` is crossed straight over and neither run
-  along nor bent in, its top and bottom sides costing what a border's side does
-  (once where a border's side lies on one), and an end's stub stops short of it.
-  An end given `RoutableEdge.sourceEnds` / `targetEnds` sits only on one of those
-  places and does not slide afterwards; the routes drawn to one such place are a
-  bundle, which a later route to it follows for half its length's cost
-  (`ROUTE_COSTS.bundledPerPx`) and no overlap, and whose segments lying on one
-  line are spread and straightened as one; `routeConnectors` passes neither
-  `crossableBands` nor such ends. Then the routes running together are spread
-  `GAP_LANE_SPACING` apart (less in a tight channel, and a pair that has no room
-  to part at all is left as it stands) in an order that keeps them from crossing
+  what faces it (up to four margins wide), so the lines between two columns of
+  boxes bend down the middle. A route between two boxes inside one border stays
+  inside the innermost such border where it finds a way there, and a run within
+  a third of the margin of a box costs much more (`ROUTE_COSTS.hugWeight`). Then
+  the routes running together are spread `GAP_LANE_SPACING` apart (less in a
+  tight channel, and a pair that has no room to part at all is left as it
+  stands) in an order that keeps them from crossing
   where they need not, which can bring a run within half that of a shape,
   caption or frame, but never nearer than it already was. A route's first and
   last segments are spread too, each end sliding along its side within the

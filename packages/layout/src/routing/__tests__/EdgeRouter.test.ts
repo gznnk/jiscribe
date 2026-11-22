@@ -1,12 +1,6 @@
-import {
-	convertRectToBoundingBox,
-	doRectsOverlap,
-	type Point,
-} from "@jiscribe/geometry";
+import { convertRectToBoundingBox, doRectsOverlap } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
-import { calcAnchorPoint } from "../../shared/calcAnchorPoint";
-import type { LayoutEdgeAnchor } from "../../shared/types";
 import { EDGE_ROUTE_MARGIN } from "../edgeRoutingCosts";
 import { listContendedSideKeys, listEndCandidates } from "../endCandidates";
 import {
@@ -27,18 +21,16 @@ const edge = (
 	id: string,
 	sourceId: string,
 	targetId: string,
-	targetEnds?: readonly LayoutEdgeAnchor[],
 ): RoutableEdge => ({
 	id,
 	sourceId,
 	targetId,
-	...(targetEnds === undefined ? {} : { targetEnds }),
 });
 
 /**
  * The edges prepared as routeEdgesAroundNodes prepares them, keyed by id, and a maker
  * of routers on lines of their own: a router counts its routes onto its lines, so two
- * routers cannot share them. No caption, border or band.
+ * routers cannot share them. No caption or border.
  */
 const prepareScene = (
 	nodes: readonly RoutableNode[],
@@ -84,10 +76,7 @@ const prepareScene = (
 				obstacles,
 				excludedSet,
 				[],
-				[],
 				contendedSideKeys,
-				routable.sourceEnds,
-				routable.targetEnds,
 			),
 			targets: listEndCandidates(
 				target,
@@ -95,10 +84,7 @@ const prepareScene = (
 				obstacles,
 				excludedSet,
 				[],
-				[],
 				contendedSideKeys,
-				routable.targetEnds,
-				routable.sourceEnds,
 			),
 		});
 	}
@@ -106,7 +92,6 @@ const prepareScene = (
 		obstacles,
 		[],
 		[...prepared.values()],
-		[],
 	);
 	return {
 		prepared,
@@ -117,11 +102,9 @@ const prepareScene = (
 					toGridLines(ys),
 					[],
 					EDGE_ROUTE_MARGIN,
-					[],
 				),
 				obstacles,
 				origins,
-				[],
 			),
 	};
 };
@@ -231,70 +214,8 @@ describe("EdgeRouter", () => {
 			expect(router.isOvertaken(down.edge)).toBe(false);
 		});
 
-		it("is not raised by a route found again where it was", () => {
-			// Two routes into one pinned spot share their last stretch. Once each has
-			// been routed against the other, routing the first again finds it where it
-			// was, along the second's steps still.
-			const pinned = [{ side: "left", t: 0.5 }] as const;
-			const bundle = prepareScene(
-				[
-					box("s1", -100, -100),
-					box("s2", 250, -200),
-					box("T", 400, 0, 60, 300),
-				],
-				[edge("p1", "s1", "T", pinned), edge("p2", "s2", "T", pinned)],
-			);
-			const p1 = bundle.prepared.get("p1") as PreparedEdge;
-			const p2 = bundle.prepared.get("p2") as PreparedEdge;
-			const router = bundle.createRouter();
-			router.route(p1);
-			router.route(p2);
-			const settled = router.reroute(p1);
-			router.reroute(p2);
-
-			expect(router.isOvertaken(p1.edge)).toBe(false);
-			expect(router.isOvertaken(p2.edge)).toBe(false);
-			expect(router.reroute(p1)).toEqual(settled);
-			expect(router.isOvertaken(p2.edge)).toBe(false);
-		});
-
 		it("is false for an edge with no route", () => {
 			expect(createRouter().isOvertaken(around.edge)).toBe(false);
 		});
-	});
-
-	it("takes a route taken back out of its bundle, so the routes to one pinned end gather into one trunk", () => {
-		// T's left side is pinned at y 150. Routed alone, p1 comes down to it at x 90;
-		// p2 then comes straight down from s2 at x 280.
-		const pinned = [{ side: "left", t: 0.5 }] as const;
-		const target = box("T", 400, 0, 60, 300);
-		const nodes = [
-			box("s1", -100, -100),
-			box("s2", 250, -200),
-			box("s3", 0, 100),
-			target,
-		];
-		const { prepared, createRouter } = prepareScene(nodes, [
-			edge("p1", "s1", "T", pinned),
-			edge("p2", "s2", "T", pinned),
-			edge("p3", "s3", "T", pinned),
-		]);
-		const router = createRouter();
-		const p1Alone = router.route(prepared.get("p1") as PreparedEdge);
-		const p2 = router.route(prepared.get("p2") as PreparedEdge) as RoutedEdge;
-		const p1 = router.reroute(prepared.get("p1") as PreparedEdge) as RoutedEdge;
-		const p3 = router.route(prepared.get("p3") as PreparedEdge) as RoutedEdge;
-
-		const lastSegmentOf = (routed: RoutedEdge, sourceId: string): Point[] => {
-			const source = nodes.find(({ id }) => id === sourceId) as RoutableNode;
-			return [
-				calcAnchorPoint(source.bounds, routed.source),
-				...routed.points,
-				calcAnchorPoint(target.bounds, routed.target),
-			].slice(-2);
-		};
-		expect(p1).not.toEqual(p1Alone);
-		expect(lastSegmentOf(p1, "s1")).toEqual(lastSegmentOf(p2, "s2"));
-		expect(lastSegmentOf(p3, "s3")).toEqual(lastSegmentOf(p2, "s2"));
 	});
 });
