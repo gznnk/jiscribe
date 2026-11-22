@@ -199,10 +199,9 @@ async function expectOutlineOverEditor(canvas: CanvasDriver): Promise<void> {
 			if (!editor || !outlineSvg) {
 				return false;
 			}
-			const outline = outlineSvg;
 			return (
 				outlineSvg.querySelector(controlsSelector) === null &&
-				(editor.compareDocumentPosition(outline) &
+				(editor.compareDocumentPosition(outlineSvg) &
 					Node.DOCUMENT_POSITION_FOLLOWING) !==
 					0
 			);

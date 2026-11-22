@@ -188,8 +188,8 @@ export const ZoomScaledOverlay = styled.div`
  * An SVG laid over the canvas SVG and the text editors, for selection feedback
  * that an opaque editor would otherwise cover (a connector label's outline).
  * Sized by calcViewportSvgBox as the canvas SVG is, so world coordinates land
- * on the same pixels in both. Takes no pointer events: what is
- * drawn here is decoration, and presses fall through to what lies under it.
+ * on the same pixels in both. Takes no pointer events: what is drawn here is
+ * decoration, and presses fall through to what lies under it.
  */
 export const CanvasFrontSvg = styled.svg`
 	position: absolute;
