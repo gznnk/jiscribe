@@ -12,7 +12,7 @@ import type { ICanvasRegistries } from "../../registries/ICanvasRegistries";
 export type DeletableParts = {
 	/** The object the parts belong to; every part id is resolved against it alone. */
 	objectId: string;
-	/** Part-id namespace owned by the object type: "textSlot", "vertex", "cell". */
+	/** Part-id namespace owned by the object type: "textSlot", "vertex", "connectorLabel", "cell". */
 	kind: string;
 	/** Non-empty, in the type's own order. Core neither sorts nor dedups. */
 	partIds: readonly string[];

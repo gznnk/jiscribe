@@ -6,6 +6,7 @@ import { createTestState } from "../../../reducer/__tests__/support/createTestSt
 import type { CanvasAction } from "../../../reducer/CanvasActions";
 import { createCanvasReducer } from "../../../reducer/canvasReducer";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import { connectorLabelPartSelection } from "../../../selection/__tests__/support/connectorLabelPartSelection";
 import { selectionOf } from "../../../selection/__tests__/support/selectionOf";
 import { textSlotPartSelection } from "../../../selection/__tests__/support/textSlotPartSelection";
 import { readTextEditDraft } from "../../../utils/readTextEditDraft";
@@ -53,7 +54,7 @@ const shapeEditState = (draft: string): CanvasControllerState =>
 
 const labelEditState = (draft: string): CanvasControllerState =>
 	createTestState(doc, {
-		selection: selectionOf(["conn-2"]),
+		selection: selectionOf(["conn-2"], connectorLabelPartSelection()),
 		mode: { kind: "textEdit", draft: { kind: "connectorLabel", text: draft } },
 	});
 

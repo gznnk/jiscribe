@@ -5,6 +5,10 @@ import type { CanvasControllerState, TextEditDraft } from "../../CanvasTypes";
 import { NORMAL_MODE } from "../../utils/normalMode";
 import { readTextEditDraft } from "../../utils/readTextEditDraft";
 import type { ObjectPartSelection } from "../CanvasSelection";
+import {
+	CONNECTOR_LABEL_PART_ID,
+	CONNECTOR_LABEL_PART_KIND,
+} from "../partKinds/connectorLabelPartKind";
 import { isTextSlotPart } from "../partKinds/textSlotPartKind";
 
 /**
@@ -30,6 +34,26 @@ const isPartSelectionLive = (
 			definition.has(target, range.focusId),
 	);
 };
+
+/**
+ * Whether the part is the label pick of the connector whose label is open in
+ * the editor. Such a pick lives with the session rather than by `has`: a label
+ * being created is not written to the document until it is committed, so
+ * `has` cannot vouch for it until then.
+ */
+const isLabelPickOfOpenLabelEdit = (
+	target: ObjectState | undefined,
+	part: ObjectPartSelection,
+	draft: TextEditDraft | null,
+): boolean =>
+	draft?.kind === "connectorLabel" &&
+	target?.type === "connector" &&
+	part.kind === CONNECTOR_LABEL_PART_KIND &&
+	part.ranges.every(
+		(range) =>
+			range.anchorId === CONNECTOR_LABEL_PART_ID &&
+			range.focusId === CONNECTOR_LABEL_PART_ID,
+	);
 
 /**
  * Whether the object the session is open over can still hold it: present, and of
@@ -61,7 +85,9 @@ const isTextEditOwnerLive = (
  * Two things are reconciled, both dropped whole rather than narrowed:
  * - the part selection, once its object is not the sole selection, is gone, does
  *   not declare the selection's `kind`, or no longer holds an end of one of its
- *   ranges (`has`)
+ *   ranges (`has`). The one exception is a connector's label pick while that
+ *   connector's label is open in the editor, which lives as long as the session
+ *   does
  * - the open text edit, once no object can hold it: the selection is not one live
  *   object, a shape session's object holds no text slots, a label session's
  *   object is no connector, or — for a shape session — `selection.part` is no
@@ -95,9 +121,12 @@ export const reconcileSelection = (
 	const target =
 		objectIds.length === 1 ? state.objects[objectIds[0]] : undefined;
 	const isPartLive =
-		part === null || isPartSelectionLive(target, part, objectPartKind);
+		part === null ||
+		isPartSelectionLive(target, part, objectPartKind) ||
+		isLabelPickOfOpenLabelEdit(target, part, draft);
 	// A shape session is written back to the slot the part names, so it goes with
-	// that part; a connector label is no part of anything and outlives one.
+	// that part; a connector label session writes to the connector whatever is
+	// picked, so it goes with the connector alone.
 	const isTextEditLive =
 		draft === null ||
 		(isTextEditOwnerLive(target, draft) &&

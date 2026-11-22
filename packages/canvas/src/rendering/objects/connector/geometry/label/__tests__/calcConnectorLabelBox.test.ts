@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import {
 	calcConnectorLabelBox,
+	calcConnectorLabelRect,
 	resolveConnectorLabelBox,
 	type ConnectorLabelFont,
 } from "../connectorLabelLayout";
@@ -89,5 +90,13 @@ describe("resolveConnectorLabelBox", () => {
 		expect(styled.height).toBeGreaterThan(
 			resolveConnectorLabelBox({ text: "Yes" }).height,
 		);
+	});
+});
+
+describe("calcConnectorLabelRect", () => {
+	it("centers the box on the anchor, unrotated", () => {
+		expect(
+			calcConnectorLabelRect({ x: 100, y: 40 }, { width: 30, height: 20 }),
+		).toEqual({ x: 85, y: 30, width: 30, height: 20 });
 	});
 });

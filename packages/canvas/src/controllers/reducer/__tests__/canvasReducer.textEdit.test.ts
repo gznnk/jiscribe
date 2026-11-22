@@ -8,6 +8,7 @@ import type { TextSlots } from "../../../states/objects/types/TextSlots";
 import { readRichTextSlot } from "../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
+import { connectorLabelPartSelection } from "../../selection/__tests__/support/connectorLabelPartSelection";
 import { selectionOf } from "../../selection/__tests__/support/selectionOf";
 import { textSlotPartSelection } from "../../selection/__tests__/support/textSlotPartSelection";
 import { readTextEditDraft } from "../../utils/readTextEditDraft";
@@ -153,5 +154,80 @@ describe("Escape out of a one-body shape's edit", () => {
 
 		const deselected = applyActions(unpicked, [command("escapeSelection")]);
 		expect(deselected.selection.objectIds).toEqual([]);
+	});
+});
+
+describe("a connector label's edit, which keeps the label picked", () => {
+	/** A rect with a free-ended connector off it, labelled `labelText` when given. */
+	const connectorDoc = (labelText?: string): CanvasDoc =>
+		({
+			version: 1,
+			root: [
+				{ id: "rect-1", type: "rect", x: 0, y: 0, width: 100, height: 40 },
+				{
+					id: "conn-1",
+					type: "connector",
+					points: [],
+					source: { owner: { id: "rect-1" }, anchor: { kind: "center" } },
+					target: { anchor: { kind: "free", point: { x: 300, y: 20 } } },
+					...(labelText === undefined ? {} : { label: { text: labelText } }),
+				},
+			],
+		}) as unknown as CanvasDoc;
+
+	/** The connector selected and its label opened from Enter. */
+	const openLabelEdit = (labelText?: string): CanvasControllerState =>
+		applyActions(
+			createTestState(connectorDoc(labelText), {
+				selection: selectionOf(["conn-1"]),
+			}),
+			[command("start-text-edit")],
+		);
+
+	const labelPicked = selectionOf(["conn-1"], connectorLabelPartSelection());
+
+	it("picks a label being created while it is typed, before the document holds it", () => {
+		const typed = applyActions(openLabelEdit(), [
+			{ type: "UPDATE_TEXT_EDIT", text: "Yes" },
+		]);
+		expect(readTextEditDraft(typed)).toMatchObject({ text: "Yes" });
+		expect(typed.selection).toEqual(labelPicked);
+	});
+
+	it("keeps the label picked once a non-empty label is committed", () => {
+		const committed = applyActions(openLabelEdit(), [
+			{ type: "UPDATE_TEXT_EDIT", text: "Yes" },
+			{ type: "END_TEXT_EDIT", commit: true },
+		]);
+		expect(readTextEditDraft(committed)).toBeNull();
+		expect(committed.selection).toEqual(labelPicked);
+	});
+
+	it("steps back to the connector once the label is committed empty", () => {
+		const committed = applyActions(openLabelEdit("Yes"), [
+			{ type: "UPDATE_TEXT_EDIT", text: "" },
+			{ type: "END_TEXT_EDIT", commit: true },
+		]);
+		expect(committed.selection).toEqual(selectionOf(["conn-1"]));
+	});
+
+	it("steps back to the connector when a label being created is cancelled", () => {
+		const cancelled = applyActions(openLabelEdit(), [
+			{ type: "UPDATE_TEXT_EDIT", text: "Yes" },
+			{ type: "END_TEXT_EDIT", commit: false },
+		]);
+		expect(readTextEditDraft(cancelled)).toBeNull();
+		expect(cancelled.selection).toEqual(selectionOf(["conn-1"]));
+	});
+
+	it("keeps an existing label picked when its edit is cancelled", () => {
+		const opened = openLabelEdit("Yes");
+		const cancelled = applyActions(opened, [
+			{ type: "UPDATE_TEXT_EDIT", text: "No" },
+			{ type: "END_TEXT_EDIT", commit: false },
+		]);
+		expect(readTextEditDraft(cancelled)).toBeNull();
+		expect(cancelled.selection).toBe(opened.selection);
+		expect(cancelled.selection).toEqual(labelPicked);
 	});
 });

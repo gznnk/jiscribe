@@ -18,6 +18,7 @@ import {
 	Viewport,
 	ViewportOverlay,
 	ZoomScaledOverlay,
+	WorldSvgOverlay,
 } from "./CanvasStyled";
 import type { Camera, CanvasSidebarsState } from "./CanvasTypes";
 import { isGestureOptedOut } from "./gestures/recognizer/targeting/isGestureOptedOut";
@@ -35,6 +36,7 @@ import { resolveCommandState } from "./hooks/useCommandState";
 import { useContainerResize } from "./hooks/useContainerResize";
 import { useCooperativeTouchClaim } from "./hooks/useCooperativeTouchClaim";
 import { useDevicePixelSnappedViewport } from "./hooks/useDevicePixelSnappedViewport";
+import { calcViewportSvgBox } from "../rendering/Viewport";
 import { useDocFonts } from "./hooks/useDocFonts";
 import type { ResolveImage } from "./hooks/useDocImages";
 import { useDocImages } from "./hooks/useDocImages";
@@ -69,6 +71,7 @@ import { CanvasView } from "../rendering/CanvasView";
 import { CanvasControlLayers } from "./ui/controls/CanvasControlLayers";
 import { TextEditorLayer } from "./ui/editors/TextEditorLayer";
 import { BusyIndicator } from "./ui/feedback/BusyIndicator";
+import { ConnectorLabelPartOutlineLayer } from "./ui/feedback/ConnectorLabelPartOutlineLayer";
 import { ErrorToast } from "./ui/feedback/ErrorToast";
 import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
@@ -793,6 +796,13 @@ const CanvasComponent = ({
 									{...editorHandlers}
 								/>
 							</ZoomScaledOverlay>
+							<WorldSvgOverlay {...calcViewportSvgBox(drawnViewport)}>
+								<ConnectorLabelPartOutlineLayer
+									selection={state.selection}
+									objects={state.objects}
+									mode={state.mode}
+								/>
+							</WorldSvgOverlay>
 							{/* HTML whose position follows zoom but whose size does not */}
 							<ScrollSyncedOverlay
 								style={{ left: -minX * zoom, top: -minY * zoom }}

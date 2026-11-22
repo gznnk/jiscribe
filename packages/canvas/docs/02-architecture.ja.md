@@ -58,7 +58,7 @@ Doc モデルはこのパッケージには**無い**。canvas が依存する `
 [`packages/doc/README.md`](../../doc/README.md)。
 
 `controllers/selection/` は直下に選択のモデル（`CanvasSelection.ts`）を置き、残りを層で
-分ける。`partKinds/` は型がパーツについて宣言するもの（テキストスロットと頂点の
+分ける。`partKinds/` は型がパーツについて宣言するもの（テキストスロット・頂点・コネクタのラベルの
 kind。それを登録する `ObjectPartKindRegistry` は、描画層がテキストスロットの置き場所を
 そこから引くため、描画層のレジストリと並べて置く）、`readers/` は選択を変えずにそこから値を導くもの、
 `writers/` は状態から次の状態への遷移（状態が裏付けなくなったパーツを落とす
@@ -118,7 +118,7 @@ State を Props として受け取り SVG を描画するコンポーネント�
 | `ObjectMapperRegistry` / `ObjectStateValidatorRegistry` など                                         | `states/registry/`                     | Doc ↔ State Mapper（+ features）・State バリデータ                                                      |
 | `GestureHandlerRegistry` / `ObjectBehaviorRegistry`                                                  | `controllers/gestures/registry/`       | ジェスチャーハンドラ・型別の `ObjectBehavior`                                                           |
 | `ObjectComponentRegistry` / `ObjectOutlineRegistry` など                                             | `rendering/objects/registry/`          | 描画コンポーネント・ヒットテスト / スナップ輪郭                                                         |
-| `ObjectPartKindRegistry`                                                                             | `rendering/objects/registry/`          | 型別の部分種別（頂点・セル・テキストスロットとその置き場所）                                            |
+| `ObjectPartKindRegistry`                                                                             | `rendering/objects/registry/`          | 型別の部分種別（頂点・セル・コネクタのラベル・テキストスロットとその置き場所）                          |
 | `StencilRegistry` / `ObjectMenuRegistry` / `PropertyPanelRegistry` / `SelectionControlRegistry` など | `controllers/ui/...`（各ドメイン配下） | StencilLibrary プリセット・型別 ObjectMenu・型別プロパティサイドバーのセクション・型別 SelectionControl |
 | `ObjectStyleRegistry`                                                                                | `controllers/style/tables/`            | 型別のスタイル表（[スタイルシステム](./10-style-properties.ja.md)）                                     |
 | `CommandRegistry`                                                                                    | `controllers/commands/`                | コマンド（[コマンドシステム](./05-command-system.ja.md)）                                               |

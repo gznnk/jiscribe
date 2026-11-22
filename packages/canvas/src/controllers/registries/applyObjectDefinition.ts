@@ -100,6 +100,10 @@ import {
 	transformByGroup as textTransformByGroup,
 } from "../behaviors/primitives/TextController";
 import {
+	CONNECTOR_LABEL_PART_KIND,
+	createConnectorLabelPartKindDefinition,
+} from "../selection/partKinds/connectorLabelPartKind";
+import {
 	createTextSlotPartKindDefinition,
 	placeTextSlotRegions,
 	TEXT_SLOT_PART_KIND,
@@ -271,7 +275,10 @@ export const BUILTIN_OBJECT_DEFINITIONS: Record<
 		// `points` holds the waypoints between the two endpoints, not the whole
 		// route: the endpoints are not among them, so there is no floor — a
 		// connector with no waypoint left is the straight route it started as.
-		partKinds: [createVertexPartKindDefinition<ConnectorState>(0)],
+		partKinds: [
+			createVertexPartKindDefinition<ConnectorState>(0),
+			createConnectorLabelPartKindDefinition(),
+		],
 		styleEntries: CONNECTOR_STYLE_TABLE,
 		menu: [
 			{
@@ -293,6 +300,7 @@ export const BUILTIN_OBJECT_DEFINITIONS: Record<
 			// Label styles. Each item renders null while the connector has no label text,
 			// so both sections collapse via ObjectMenuSection's `:empty`.
 			// Following the shapes, split into background/border (style) and text (text) sections.
+			// Each names the label's part kind, so they are what stays while the label is picked.
 			{
 				id: "label-style",
 				items: [
@@ -300,16 +308,19 @@ export const BUILTIN_OBJECT_DEFINITIONS: Record<
 						type: "custom",
 						id: "label-bg-color",
 						component: ConnectorLabelBackgroundColorMenu,
+						pickedPartKinds: [CONNECTOR_LABEL_PART_KIND],
 					},
 					{
 						type: "custom",
 						id: "label-border-color",
 						component: LabelBorderColorMenu,
+						pickedPartKinds: [CONNECTOR_LABEL_PART_KIND],
 					},
 					{
 						type: "custom",
 						id: "label-border-style",
 						component: LabelBorderStyleMenu,
+						pickedPartKinds: [CONNECTOR_LABEL_PART_KIND],
 					},
 				],
 			},
@@ -320,18 +331,26 @@ export const BUILTIN_OBJECT_DEFINITIONS: Record<
 						type: "custom",
 						id: "label-font-family",
 						component: LabelFontFamilyMenu,
+						pickedPartKinds: [CONNECTOR_LABEL_PART_KIND],
 					},
 					{
 						type: "custom",
 						id: "label-font-size",
 						component: LabelFontSizeMenu,
+						pickedPartKinds: [CONNECTOR_LABEL_PART_KIND],
 					},
 					{
 						type: "custom",
 						id: "label-font-color",
 						component: LabelFontColorMenu,
+						pickedPartKinds: [CONNECTOR_LABEL_PART_KIND],
 					},
-					{ type: "custom", id: "label-bold", component: LabelBoldMenu },
+					{
+						type: "custom",
+						id: "label-bold",
+						component: LabelBoldMenu,
+						pickedPartKinds: [CONNECTOR_LABEL_PART_KIND],
+					},
 				],
 			},
 		],
@@ -341,7 +360,8 @@ export const BUILTIN_OBJECT_DEFINITIONS: Record<
 		// under `label` that no feature speaks for. The label takes two
 		// sections, its text and face apart from its border, the way a shape's
 		// Text and Border are apart: under one heading "Width" and "Color"
-		// would not say which of the two they state.
+		// would not say which of the two they state. Its rows name the label's
+		// part kind, as the menu's label items do.
 		propertyPanel: [
 			...appendPropertyPanelItems(
 				createDefaultPropertyPanel(
@@ -368,26 +388,31 @@ export const BUILTIN_OBJECT_DEFINITIONS: Record<
 						type: "custom",
 						id: "label-font-family",
 						component: ConnectorLabelFontFamilyItem,
+						pickedPartKinds: [CONNECTOR_LABEL_PART_KIND],
 					},
 					{
 						type: "custom",
 						id: "label-font-size",
 						component: ConnectorLabelFontSizeItem,
+						pickedPartKinds: [CONNECTOR_LABEL_PART_KIND],
 					},
 					{
 						type: "custom",
 						id: "label-font-color",
 						component: ConnectorLabelFontColorItem,
+						pickedPartKinds: [CONNECTOR_LABEL_PART_KIND],
 					},
 					{
 						type: "custom",
 						id: "label-style",
 						component: ConnectorLabelStyleItem,
+						pickedPartKinds: [CONNECTOR_LABEL_PART_KIND],
 					},
 					{
 						type: "custom",
 						id: "label-background",
 						component: ConnectorLabelBackgroundItem,
+						pickedPartKinds: [CONNECTOR_LABEL_PART_KIND],
 					},
 				],
 			},
@@ -400,16 +425,19 @@ export const BUILTIN_OBJECT_DEFINITIONS: Record<
 						type: "custom",
 						id: "label-border-color",
 						component: ConnectorLabelBorderColorItem,
+						pickedPartKinds: [CONNECTOR_LABEL_PART_KIND],
 					},
 					{
 						type: "custom",
 						id: "label-border-width",
 						component: ConnectorLabelBorderWidthItem,
+						pickedPartKinds: [CONNECTOR_LABEL_PART_KIND],
 					},
 					{
 						type: "custom",
 						id: "label-border-type",
 						component: ConnectorLabelBorderTypeItem,
+						pickedPartKinds: [CONNECTOR_LABEL_PART_KIND],
 					},
 				],
 			},

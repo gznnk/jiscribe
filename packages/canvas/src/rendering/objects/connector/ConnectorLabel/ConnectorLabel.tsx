@@ -11,7 +11,10 @@ import { useIsTextLegible } from "../../useIsTextLegible";
 import { useLabelBackdropLayers } from "../../useLabelBackdropLayers";
 import { resolveAutoColor } from "../../utils/resolveAutoColor";
 import { resolveLabelFill } from "../../utils/resolveLabelFill";
-import { resolveConnectorLabelBox } from "../geometry/label/connectorLabelLayout";
+import {
+	calcConnectorLabelRect,
+	resolveConnectorLabelBox,
+} from "../geometry/label/connectorLabelLayout";
 
 type ConnectorLabelProps = {
 	/** Parent connector id (placed in a data attribute so a hit can start editing). */
@@ -59,7 +62,7 @@ const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
 	const documentSurface = useDocumentSurface();
 	// Memoized so dragging the connector (anchor changes every frame, text does not)
 	// skips the per-line measureText.
-	const { width, height } = useMemo(
+	const labelBox = useMemo(
 		() =>
 			resolveConnectorLabelBox({
 				text,
@@ -71,15 +74,9 @@ const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[text, fontFamily, fontSize, fontWeight, strokeWidth, fontsLoadedNonce],
 	);
-	// Laid out horizontally centered on the anchor (no rotation).
 	const box = useMemo(
-		() => ({
-			x: anchor.x - width / 2,
-			y: anchor.y - height / 2,
-			width,
-			height,
-		}),
-		[anchor, width, height],
+		() => calcConnectorLabelRect(anchor, labelBox),
+		[anchor, labelBox],
 	);
 	const layers = useLabelBackdropLayers(id);
 
