@@ -77,7 +77,7 @@ const readDocEndpointOwnerShape = (
  * @param definitions - Type table each owner's `features`, box declaration, `outline`, `anchorRegion` and declared connect point ids are read from
  * @returns The drawn points in world coordinates — source, the vertices, target —
  *   with points closer than the drawing tells apart not yet collapsed
- *   (dedupePoints); null for a connector with no stored vertices (its route is
+ *   (resolveArrowHeadPath); null for a connector with no stored vertices (its route is
  *   chosen on the canvas), an owned end whose owner is missing, of a type the
  *   table does not know or without a frame, an end on a connect point its
  *   owner's type declares, and an end that does not resolve. A connect point id

@@ -56,6 +56,14 @@ const straight = (points: object[], fields: Record<string, unknown> = {}) => ({
 	...fields,
 });
 
+/** A polyline through `points` with a head on its last point. */
+const polyline = (points: object[]) => ({
+	id: "line",
+	type: "polyline",
+	points,
+	endArrow: "FilledTriangle",
+});
+
 describe("diagnoseDoc on arrowheads drawn over a bend", () => {
 	it("warns about a right-angled line bending closer to its end than the head is long", () => {
 		expect(
@@ -213,14 +221,7 @@ describe("diagnoseDoc on arrowheads drawn over a bend", () => {
 		).toEqual([]);
 	});
 
-	it("measures a polyline on its stored points, a point on its end measuring 0", () => {
-		const polyline = (points: object[]) => ({
-			id: "line",
-			type: "polyline",
-			points,
-			endArrow: "FilledTriangle",
-		});
-
+	it("measures a polyline along its points", () => {
 		expect(
 			diagnoseArrowHeads([
 				polyline([
@@ -241,21 +242,34 @@ describe("diagnoseDoc on arrowheads drawn over a bend", () => {
 			diagnoseArrowHeads([
 				polyline([
 					{ x: 0, y: 0 },
-					{ x: 100, y: 0 },
-					{ x: 100, y: 0 },
-				]),
-			]).map((diagnostic) => diagnostic.message.split(", so")[0]),
-		).toEqual([
-			"endArrow (FilledTriangle) is drawn 18.0px back along the line, but the line bends 0.0px from its last point",
-		]);
-		expect(
-			diagnoseArrowHeads([
-				polyline([
-					{ x: 0, y: 0 },
 					{ x: 50, y: 0 },
 					{ x: 100, y: 0 },
 				]),
 			]),
 		).toEqual([]);
+	});
+
+	it("collapses a point lying on the polyline's end, as the drawing does", () => {
+		expect(
+			diagnoseArrowHeads([
+				polyline([
+					{ x: 0, y: 0 },
+					{ x: 100, y: 0 },
+					{ x: 100, y: 0 },
+				]),
+			]),
+		).toEqual([]);
+		expect(
+			diagnoseArrowHeads([
+				polyline([
+					{ x: 0, y: 0 },
+					{ x: 100, y: 0 },
+					{ x: 100, y: 10 },
+					{ x: 100.3, y: 10 },
+				]),
+			]).map((diagnostic) => diagnostic.message.split(", so")[0]),
+		).toEqual([
+			"endArrow (FilledTriangle) is drawn 18.0px back along the line, but the line bends 10.0px from its last point",
+		]);
 	});
 });

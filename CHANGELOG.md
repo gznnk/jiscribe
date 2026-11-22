@@ -407,13 +407,15 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   segment, so where the line turns closer to the end than the head is long, the
   head covers the corner and points off the line. A connector with stored
   `points` is measured on the path the canvas draws, and a polyline on its
-  stored points; the warning names the end, the distance to the bend and the
-  head's length. A connector the canvas routes itself (no `points`), an end on
+  points, each with every point within 0.5px of the last point kept dropped as
+  the drawing drops them; the warning names the end, the distance to the bend
+  and the head's length. A connector the canvas routes itself (no `points`), an end on
   a connect point its owner's type declares and an end that cannot be resolved
   from the document are passed over. Behind it, `@jiscribe/doc/unstable`
   exports `resolveConnectorDocPath` (a connector's drawn path from the document
-  alone), `calcObjectTransformedFrame`, `dedupePoints`, `readArrowExtent` and
-  `calcArrowHeadLength`.
+  alone), `calcObjectTransformedFrame`, `resolveArrowHeadPath` (the path a
+  line is drawn and its heads aimed along), `calcArrowHeadRadians`,
+  `readArrowExtent` and `calcArrowHeadLength`.
 
 ### Changed
 
@@ -855,6 +857,13 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   connectors into a document of 5000 shapes takes about 4ms instead of 3.1s,
   and adding 5000 shapes to one about 40ms instead of 4.3s. The ids handed out
   and error messages are unchanged.
+- **A polyline's arrowhead points along the line past a point lying on its
+  end.** With a point within 0.5px of an end, the head was aimed along that
+  zero-length segment and pointed right whichever way the line ran, and the
+  line ran on through a hollow head. A polyline now collapses such points
+  before drawing and aiming its heads, as a connector does, so the head follows
+  the next distinct point and the line stops at its base. A polyline whose
+  points all lie within 0.5px of its first point draws no heads.
 
 ## [0.12.2] - 2026-10-25
 

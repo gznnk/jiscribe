@@ -1,9 +1,12 @@
+import {
+	calcArrowHeadRadians,
+	resolveArrowHeadPath,
+} from "@jiscribe/doc/model/objects/utils/arrowHeadAim";
 import { calcArrowLineInset } from "@jiscribe/doc/model/objects/utils/arrowLineInsets";
 import {
 	calcArrowLineEndWedge,
 	calcArrowOutlineWidth,
 } from "@jiscribe/doc/model/objects/utils/arrowOutlineThinning";
-import { calcVectorAngleRad } from "@jiscribe/geometry";
 import type React from "react";
 import { memo } from "react";
 
@@ -41,38 +44,27 @@ const PolylineComponent: React.FC<PolylineProps> = ({
 	// Resolve auto (theme-following) — and an unspecified stroke, like every
 	// other renderer — to the theme foreground (ink) (issue #38).
 	const strokeColor = resolveAutoColor(shapeStyle.stroke, "ink");
+	// The hit area keeps the stored points; the line and its heads follow the
+	// collapsed path; where it is null (too short to aim a head on) the line
+	// keeps the stored points and no head is drawn.
+	const arrowPath = resolveArrowHeadPath(points);
 	// Stop the line where the head needs it (calcArrowLineInset) so it does not
 	// show through a hollow head or past a thinned one. The arrow itself is drawn
-	// at the original endpoint (tip), so the visible endpoint position is unchanged.
+	// at the path's endpoint (tip), so the visible endpoint position is unchanged.
 	const linePoints = insetPolylineEnds(
-		points,
+		arrowPath ?? points,
 		calcArrowLineInset(startArrow, resolvedStrokeWidth, shapeStyle.arrowScale),
 		calcArrowLineInset(endArrow, resolvedStrokeWidth, shapeStyle.arrowScale),
 	);
 	const linePointsAttr = formatPolygonPoints(linePoints);
-
-	// Calculate angle at the start of the polyline (pointing from second point to first)
-	let startAngleRadians = 0;
-	if (points.length >= 2 && startArrow && startArrow !== "None") {
-		startAngleRadians = calcVectorAngleRad(
-			points[0].x,
-			points[0].y,
-			points[1].x,
-			points[1].y,
-		);
-	}
-
-	// Calculate angle at the end of the polyline (pointing from second-to-last to last)
-	let endAngleRadians = 0;
-	if (points.length >= 2 && endArrow && endArrow !== "None") {
-		const lastIdx = points.length - 1;
-		endAngleRadians = calcVectorAngleRad(
-			points[lastIdx].x,
-			points[lastIdx].y,
-			points[lastIdx - 1].x,
-			points[lastIdx - 1].y,
-		);
-	}
+	const arrowHeads =
+		arrowPath === null
+			? null
+			: {
+					start: arrowPath[0],
+					end: arrowPath[arrowPath.length - 1],
+					...calcArrowHeadRadians(arrowPath),
+				};
 
 	return (
 		<>
@@ -87,14 +79,14 @@ const PolylineComponent: React.FC<PolylineProps> = ({
 					resolvedStrokeWidth,
 				)}
 			/>
-			{startArrow && startArrow !== "None" && points.length >= 1 && (
+			{startArrow && startArrow !== "None" && arrowHeads && (
 				<Arrow
 					type={startArrow}
-					x={points[0].x}
-					y={points[0].y}
+					x={arrowHeads.start.x}
+					y={arrowHeads.start.y}
 					color={strokeColor}
 					opacity={shapeStyle.strokeOpacity}
-					radians={startAngleRadians}
+					radians={arrowHeads.startRadians}
 					scale={arrowHeadScale}
 					outlineWidth={arrowOutlineWidth}
 					lineEndWedge={calcArrowLineEndWedge(
@@ -105,14 +97,14 @@ const PolylineComponent: React.FC<PolylineProps> = ({
 					dataId={id}
 				/>
 			)}
-			{endArrow && endArrow !== "None" && points.length >= 1 && (
+			{endArrow && endArrow !== "None" && arrowHeads && (
 				<Arrow
 					type={endArrow}
-					x={points[points.length - 1].x}
-					y={points[points.length - 1].y}
+					x={arrowHeads.end.x}
+					y={arrowHeads.end.y}
 					color={strokeColor}
 					opacity={shapeStyle.strokeOpacity}
-					radians={endAngleRadians}
+					radians={arrowHeads.endRadians}
 					scale={arrowHeadScale}
 					outlineWidth={arrowOutlineWidth}
 					lineEndWedge={calcArrowLineEndWedge(endArrow, shapeStyle.arrowScale)}

@@ -7,7 +7,7 @@ import type {
 import { extractShapeStyleDefaults } from "@jiscribe/doc";
 import {
 	calcArrowHeadLength,
-	dedupePoints,
+	resolveArrowHeadPath,
 	resolveConnectorDocPath,
 	resolveShapeStyle,
 } from "@jiscribe/doc/unstable";
@@ -44,7 +44,7 @@ export type ArrowHeadOverBend = {
 	end: ArrowHeadEnd;
 	/** The head's mark. */
 	arrow: ArrowType;
-	/** Distance from the end to the first point where the line changes heading, in world px; 0 for a point lying on the end. */
+	/** Distance from the end to the first point where the line changes heading, in world px, measured on the collapsed path (resolveArrowHeadPath). */
 	bendDistance: number;
 	/** How far back along the line the head is drawn from the end, in world px (calcArrowHeadLength). */
 	headLength: number;
@@ -52,14 +52,10 @@ export type ArrowHeadOverBend = {
 
 /**
  * Whether two segments run the same way: parallel within float noise and
- * pointing alike. A zero-length segment has no heading of its own and reads as
- * continuing.
+ * pointing alike.
  */
 const isSameHeading = (heading: Point, segment: Point): boolean => {
 	const segmentLength = Math.hypot(segment.x, segment.y);
-	if (segmentLength === 0) {
-		return true;
-	}
 	const headingLength = Math.hypot(heading.x, heading.y);
 	const cross = heading.x * segment.y - heading.y * segment.x;
 	const dot = heading.x * segment.x + heading.y * segment.y;
@@ -74,15 +70,11 @@ const isSameHeading = (heading: Point, segment: Point): boolean => {
  * Distance from the first point of `points` to the first point after which the
  * line heads another way, or null when it runs straight to its last point.
  *
- * @param points - The drawn path starting at the end being looked at, at least two points
- * @returns 0 where the point next to the end lies on it, the head then having no heading to take
+ * @param points - The collapsed path (resolveArrowHeadPath) starting at the end being looked at, at least two points
  */
 const calcBendDistance = (points: readonly Point[]): number | null => {
 	const tip = points[0];
 	const heading = { x: points[1].x - tip.x, y: points[1].y - tip.y };
-	if (heading.x === 0 && heading.y === 0) {
-		return 0;
-	}
 	for (let index = 1; index < points.length - 1; index++) {
 		const segment = {
 			x: points[index + 1].x - points[index].x,
@@ -104,19 +96,16 @@ const calcBendDistance = (points: readonly Point[]): number | null => {
  * The path the arrowheads of a line are aimed along, or null where it cannot be
  * known here.
  *
- * A connector's is its drawn path (resolveConnectorDocPath), collapsed as the
- * renderer collapses it before aiming a head (dedupePoints). A polyline's is its
- * stored points as they are: its renderer aims the heads at the second and
- * second-to-last stored point without collapsing anything.
+ * A connector's starts from its drawn path (resolveConnectorDocPath), a
+ * polyline's from its stored points; either is then collapsed as the renderer
+ * collapses it before aiming a head (resolveArrowHeadPath).
  */
 const resolveArrowPath = (
 	line: ArrowLineDoc,
 	objectsById: ReadonlyMap<string, ObjectDoc>,
 ): readonly Point[] | null => {
 	if (line.type === "polyline") {
-		return line.points !== undefined && line.points.length >= 2
-			? line.points
-			: null;
+		return line.points === undefined ? null : resolveArrowHeadPath(line.points);
 	}
 	if (
 		line.source === undefined ||
@@ -140,11 +129,7 @@ const resolveArrowPath = (
 		ownerOf(line.target),
 		standardObjectDocDefinitions,
 	);
-	if (path === null) {
-		return null;
-	}
-	const drawnPath = dedupePoints(path);
-	return drawnPath.length >= 2 ? drawnPath : null;
+	return path === null ? null : resolveArrowHeadPath(path);
 };
 
 /**

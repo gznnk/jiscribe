@@ -106,4 +106,71 @@ describe("Polyline arrowheads", () => {
 			container.querySelector('g[data-kind="object"] polygon'),
 		).not.toBeNull();
 	});
+
+	it("aims a head past a point lying on its end, and stops the line short of it", () => {
+		const container = renderPolyline({
+			points: [
+				{ x: 0, y: 0 },
+				{ x: 0, y: 0 },
+				{ x: 0, y: 100 },
+			],
+			startArrow: "HollowTriangle",
+			arrowScale: 0.5,
+		});
+
+		const [a, b] = (
+			container
+				.querySelector('polygon[data-kind="object"]')
+				?.getAttribute("transform")
+				?.match(/-?[\d.e+-]+/g) ?? []
+		).map(Number);
+		// Pointing along -y, away from the third point.
+		expect(Math.atan2(b, a)).toBeCloseTo(-Math.PI / 2, 9);
+		const drawnLine = [...container.querySelectorAll("polyline")].find(
+			(polyline) => !polyline.hasAttribute("data-kind"),
+		);
+		expect(drawnLine?.getAttribute("points")).toBe(`0,${ARROW_SIZE} 0,100`);
+	});
+
+	it("draws the end's head at the point kept where the last point lies within 0.5px of it", () => {
+		const container = renderPolyline({
+			points: [
+				{ x: 0, y: 0 },
+				{ x: 100, y: 0 },
+				{ x: 100.3, y: 0 },
+			],
+			endArrow: "HollowTriangle",
+		});
+
+		const matrix = (
+			container
+				.querySelector('polygon[data-kind="object"]')
+				?.getAttribute("transform")
+				?.match(/-?[\d.e+-]+/g) ?? []
+		).map(Number);
+		// The translation terms (e, f) of matrix(a, b, c, d, e, f).
+		expect(matrix.slice(4)).toEqual([100, 0]);
+	});
+
+	it("draws no head on a polyline whose points all lie within 0.5px", () => {
+		for (const points of [
+			[
+				{ x: 5, y: 5 },
+				{ x: 5.3, y: 5 },
+			],
+			[{ x: 5, y: 5 }],
+		]) {
+			const container = renderPolyline({
+				points,
+				startArrow: "FilledTriangle",
+				endArrow: "HollowTriangle",
+			});
+			// The hit area alone.
+			expect(container.querySelectorAll('[data-kind="object"]')).toHaveLength(
+				1,
+			);
+			act(() => root?.unmount());
+			root = null;
+		}
+	});
 });

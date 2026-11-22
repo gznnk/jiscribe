@@ -1,12 +1,15 @@
-import { dedupePoints } from "@jiscribe/doc/model/objects/connector/dedupePoints";
 import type { ArrowType } from "@jiscribe/doc/model/objects/types/ArrowType";
 import type { StrokeDashType } from "@jiscribe/doc/model/objects/types/StrokeDashType";
+import {
+	calcArrowHeadRadians,
+	resolveArrowHeadPath,
+} from "@jiscribe/doc/model/objects/utils/arrowHeadAim";
 import { calcArrowLineInset } from "@jiscribe/doc/model/objects/utils/arrowLineInsets";
 import {
 	calcArrowLineEndWedge,
 	calcArrowOutlineWidth,
 } from "@jiscribe/doc/model/objects/utils/arrowOutlineThinning";
-import { calcVectorAngleRad, type Point } from "@jiscribe/geometry";
+import type { Point } from "@jiscribe/geometry";
 import type React from "react";
 import { memo } from "react";
 
@@ -57,14 +60,12 @@ const ConnectorComponent: React.FC<ConnectorProps> = ({
 	// Resolve auto (theme-following) to the theme foreground (ink) (issue #38).
 	const strokeColor = resolveAutoColor(shapeStyle.stroke, "ink");
 
-	// Polyline. Collapse redundant waypoints coinciding with endpoints before drawing.
-	const polyPoints = dedupePoints(points);
-	if (polyPoints.length < 2) {
+	const polyPoints = resolveArrowHeadPath(points);
+	if (polyPoints === null) {
 		return null;
 	}
-	const lastIdx = polyPoints.length - 1;
 	const start = polyPoints[0];
-	const end = polyPoints[lastIdx];
+	const end = polyPoints[polyPoints.length - 1];
 
 	// The hit area keeps its full length up to the endpoints for easier clicking.
 	const hitAreaPointsAttr = formatPolygonPoints(polyPoints);
@@ -77,19 +78,7 @@ const ConnectorComponent: React.FC<ConnectorProps> = ({
 	);
 	const linePointsAttr = formatPolygonPoints(insetPoints);
 
-	// Orient arrows toward the point adjacent to the endpoint (following the end segment even for polylines).
-	const startAngleRadians = calcVectorAngleRad(
-		start.x,
-		start.y,
-		polyPoints[1].x,
-		polyPoints[1].y,
-	);
-	const endAngleRadians = calcVectorAngleRad(
-		end.x,
-		end.y,
-		polyPoints[lastIdx - 1].x,
-		polyPoints[lastIdx - 1].y,
-	);
+	const { startRadians, endRadians } = calcArrowHeadRadians(polyPoints);
 
 	return (
 		<>
@@ -117,7 +106,7 @@ const ConnectorComponent: React.FC<ConnectorProps> = ({
 					y={start.y}
 					color={strokeColor}
 					opacity={shapeStyle.strokeOpacity}
-					radians={startAngleRadians}
+					radians={startRadians}
 					scale={arrowHeadScale}
 					outlineWidth={arrowOutlineWidth}
 					lineEndWedge={calcArrowLineEndWedge(
@@ -135,7 +124,7 @@ const ConnectorComponent: React.FC<ConnectorProps> = ({
 					y={end.y}
 					color={strokeColor}
 					opacity={shapeStyle.strokeOpacity}
-					radians={endAngleRadians}
+					radians={endRadians}
 					scale={arrowHeadScale}
 					outlineWidth={arrowOutlineWidth}
 					lineEndWedge={calcArrowLineEndWedge(endArrow, shapeStyle.arrowScale)}

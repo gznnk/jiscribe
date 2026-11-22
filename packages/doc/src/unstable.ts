@@ -170,18 +170,21 @@ export type { TextWidthMeasurer } from "./text/measure/textWidthMeasurer";
 
 // A connector's drawn path from the document alone, for a headless check that
 // looks at how the line runs (`@jiscribe/doc-tools`'s diagnoseDoc): the frame each
-// owner is drawn in, the path resolved through the same steps the canvas draws
-// it by, and the collapsing of near-identical points the drawing applies before
-// it aims an arrowhead.
+// owner is drawn in and the path resolved through the same steps the canvas draws
+// it by.
 export { calcObjectTransformedFrame } from "./ops/utils/objectFrame";
 export { resolveConnectorDocPath } from "./ops/utils/connectorPath";
-export { dedupePoints } from "./model/objects/connector/dedupePoints";
 
-// How far each arrowhead runs from its tip, which the canvas draws the heads and
-// stops its lines by: for a headless check of whether a head fits on the end
-// segment it is drawn along.
+// How far each arrowhead runs from its tip, and the path its line is drawn and
+// the head aimed along (near-identical points collapsed), which the canvas draws
+// the heads and stops its lines by: for a headless check of whether a head fits
+// on the end segment it is drawn along.
 export {
 	calcArrowHeadLength,
 	readArrowExtent,
 } from "./model/objects/utils/arrowExtents";
+export {
+	calcArrowHeadRadians,
+	resolveArrowHeadPath,
+} from "./model/objects/utils/arrowHeadAim";
 export type { ArrowExtent } from "./model/objects/utils/arrowHeadDimensions";
