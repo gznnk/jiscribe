@@ -17,13 +17,10 @@ import { selectionOf } from "../../../../selection/__tests__/support/selectionOf
 import { vertexPartSelection } from "../../../../selection/__tests__/support/vertexPartSelection";
 import type { CanvasSelection } from "../../../../selection/CanvasSelection";
 import { NORMAL_MODE } from "../../../../utils/normalMode";
-import { ConnectorControls } from "../../../controls/ConnectorControls";
+import { ConnectorLabelPartOutlineLayer } from "../../ConnectorLabelPartOutlineLayer";
 import { SELECTION_OUTLINE_WIDTH } from "../../utils/selectionOutline";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
-
-/** How far the outline's rect lies outside the label box on each side at zoom 1: half its stroke, past 1px of clearance. */
-const OUTSET = SELECTION_OUTLINE_WIDTH / 2 + 1;
 
 const unmounts: (() => void)[] = [];
 
@@ -43,7 +40,7 @@ const connectorWith = (label: ConnectorLabel | undefined): ConnectorState =>
 		...(label ? { label } : {}),
 	}) as unknown as ConnectorState;
 
-/** A canvas drawn at `zoom`, for the legibility check (the controls take the same zoom as a prop). */
+/** A canvas drawn at `zoom`, for the legibility check. */
 const zoomStoreAt = (zoom: number): CanvasZoomStore => ({
 	subscribe: () => () => {},
 	getZoom: () => zoom,
@@ -59,7 +56,7 @@ const labelEditMode = (
 	draft: { kind: "connectorLabel", text, ...(placement ? { placement } : {}) },
 });
 
-/** Renders the connector's controls under `selection` and returns the part outlines drawn. */
+/** Renders the label outline layer under `selection` and returns the part outlines drawn. */
 const renderPartOutlines = (
 	connector: ConnectorState,
 	selection: CanvasSelection,
@@ -72,12 +69,10 @@ const renderPartOutlines = (
 		root.render(
 			<CanvasZoomStoreContext.Provider value={zoomStoreAt(zoom)}>
 				<svg>
-					<ConnectorControls
-						connectorState={connector}
+					<ConnectorLabelPartOutlineLayer
 						objects={{ c1: connector }}
 						selection={selection}
 						mode={mode}
-						zoom={zoom}
 					/>
 				</svg>
 			</CanvasZoomStoreContext.Provider>,
@@ -89,7 +84,7 @@ const renderPartOutlines = (
 	);
 };
 
-describe("ConnectorLabelPartOutline (through ConnectorControls)", () => {
+describe("ConnectorLabelPartOutline (through ConnectorLabelPartOutlineLayer)", () => {
 	it("outlines the picked label's box, centred where the renderer anchors it", () => {
 		const label = { text: "Yes", position: 0.25, offset: 10 };
 		const outlines = renderPartOutlines(
@@ -101,38 +96,15 @@ describe("ConnectorLabelPartOutline (through ConnectorControls)", () => {
 		expect(outlines).toHaveLength(1);
 		const [outline] = outlines;
 		// 0.25 of 200 along, 10 to the left of travel (+y).
-		expect(Number(outline.getAttribute("x"))).toBeCloseTo(
-			50 - width / 2 - OUTSET,
-		);
-		expect(Number(outline.getAttribute("y"))).toBeCloseTo(
-			10 - height / 2 - OUTSET,
-		);
-		expect(Number(outline.getAttribute("width"))).toBeCloseTo(
-			width + 2 * OUTSET,
-		);
-		expect(Number(outline.getAttribute("height"))).toBeCloseTo(
-			height + 2 * OUTSET,
-		);
+		expect(Number(outline.getAttribute("x"))).toBeCloseTo(50 - width / 2);
+		expect(Number(outline.getAttribute("y"))).toBeCloseTo(10 - height / 2);
+		expect(Number(outline.getAttribute("width"))).toBeCloseTo(width);
+		expect(Number(outline.getAttribute("height"))).toBeCloseTo(height);
 		expect(outline.getAttribute("stroke-width")).toBe(
 			String(SELECTION_OUTLINE_WIDTH),
 		);
 		expect(outline.getAttribute("pointer-events")).toBe("none");
 		expect(outline.style.fill).toBe("none");
-	});
-
-	it("keeps the clearance around the box at one screen px, whatever the zoom", () => {
-		const label = { text: "Yes" };
-		const { width } = resolveConnectorLabelBox(label);
-		const outline = renderPartOutlines(
-			connectorWith(label),
-			selectionOf(["c1"], connectorLabelPartSelection()),
-			2,
-		)[0];
-
-		// Half the stroke, in world units as the stroke is, past 1 screen px at zoom 2.
-		expect(Number(outline.getAttribute("width"))).toBeCloseTo(
-			width + 2 * (SELECTION_OUTLINE_WIDTH / 2 + 0.5),
-		);
 	});
 
 	it("draws nothing while the connector is selected with nothing, or a waypoint, picked", () => {
@@ -174,18 +146,10 @@ describe("ConnectorLabelPartOutline (through ConnectorControls)", () => {
 
 		expect(outlines).toHaveLength(1);
 		const [outline] = outlines;
-		expect(Number(outline.getAttribute("x"))).toBeCloseTo(
-			50 - width / 2 - OUTSET,
-		);
-		expect(Number(outline.getAttribute("y"))).toBeCloseTo(
-			10 - height / 2 - OUTSET,
-		);
-		expect(Number(outline.getAttribute("width"))).toBeCloseTo(
-			width + 2 * OUTSET,
-		);
-		expect(Number(outline.getAttribute("height"))).toBeCloseTo(
-			height + 2 * OUTSET,
-		);
+		expect(Number(outline.getAttribute("x"))).toBeCloseTo(50 - width / 2);
+		expect(Number(outline.getAttribute("y"))).toBeCloseTo(10 - height / 2);
+		expect(Number(outline.getAttribute("width"))).toBeCloseTo(width);
+		expect(Number(outline.getAttribute("height"))).toBeCloseTo(height);
 		expect(outline.style.fill).toBe("none");
 	});
 
@@ -201,16 +165,10 @@ describe("ConnectorLabelPartOutline (through ConnectorControls)", () => {
 		expect(outlines).toHaveLength(1);
 		const [outline] = outlines;
 		expect(width).toBeGreaterThan(0);
-		expect(Number(outline.getAttribute("x"))).toBeCloseTo(
-			150 - width / 2 - OUTSET,
-		);
-		expect(Number(outline.getAttribute("y"))).toBeCloseTo(-height / 2 - OUTSET);
-		expect(Number(outline.getAttribute("width"))).toBeCloseTo(
-			width + 2 * OUTSET,
-		);
-		expect(Number(outline.getAttribute("height"))).toBeCloseTo(
-			height + 2 * OUTSET,
-		);
+		expect(Number(outline.getAttribute("x"))).toBeCloseTo(150 - width / 2);
+		expect(Number(outline.getAttribute("y"))).toBeCloseTo(-height / 2);
+		expect(Number(outline.getAttribute("width"))).toBeCloseTo(width);
+		expect(Number(outline.getAttribute("height"))).toBeCloseTo(height);
 	});
 
 	it("stays drawn in the editor at a zoom too small to read the label, as the editor does", () => {

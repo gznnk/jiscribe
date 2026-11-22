@@ -18,6 +18,7 @@ import {
 	Viewport,
 	ViewportOverlay,
 	ZoomScaledOverlay,
+	CanvasFrontSvg,
 } from "./CanvasStyled";
 import type { Camera, CanvasSidebarsState } from "./CanvasTypes";
 import { isGestureOptedOut } from "./gestures/recognizer/targeting/isGestureOptedOut";
@@ -69,6 +70,7 @@ import { CanvasView } from "../rendering/CanvasView";
 import { CanvasControlLayers } from "./ui/controls/CanvasControlLayers";
 import { TextEditorLayer } from "./ui/editors/TextEditorLayer";
 import { BusyIndicator } from "./ui/feedback/BusyIndicator";
+import { ConnectorLabelPartOutlineLayer } from "./ui/feedback/ConnectorLabelPartOutlineLayer";
 import { ErrorToast } from "./ui/feedback/ErrorToast";
 import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
@@ -793,6 +795,17 @@ const CanvasComponent = ({
 									{...editorHandlers}
 								/>
 							</ZoomScaledOverlay>
+							<CanvasFrontSvg
+								width={drawnViewport.width}
+								height={drawnViewport.height}
+								viewBox={`${minX} ${minY} ${drawnViewport.width / zoom} ${drawnViewport.height / zoom}`}
+							>
+								<ConnectorLabelPartOutlineLayer
+									selection={state.selection}
+									objects={state.objects}
+									mode={state.mode}
+								/>
+							</CanvasFrontSvg>
 							{/* HTML whose position follows zoom but whose size does not */}
 							<ScrollSyncedOverlay
 								style={{ left: -minX * zoom, top: -minY * zoom }}

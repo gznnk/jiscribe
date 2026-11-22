@@ -185,6 +185,21 @@ export const ZoomScaledOverlay = styled.div`
 `;
 
 /**
+ * An SVG laid over the canvas SVG and the text editors, for selection feedback
+ * that an opaque editor would otherwise cover (a connector label's outline).
+ * Given the canvas SVG's own `width` / `height` / `viewBox`, so world
+ * coordinates land on the same pixels in both. Takes no pointer events: what is
+ * drawn here is decoration, and presses fall through to what lies under it.
+ */
+export const CanvasFrontSvg = styled.svg`
+	position: absolute;
+	top: 0;
+	left: 0;
+	display: block;
+	pointer-events: none;
+`;
+
+/**
  * Container for HTML elements fixed to the viewport.
  * Used for UI elements that stay in fixed positions regardless of canvas scroll/zoom.
  * Example: Menu bars, zoom controls, mini-maps.

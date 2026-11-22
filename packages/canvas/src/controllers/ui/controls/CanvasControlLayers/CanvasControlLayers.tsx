@@ -68,7 +68,6 @@ export const CanvasControlLayers = ({
 			<ConnectorControlsLayer
 				selection={selection}
 				objects={objects}
-				mode={mode}
 				zoom={zoom}
 			/>
 			<TransformControlsLayer

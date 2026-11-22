@@ -454,7 +454,7 @@ Five optional members bear on selection:
   `vertex` declares none (a vertex has handles of its own), so it neither draws
   a box nor hides the handles. Nor does the connector's `connectorLabel`: the
   label's box follows from the resolved route rather than the connector alone,
-  so the connector's own controls outline it
+  so a layer of its own outlines it, in front of the text editors
 - `regions` — every part's box in one call, keyed by part id, in the same
   coordinates as `region`, for a kind whose one part cannot be placed without
   laying out the rest (the table's cells); a kind declaring both answers the

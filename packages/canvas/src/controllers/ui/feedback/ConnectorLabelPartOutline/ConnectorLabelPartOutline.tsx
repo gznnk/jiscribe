@@ -15,15 +15,6 @@ import { useFontsLoadedNonceContext } from "../../../../rendering/objects/FontsL
 import { useIsTextLegible } from "../../../../rendering/objects/useIsTextLegible";
 import { SELECTION_OUTLINE_WIDTH } from "../utils/selectionOutline";
 
-/**
- * Clearance between the label's box and its outline, in screen px. The label's
- * editor is an opaque HTML box above this layer, snapped to the pixel grid where
- * this stroke is antialiased, so it covers up to a pixel around the box it
- * stands for. Kept clear of that, the outline is drawn the same whether the
- * label or its editor is inside it.
- */
-const LABEL_OUTLINE_CLEARANCE_PX = 1;
-
 type ConnectorLabelPartOutlineProps = {
 	/** The connector's resolved path, the one its label is drawn along (world coordinates). */
 	points: readonly Point[];
@@ -39,20 +30,19 @@ type ConnectorLabelPartOutlineProps = {
 	 * as the editor is.
 	 */
 	isTextEditing: boolean;
-	/** The canvas zoom (world → screen scale, > 0), which the clearance ({@link LABEL_OUTLINE_CLEARANCE_PX}) is divided by to stay constant on screen. */
-	zoom: number;
 };
 
 /**
- * Outlines a connector's picked label (the `connectorLabel` part kind), a
- * stroke lying just outside the label's box (calcConnectorLabelRect, past
- * {@link LABEL_OUTLINE_CLEARANCE_PX}) with nothing inside, so it reads the
- * same around the label and around its editor. Outside the editor it is
- * hidden while the label itself is, too small to read at the canvas's zoom.
+ * Outlines a connector's picked label (the `connectorLabel` part kind): a
+ * stroke along the label's box (calcConnectorLabelRect) with nothing inside.
+ * Drawn in the layer in front of the text editors
+ * (ConnectorLabelPartOutlineLayer), so the label's editor, an opaque box,
+ * covers none of it. Outside the editor it is hidden while the label itself
+ * is, too small to read at the canvas's zoom.
  */
 const ConnectorLabelPartOutlineComponent: React.FC<
 	ConnectorLabelPartOutlineProps
-> = ({ points, label, isTextEditing, zoom }) => {
+> = ({ points, label, isTextEditing }) => {
 	// An invalidation signal, as in ConnectorLabel: a face arriving later
 	// re-measures the box the label is drawn in, and the outline goes with it.
 	const fontsLoadedNonce = useFontsLoadedNonceContext();
@@ -83,14 +73,12 @@ const ConnectorLabelPartOutlineComponent: React.FC<
 	}
 
 	const { x, y, width, height } = calcConnectorLabelRect(anchor, labelBox);
-	const outset =
-		SELECTION_OUTLINE_WIDTH / 2 + LABEL_OUTLINE_CLEARANCE_PX / zoom;
 	return (
 		<rect
-			x={x - outset}
-			y={y - outset}
-			width={width + 2 * outset}
-			height={height + 2 * outset}
+			x={x}
+			y={y}
+			width={width}
+			height={height}
 			// Tells a part's box from an object outline, which is drawn the same way.
 			data-testid="part-outline"
 			strokeWidth={SELECTION_OUTLINE_WIDTH}
