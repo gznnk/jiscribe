@@ -214,6 +214,31 @@ describe("EdgeRouter", () => {
 			expect(router.isOvertaken(down.edge)).toBe(false);
 		});
 
+		it("is not raised by a route found again where it was", () => {
+			// "across" runs straight from a to b and "through" straight down from u to
+			// d, crossing it; any way round u or d costs more than the crossing, so
+			// "across" routed again comes out where it was, still crossing "through".
+			const crossing = prepareScene(
+				[
+					box("a", 0, 0),
+					box("b", 300, 0),
+					box("u", 150, -150),
+					box("d", 150, 150),
+				],
+				[edge("across", "a", "b"), edge("through", "u", "d")],
+			);
+			const across = crossing.prepared.get("across") as PreparedEdge;
+			const through = crossing.prepared.get("through") as PreparedEdge;
+			const router = crossing.createRouter();
+			const before = router.route(across);
+			router.route(through);
+
+			expect(router.isOvertaken(across.edge)).toBe(true);
+			expect(router.reroute(across)).toEqual(before);
+			expect(router.isOvertaken(across.edge)).toBe(false);
+			expect(router.isOvertaken(through.edge)).toBe(false);
+		});
+
 		it("is false for an edge with no route", () => {
 			expect(createRouter().isOvertaken(around.edge)).toBe(false);
 		});
