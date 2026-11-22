@@ -18,7 +18,7 @@ import {
 	Viewport,
 	ViewportOverlay,
 	ZoomScaledOverlay,
-	CanvasFrontSvg,
+	WorldSvgOverlay,
 } from "./CanvasStyled";
 import type { Camera, CanvasSidebarsState } from "./CanvasTypes";
 import { isGestureOptedOut } from "./gestures/recognizer/targeting/isGestureOptedOut";
@@ -796,13 +796,13 @@ const CanvasComponent = ({
 									{...editorHandlers}
 								/>
 							</ZoomScaledOverlay>
-							<CanvasFrontSvg {...calcViewportSvgBox(drawnViewport)}>
+							<WorldSvgOverlay {...calcViewportSvgBox(drawnViewport)}>
 								<ConnectorLabelPartOutlineLayer
 									selection={state.selection}
 									objects={state.objects}
 									mode={state.mode}
 								/>
-							</CanvasFrontSvg>
+							</WorldSvgOverlay>
 							{/* HTML whose position follows zoom but whose size does not */}
 							<ScrollSyncedOverlay
 								style={{ left: -minX * zoom, top: -minY * zoom }}

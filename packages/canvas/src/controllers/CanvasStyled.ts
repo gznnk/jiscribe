@@ -191,7 +191,7 @@ export const ZoomScaledOverlay = styled.div`
  * on the same pixels in both. Takes no pointer events: what is drawn here is
  * decoration, and presses fall through to what lies under it.
  */
-export const CanvasFrontSvg = styled.svg`
+export const WorldSvgOverlay = styled.svg`
 	position: absolute;
 	top: 0;
 	left: 0;

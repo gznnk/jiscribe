@@ -62,7 +62,7 @@ const PickedConnectorLabelOutline: React.FC<
  * draft as the editor lays it out.
  *
  * Unlike the other selection feedback it is not drawn inside the canvas SVG but
- * in the SVG laid over the text editors (CanvasFrontSvg): a label's editor is an
+ * in the SVG laid over the text editors (WorldSvgOverlay): a label's editor is an
  * opaque box, where a shape's lets the outline under it show through.
  */
 const ConnectorLabelPartOutlineLayerComponent: React.FC<
