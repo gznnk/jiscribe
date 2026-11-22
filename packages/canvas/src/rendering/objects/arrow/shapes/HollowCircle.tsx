@@ -1,4 +1,4 @@
-import { ARROW_SIZE } from "@jiscribe/doc/model/objects/utils/arrowHeadDimensions";
+import { ARROW_SIZE } from "@jiscribe/doc/model/objects/arrow/arrowHeadDimensions";
 import { radiansToDegrees } from "@jiscribe/geometry";
 import type React from "react";
 import { memo } from "react";
@@ -8,15 +8,17 @@ import { createSvgTransform } from "../../utils/createSvgTransform";
 import type { ArrowShapeProps } from "../ArrowTypes";
 
 /**
- * Circle arrow shape component.
+ * HollowCircle arrow shape component.
+ * UML provided-interface "ball" (lollipop notation).
  */
-const CircleArrowComponent: React.FC<ArrowShapeProps> = ({
+const HollowCircleArrowComponent: React.FC<ArrowShapeProps> = ({
 	x,
 	y,
 	color,
 	opacity,
 	radians,
 	scale,
+	outlineWidth,
 	dataKind,
 	dataId,
 }) => {
@@ -31,8 +33,9 @@ const CircleArrowComponent: React.FC<ArrowShapeProps> = ({
 			cx={cx}
 			cy={0}
 			r={radius}
-			fillColor={color}
+			strokeColor={color}
 			alpha={opacity}
+			strokeWidth={outlineWidth}
 			transform={transform}
 			data-kind={dataKind}
 			data-id={dataId}
@@ -40,4 +43,4 @@ const CircleArrowComponent: React.FC<ArrowShapeProps> = ({
 	);
 };
 
-export const CircleArrow = memo(CircleArrowComponent);
+export const HollowCircleArrow = memo(HollowCircleArrowComponent);

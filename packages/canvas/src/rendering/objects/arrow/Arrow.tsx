@@ -1,5 +1,5 @@
+import type { ArrowLineEndWedge } from "@jiscribe/doc/model/objects/arrow/arrowOutlineThinning";
 import type { ArrowType } from "@jiscribe/doc/model/objects/types/ArrowType";
-import type { ArrowLineEndWedge } from "@jiscribe/doc/model/objects/utils/arrowOutlineThinning";
 import type React from "react";
 import { memo } from "react";
 

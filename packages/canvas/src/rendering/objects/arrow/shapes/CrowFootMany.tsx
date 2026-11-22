@@ -1,7 +1,4 @@
-import {
-	CROW_FOOT_ONE_MANY_BAR_DISTANCE,
-	CROW_FOOT_ONE_MANY_INSET,
-} from "@jiscribe/doc/model/objects/utils/arrowHeadDimensions";
+import { CROW_FOOT_MANY_INSET } from "@jiscribe/doc/model/objects/arrow/arrowHeadDimensions";
 import { radiansToDegrees } from "@jiscribe/geometry";
 import type React from "react";
 import { memo } from "react";
@@ -10,16 +7,15 @@ import { createSvgTransform } from "../../utils/createSvgTransform";
 import type { ArrowShapeProps } from "../ArrowTypes";
 import { ArrowPath } from "./ArrowStyled";
 import {
-	buildCrowFootBar,
 	buildCrowFootProngs,
 	buildCrowFootSpine,
 } from "./utils/crowFootGeometry";
 
 /**
- * CrowFootOneMany arrow shape component.
- * ER crow's foot notation: one or many (`1..*`).
+ * CrowFootMany arrow shape component.
+ * ER crow's foot notation: many (no lower bound stated).
  */
-const CrowFootOneManyArrowComponent: React.FC<ArrowShapeProps> = ({
+const CrowFootManyArrowComponent: React.FC<ArrowShapeProps> = ({
 	x,
 	y,
 	color,
@@ -32,12 +28,8 @@ const CrowFootOneManyArrowComponent: React.FC<ArrowShapeProps> = ({
 }) => {
 	const rotationDegrees = radiansToDegrees(radians);
 	const transform = createSvgTransform(scale, scale, rotationDegrees, x, y);
-	// Arrow with tip at (0,0), pointing right when radians=0 - bar then prongs toward the tip
-	const d = [
-		buildCrowFootSpine(CROW_FOOT_ONE_MANY_INSET),
-		buildCrowFootProngs(),
-		buildCrowFootBar(CROW_FOOT_ONE_MANY_BAR_DISTANCE),
-	].join(" ");
+	// Arrow with tip at (0,0), pointing right when radians=0 - prongs open toward the tip
+	const d = `${buildCrowFootSpine(CROW_FOOT_MANY_INSET)} ${buildCrowFootProngs()}`;
 
 	return (
 		<ArrowPath
@@ -53,4 +45,4 @@ const CrowFootOneManyArrowComponent: React.FC<ArrowShapeProps> = ({
 	);
 };
 
-export const CrowFootOneManyArrow = memo(CrowFootOneManyArrowComponent);
+export const CrowFootManyArrow = memo(CrowFootManyArrowComponent);

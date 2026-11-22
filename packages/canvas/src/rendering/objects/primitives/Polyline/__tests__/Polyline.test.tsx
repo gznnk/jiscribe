@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { ARROW_SIZE } from "@jiscribe/doc/model/objects/utils/arrowHeadDimensions";
+import { ARROW_SIZE } from "@jiscribe/doc/model/objects/arrow/arrowHeadDimensions";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it } from "vitest";

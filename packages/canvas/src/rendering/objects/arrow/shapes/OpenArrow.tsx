@@ -1,4 +1,4 @@
-import { ARROW_SIZE } from "@jiscribe/doc/model/objects/utils/arrowHeadDimensions";
+import { ARROW_SIZE } from "@jiscribe/doc/model/objects/arrow/arrowHeadDimensions";
 import { radiansToDegrees } from "@jiscribe/geometry";
 import type React from "react";
 import { memo } from "react";

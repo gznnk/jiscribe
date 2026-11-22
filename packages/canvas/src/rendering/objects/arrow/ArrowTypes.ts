@@ -1,4 +1,4 @@
-import type { ArrowLineEndWedge } from "@jiscribe/doc/model/objects/utils/arrowOutlineThinning";
+import type { ArrowLineEndWedge } from "@jiscribe/doc/model/objects/arrow/arrowOutlineThinning";
 
 /**
  * Common props for arrow shape components

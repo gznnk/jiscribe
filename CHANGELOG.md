@@ -434,7 +434,7 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 - **A connector's endpoint and vertex resolution moved from the canvas into
   `@jiscribe/doc`** (`model/objects/connector/`), along with the arrowheads'
-  dimensions (`model/objects/utils/`), so the document layer resolves a path
+  dimensions (`model/objects/arrow/`), so the document layer resolves a path
   and measures a head by the same steps the canvas draws them with. The canvas
   keeps the automatic route and its registries and calls those; nothing is
   drawn differently. `ExtraConnectPoint` is now declared in `@jiscribe/doc` and

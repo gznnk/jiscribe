@@ -1,7 +1,7 @@
 import {
 	CROW_FOOT_HALF_HEIGHT,
 	CROW_FOOT_LENGTH,
-} from "@jiscribe/doc/model/objects/utils/arrowHeadDimensions";
+} from "@jiscribe/doc/model/objects/arrow/arrowHeadDimensions";
 
 /**
  * Path builders for the ER crow's foot cardinality marks, laid out on the

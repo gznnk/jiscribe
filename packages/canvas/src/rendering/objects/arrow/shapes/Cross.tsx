@@ -1,17 +1,17 @@
-import { ARROW_SIZE } from "@jiscribe/doc/model/objects/utils/arrowHeadDimensions";
+import { CROSS_ARM } from "@jiscribe/doc/model/objects/arrow/arrowHeadDimensions";
 import { radiansToDegrees } from "@jiscribe/geometry";
 import type React from "react";
 import { memo } from "react";
 
-import { ArrowCircle } from "./ArrowStyled";
+import { ArrowPath } from "./ArrowStyled";
 import { createSvgTransform } from "../../utils/createSvgTransform";
 import type { ArrowShapeProps } from "../ArrowTypes";
 
 /**
- * HollowCircle arrow shape component.
- * UML provided-interface "ball" (lollipop notation).
+ * Cross arrow shape component.
+ * UML non-navigable association end; also usable for a destroyed lifeline.
  */
-const HollowCircleArrowComponent: React.FC<ArrowShapeProps> = ({
+const CrossArrowComponent: React.FC<ArrowShapeProps> = ({
 	x,
 	y,
 	color,
@@ -24,15 +24,13 @@ const HollowCircleArrowComponent: React.FC<ArrowShapeProps> = ({
 }) => {
 	const rotationDegrees = radiansToDegrees(radians);
 	const transform = createSvgTransform(scale, scale, rotationDegrees, x, y);
-	const radius = ARROW_SIZE / 2;
-	// Arrow with tip at (0,0), pointing right when radians=0 - circle center offset by radius
-	const cx = -radius;
+	// Arrow with tip at (0,0), pointing right when radians=0 - the cross trails the tip
+	const back = -CROSS_ARM * 2;
+	const d = `M ${back},${-CROSS_ARM} L 0,${CROSS_ARM} M ${back},${CROSS_ARM} L 0,${-CROSS_ARM}`;
 
 	return (
-		<ArrowCircle
-			cx={cx}
-			cy={0}
-			r={radius}
+		<ArrowPath
+			d={d}
 			strokeColor={color}
 			alpha={opacity}
 			strokeWidth={outlineWidth}
@@ -43,4 +41,4 @@ const HollowCircleArrowComponent: React.FC<ArrowShapeProps> = ({
 	);
 };
 
-export const HollowCircleArrow = memo(HollowCircleArrowComponent);
+export const CrossArrow = memo(CrossArrowComponent);

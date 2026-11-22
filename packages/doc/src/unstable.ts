@@ -182,9 +182,9 @@ export { resolveConnectorDocPath } from "./ops/utils/connectorPath";
 export {
 	calcArrowHeadLength,
 	readArrowExtent,
-} from "./model/objects/utils/arrowExtents";
+} from "./model/objects/arrow/arrowExtents";
 export {
 	calcArrowHeadRadians,
 	resolveArrowHeadPath,
-} from "./model/objects/utils/arrowHeadAim";
-export type { ArrowExtent } from "./model/objects/utils/arrowHeadDimensions";
+} from "./model/objects/arrow/arrowHeadAim";
+export type { ArrowExtent } from "./model/objects/arrow/arrowHeadDimensions";

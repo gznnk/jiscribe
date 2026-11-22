@@ -1,4 +1,4 @@
-import { ARROW_SIZE } from "@jiscribe/doc/model/objects/utils/arrowHeadDimensions";
+import { ARROW_SIZE } from "@jiscribe/doc/model/objects/arrow/arrowHeadDimensions";
 import { radiansToDegrees } from "@jiscribe/geometry";
 import type React from "react";
 import { memo } from "react";
@@ -8,9 +8,9 @@ import { createSvgTransform } from "../../utils/createSvgTransform";
 import type { ArrowShapeProps } from "../ArrowTypes";
 
 /**
- * HollowDiamond arrow shape component.
+ * HollowTriangle arrow shape component.
  */
-const HollowDiamondArrowComponent: React.FC<ArrowShapeProps> = ({
+const HollowTriangleArrowComponent: React.FC<ArrowShapeProps> = ({
 	x,
 	y,
 	color,
@@ -23,9 +23,8 @@ const HollowDiamondArrowComponent: React.FC<ArrowShapeProps> = ({
 }) => {
 	const rotationDegrees = radiansToDegrees(radians);
 	const transform = createSvgTransform(scale, scale, rotationDegrees, x, y);
-	const size = ARROW_SIZE;
 	// Arrow with tip at (0,0), pointing right when radians=0
-	const points = `0,0 ${-size / 2},${size / 2} ${-size},0 ${-size / 2},${-size / 2}`;
+	const points = `0,0 ${-ARROW_SIZE},${ARROW_SIZE / 2} ${-ARROW_SIZE},${-ARROW_SIZE / 2}`;
 
 	return (
 		<ArrowPolygon
@@ -41,4 +40,4 @@ const HollowDiamondArrowComponent: React.FC<ArrowShapeProps> = ({
 	);
 };
 
-export const HollowDiamondArrow = memo(HollowDiamondArrowComponent);
+export const HollowTriangleArrow = memo(HollowTriangleArrowComponent);

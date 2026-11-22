@@ -1,18 +1,18 @@
 import {
 	calcArrowHeadRadians,
 	resolveArrowHeadPath,
-} from "@jiscribe/doc/model/objects/utils/arrowHeadAim";
-import { calcArrowLineInset } from "@jiscribe/doc/model/objects/utils/arrowLineInsets";
+} from "@jiscribe/doc/model/objects/arrow/arrowHeadAim";
+import { calcArrowLineInset } from "@jiscribe/doc/model/objects/arrow/arrowLineInsets";
 import {
 	calcArrowLineEndWedge,
 	calcArrowOutlineWidth,
-} from "@jiscribe/doc/model/objects/utils/arrowOutlineThinning";
+} from "@jiscribe/doc/model/objects/arrow/arrowOutlineThinning";
 import type React from "react";
 import { memo } from "react";
 
 import { PolylineElement, PolylineHitArea } from "./PolylineStyled";
 import type { PolylineState } from "../../../../states/objects/primitives/polyline/PolylineState";
-import { Arrow } from "../../arrows";
+import { Arrow } from "../../arrow";
 import { useObjectShapeStyleDefaultsRegistry } from "../../registry/ObjectShapeStyleDefaultsRegistryContext";
 import { formatPolygonPoints } from "../../utils/formatPolygonPoints";
 import { getStrokeDasharray } from "../../utils/getStrokeDasharray";

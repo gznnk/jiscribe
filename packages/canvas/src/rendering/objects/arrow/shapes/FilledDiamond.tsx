@@ -1,4 +1,4 @@
-import { ARROW_SIZE } from "@jiscribe/doc/model/objects/utils/arrowHeadDimensions";
+import { ARROW_SIZE } from "@jiscribe/doc/model/objects/arrow/arrowHeadDimensions";
 import { radiansToDegrees } from "@jiscribe/geometry";
 import type React from "react";
 import { memo } from "react";
@@ -8,9 +8,9 @@ import { createSvgTransform } from "../../utils/createSvgTransform";
 import type { ArrowShapeProps } from "../ArrowTypes";
 
 /**
- * ConcaveTriangle arrow shape component.
+ * FilledDiamond arrow shape component.
  */
-const ConcaveTriangleArrowComponent: React.FC<ArrowShapeProps> = ({
+const FilledDiamondArrowComponent: React.FC<ArrowShapeProps> = ({
 	x,
 	y,
 	color,
@@ -23,8 +23,8 @@ const ConcaveTriangleArrowComponent: React.FC<ArrowShapeProps> = ({
 	const rotationDegrees = radiansToDegrees(radians);
 	const transform = createSvgTransform(scale, scale, rotationDegrees, x, y);
 	const size = ARROW_SIZE;
-	// Arrow with tip at (0,0), pointing right when radians=0 - concave inset at 90% from base
-	const points = `0,0 ${-size},${size / 2} ${-size * 0.9},0 ${-size},${-size / 2}`;
+	// Arrow with tip at (0,0), pointing right when radians=0
+	const points = `0,0 ${-size / 2},${size / 2} ${-size},0 ${-size / 2},${-size / 2}`;
 
 	return (
 		<ArrowPolygon
@@ -38,4 +38,4 @@ const ConcaveTriangleArrowComponent: React.FC<ArrowShapeProps> = ({
 	);
 };
 
-export const ConcaveTriangleArrow = memo(ConcaveTriangleArrowComponent);
+export const FilledDiamondArrow = memo(FilledDiamondArrowComponent);

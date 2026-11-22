@@ -1,6 +1,6 @@
 import { calcVectorAngleRad, type Point } from "@jiscribe/geometry";
 
-import { dedupePoints } from "../connector/dedupePoints";
+import { dedupePoints } from "./dedupePoints";
 
 /**
  * The path a line carrying arrowheads is drawn along and its heads are aimed

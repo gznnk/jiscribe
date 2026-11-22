@@ -1,4 +1,4 @@
-import { ARROW_SIZE } from "@jiscribe/doc/model/objects/utils/arrowHeadDimensions";
+import { ARROW_SIZE } from "@jiscribe/doc/model/objects/arrow/arrowHeadDimensions";
 import { radiansToDegrees } from "@jiscribe/geometry";
 import type React from "react";
 import { memo } from "react";
@@ -8,31 +8,29 @@ import { createSvgTransform } from "../../utils/createSvgTransform";
 import type { ArrowShapeProps } from "../ArrowTypes";
 
 /**
- * HollowTriangle arrow shape component.
+ * ConcaveTriangle arrow shape component.
  */
-const HollowTriangleArrowComponent: React.FC<ArrowShapeProps> = ({
+const ConcaveTriangleArrowComponent: React.FC<ArrowShapeProps> = ({
 	x,
 	y,
 	color,
 	opacity,
 	radians,
 	scale,
-	outlineWidth,
 	dataKind,
 	dataId,
 }) => {
 	const rotationDegrees = radiansToDegrees(radians);
 	const transform = createSvgTransform(scale, scale, rotationDegrees, x, y);
-	// Arrow with tip at (0,0), pointing right when radians=0
-	const points = `0,0 ${-ARROW_SIZE},${ARROW_SIZE / 2} ${-ARROW_SIZE},${-ARROW_SIZE / 2}`;
+	const size = ARROW_SIZE;
+	// Arrow with tip at (0,0), pointing right when radians=0 - concave inset at 90% from base
+	const points = `0,0 ${-size},${size / 2} ${-size * 0.9},0 ${-size},${-size / 2}`;
 
 	return (
 		<ArrowPolygon
 			points={points}
-			strokeColor={color}
+			fillColor={color}
 			alpha={opacity}
-			strokeWidth={outlineWidth}
-			strokeLinejoin="miter"
 			transform={transform}
 			data-kind={dataKind}
 			data-id={dataId}
@@ -40,4 +38,4 @@ const HollowTriangleArrowComponent: React.FC<ArrowShapeProps> = ({
 	);
 };
 
-export const HollowTriangleArrow = memo(HollowTriangleArrowComponent);
+export const ConcaveTriangleArrow = memo(ConcaveTriangleArrowComponent);

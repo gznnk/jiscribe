@@ -1,20 +1,20 @@
-import type { ArrowType } from "@jiscribe/doc/model/objects/types/ArrowType";
-import type { StrokeDashType } from "@jiscribe/doc/model/objects/types/StrokeDashType";
 import {
 	calcArrowHeadRadians,
 	resolveArrowHeadPath,
-} from "@jiscribe/doc/model/objects/utils/arrowHeadAim";
-import { calcArrowLineInset } from "@jiscribe/doc/model/objects/utils/arrowLineInsets";
+} from "@jiscribe/doc/model/objects/arrow/arrowHeadAim";
+import { calcArrowLineInset } from "@jiscribe/doc/model/objects/arrow/arrowLineInsets";
 import {
 	calcArrowLineEndWedge,
 	calcArrowOutlineWidth,
-} from "@jiscribe/doc/model/objects/utils/arrowOutlineThinning";
+} from "@jiscribe/doc/model/objects/arrow/arrowOutlineThinning";
+import type { ArrowType } from "@jiscribe/doc/model/objects/types/ArrowType";
+import type { StrokeDashType } from "@jiscribe/doc/model/objects/types/StrokeDashType";
 import type { Point } from "@jiscribe/geometry";
 import type React from "react";
 import { memo } from "react";
 
 import { ConnectorElement, ConnectorHitArea } from "./ConnectorStyled";
-import { Arrow } from "../../arrows";
+import { Arrow } from "../../arrow";
 import { useObjectShapeStyleDefaultsRegistry } from "../../registry/ObjectShapeStyleDefaultsRegistryContext";
 import { formatPolygonPoints } from "../../utils/formatPolygonPoints";
 import { getStrokeDasharray } from "../../utils/getStrokeDasharray";

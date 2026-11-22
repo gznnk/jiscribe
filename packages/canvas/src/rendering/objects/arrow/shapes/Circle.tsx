@@ -1,16 +1,16 @@
-import { ARROW_SIZE } from "@jiscribe/doc/model/objects/utils/arrowHeadDimensions";
+import { ARROW_SIZE } from "@jiscribe/doc/model/objects/arrow/arrowHeadDimensions";
 import { radiansToDegrees } from "@jiscribe/geometry";
 import type React from "react";
 import { memo } from "react";
 
-import { ArrowPolygon } from "./ArrowStyled";
+import { ArrowCircle } from "./ArrowStyled";
 import { createSvgTransform } from "../../utils/createSvgTransform";
 import type { ArrowShapeProps } from "../ArrowTypes";
 
 /**
- * FilledDiamond arrow shape component.
+ * Circle arrow shape component.
  */
-const FilledDiamondArrowComponent: React.FC<ArrowShapeProps> = ({
+const CircleArrowComponent: React.FC<ArrowShapeProps> = ({
 	x,
 	y,
 	color,
@@ -22,13 +22,15 @@ const FilledDiamondArrowComponent: React.FC<ArrowShapeProps> = ({
 }) => {
 	const rotationDegrees = radiansToDegrees(radians);
 	const transform = createSvgTransform(scale, scale, rotationDegrees, x, y);
-	const size = ARROW_SIZE;
-	// Arrow with tip at (0,0), pointing right when radians=0
-	const points = `0,0 ${-size / 2},${size / 2} ${-size},0 ${-size / 2},${-size / 2}`;
+	const radius = ARROW_SIZE / 2;
+	// Arrow with tip at (0,0), pointing right when radians=0 - circle center offset by radius
+	const cx = -radius;
 
 	return (
-		<ArrowPolygon
-			points={points}
+		<ArrowCircle
+			cx={cx}
+			cy={0}
+			r={radius}
 			fillColor={color}
 			alpha={opacity}
 			transform={transform}
@@ -38,4 +40,4 @@ const FilledDiamondArrowComponent: React.FC<ArrowShapeProps> = ({
 	);
 };
 
-export const FilledDiamondArrow = memo(FilledDiamondArrowComponent);
+export const CircleArrow = memo(CircleArrowComponent);

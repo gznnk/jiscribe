@@ -1,4 +1,4 @@
-import { calcArrowReach } from "@jiscribe/doc/model/objects/utils/arrowExtents";
+import { calcArrowReach } from "@jiscribe/doc/model/objects/arrow/arrowExtents";
 import { unionBoundingBoxes } from "@jiscribe/geometry";
 import type { BoundingBox, Point } from "@jiscribe/geometry";
 
