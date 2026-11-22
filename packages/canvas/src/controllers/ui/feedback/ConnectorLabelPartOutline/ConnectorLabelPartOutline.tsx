@@ -39,16 +39,16 @@ type ConnectorLabelPartOutlineProps = {
 	 * as the editor is.
 	 */
 	isTextEditing: boolean;
-	/** The canvas zoom (world → screen scale, > 0), which the clearance around the box is held against so it stays 1 screen px. */
+	/** The canvas zoom (world → screen scale, > 0), which the clearance ({@link LABEL_OUTLINE_CLEARANCE_PX}) is divided by to stay constant on screen. */
 	zoom: number;
 };
 
 /**
  * Outlines a connector's picked label (the `connectorLabel` part kind), a
- * stroke lying just outside the label's box (calcConnectorLabelRect) with
- * nothing inside, so it reads the same around the label and around its
- * editor ({@link LABEL_OUTLINE_CLEARANCE_PX}). Outside the editor it is hidden while the label itself is, too
- * small to read at the canvas's zoom.
+ * stroke lying just outside the label's box (calcConnectorLabelRect, past
+ * {@link LABEL_OUTLINE_CLEARANCE_PX}) with nothing inside, so it reads the
+ * same around the label and around its editor. Outside the editor it is
+ * hidden while the label itself is, too small to read at the canvas's zoom.
  */
 const ConnectorLabelPartOutlineComponent: React.FC<
 	ConnectorLabelPartOutlineProps
@@ -83,7 +83,6 @@ const ConnectorLabelPartOutlineComponent: React.FC<
 	}
 
 	const { x, y, width, height } = calcConnectorLabelRect(anchor, labelBox);
-	// The whole stroke lies outside the box, past the clearance.
 	const outset =
 		SELECTION_OUTLINE_WIDTH / 2 + LABEL_OUTLINE_CLEARANCE_PX / zoom;
 	return (
