@@ -1,12 +1,6 @@
 import type { Point, Rect } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
-import type { CanvasDoc } from "../../model/canvas/CanvasDoc";
-import type { ConnectorDoc } from "../../model/objects/connector/ConnectorDoc";
-import { calcLabelTextRegion } from "../../text/label/calcLabelTextRegion";
-import { createDocOps } from "../createDocOps";
-import { DocOperationError } from "../errors";
-import { measureLabelBox } from "../utils/connectorLabelBox";
 import {
 	emptyDoc,
 	expectValid,
@@ -18,6 +12,12 @@ import {
 	columnCardDefinition,
 	regionDefinition,
 } from "./support/pluginFixtures";
+import type { CanvasDoc } from "../../model/canvas/CanvasDoc";
+import type { ConnectorDoc } from "../../model/objects/connector/ConnectorDoc";
+import { calcLabelTextRegion } from "../../text/label/calcLabelTextRegion";
+import { createDocOps } from "../createDocOps";
+import { DocOperationError } from "../errors";
+import { measureLabelBox } from "../utils/connectorLabelBox";
 
 const routingDocOps = createDocOps({
 	plugins: [
@@ -436,6 +436,7 @@ describe("routeConnectors", () => {
 		addRect(doc, 1200, 100, 260, 40);
 		addRect(doc, 1200, -80, 40, 200);
 		addRect(doc, 1420, -80, 40, 200);
+		addRect(doc, 700, 450); // rect-10, inside region-1
 		routingDocOps.connect(doc, { sourceId: "rect-1", targetId: "rect-1" });
 		routingDocOps.connect(doc, {
 			sourceId: "rect-1",
@@ -443,7 +444,7 @@ describe("routeConnectors", () => {
 		});
 		connect(doc, "rect-2", "rect-3");
 		connect(doc, "rect-1", "rect-4");
-		connect(doc, "rect-1", "region-1");
+		connect(doc, "rect-10", "region-1");
 		routingDocOps.connect(doc, {
 			sourceId: "rect-1",
 			targetId: "column-card-1",
@@ -471,6 +472,28 @@ describe("routeConnectors", () => {
 				readObject(doc, `connector-${index}`),
 			),
 		).toEqual(keptBefore);
+	});
+
+	it("reports the first reason in the order they are asked, a container end after a turned end and a declared connect point", () => {
+		const doc = emptyDoc();
+		routingDocOps.addObject(doc, "region", { x: 0, y: 0 });
+		addRect(doc, 100, 100);
+		routingDocOps.addObject(doc, "column-card", { x: 250, y: 100 });
+		// Both inside region-1, so each line to it is also a container end.
+		connect(doc, "rect-1", "region-1");
+		routingDocOps.connect(doc, {
+			sourceId: "column-card-1",
+			targetId: "region-1",
+			sourceAnchor: "col:0:left",
+		});
+		Object.assign(readObject(doc, "region-1"), { rotation: 90 });
+
+		expect(
+			routingDocOps.routeConnectors(doc, undefined).keptConnectorIdsByReason,
+		).toEqual({
+			transformedEnd: ["connector-1"],
+			declaredConnectPoint: ["connector-2"],
+		});
 	});
 
 	it("leaves a connector ending on a group as having no box of its own", () => {
@@ -541,5 +564,185 @@ describe("routeConnectors", () => {
 		routingDocOps.routeConnectors(doc, undefined);
 
 		expect(doc).toEqual(routed);
+	});
+});
+
+/** The title band of the 400 by 300 region the tests below put at the origin. */
+const REGION_TITLE_BAND: Rect = { x: 0, y: 0, width: 400, height: 40 };
+
+/**
+ * A 400 by 300 region at the origin with a 40px title band, `rect-1` above it and
+ * `rect-2` inside it, both 60 by 40 and centred on x 330, joined by `connector-1`: a
+ * straight line would run down through the band at x 330.
+ */
+const connectAcrossTitleBand = (doc: CanvasDoc): void => {
+	routingDocOps.addObject(doc, "region", {
+		x: 0,
+		y: 0,
+		width: 400,
+		height: 300,
+		extraProps: { headerHeight: 40 },
+	});
+	addRect(doc, 300, -200);
+	addRect(doc, 300, 150);
+	connect(doc, "rect-1", "rect-2");
+};
+
+describe("routeConnectors across a container's title band", () => {
+	it("goes around the whole band", () => {
+		const doc = emptyDoc();
+		connectAcrossTitleBand(doc);
+
+		routingDocOps.routeConnectors(doc, undefined);
+
+		expect(readConnector(doc, "connector-1").points).not.toEqual([]);
+		expect(entersRect(pathOf(doc, "connector-1"), REGION_TITLE_BAND)).toBe(
+			false,
+		);
+	});
+
+	it("still routes the connector of a shape standing in the band", () => {
+		const doc = emptyDoc();
+		connectAcrossTitleBand(doc);
+		// rect-3 straddles the band's bottom edge, clear of the straight line at x 330.
+		addRect(doc, 100, 20);
+		addRect(doc, 100, -200);
+		connect(doc, "rect-3", "rect-4");
+
+		const result = routingDocOps.routeConnectors(doc, undefined);
+
+		expect(result.keptConnectorIdsByReason).toEqual({});
+		expect([...result.connectorIds].sort()).toEqual([
+			"connector-1",
+			"connector-2",
+		]);
+		expect(entersRect(pathOf(doc, "connector-1"), REGION_TITLE_BAND)).toBe(
+			false,
+		);
+	});
+});
+
+describe("routeConnectors with an end on a container shape", () => {
+	it("routes a connector from a shape outside it onto a side of its box, from outside, entering no shape inside it", () => {
+		const doc = emptyDoc();
+		routingDocOps.addObject(doc, "region", { x: 0, y: 0 });
+		addRect(doc, 170, 130); // rect-1, inside region-1
+		addRect(doc, 600, 130); // rect-2
+		// Against the region's top and bottom and across its right side's middle,
+		// leaving its left side.
+		addRect(doc, -50, -20, 500, 20);
+		addRect(doc, -50, 300, 500, 20);
+		addRect(doc, 400, 110, 20, 80);
+		connect(doc, "rect-2", "region-1");
+
+		const result = routingDocOps.routeConnectors(doc, undefined);
+
+		expect(result).toEqual({
+			connectorIds: ["connector-1"],
+			keptConnectorIdsByReason: {},
+			restackedConnectorIds: [],
+		});
+		expect(readObject(doc, "connector-1").target).toEqual({
+			owner: { id: "region-1" },
+			anchor: { kind: "edge", side: "left", t: 0.5 },
+		});
+		const path = pathOf(doc, "connector-1");
+		expect(entersRect(path, boxOf(doc, "region-1"))).toBe(false);
+		expect(entersRect(path, boxOf(doc, "rect-1"))).toBe(false);
+		expectValid(doc);
+	});
+
+	it("routes a connector between two container shapes side by side", () => {
+		const doc = emptyDoc();
+		routingDocOps.addObject(doc, "region", { x: 0, y: 0 });
+		routingDocOps.addObject(doc, "region", { x: 600, y: 0 });
+		connect(doc, "region-1", "region-2");
+
+		const result = routingDocOps.routeConnectors(doc, undefined);
+
+		expect(result.connectorIds).toEqual(["connector-1"]);
+		expect(readObject(doc, "connector-1")).toMatchObject({
+			source: {
+				owner: { id: "region-1" },
+				anchor: { kind: "edge", side: "right", t: 0.5 },
+			},
+			target: {
+				owner: { id: "region-2" },
+				anchor: { kind: "edge", side: "left", t: 0.5 },
+			},
+			points: [],
+		});
+	});
+
+	it("keeps a connector between it and a shape or container shape inside it as a container end", () => {
+		const doc = emptyDoc();
+		routingDocOps.addObject(doc, "region", { x: 0, y: 0 });
+		routingDocOps.addObject(doc, "region", {
+			x: 50,
+			y: 50,
+			width: 200,
+			height: 200,
+		});
+		addRect(doc, 300, 100);
+		connect(doc, "rect-1", "region-1");
+		connect(doc, "region-1", "region-2");
+		const keptBefore = [1, 2].map((index) =>
+			structuredClone(readObject(doc, `connector-${index}`)),
+		);
+
+		const result = routingDocOps.routeConnectors(doc, undefined);
+
+		expect(result.connectorIds).toEqual([]);
+		expect(result.keptConnectorIdsByReason).toEqual({
+			containerEnd: ["connector-1", "connector-2"],
+		});
+		expect(
+			[1, 2].map((index) => readObject(doc, `connector-${index}`)),
+		).toEqual(keptBefore);
+	});
+
+	it.each([{ rotation: 90 }, { flipX: true }])(
+		"keeps a connector to a turned container shape (%o) as a transformed end",
+		(transform) => {
+			const doc = emptyDoc();
+			routingDocOps.addObject(doc, "region", { x: 0, y: 0 });
+			addRect(doc, 600, 130);
+			connect(doc, "rect-1", "region-1");
+			Object.assign(readObject(doc, "region-1"), transform);
+
+			expect(
+				routingDocOps.routeConnectors(doc, undefined).keptConnectorIdsByReason,
+			).toEqual({ transformedEnd: ["connector-1"] });
+		},
+	);
+
+	it("ends two connectors on a titled container's top side on different spots", () => {
+		const doc = emptyDoc();
+		routingDocOps.addObject(doc, "region", {
+			x: 0,
+			y: 0,
+			extraProps: { headerHeight: 40 },
+		});
+		// Against the region's other three sides, so both lines come in at its top,
+		// from far off either way.
+		addRect(doc, -40, 0, 40, 340);
+		addRect(doc, 400, 0, 40, 340);
+		addRect(doc, -40, 300, 480, 40);
+		addRect(doc, -300, -300); // rect-4
+		addRect(doc, 640, -300); // rect-5
+		connect(doc, "rect-4", "region-1");
+		connect(doc, "rect-5", "region-1");
+
+		routingDocOps.routeConnectors(doc, undefined);
+
+		// 10px either side of the top side's centre, x 200.
+		expect(
+			["connector-1", "connector-2"].map(
+				(id) => readConnector(doc, id).target.anchor,
+			),
+		).toEqual([
+			{ kind: "edge", side: "top", t: 0.475 },
+			{ kind: "edge", side: "top", t: 0.525 },
+		]);
 	});
 });

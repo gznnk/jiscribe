@@ -22,6 +22,7 @@ import {
 	oppositeDirection,
 	pointIndex,
 	snapToGridResolution,
+	GRID_STEP,
 	stepIndex,
 } from "./RouteGrid";
 import { RouteSearchQueue } from "./RouteSearchQueue";
@@ -40,6 +41,8 @@ export type Obstacle = {
 	/** The node whose box or caption it is; undefined for one of `options.obstacles`. */
 	ownerId?: string;
 	isLabel: boolean;
+	/** Set for a hollow node's box, which only the edges ending on that node keep out of. */
+	isHollow?: true;
 };
 
 /** One place an edge may end at, with the stub it runs out along. */
@@ -71,6 +74,12 @@ export type PreparedEdge = {
 	excluded: Obstacle[];
 	sources: EndCandidate[];
 	targets: EndCandidate[];
+	/**
+	 * The innermost border both end boxes lie inside: the route stays strictly inside
+	 * it, off its outline, where a way is found there, even when a cheaper one runs
+	 * outside. Undefined when no border holds both ends.
+	 */
+	sharedBorder?: BoundingBox;
 };
 
 /**
@@ -129,6 +138,14 @@ const countBendsAtLeast = (
 const toDrawnStep = (step: number, direction: RouteDirection): number =>
 	isHorizontalDirection(direction) ? step * 2 : step * 2 + 1;
 
+/** What one route drew on the lines, as toDrawnStep numbers. */
+type DrawnRoute = {
+	/** Every unit step, stubs included, one entry per step run. */
+	steps: number[];
+	/** The stub steps among them, under each end's key. */
+	stubSteps: { endKey: string; steps: number[] }[];
+};
+
 /** A stub on the lines: its anchor's line indices and the unit steps it runs. */
 type StubOnLines = {
 	xi: number;
@@ -139,7 +156,8 @@ type StubOnLines = {
 
 /**
  * Route every edge in turn on shared lines, each on the graph of the obstacles it
- * must keep out of and against the routes drawn before it; see routeEdgesAroundNodes.
+ * must keep out of and against the routes drawn at the time: those before it for
+ * `route`, every other one for `reroute`; see routeEdgesAroundNodes.
  */
 export class EdgeRouter {
 	private readonly lines: RouteLines;
@@ -156,8 +174,26 @@ export class EdgeRouter {
 	/** How many stubs of each end run along each unit step, by end and then step. */
 	private readonly stubStepsByEnd = new Map<string, Map<number, number>>();
 	/**
-	 * Every unit step drawn so far, in the order drawn, as step × 2 plus 1 for a
-	 * vertical one: what a graph's `drawnCosts` takes in (see applyDrawnSteps).
+	 * What each routed edge drew, for reroute to take back; by the edge itself, ids
+	 * not having to differ.
+	 */
+	private readonly drawnRouteByEdge = new Map<RoutableEdge, DrawnRoute>();
+	/** The edges whose routes run along each unit step, by toDrawnStep number. */
+	private readonly edgesByStep = new Map<number, Set<RoutableEdge>>();
+	/**
+	 * How many states every search so far took off its queue in all, plus the states
+	 * of every graph built: a measure of the work done that does not depend on the
+	 * machine.
+	 */
+	searchedStateCount = 0;
+	/** What reroute took back of the edge it is routing again; undefined otherwise. */
+	private routeTakenBack: DrawnRoute | undefined;
+	/** The edges a route drawn after theirs runs along or crosses; see isOvertaken. */
+	private readonly overtakenEdges = new Set<RoutableEdge>();
+	/**
+	 * Every unit step whose count of routes changed so far, drawn or taken back, in
+	 * that order, as step × 2 plus 1 for a vertical one: what a graph's `drawnCosts`
+	 * takes in (see applyDrawnSteps).
 	 */
 	private readonly drawnSteps: number[] = [];
 	/**
@@ -203,6 +239,8 @@ export class EdgeRouter {
 				this.origins,
 			);
 			const stateCount = graph.nodeXi.length * 4;
+			// Building a graph is work as searching one is: a state built counts as one searched.
+			this.searchedStateCount += stateCount;
 			for (const [keptKey, keptGraph] of this.graphs) {
 				if (this.keptStateCount + stateCount <= MAX_KEPT_GRAPH_STATES) {
 					break;
@@ -431,41 +469,36 @@ export class EdgeRouter {
 		);
 	}
 
-	/** Count the route's unit steps, and its stubs under their ends, as drawn. */
+	/**
+	 * The route's unit steps, and its stubs under their ends, for countDrawnRoute to
+	 * count as drawn and reroute to take back.
+	 */
 	private occupy(
 		route: readonly { xi: number; yi: number }[],
 		source: EndCandidate,
 		target: EndCandidate,
-	): void {
+	): DrawnRoute {
+		const drawn: DrawnRoute = { steps: [], stubSteps: [] };
 		const mark = (
 			xi: number,
 			yi: number,
 			direction: RouteDirection,
-			endKey?: string,
+			stubSteps?: number[],
 		): void => {
-			const step = stepIndex(this.lines, xi, yi, direction);
-			if (isHorizontalDirection(direction)) {
-				this.lines.occupiedH[step] += 1;
-			} else {
-				this.lines.occupiedV[step] += 1;
-			}
-			const key = toDrawnStep(step, direction);
-			this.drawnSteps.push(key);
-			if (endKey === undefined) {
-				return;
-			}
-			let steps = this.stubStepsByEnd.get(endKey);
-			if (steps === undefined) {
-				steps = new Map();
-				this.stubStepsByEnd.set(endKey, steps);
-			}
-			steps.set(key, (steps.get(key) ?? 0) + 1);
+			const key = toDrawnStep(
+				stepIndex(this.lines, xi, yi, direction),
+				direction,
+			);
+			drawn.steps.push(key);
+			stubSteps?.push(key);
 		};
 		for (const candidate of [source, target]) {
 			const stub = this.toStubOnLines(candidate);
+			const stubSteps: number[] = [];
+			drawn.stubSteps.push({ endKey: candidate.endKey, steps: stubSteps });
 			let { xi, yi } = stub;
 			for (let index = 0; index < stub.steps; index += 1) {
-				mark(xi, yi, stub.direction, candidate.endKey);
+				mark(xi, yi, stub.direction, stubSteps);
 				xi += STEP_X[stub.direction];
 				yi += STEP_Y[stub.direction];
 			}
@@ -486,11 +519,165 @@ export class EdgeRouter {
 				yi += STEP_Y[direction];
 			}
 		}
+		return drawn;
+	}
+
+	/**
+	 * Count a route's steps into what the lines hold, or back out of it.
+	 *
+	 * @param delta - 1 to draw the route, -1 to take it back
+	 * @param overtakes - Whether to note the routes it runs along or crosses as
+	 *   overtaken (see isOvertaken); false for a route drawn back where it was
+	 */
+	private countDrawnRoute(
+		edge: RoutableEdge,
+		drawn: DrawnRoute,
+		delta: 1 | -1,
+		overtakes = delta === 1,
+	): void {
+		const count = (steps: Map<number, number>, key: number): void => {
+			const total = (steps.get(key) ?? 0) + delta;
+			if (total === 0) {
+				steps.delete(key);
+			} else {
+				steps.set(key, total);
+			}
+		};
+		const stepsOf = (
+			byEnd: Map<string, Map<number, number>>,
+			endKey: string,
+		): Map<number, number> => {
+			let steps = byEnd.get(endKey);
+			if (steps === undefined) {
+				steps = new Map();
+				byEnd.set(endKey, steps);
+			}
+			return steps;
+		};
+		for (const key of drawn.steps) {
+			if ((key & 1) === 0) {
+				this.lines.occupiedH[key >> 1] += delta;
+			} else {
+				this.lines.occupiedV[key >> 1] += delta;
+			}
+			// A step whose count changed either way has its links' costs counted again.
+			this.drawnSteps.push(key);
+			let edges = this.edgesByStep.get(key);
+			if (delta === 1) {
+				if (edges === undefined) {
+					edges = new Set();
+					this.edgesByStep.set(key, edges);
+				}
+				edges.add(edge);
+			} else {
+				edges?.delete(edge);
+			}
+		}
+		if (overtakes) {
+			this.markOvertaken(edge, drawn);
+		}
+		if (delta === -1) {
+			this.overtakenEdges.delete(edge);
+		}
+		for (const { endKey, steps } of drawn.stubSteps) {
+			const stubSteps = stepsOf(this.stubStepsByEnd, endKey);
+			for (const key of steps) {
+				count(stubSteps, key);
+			}
+		}
+	}
+
+	/**
+	 * Note every other edge whose route the newly drawn one runs along, or crosses at
+	 * the point one of its steps runs to, as overtaken.
+	 */
+	private markOvertaken(edge: RoutableEdge, drawn: DrawnRoute): void {
+		const nx = this.lines.xs.length;
+		const ny = this.lines.ys.length;
+		const mark = (other: RoutableEdge): void => {
+			if (other !== edge) {
+				this.overtakenEdges.add(other);
+			}
+		};
+		for (const key of drawn.steps) {
+			this.edgesByStep.get(key)?.forEach(mark);
+			const step = key >> 1;
+			const isHorizontal = (key & 1) === 0;
+			const xi = isHorizontal
+				? (step % (nx - 1)) + 1
+				: Math.floor(step / (ny - 1));
+			const yi = isHorizontal
+				? Math.floor(step / (nx - 1))
+				: (step % (ny - 1)) + 1;
+			const sideways: [RouteDirection, RouteDirection] = isHorizontal
+				? [0, 2]
+				: [3, 1];
+			const before = stepIndex(this.lines, xi, yi, sideways[0]);
+			const after = stepIndex(this.lines, xi, yi, sideways[1]);
+			if (before < 0 || after < 0) {
+				continue;
+			}
+			const beyond = this.edgesByStep.get(toDrawnStep(after, sideways[1]));
+			if (beyond === undefined) {
+				continue;
+			}
+			for (const other of this.edgesByStep.get(
+				toDrawnStep(before, sideways[0]),
+			) ?? []) {
+				if (beyond.has(other)) {
+					mark(other);
+				}
+			}
+		}
+	}
+
+	/**
+	 * Whether a route drawn after the edge's own runs along it or crosses it: the edge
+	 * was routed without knowing of that one, so routing it again may mend the two.
+	 * False once it is routed again, and for an edge with no route.
+	 *
+	 * @param edge - An edge given to `route` or `reroute` before
+	 */
+	isOvertaken(edge: RoutableEdge): boolean {
+		return this.overtakenEdges.has(edge);
+	}
+
+	/**
+	 * Route an edge again against every other route drawn: its own route is taken back
+	 * off the lines first, as if it had not been drawn, and the new one drawn in its
+	 * place. The route found may be the one it had.
+	 *
+	 * @param prepared - An edge given to `route` before; one that got no route then is
+	 *   routed as `route` would
+	 * @returns The new route; undefined when none is found, the route it had then
+	 *   staying drawn
+	 */
+	reroute(prepared: PreparedEdge): RoutedEdge | undefined {
+		const { edge } = prepared;
+		const drawn = this.drawnRouteByEdge.get(edge);
+		if (drawn !== undefined) {
+			this.drawnRouteByEdge.delete(edge);
+			this.countDrawnRoute(edge, drawn, -1);
+		}
+		this.routeTakenBack = drawn;
+		try {
+			const routed = this.route(prepared);
+			if (routed === undefined && drawn !== undefined) {
+				this.countDrawnRoute(edge, drawn, 1, false);
+				this.drawnRouteByEdge.set(edge, drawn);
+			}
+			return routed;
+		} finally {
+			this.routeTakenBack = undefined;
+		}
 	}
 
 	/**
 	 * The cheapest route for one edge: an A* search over (node, direction) from every
-	 * source stub tip to a virtual finish reached from every target stub tip.
+	 * source stub tip to a virtual finish reached from every target stub tip. An edge
+	 * with a `sharedBorder` is searched strictly inside that border first, and anywhere
+	 * only when no route is found there, so its route is the cheapest inside the
+	 * border though a cheaper one runs outside.
 	 *
 	 * @returns The route, or undefined when no target can be reached
 	 */
@@ -501,6 +688,38 @@ export class EdgeRouter {
 			prepared.targetBox,
 		]) as BoundingBox;
 		const { xs, ys } = this.lines;
+		const { sharedBorder } = prepared;
+		if (sharedBorder !== undefined) {
+			// Inside the border both ends share first, wider and wider up to all of it;
+			// strictly inside, since the nudging lets a run lying on a border's side off
+			// it either way.
+			const inside = {
+				left: snapToGridResolution(sharedBorder.left) + GRID_STEP,
+				top: snapToGridResolution(sharedBorder.top) + GRID_STEP,
+				right: snapToGridResolution(sharedBorder.right) - GRID_STEP,
+				bottom: snapToGridResolution(sharedBorder.bottom) - GRID_STEP,
+			};
+			for (let reach = SEARCH_WINDOW_REACH; ; reach *= SEARCH_WINDOW_GROWTH) {
+				const window = growBox(around, reach);
+				const coversBorder =
+					window.left <= sharedBorder.left &&
+					window.top <= sharedBorder.top &&
+					window.right >= sharedBorder.right &&
+					window.bottom >= sharedBorder.bottom;
+				const routed = this.searchWithin(prepared, graph, {
+					left: Math.max(window.left, inside.left),
+					top: Math.max(window.top, inside.top),
+					right: Math.min(window.right, inside.right),
+					bottom: Math.min(window.bottom, inside.bottom),
+				});
+				if (routed !== undefined) {
+					return routed;
+				}
+				if (coversBorder) {
+					break;
+				}
+			}
+		}
 		for (let reach = SEARCH_WINDOW_REACH; ; reach *= SEARCH_WINDOW_GROWTH) {
 			const window = growBox(around, reach);
 			const coversAll =
@@ -622,6 +841,7 @@ export class EdgeRouter {
 		});
 
 		while (queue.pop()) {
+			this.searchedStateCount += 1;
 			const state = queue.poppedState;
 			const g = queue.poppedG;
 			if (state < 0) {
@@ -686,14 +906,17 @@ export class EdgeRouter {
 				) {
 					continue;
 				}
+				let turnCost: number = ROUTE_COSTS.bend;
+				if (direction === arrival) {
+					turnCost =
+						this.countDrawnCrossingsAt(xi, yi, direction) *
+						ROUTE_COSTS.crossing;
+				}
 				const cost =
 					g +
 					linkCosts[node * 4 + direction] +
 					drawnCosts[node * 4 + direction] +
-					(direction === arrival
-						? this.countDrawnCrossingsAt(xi, yi, direction) *
-							ROUTE_COSTS.crossing
-						: ROUTE_COSTS.bend);
+					turnCost;
 				const nextState = (next << 2) | direction;
 				if (cost < bestCost[nextState]) {
 					reach(nextState, cost, state);
@@ -722,7 +945,15 @@ export class EdgeRouter {
 			xi: graph.nodeXi[state >> 2],
 			yi: graph.nodeYi[state >> 2],
 		}));
-		this.occupy(route, source, target);
+		const drawn = this.occupy(route, source, target);
+		const takenBack = this.routeTakenBack;
+		// Found again where it was, it overtakes no route it had not before.
+		const isWhereItWas =
+			takenBack !== undefined &&
+			takenBack.steps.length === drawn.steps.length &&
+			takenBack.steps.every((key, index) => key === drawn.steps[index]);
+		this.countDrawnRoute(edge, drawn, 1, !isWhereItWas);
+		this.drawnRouteByEdge.set(edge, drawn);
 		const onLines = (point: Point): Point => ({
 			x: snapToGridResolution(point.x),
 			y: snapToGridResolution(point.y),

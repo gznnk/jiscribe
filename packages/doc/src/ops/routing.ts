@@ -51,10 +51,11 @@ import { sortEdgesByEndOrder } from "../model/objects/utils/sortEdgesByEndOrder"
  * - `selfLoop`: both ends on one shape
  * - `declaredConnectPoint`: an end on a connect point its owner's type declares (an ER
  *   entity's column), which the type, not a side, places
- * - `containerEnd`: an end on a shape whose type declares `container`
  * - `transformedEnd`: an end on a shape that is rotated or flipped
  * - `unmeasurableEnd`: an end on an object with no box to route around (a group, an
  *   unknown type)
+ * - `containerEnd`: an end on a shape whose type declares `container`, the other end's
+ *   box overlapping it (a shape inside it, a container around it)
  * - `overlappingEnds`: the two ends' boxes overlap
  * - `unroutable`: no way found between them
  */
@@ -62,9 +63,9 @@ export const ConnectorRouteKeptReasons = [
 	"freeEnd",
 	"selfLoop",
 	"declaredConnectPoint",
-	"containerEnd",
 	"transformedEnd",
 	"unmeasurableEnd",
+	"containerEnd",
 	"overlappingEnds",
 	"unroutable",
 ] as const;
@@ -98,9 +99,14 @@ type SceneShape = {
 	node: RoutableNode;
 };
 
-/** Everything the routes go around: the shapes, and the containers' title bands and frames. */
+/**
+ * Everything the routes go around (the shapes, and the containers' title bands and
+ * frames) and the container shapes a route may end on.
+ */
 type RoutingScene = {
 	shapeById: Map<string, SceneShape>;
+	/** The container shapes with a box, which a route may end on but goes around nothing of. */
+	containerById: Map<string, SceneShape>;
 	containerIds: Set<string>;
 	titleBands: Rect[];
 	frames: Rect[];
@@ -109,8 +115,9 @@ type RoutingScene = {
 /**
  * Every object a route goes around, wherever it sits in the tree: each shape with a
  * box, as the box it fills once turned (and its caption, likewise), and each container
- * shape's title band and frame. A connector, a group and a container shape are no
- * shapes of their own here.
+ * shape's title band and frame. A container shape with a box is recorded apart
+ * (`containerById`) as a hollow node a route may end on and never goes around. A
+ * connector and a group are nothing here.
  */
 const collectRoutingScene = (
 	doc: CanvasDoc,
@@ -118,6 +125,7 @@ const collectRoutingScene = (
 ): RoutingScene => {
 	const scene: RoutingScene = {
 		shapeById: new Map(),
+		containerById: new Map(),
 		containerIds: new Set(),
 		titleBands: [],
 		frames: [],
@@ -138,6 +146,12 @@ const collectRoutingScene = (
 				return;
 			}
 			scene.frames.push(bounds);
+			scene.containerById.set(object.id, {
+				object,
+				bounds,
+				isTransformed: isTransformed(object),
+				node: { id: object.id, bounds, isHollow: true },
+			});
 			const { titleHeight } = container(object);
 			if (Number.isFinite(titleHeight) && titleHeight > 0) {
 				scene.titleBands.push({
@@ -278,6 +292,13 @@ const selectConnectors = (
 	return connectors;
 };
 
+/** The shape or container shape an end sits on, as the scene measures it. */
+const findEndShape = (
+	scene: RoutingScene,
+	ownerId: string,
+): SceneShape | undefined =>
+	scene.shapeById.get(ownerId) ?? scene.containerById.get(ownerId);
+
 /** Why the connector is left as it is, or undefined when it is to be routed. */
 const readKeptReason = (
 	connector: ConnectorDoc,
@@ -303,20 +324,20 @@ const readKeptReason = (
 	) {
 		return "declaredConnectPoint";
 	}
-	if (scene.containerIds.has(sourceId) || scene.containerIds.has(targetId)) {
-		return "containerEnd";
-	}
-	const source = scene.shapeById.get(sourceId);
-	const target = scene.shapeById.get(targetId);
+	const source = findEndShape(scene, sourceId);
+	const target = findEndShape(scene, targetId);
 	if (source?.isTransformed === true || target?.isTransformed === true) {
 		return "transformedEnd";
 	}
 	if (source === undefined || target === undefined) {
 		return "unmeasurableEnd";
 	}
-	return doRectsOverlap(source.bounds, target.bounds)
-		? "overlappingEnds"
-		: undefined;
+	if (!doRectsOverlap(source.bounds, target.bounds)) {
+		return undefined;
+	}
+	return scene.containerIds.has(sourceId) || scene.containerIds.has(targetId)
+		? "containerEnd"
+		: "overlappingEnds";
 };
 
 /**
@@ -324,24 +345,28 @@ const readKeptReason = (
  * place: each one's ends are moved to the sides and spots that give it the cheapest
  * right-angled route around every other shape, caption and container title band in
  * the document (routeEdgesAroundNodes), and its corners are written as `points`
- * (none when it runs straight); `routing` is dropped. The routes are drawn one by one
- * in the order of their ends in the stacking order (sortEdgesByEndOrder), each keeping
- * off the ones drawn before it in this call; the connectors not redrawn are not kept
- * off. A label is moved (its `position` and `offset`) to where it covers as little of
- * any shape, and as few of the other labels and of the lines redrawn in the same call,
- * as it can; the connectors not redrawn, and their labels, are not taken into
- * account. A connector whose route runs under its own
- * end's caption is moved to just beneath that shape in the stacking order, as
- * layoutObjects does. Nothing follows a shape moved afterwards: run it again.
+ * (none when it runs straight); `routing` is dropped. An end on a container shape sits
+ * on a side of the container's box and leaves outward, the route keeping out of the
+ * container (`RoutableNode.isHollow`). The routes are drawn one by one in the order
+ * of their ends in the stacking order (sortEdgesByEndOrder), each keeping off the ones
+ * drawn before it in this call, and each one that a later route runs along or
+ * crosses is then drawn again against all the others drawn in this call; the
+ * connectors not redrawn are not kept off. A label is moved (its `position` and
+ * `offset`) to where it covers as little of any shape, and as few of the other labels
+ * and of the lines redrawn in the same call, as it can; the connectors not redrawn,
+ * and their labels, are not taken into account. A
+ * connector whose route runs under its own end's caption is moved to just beneath
+ * that shape in the stacking order, as layoutObjects does. Nothing follows a shape
+ * moved afterwards: run it again.
  *
  * @param doc - Mutated in place
  * @param ids - What to redraw; omitted, every connector in the document. A connector
  *   named is redrawn; a shape named stands for itself, a group for every object in it,
  *   and a container shape for itself and the shapes at its own level lying inside it,
  *   and every connector joining two shapes so named is redrawn. Every id must exist
- * @param definitions - Type table the boxes, `container` (and its title band), the
- *   captions of `features.text: "label"` types, the offered connect points and the
- *   `outline` / `anchorRegion` an end is kept on are read from
+ * @param definitions - Type table the boxes, `layoutContainer` (the title band), the
+ *   captions of `features.text: "label"` types and the `outline` / `anchorRegion` an
+ *   end is kept on are read from
  * @returns Which connectors were redrawn, which were left as they were and why, and
  *   which were moved in the stacking order
  * @throws {@link DocOperationError} for an id that is missing, before anything is
@@ -379,7 +404,13 @@ export const routeConnectors = (
 	const endShapeIds = new Set(
 		edges.flatMap(({ sourceId, targetId }) => [sourceId, targetId]),
 	);
-	const sceneShapes = [...scene.shapeById.values()];
+	// A container shape is a node only where a connector ends on it.
+	const sceneShapes = [
+		...scene.shapeById.values(),
+		...[...scene.containerById.values()].filter(({ object }) =>
+			endShapeIds.has(object.id),
+		),
+	];
 	const anchorShapeById = new Map(
 		sceneShapes
 			.filter(({ object }) => endShapeIds.has(object.id))
@@ -447,7 +478,7 @@ export const routeConnectors = (
 		routed.edges,
 		edges,
 		[...endShapeIds].map((id) => {
-			const { object, bounds } = scene.shapeById.get(id) as SceneShape;
+			const { object, bounds } = findEndShape(scene, id) as SceneShape;
 			return {
 				id,
 				visualMargin: readLayoutVisualMargin(object, bounds, definitions),

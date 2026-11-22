@@ -21,23 +21,36 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   around every other shape, the caption hung below a `"label"` type and a
   container's title band, running flush along none of their edges, paying for
   running within its margin (`EDGE_ROUTE_MARGIN`) of them or of a container's
-  frame (the nearer, the dearer) and crossing and running along the routes drawn
-  before it as little as it can; the corners are written as `points` and
+  frame (the nearer, the dearer) and crossing and running along the other routes
+  drawn in the same call as little as it can; the corners are written as `points` and
   `routing` is dropped. It runs once: a shape moved
   afterwards is not followed. Omitted ids redraw every connector; named shapes
   (a group or a container shape standing for its contents) redraw the
-  connectors among them. A self loop, an end that is free, on a declared
-  connect point, on a container shape or on a rotated or flipped shape, ends
-  whose boxes overlap and a connector no way is found for are left as they are
-  and reported by reason (`ConnectorRouteKeptReasons`). A connector leaving
+  connectors among them. An end on a container shape sits on
+  the container's side and leaves outward (the new `RoutableNode.isHollow` of
+  `@jiscribe/layout`). Two connectors between facing shapes run straight side
+  by side where the gap between the shapes is clear. A self loop, an end that
+  is free or on a rotated or flipped shape, a connector between a container
+  shape and a shape standing in it, an end on a declared connect point, ends
+  whose boxes overlap and a connector no
+  way is found for are left as they are and reported by reason
+  (`ConnectorRouteKeptReasons`). A connector leaving
   through its own end's caption is moved to just beneath that shape, as
   `layoutObjects` does. The routing itself is `routeEdgesAroundNodes`
   (`@jiscribe/layout`): edge by edge in the order given, an A* search over an
   orthogonal visibility graph run from the obstacles' corners, their margins and
   the ends' stubs, first close around the two ends and further out only when
-  no route is found there. Then the routes running together are spread
-  `GAP_LANE_SPACING` apart (less in a tight channel, and a pair that has no room
-  to part at all is left as it stands) in an order that keeps them from crossing
+  no route is found there; once every edge has a route, each one that a later
+  route runs along or crosses is taken back and found again against all the
+  others, up to twice, so an early edge gives way where a later one needed the
+  room. An end's stub runs to the middle of a channel between its side and
+  what faces it (up to four margins wide), so the lines between two columns of
+  boxes bend down the middle. A route between two boxes inside one border stays
+  inside the innermost such border where it finds a way there, and a run within
+  a third of the margin of a box costs much more (`ROUTE_COSTS.hugWeight`). Then
+  the routes running together are spread `GAP_LANE_SPACING` apart (less in a
+  tight channel, and a pair that has no room to part at all is left as it
+  stands) in an order that keeps them from crossing
   where they need not, which can bring a run within half that of a shape,
   caption or frame, but never nearer than it already was. A route's first and
   last segments are spread too, each end sliding along its side within the

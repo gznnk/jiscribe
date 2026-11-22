@@ -1,11 +1,18 @@
 import {
+	type BoundingBox,
 	convertRectToBoundingBox,
 	doRectsOverlap,
 	type Point,
+	type Rect,
 } from "@jiscribe/geometry";
 
 import { EDGE_ROUTE_MARGIN } from "./edgeRoutingCosts";
-import { isOwnWall, listEndCandidates } from "./endCandidates";
+import {
+	isOwnWall,
+	listContendedSideKeys,
+	listEndCandidates,
+} from "./endCandidates";
+import { isRectInside } from "../shared/isRectInside";
 import { placeRouteLabels } from "./labels/placeRouteLabels";
 import { nudgeRoutes } from "./nudge/nudgeRoutes";
 import type { RouteEnd, RouteToNudge } from "./nudge/routeSegments";
@@ -78,6 +85,60 @@ const toRouteEnd = (
 	};
 };
 
+/** How many times at most every route is taken back and found again against the others. */
+const REROUTE_PASSES = 2;
+
+/**
+ * How much search work the routing again may take, as a share of what routing every
+ * edge once took (EdgeRouter.searchedStateCount), so a large drawing takes at most
+ * that much longer; past it the routes stay as they are.
+ */
+const REROUTE_WORK_SHARE = 0.5;
+
+/**
+ * The search work the routing again may take whatever the share allows, in states
+ * searched: several times what a drawing of some fifty edges takes to route once, so
+ * a drawing of that size is routed again until it settles or the passes run out.
+ */
+const REROUTE_WORK_FLOOR = 100_000;
+
+const isSameRoute = (a: RoutedEdge, b: RoutedEdge): boolean =>
+	a.source.side === b.source.side &&
+	a.source.t === b.source.t &&
+	a.target.side === b.target.side &&
+	a.target.t === b.target.t &&
+	a.points.length === b.points.length &&
+	a.points.every(
+		(point, index) =>
+			point.x === b.points[index].x && point.y === b.points[index].y,
+	);
+
+/**
+ * The innermost of `borders` that both nodes' boxes lie inside, edges included (see
+ * isRectInside): what a prepared edge takes as its `sharedBorder`. Undefined when no
+ * border holds both.
+ */
+const findInnermostSharedBorder = (
+	borders: readonly Rect[],
+	source: RoutableNode,
+	target: RoutableNode,
+): BoundingBox | undefined => {
+	let innermost: Rect | undefined;
+	for (const border of borders) {
+		if (
+			isRectInside(border, source.bounds) &&
+			isRectInside(border, target.bounds) &&
+			(innermost === undefined ||
+				border.width * border.height < innermost.width * innermost.height)
+		) {
+			innermost = border;
+		}
+	}
+	return innermost === undefined
+		? undefined
+		: convertRectToBoundingBox(innermost);
+};
+
 /**
  * `anchor` moved to where the nudging left its end, `point`; `anchor` itself when the
  * end did not move.
@@ -101,21 +162,26 @@ const toNudgedAnchor = (
 };
 
 /**
- * The obstacles an edge may run through: every one covering or overlapping either end
- * node's box, but for the end nodes' own boxes and captions.
+ * The obstacles an edge may run through: every hollow node's box but an end node's
+ * own, and every other one covering or overlapping either end node's box, but for the
+ * end nodes' own boxes and captions. What stands in a hollow end node is among them:
+ * that node's own box already keeps its edges out.
  */
 const listExcludedObstacles = (
 	obstacles: readonly Obstacle[],
 	source: RoutableNode,
 	target: RoutableNode,
 ): Obstacle[] => {
-	return obstacles.filter(
-		(obstacle) =>
-			obstacle.ownerId !== source.id &&
-			obstacle.ownerId !== target.id &&
-			(doRectsOverlap(obstacle.rect, source.bounds) ||
-				doRectsOverlap(obstacle.rect, target.bounds)),
-	);
+	return obstacles.filter((obstacle) => {
+		if (obstacle.ownerId === source.id || obstacle.ownerId === target.id) {
+			return false;
+		}
+		return (
+			obstacle.isHollow === true ||
+			doRectsOverlap(obstacle.rect, source.bounds) ||
+			doRectsOverlap(obstacle.rect, target.bounds)
+		);
+	});
 };
 
 /**
@@ -124,9 +190,14 @@ const listExcludedObstacles = (
  * box but its own ends' — not even there, past the stub each end runs straight out
  * along — nor any caption or other obstacle, and runs flush along none of their edges.
  * Running within {@link EDGE_ROUTE_MARGIN} of them or of the borders' sides costs it,
- * the nearer the dearer, and it crosses and runs along the routes drawn before it as
+ * the nearer the dearer and much dearer within ROUTE_HUG_REACH of a box, and it
+ * crosses and runs along the routes drawn before it as
  * little as it can. Edges are routed one by one in the order given, each against the
- * routes of the edges before it in this call only.
+ * routes of the edges before it; then, up to REROUTE_PASSES times and as long as a
+ * route changes, each route that one drawn after it runs along or crosses is taken
+ * back, in the same order, and found again against all the others, so an early edge
+ * gives way where a later one needed the room. The order still decides between
+ * routes of equal cost.
  *
  * Once every edge is routed, parallel runs are spread GAP_LANE_SPACING apart where
  * there is room, or less in a tight channel, in an order that keeps routes running
@@ -147,10 +218,25 @@ const listExcludedObstacles = (
  *
  * Each end picks among, on every side of its box, the side's centre and the spot that
  * runs straight to the other box's centred end when the other box lies wholly beyond
- * the side. An end's stub runs {@link EDGE_ROUTE_MARGIN} out, a bottom one past the
- * box's caption first, and shrinks to half the gap to an obstacle straight ahead that
- * is nearer. A box, caption or obstacle covering or overlapping an edge's end box is
- * no obstacle to that edge.
+ * the side; where two or more of the edges have their other box wholly beyond that
+ * side of either box, also the spots GAP_LANE_SPACING either side of those two that
+ * run straight between the two boxes with {@link EDGE_ROUTE_MARGIN} clear of every
+ * other obstacle and border's side alongside, which lose a tie to the others, so a
+ * second edge between two facing boxes runs straight beside the first. An end's stub
+ * runs {@link EDGE_ROUTE_MARGIN} out, a bottom one past the box's caption first; to
+ * the middle of a channel between its side and what faces it, where that is a few
+ * margins wide at the most; and stops short of an obstacle straight ahead that is
+ * nearer (see calcStubLength for the widths and how short). A box, caption or
+ * obstacle covering or overlapping an edge's end box is no obstacle to that edge.
+ *
+ * An edge whose two end boxes lie inside one of the borders stays strictly inside
+ * the innermost such border where a route is found there, though a cheaper one runs
+ * outside: it does not leave the frame its ends share to get round what stands
+ * between them.
+ *
+ * A hollow node (`RoutableNode.isHollow`) is a frame: its box is an obstacle to the
+ * edges ending on it alone, whose ends sit on its sides and leave outward, and every
+ * other route runs through it; no label keeps off its box.
  *
  * Routes run on an orthogonal visibility graph (see buildRouteGraph), searched first
  * close around the two end boxes and further out only when no route is found there
@@ -161,7 +247,8 @@ const listExcludedObstacles = (
  * @param edges - The edges to route, each between two different nodes; ends whose
  *   boxes overlap each other are routed but may well find no way. One given a `label`
  *   comes back with `labelPosition` and `labelOffset`
- * @param options - Title bands to keep out of, and frames to cross and run alongside sparingly
+ * @param options - Rects to keep out of, and frames to cross and run alongside
+ *   sparingly
  * @returns The edges routed and the ids of those left without a route
  * @throws Error for a repeated node id, or an edge naming a node not among `nodes`
  */
@@ -190,6 +277,7 @@ export const routeEdgesAroundNodes = (
 				rect: node.bounds,
 				ownerId: node.id,
 				isLabel: false,
+				...(node.isHollow === true ? { isHollow: true as const } : {}),
 			},
 			...(node.labelBounds === undefined
 				? []
@@ -210,6 +298,13 @@ export const routeEdgesAroundNodes = (
 	}));
 	const borders = (options.borders ?? []).map(convertRectToBoundingBox);
 
+	const contendedSideKeys = listContendedSideKeys(
+		edges.flatMap((edge) => {
+			const source = requireNode(edge.sourceId, edge.id);
+			const target = requireNode(edge.targetId, edge.id);
+			return source === target ? [] : [{ source, target }];
+		}),
+	);
 	const unroutedEdgeIds = new Set<string>();
 	const prepared: PreparedEdge[] = [];
 	for (const edge of edges) {
@@ -220,6 +315,11 @@ export const routeEdgesAroundNodes = (
 			continue;
 		}
 		const excluded = listExcludedObstacles(obstacles, source, target);
+		const sharedBorder = findInnermostSharedBorder(
+			options.borders ?? [],
+			source,
+			target,
+		);
 		const excludedSet = new Set(excluded);
 		prepared.push({
 			edge,
@@ -227,9 +327,24 @@ export const routeEdgesAroundNodes = (
 			targetNode: target,
 			sourceBox: convertRectToBoundingBox(source.bounds),
 			targetBox: convertRectToBoundingBox(target.bounds),
+			...(sharedBorder === undefined ? {} : { sharedBorder }),
 			excluded,
-			sources: listEndCandidates(source, target, obstacles, excludedSet),
-			targets: listEndCandidates(target, source, obstacles, excludedSet),
+			sources: listEndCandidates(
+				source,
+				target,
+				obstacles,
+				excludedSet,
+				borders,
+				contendedSideKeys,
+			),
+			targets: listEndCandidates(
+				target,
+				source,
+				obstacles,
+				excludedSet,
+				borders,
+				contendedSideKeys,
+			),
 		});
 	}
 	const routedById = new Map<string, RoutedEdge>();
@@ -254,12 +369,41 @@ export const routeEdgesAroundNodes = (
 			sourcePoint: Point;
 			targetPoint: Point;
 		}[] = [];
+		const routedByEdge = new Map<PreparedEdge, RoutedEdge>();
 		for (const edgeToRoute of prepared) {
 			const routed = router.route(edgeToRoute);
 			if (routed === undefined) {
 				unroutedEdgeIds.add(edgeToRoute.edge.id);
 				continue;
 			}
+			routedByEdge.set(edgeToRoute, routed);
+		}
+		const searchedStateBudget =
+			router.searchedStateCount +
+			Math.max(
+				router.searchedStateCount * REROUTE_WORK_SHARE,
+				REROUTE_WORK_FLOOR,
+			);
+		for (let pass = 0; pass < REROUTE_PASSES; pass += 1) {
+			let hasChanged = false;
+			for (const [edgeToRoute, routed] of routedByEdge) {
+				if (router.searchedStateCount >= searchedStateBudget) {
+					break;
+				}
+				if (!router.isOvertaken(edgeToRoute.edge)) {
+					continue;
+				}
+				const rerouted = router.reroute(edgeToRoute) ?? routed;
+				if (!isSameRoute(rerouted, routed)) {
+					hasChanged = true;
+					routedByEdge.set(edgeToRoute, rerouted);
+				}
+			}
+			if (!hasChanged) {
+				break;
+			}
+		}
+		for (const [edgeToRoute, routed] of routedByEdge) {
 			const { edge, sourceNode, targetNode } = edgeToRoute;
 			const excludedSet = new Set(edgeToRoute.excluded);
 			const walls = obstacles.filter((obstacle) => !excludedSet.has(obstacle));
@@ -293,7 +437,9 @@ export const routeEdgesAroundNodes = (
 				path: route.path,
 				label: edge.label,
 			})),
-			obstacleRects.map(({ rect }) => rect),
+			obstacles
+				.filter(({ isHollow }) => isHollow !== true)
+				.map(({ rect }) => rect),
 			options.borders ?? [],
 		);
 		toNudge.forEach(

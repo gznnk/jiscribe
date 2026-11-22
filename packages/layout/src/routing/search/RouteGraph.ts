@@ -1,6 +1,10 @@
 import type { BoundingBox } from "@jiscribe/geometry";
 
-import { EDGE_ROUTE_MARGIN, ROUTE_COSTS } from "../edgeRoutingCosts";
+import {
+	EDGE_ROUTE_MARGIN,
+	ROUTE_COSTS,
+	ROUTE_HUG_REACH,
+} from "../edgeRoutingCosts";
 import {
 	type GridSpan,
 	type RouteLines,
@@ -52,7 +56,9 @@ const BLOCKED = 4;
 
 /**
  * How near a point lies to a box, as the margin band's weight: 1 against or inside
- * the box, falling to 0 a margin away, measured on the nearer axis outside it.
+ * the box, falling to 0 a margin away, measured on the nearer axis outside it; plus,
+ * within ROUTE_HUG_REACH of the box, `ROUTE_COSTS.hugWeight` against it falling to 0
+ * at that reach, so up to 1 + hugWeight.
  */
 const calcBandWeight = (x: number, y: number, box: BoundingBox): number => {
 	const distance = Math.max(
@@ -62,7 +68,10 @@ const calcBandWeight = (x: number, y: number, box: BoundingBox): number => {
 		y - box.bottom,
 		0,
 	);
-	return 1 - distance / EDGE_ROUTE_MARGIN;
+	const weight = 1 - distance / EDGE_ROUTE_MARGIN;
+	return distance < ROUTE_HUG_REACH
+		? weight + ROUTE_COSTS.hugWeight * (1 - distance / ROUTE_HUG_REACH)
+		: weight;
 };
 
 /** The index among `sorted` of the last value at or before `value` (or before it, unless `inclusive`); -1 for none. */
