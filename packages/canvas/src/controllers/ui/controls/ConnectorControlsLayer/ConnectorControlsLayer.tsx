@@ -1,3 +1,4 @@
+import type { ConnectorLabel } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import { memo } from "react";
 
 import type { ConnectorState } from "../../../../states/objects/connector/ConnectorState";
@@ -10,6 +11,8 @@ type ConnectorControlsLayerProps = Pick<
 	"selection" | "objects"
 > & {
 	zoom?: number;
+	/** The selected connector's label as open in the editor (resolveConnectorLabelDraft); null while none is open. */
+	labelDraft: ConnectorLabel | null;
 };
 
 /**
@@ -19,7 +22,7 @@ type ConnectorControlsLayerProps = Pick<
  */
 const ConnectorControlsLayerComponent: React.FC<
 	ConnectorControlsLayerProps
-> = ({ selection, objects, zoom }) => {
+> = ({ selection, objects, zoom, labelDraft }) => {
 	const connectorId = getSelectedConnectorId({ selection, objects });
 	if (connectorId === null) {
 		return null;
@@ -31,6 +34,7 @@ const ConnectorControlsLayerComponent: React.FC<
 			objects={objects}
 			zoom={zoom}
 			selection={selection}
+			labelDraft={labelDraft}
 		/>
 	);
 };

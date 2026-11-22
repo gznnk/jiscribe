@@ -26,10 +26,10 @@ import { startConnectorLabelEdit } from "../utils/startConnectorLabelEdit";
  *   starts editing; a double click on the bare line just selects.
  * Either way, opening the editor picks the label too (startConnectorLabelEdit).
  *
- * While editing, the static label box is not rendered and the editor overlay
- * (data-gesture="none") sits in its place, so any click that reaches this handler
- * is outside the editor, and ConnectorEventHandler has committed the pending
- * edit before routing it here, like any other outside click.
+ * While editing, the label box under the editor takes no pointer (ConnectorLabel's
+ * `isEditing`) and the editor overlay (data-gesture="none") lies over it, so any
+ * click that reaches this handler is outside the editor, and ConnectorEventHandler
+ * has committed the pending edit before routing it here, like any other outside click.
  */
 export const ConnectorClickHandler: GestureHandler = {
 	supports(event: CanvasEvent): boolean {

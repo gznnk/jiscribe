@@ -1,3 +1,4 @@
+import type { ConnectorLabel } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import { useLayoutEffect, useState } from "react";
 import type React from "react";
 
@@ -18,6 +19,8 @@ type CanvasViewProps = {
 	textEditObjectId?: string | null;
 	/** Slot the open editor targets, so only that slot's text is hidden (see ObjectsRenderer). */
 	editingTextSlotId?: string | null;
+	/** The connector label open in the editor, drawn in place of `textEditObjectId`'s own (see ObjectsRenderer). */
+	connectorLabelDraft?: ConnectorLabel | null;
 	isDrawMode?: boolean;
 	/**
 	 * Hides the drawn scene while leaving it laid out (default false). Set while
@@ -58,6 +61,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
 	children,
 	textEditObjectId,
 	editingTextSlotId,
+	connectorLabelDraft,
 	isDrawMode = false,
 	isContentHidden = false,
 	renderedObjectIds,
@@ -118,6 +122,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
 					rootIds={rootIds}
 					textEditObjectId={textEditObjectId}
 					editingTextSlotId={editingTextSlotId}
+					connectorLabelDraft={connectorLabelDraft}
 					renderedObjectIds={renderedObjectIds}
 					movePreview={movePreview}
 				/>

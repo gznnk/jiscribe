@@ -1,1 +1,0 @@
-export { ConnectorLabelPartOutlineLayer } from "./ConnectorLabelPartOutlineLayer";

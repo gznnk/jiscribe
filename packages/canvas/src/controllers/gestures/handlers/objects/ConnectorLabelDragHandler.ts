@@ -420,9 +420,8 @@ const handleDragEnd = (
  * keeps the three connector handlers' supports() mutually exclusive (#110). The recognizer's 3px drag threshold is what keeps a sloppy
  * double click on the label from nudging it.
  *
- * While editing, the static label box is not rendered (ConnectorRenderer skips
- * it in favor of ConnectorLabelEditor), so no drag can reach the label being
- * edited.
+ * While editing, the label box under the editor takes no pointer
+ * (ConnectorLabel's `isEditing`), so no drag can reach the label being edited.
  */
 export const ConnectorLabelDragHandler: GestureHandler = {
 	supports(event: CanvasEvent): boolean {

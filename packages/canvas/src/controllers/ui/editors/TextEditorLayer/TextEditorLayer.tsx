@@ -105,17 +105,13 @@ function renderConnectorLabelEditor(
 
 	return (
 		<ConnectorLabelEditor
-			id={connector.id}
 			anchor={anchor}
 			text={text}
 			fontColor={connector.label?.fontColor}
 			fontFamily={connector.label?.fontFamily}
 			fontSize={connector.label?.fontSize}
 			fontWeight={connector.label?.fontWeight}
-			fill={connector.label?.fill}
-			stroke={connector.label?.stroke}
 			strokeWidth={connector.label?.strokeWidth}
-			strokeDashType={connector.label?.strokeDashType}
 			onChange={handlers.onChange}
 			onEscape={handlers.onEscape}
 			onCommit={handlers.onCommit}

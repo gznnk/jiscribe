@@ -84,6 +84,6 @@ const LabelBackdropLayersComponent: React.FC<LabelBackdropLayersProps> = ({
  * color behind it so an `"auto"` label blends into the frame it sits on: one
  * rect over the whole box per layer, in one group, taking no pointer and
  * carrying no `data-kind`, after the knockout when one is given. Shared by a
- * caption's LabelTextFill, a connector's label and that label's editor.
+ * caption's LabelTextFill and a connector's label.
  */
 export const LabelBackdropLayers = memo(LabelBackdropLayersComponent);

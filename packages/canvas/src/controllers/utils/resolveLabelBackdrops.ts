@@ -395,7 +395,7 @@ export type LabelBackdropPass = {
  * @param labelEditOwnerId - The connector whose label is open in the editor,
  *   already placed in `objects` where the editor sits
  *   (graftConnectorLabelDraft): its label is taken even while empty, the
- *   editor drawing a box for it all the same.
+ *   canvas drawing a box under the editor for it all the same.
  *   Omitted = an empty label is taken for no connector
  * @param drag - The drag under way, outside an export's scope; omitted when
  *   none is. A connector moved with both its owners is then judged from its

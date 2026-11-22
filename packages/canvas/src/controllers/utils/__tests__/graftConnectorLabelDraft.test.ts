@@ -4,7 +4,10 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../states/objects/connector/ConnectorState";
 import { connectorLabelPartSelection } from "../../selection/__tests__/support/connectorLabelPartSelection";
 import { textSlotPartSelection } from "../../selection/__tests__/support/textSlotPartSelection";
-import { graftConnectorLabelDraft } from "../graftConnectorLabelDraft";
+import {
+	graftConnectorLabelDraft,
+	resolveConnectorLabelDraft,
+} from "../graftConnectorLabelDraft";
 
 type GraftInput = Parameters<typeof graftConnectorLabelDraft>[0];
 
@@ -89,5 +92,45 @@ describe("graftConnectorLabelDraft", () => {
 			position: 0.25,
 			offset: -6,
 		});
+	});
+});
+
+describe("resolveConnectorLabelDraft", () => {
+	it("draws a re-edited label with the draft text, keeping its style and placement", () => {
+		const labelOwner = connector({
+			text: "go",
+			fill: "#ff0000",
+			strokeWidth: 2,
+			position: 0.3,
+			offset: 4,
+		}) as ConnectorState;
+		expect(resolveConnectorLabelDraft(labelOwner, "gone", undefined)).toEqual({
+			text: "gone",
+			fill: "#ff0000",
+			strokeWidth: 2,
+			position: 0.3,
+			offset: 4,
+		});
+	});
+
+	it("puts a label being created at its pending placement, over a deleted label's leftovers", () => {
+		const labelOwner = connector({
+			text: "",
+			fontSize: 20,
+			position: 0.9,
+			offset: 8,
+		}) as ConnectorState;
+		expect(
+			resolveConnectorLabelDraft(labelOwner, "", {
+				position: 0.25,
+				offset: -6,
+			}),
+		).toEqual({ text: "", fontSize: 20, position: 0.25, offset: -6 });
+	});
+
+	it("gives a connector with no label one holding the draft text alone", () => {
+		expect(
+			resolveConnectorLabelDraft(connector() as ConnectorState, "a", undefined),
+		).toEqual({ text: "a", position: undefined, offset: undefined });
 	});
 });

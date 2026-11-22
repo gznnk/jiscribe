@@ -5,7 +5,7 @@ import {
 } from "@jiscribe/doc/text/block/textBoxPadding";
 import { TEXT_LINE_HEIGHT } from "@jiscribe/doc/text/layout/textLineHeight";
 
-/** The label box's corner radius in world units, which the SVG painted under it (ConnectorLabel) and the editor's box (ConnectorLabelEditor) round by too. */
+/** The label box's corner radius in world units, which the backdrop painted under it in SVG (ConnectorLabel) rounds by too. */
 export const LABEL_BOX_CORNER_RADIUS = 2;
 
 /**

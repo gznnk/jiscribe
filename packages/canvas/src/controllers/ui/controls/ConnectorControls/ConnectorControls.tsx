@@ -1,3 +1,4 @@
+import type { ConnectorLabel } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import { isConnectorDrawnOrthogonal } from "@jiscribe/doc/model/objects/connector/isConnectorDrawnOrthogonal";
 import { isFreeEndpointRef } from "@jiscribe/doc/model/objects/types/EndpointRef";
 import { memo } from "react";
@@ -9,7 +10,9 @@ import { resolveEndpointOwner } from "../../../../rendering/objects/connector/ge
 import type { CanvasState } from "../../../../states/canvas/CanvasState";
 import type { ConnectorState } from "../../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { isConnectorLabelPart } from "../../../selection/partKinds/connectorLabelPartKind";
 import { readSelectedVertexIndex } from "../../../selection/readers/readSelectedVertexIndex";
+import { ConnectorLabelPartOutline } from "../../feedback/ConnectorLabelPartOutline";
 import { VertexControls, VertexInsertControls } from "../VertexControls";
 
 // Handle colors may hold var(--jiscribe-*), so they are applied via style
@@ -26,10 +29,15 @@ type ConnectorControlsProps = {
 	zoom?: number;
 	/**
 	 * What the canvas is pointed at, `state.selection` as it stands: a picked
-	 * waypoint of this very connector rings its handle, anything else leaves
-	 * the handles plain
+	 * waypoint of this very connector rings its handle, its picked label is
+	 * outlined, anything else leaves the handles plain
 	 */
 	selection: CanvasControllerState["selection"];
+	/**
+	 * This connector's label as open in the editor (resolveConnectorLabelDraft),
+	 * which the picked label's outline follows; null while it is not edited.
+	 */
+	labelDraft: ConnectorLabel | null;
 };
 
 /**
@@ -41,6 +49,8 @@ type ConnectorControlsProps = {
  * - Waypoint insert handles (lines drawn straight only): the midpoint of each segment of the resolved path
  *   [source, ...waypoints, target]. Drag to add a new waypoint
  *   (data-id=<id> + data-action="waypoint-insert:<segment>" → ConnectorVertexInsertHandler)
+ * - The outline of the label while it is picked (ConnectorLabelPartOutline), beneath the handles;
+ *   while the label is open in the editor, along the draft's box
  *
  * The two shapes are edited differently because a point means a different thing in each. Under
  * straight a point is a bend the user places and then moves freely, so it gets a handle; under
@@ -59,6 +69,7 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 	objects,
 	zoom = 1,
 	selection,
+	labelDraft,
 }) => {
 	const resolved = useResolvedConnectorPoints(
 		connectorState,
@@ -95,8 +106,18 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 		connectorState.id,
 	);
 
+	const label = labelDraft ?? connectorState.label;
+
 	return (
 		<g data-layer="connector-controls">
+			{isConnectorLabelPart(selection.part) && label && (
+				<ConnectorLabelPartOutline
+					points={resolved.points}
+					label={label}
+					isTextEditing={labelDraft !== null}
+				/>
+			)}
+
 			{/* Waypoint insert handles (segment midpoints of the endpoint-inclusive path). Drawn beneath the endpoint handles */}
 			{!isOrthogonal && (
 				<VertexInsertControls

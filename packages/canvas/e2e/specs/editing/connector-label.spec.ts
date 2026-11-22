@@ -19,6 +19,8 @@ import { selectors } from "../../support/selectors";
  *   not carried over)
  * - A multi-line label has the same height before committing (the real textarea
  *   layout) and after committing (the measured line boxes)
+ * - While editing, the canvas keeps drawing the label's box, styled as committed
+ *   and sized from the text typed, under the editor, which paints none
  */
 
 type Vec = { x: number; y: number };
@@ -161,19 +163,66 @@ async function setupConnectorWithLabel(
 	return { connectorId, onLine };
 }
 
+/** Allowed gap per edge between the label editor and the label box the canvas draws under it (subpixel rounding). */
+const LABEL_BOX_TOLERANCE_PX = 1;
+
+/** Locator for the label's box on the canvas, the foreignObject itself; drawn while the label is edited too. */
+function labelForeignObjectOf(canvas: CanvasDriver, connectorId: string) {
+	return canvas.page.locator(
+		`foreignObject[data-kind=connector][data-action=label][data-id="${connectorId}"]`,
+	);
+}
+
+/**
+ * Asserts the open label editor paints no box of its own and lies over the
+ * label's box, which the canvas keeps drawing under it, on the same pixels.
+ *
+ * @returns The editor's bounds, in screen px
+ */
+async function expectLabelBoxUnderEditor(
+	canvas: CanvasDriver,
+	connectorId: string,
+) {
+	const editor = canvas.page.locator(selectors.textEditor);
+	await expect(editor).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+	const editorBounds = await editor.boundingBox();
+	const labelBounds = await labelForeignObjectOf(
+		canvas,
+		connectorId,
+	).boundingBox();
+	if (!editorBounds || !labelBounds) {
+		throw new Error("cannot read the label editor or the label box under it");
+	}
+	expect(Math.abs(labelBounds.x - editorBounds.x)).toBeLessThanOrEqual(
+		LABEL_BOX_TOLERANCE_PX,
+	);
+	expect(Math.abs(labelBounds.y - editorBounds.y)).toBeLessThanOrEqual(
+		LABEL_BOX_TOLERANCE_PX,
+	);
+	expect(Math.abs(labelBounds.width - editorBounds.width)).toBeLessThanOrEqual(
+		LABEL_BOX_TOLERANCE_PX * 2,
+	);
+	expect(
+		Math.abs(labelBounds.height - editorBounds.height),
+	).toBeLessThanOrEqual(LABEL_BOX_TOLERANCE_PX * 2);
+	return editorBounds;
+}
+
 /**
  * Asserts the picked label's outline frames the open label editor's box: the
- * same box, give or take the stroke the outline is drawn with.
+ * same box, give or take the stroke the outline is drawn with. The outline is
+ * the connector's own control, in the canvas SVG, and shows through the
+ * editor, which paints no box; under it the canvas keeps drawing the label's.
  */
-async function expectOutlineOverEditor(canvas: CanvasDriver): Promise<void> {
-	const editorBounds = await canvas.page
-		.locator(selectors.textEditor)
-		.boundingBox();
-	const outlineBounds = await canvas.page
-		.locator(selectors.partOutline)
-		.boundingBox();
-	if (!editorBounds || !outlineBounds) {
-		throw new Error("cannot read the label editor or its outline");
+async function expectOutlineOverEditor(
+	canvas: CanvasDriver,
+	connectorId: string,
+): Promise<void> {
+	const editorBounds = await expectLabelBoxUnderEditor(canvas, connectorId);
+	const outline = canvas.page.locator(selectors.partOutline);
+	const outlineBounds = await outline.boundingBox();
+	if (!outlineBounds) {
+		throw new Error("cannot read the label's outline");
 	}
 	expect(Math.abs(outlineBounds.x - editorBounds.x)).toBeLessThanOrEqual(
 		OUTLINE_STROKE_TOLERANCE_PX,
@@ -188,31 +237,11 @@ async function expectOutlineOverEditor(canvas: CanvasDriver): Promise<void> {
 		Math.abs(outlineBounds.height - editorBounds.height),
 	).toBeLessThanOrEqual(OUTLINE_STROKE_TOLERANCE_PX * 2);
 
-	// The editor is an opaque box, so the outline only shows if it is painted
-	// after it: in an SVG of its own (not the canvas SVG, which holds the
-	// connector's controls), later in the document than the editor.
-	const isPaintedOverEditor = await canvas.page.evaluate(
-		({ editorSelector, outlineSelector, controlsSelector }) => {
-			const editor = document.querySelector(editorSelector);
-			const outlineSvg =
-				document.querySelector<SVGElement>(outlineSelector)?.ownerSVGElement;
-			if (!editor || !outlineSvg) {
-				return false;
-			}
-			return (
-				outlineSvg.querySelector(controlsSelector) === null &&
-				(editor.compareDocumentPosition(outlineSvg) &
-					Node.DOCUMENT_POSITION_FOLLOWING) !==
-					0
-			);
-		},
-		{
-			editorSelector: selectors.textEditor,
-			outlineSelector: selectors.partOutline,
-			controlsSelector: '[data-layer="connector-controls"]',
-		},
-	);
-	expect(isPaintedOverEditor).toBe(true);
+	await expect(
+		canvas.page.locator(
+			`[data-layer="connector-controls"] ${selectors.partOutline}`,
+		),
+	).toHaveCount(1);
 }
 
 test.describe("connector label", () => {
@@ -1119,14 +1148,124 @@ test.describe("connector label", () => {
 		await canvas.typeTextAt(await pointOnConnector(canvas, connectorId), "");
 		await expect(partOutline).toHaveCount(1);
 		await expect(partOutline).toHaveCSS("fill", "none");
-		await expectOutlineOverEditor(canvas);
+		await expectOutlineOverEditor(canvas, connectorId);
 		const emptyWidth = (await partOutline.boundingBox())?.width ?? 0;
 
 		await canvas.page.keyboard.type("A longer label");
 		await expect
 			.poll(async () => (await partOutline.boundingBox())?.width ?? 0)
 			.toBeGreaterThan(emptyWidth + 40);
-		await expectOutlineOverEditor(canvas);
+		await expectOutlineOverEditor(canvas, connectorId);
+	});
+
+	test("keeps a styled label's box drawn under its editor, color and border kept, widening as it is typed", async ({
+		canvas,
+	}) => {
+		const { connectorId, onLine } = await setupConnectorWithLabel(
+			canvas,
+			"Yes",
+		);
+		await canvas.clickAt(onLine);
+		await canvas.openObjectMenu("label-bg-color");
+		await canvas.page.click(selectors.objectMenuSet("label.fill", "#dc2626"));
+		await canvas.openObjectMenu("label-border-style");
+		await canvas.setNumberInput("label.strokeWidth", 3);
+		await canvas.deselect();
+
+		const labelBox = labelBoxOf(canvas, connectorId);
+		await labelBox.dblclick();
+		await expect(canvas.textEditorSurface()).toHaveValue("Yes");
+		await expect(labelBox).toHaveCSS("background-color", "rgb(220, 38, 38)");
+		await expect(labelBox).toHaveCSS("border-top-width", "3px");
+		await expect(labelBox).toHaveCSS("border-top-style", "solid");
+		// The text is the editor's alone.
+		await expect(labelBox).toHaveText("");
+		const openedBounds = await expectLabelBoxUnderEditor(canvas, connectorId);
+
+		await canvas.page.keyboard.type(", and more");
+		await expect
+			.poll(
+				async () =>
+					(await labelForeignObjectOf(canvas, connectorId).boundingBox())
+						?.width ?? 0,
+			)
+			.toBeGreaterThan(openedBounds.width + 20);
+		await expectLabelBoxUnderEditor(canvas, connectorId);
+	});
+
+	test("lines the editor's text up inside the label's border, over several lines at zoom 2", async ({
+		canvas,
+	}) => {
+		const { connectorId, onLine } = await setupConnectorWithLabel(
+			canvas,
+			"Yes",
+		);
+		const borderWidth = 3;
+		const zoom = 2;
+		await canvas.clickAt(onLine);
+		await canvas.openObjectMenu("label-border-style");
+		await canvas.setNumberInput("label.strokeWidth", borderWidth);
+		await canvas.deselect();
+
+		// Scrolled to the middle of the view first, which zooming in is anchored on,
+		// so the label stays on screen.
+		const areaBounds = await canvas.page
+			.locator(selectors.canvasArea)
+			.boundingBox();
+		const labelBounds = await labelBoxOf(canvas, connectorId).boundingBox();
+		if (!areaBounds || !labelBounds) {
+			throw new Error("cannot read the canvas or the label box");
+		}
+		const areaCenter = {
+			x: areaBounds.x + areaBounds.width / 2,
+			y: areaBounds.y + areaBounds.height / 2,
+		};
+		await canvas.wheel(canvas.toContent(areaCenter), {
+			deltaX: labelBounds.x + labelBounds.width / 2 - areaCenter.x,
+			deltaY: labelBounds.y + labelBounds.height / 2 - areaCenter.y,
+		});
+		await expect
+			.poll(async () => {
+				const bounds = await labelBoxOf(canvas, connectorId).boundingBox();
+				return bounds
+					? Math.abs(bounds.y + bounds.height / 2 - areaCenter.y)
+					: Infinity;
+			})
+			.toBeLessThan(50);
+
+		// The zoom stops run 1 → 1.25 → 1.5 → 2.
+		const viewBoxWidthAt1 = Number((await canvas.getViewBox())?.split(" ")[2]);
+		for (let step = 0; step < 3; step++) {
+			await canvas.zoomIn();
+		}
+		await expect
+			.poll(async () => Number((await canvas.getViewBox())?.split(" ")[2]))
+			.toBeCloseTo(viewBoxWidthAt1 / zoom, 3);
+
+		await labelBoxOf(canvas, connectorId).dblclick();
+		await canvas.textEditorSurface().fill("Line one\nLine two");
+		const editorBounds = await expectLabelBoxUnderEditor(canvas, connectorId);
+		// Two lines of 16 × 1.5, padding 4 and the border, at zoom 2.
+		expect(editorBounds.height).toBeGreaterThan((2 * 24 + 4) * zoom);
+
+		// The text box sits inside the border, as the label's text sits in its box.
+		const textAreaBounds = await canvas.textEditorSurface().boundingBox();
+		if (!textAreaBounds) {
+			throw new Error("cannot read the editor's text box");
+		}
+		const inset = borderWidth * zoom;
+		expect(
+			Math.abs(textAreaBounds.x - (editorBounds.x + inset)),
+		).toBeLessThanOrEqual(LABEL_BOX_TOLERANCE_PX);
+		expect(
+			Math.abs(textAreaBounds.y - (editorBounds.y + inset)),
+		).toBeLessThanOrEqual(LABEL_BOX_TOLERANCE_PX);
+		expect(
+			Math.abs(textAreaBounds.width - (editorBounds.width - 2 * inset)),
+		).toBeLessThanOrEqual(LABEL_BOX_TOLERANCE_PX * 2);
+		expect(
+			Math.abs(textAreaBounds.height - (editorBounds.height - 2 * inset)),
+		).toBeLessThanOrEqual(LABEL_BOX_TOLERANCE_PX * 2);
 	});
 
 	test("keeps the label picked once its edit is committed", async ({

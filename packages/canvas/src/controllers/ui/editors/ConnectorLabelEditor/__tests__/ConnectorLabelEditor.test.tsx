@@ -4,22 +4,18 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it } from "vitest";
 
+import { resolveConnectorLabelBox } from "../../../../../rendering/objects/connector/geometry/label/connectorLabelLayout";
 import { DocumentSurfaceContext } from "../../../../../rendering/objects/DocumentSurfaceContext";
-import type { LabelBackdropLayer } from "../../../../../rendering/objects/LabelBackdropStoreContext";
 import { LabelBackdropStoreContext } from "../../../../../rendering/objects/LabelBackdropStoreContext";
 import { createLabelBackdropStore } from "../../../../hooks/utils/createLabelBackdropStore";
 import { ConnectorLabelEditor } from "../ConnectorLabelEditor";
-import { LABEL_EDITOR_BORDER_WIDTH_VAR } from "../ConnectorLabelEditorStyled";
 
 // Without this React treats every `act` below as unsupported and warns, the
 // flushes being correct all the same.
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
-const SURFACE = "rgb(11, 18, 32)";
 const ANCHOR = { x: 100, y: 50 };
-const LAYERS: LabelBackdropLayer[] = [
-	{ fill: "rgb(255, 0, 0)", fillOpacity: 0.5 },
-];
+const TEXT = "go";
 
 let unmount: (() => void) | null = null;
 
@@ -28,29 +24,25 @@ afterEach(() => {
 	unmount = null;
 });
 
-/** Mounts the editor for "connector-1" over a store holding `layers` for it, or none. */
-const renderEditor = ({
-	layers,
-	strokeWidth,
-}: {
-	layers: LabelBackdropLayer[] | null;
-	strokeWidth?: number;
-}): HTMLElement => {
+/**
+ * Mounts the editor where a committed label would paint a backdrop and a
+ * knockout (a layer stored for the connector, a page color), so a box the
+ * editor painted itself would show.
+ */
+const renderEditor = (strokeWidth?: number): HTMLElement => {
 	const store = createLabelBackdropStore();
-	if (layers !== null) {
-		store.replaceLayers(new Map([["connector-1", layers]]));
-	}
+	store.replaceLayers(
+		new Map([["connector-1", [{ fill: "rgb(255, 0, 0)", fillOpacity: 0.5 }]]]),
+	);
 	const container = document.createElement("div");
 	const root = createRoot(container);
 	act(() =>
 		root.render(
 			<LabelBackdropStoreContext value={store}>
-				<DocumentSurfaceContext value={SURFACE}>
+				<DocumentSurfaceContext value="rgb(11, 18, 32)">
 					<ConnectorLabelEditor
-						id="connector-1"
 						anchor={ANCHOR}
-						text="go"
-						stroke="#000000"
+						text={TEXT}
 						strokeWidth={strokeWidth}
 						onChange={() => {}}
 					/>
@@ -62,38 +54,28 @@ const renderEditor = ({
 	return container.querySelector<HTMLElement>('[data-testid="text-editor"]')!;
 };
 
-describe("ConnectorLabelEditor backdrop", () => {
-	it("draws the knockout and the layers behind the text, the box itself transparent", () => {
-		const wrapper = renderEditor({ layers: LAYERS, strokeWidth: 2 });
-		expect(wrapper.style.background).toBe("transparent");
-		expect(wrapper.style.getPropertyValue(LABEL_EDITOR_BORDER_WIDTH_VAR)).toBe(
-			"2px",
-		);
-
-		const [backdrop, textArea] = [...wrapper.children];
-		expect(backdrop.tagName).toBe("svg");
-		expect(textArea.tagName).toBe("TEXTAREA");
-		const [knockout, layerGroup] = [...backdrop.children];
-		expect(knockout.tagName).toBe("rect");
-		expect((knockout as SVGRectElement).style.fill).toBe(SURFACE);
-		expect(knockout.getAttribute("rx")).toBe("2");
-		expect(knockout.getAttribute("shape-rendering")).toBe("crispEdges");
-		expect(layerGroup.getAttribute("shape-rendering")).toBe("crispEdges");
-		const layer = layerGroup.firstElementChild as SVGElement;
-		// Over the whole box, rounded as the box is.
-		expect(layer.tagName).toBe("rect");
-		expect(layer.getAttribute("rx")).toBe("2");
-		expect(layer.style.fill).toBe("rgb(255, 0, 0)");
-	});
-
-	it("keeps its own background with no layers for its id", () => {
-		const wrapper = renderEditor({ layers: null });
-		expect(wrapper.style.background).toBe(SURFACE);
+describe("ConnectorLabelEditor box", () => {
+	it("paints no box of its own: no background, no backdrop, the text area alone", () => {
+		const wrapper = renderEditor(2);
+		expect(wrapper.style.background).toBe("");
+		expect(wrapper.style.backgroundColor).toBe("");
 		expect([...wrapper.children].map((child) => child.tagName)).toEqual([
 			"TEXTAREA",
 		]);
-		expect(wrapper.style.getPropertyValue(LABEL_EDITOR_BORDER_WIDTH_VAR)).toBe(
-			"",
+	});
+
+	it("takes up the label's border width in a transparent border, at the label box's width", () => {
+		const wrapper = renderEditor(2);
+		expect(wrapper.style.borderWidth).toBe("2px");
+		expect(wrapper.style.borderStyle).toBe("solid");
+		expect(wrapper.style.borderColor).toBe("transparent");
+		expect(wrapper.style.width).toBe(
+			`${resolveConnectorLabelBox({ text: TEXT, strokeWidth: 2 }).width}px`,
 		);
+	});
+
+	it("has no border for a label without one", () => {
+		const wrapper = renderEditor();
+		expect(wrapper.style.borderStyle).toBe("none");
 	});
 });

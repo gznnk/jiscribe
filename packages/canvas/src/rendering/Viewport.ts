@@ -14,9 +14,8 @@ export type Viewport = {
 
 /**
  * The size and `viewBox` an SVG showing `viewport` takes, so world coordinates
- * drawn in it land on the screen where the viewport says. The canvas SVG
- * (CanvasView) and the SVG laid over the text editors (WorldSvgOverlay) both
- * take theirs from here, which is what keeps the two on the same pixels.
+ * drawn in it land on the screen where the viewport says (the canvas SVG,
+ * CanvasView).
  *
  * @param viewport - The view to show; `zoom` is the world → screen scale, above 0
  * @returns `width` / `height` in screen px and the `viewBox` string in world units

@@ -151,6 +151,27 @@ describe("useTextEditSession derived state", () => {
 		expect(first.editingTextSlotId).toBeNull();
 		expect(first.draftObjects).toBe(canvasState.objects);
 	});
+
+	it("hands out the connector label open in the editor, draft text and placement included, and null otherwise", () => {
+		const labelEditState = createTestState(twoRectsWithConnectorDoc, {
+			selection: selectionOf(["conn-1"], connectorLabelPartSelection()),
+			mode: {
+				kind: "textEdit",
+				draft: {
+					kind: "connectorLabel",
+					text: "typed",
+					placement: { position: 0.25, offset: 4 },
+				},
+			},
+		});
+		const { first, render } = mountSession(labelEditState);
+		expect(first.connectorLabelDraft).toEqual({
+			text: "typed",
+			position: 0.25,
+			offset: 4,
+		});
+		expect(render(editingState()).connectorLabelDraft).toBeNull();
+	});
 });
 
 describe("useTextEditSession editor handlers", () => {

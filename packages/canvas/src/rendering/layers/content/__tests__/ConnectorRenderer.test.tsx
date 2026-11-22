@@ -1,12 +1,14 @@
 // @vitest-environment jsdom
 
 import { ARROW_SIZE } from "@jiscribe/doc/model/objects/arrow/arrowHeadDimensions";
+import type { ConnectorLabel } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import type { ArrowType } from "@jiscribe/doc/model/objects/types/ArrowType";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it } from "vitest";
 
 import type { ConnectorState } from "../../../../states/objects/connector/ConnectorState";
+import { resolveConnectorLabelBox } from "../../../objects/connector/geometry/label/connectorLabelLayout";
 import { ConnectorRenderer } from "../ConnectorRenderer";
 
 // Without this React treats every `act` below as unsupported and warns, the
@@ -36,7 +38,10 @@ const connectorWith = (
 	}) as ConnectorState;
 
 /** Renders the connector through ConnectorRenderer, the path the canvas draws it by. */
-const renderConnector = (connectorState: ConnectorState): HTMLElement => {
+const renderConnector = (
+	connectorState: ConnectorState,
+	labelDraft?: ConnectorLabel,
+): HTMLElement => {
 	const container = document.createElement("div");
 	root = createRoot(container);
 	act(() =>
@@ -46,6 +51,7 @@ const renderConnector = (connectorState: ConnectorState): HTMLElement => {
 					connectorState={connectorState}
 					sourceObj={null}
 					targetObj={null}
+					labelDraft={labelDraft}
 				/>
 			</svg>,
 		),
@@ -189,5 +195,32 @@ describe("ConnectorRenderer arrowheads", () => {
 		const head = container.querySelector('polygon[data-kind="connector"]');
 		expect(headScaleOf(head as Element)).toBe(2);
 		expect(head?.getAttribute("stroke-width")).toBe("1");
+	});
+});
+
+describe("ConnectorRenderer label", () => {
+	const labelledConnector = connectorWith({
+		endArrow: "None",
+		label: { text: "Yes", position: 0.5 },
+	});
+
+	it("draws its own label, text and all, while none is open in the editor", () => {
+		const container = renderConnector(labelledConnector);
+		expect(container.querySelector("foreignObject")?.textContent).toBe("Yes");
+	});
+
+	it("draws the draft in its place while the label is open in the editor, an empty one included", () => {
+		const labelDraft = { text: "", position: 0.25 };
+		const container = renderConnector(labelledConnector, labelDraft);
+
+		const foreignObjects = container.querySelectorAll("foreignObject");
+		expect(foreignObjects).toHaveLength(1);
+		const [foreignObject] = foreignObjects;
+		// 0.25 of the way along (0,0)-(100,0).
+		const { width } = resolveConnectorLabelBox(labelDraft);
+		expect(Number(foreignObject.getAttribute("x"))).toBeCloseTo(25 - width / 2);
+		expect(Number(foreignObject.getAttribute("width"))).toBeCloseTo(width);
+		expect(foreignObject.textContent).toBe("");
+		expect(foreignObject.getAttribute("pointer-events")).toBe("none");
 	});
 });

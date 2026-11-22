@@ -1,3 +1,4 @@
+import type { ConnectorLabel } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import { memo } from "react";
 
 import { ConnectorRenderer } from "./ConnectorRenderer";
@@ -21,6 +22,13 @@ type ObjectsRendererProps = Pick<CanvasState, "objects" | "rootIds"> & {
 	 * shape hides only that slot's text while the editor covers it.
 	 */
 	editingTextSlotId?: string | null;
+	/**
+	 * The label of `textEditObjectId` open in the editor, its draft text
+	 * included, when that is a connector. Passed on to that connector alone,
+	 * which draws it in place of its own label, so the box under the editor
+	 * follows each keystroke.
+	 */
+	connectorLabelDraft?: ConnectorLabel | null;
 	/**
 	 * When set, only these IDs are rendered: the objects on screen (viewport
 	 * culling, issue #212), or what an export snapshot draws in their place (see
@@ -61,6 +69,7 @@ const ObjectsRendererComponent: React.FC<ObjectsRendererProps> = ({
 	rootIds,
 	textEditObjectId,
 	editingTextSlotId,
+	connectorLabelDraft,
 	renderedObjectIds,
 	movePreview,
 }) => {
@@ -94,6 +103,11 @@ const ObjectsRendererComponent: React.FC<ObjectsRendererProps> = ({
 		if (objState.type === "connector") {
 			const connectorState = objState as ConnectorState;
 			const isEditing = id === textEditObjectId;
+			// Only the edited connector receives the draft; for the rest the prop
+			// stays undefined so starting/ending an edit does not break their memo.
+			const labelDraft = isEditing
+				? (connectorLabelDraft ?? undefined)
+				: undefined;
 			const isShifted =
 				movePreview !== undefined &&
 				!isEditing &&
@@ -116,16 +130,14 @@ const ObjectsRendererComponent: React.FC<ObjectsRendererProps> = ({
 			result.push(
 				reuseElement(
 					id,
-					[connectorState, sourceObj, targetObj, isEditing, transform],
+					[connectorState, sourceObj, targetObj, labelDraft, transform],
 					() => (
 						<g key={id} data-canvas-export="flatten" transform={transform}>
 							<ConnectorRenderer
 								connectorState={connectorState}
 								sourceObj={sourceObj}
 								targetObj={targetObj}
-								// Derived here so only the edited connector's prop changes and
-								// starting/ending an edit does not break the others' memo.
-								isEditing={isEditing}
+								labelDraft={labelDraft}
 							/>
 						</g>
 					),

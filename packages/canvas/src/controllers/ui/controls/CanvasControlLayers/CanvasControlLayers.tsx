@@ -1,3 +1,5 @@
+import type { ConnectorLabel } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
+
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { AxisLockGuide } from "../../feedback/AxisLockGuide";
@@ -18,6 +20,8 @@ type CanvasControlLayersProps = {
 	canvasState: CanvasControllerState;
 	/** The draft-grafted objects (see useTextEditSession); only the selection outline reads them. */
 	draftObjects: Record<string, ObjectState>;
+	/** The connector label open in the editor (see useTextEditSession), whose box the picked label's outline follows. */
+	connectorLabelDraft: ConnectorLabel | null;
 };
 
 /**
@@ -31,6 +35,7 @@ type CanvasControlLayersProps = {
 export const CanvasControlLayers = ({
 	canvasState,
 	draftObjects,
+	connectorLabelDraft,
 }: CanvasControlLayersProps) => {
 	const { selection, objects, multiSelectGroup, mode, drag } = canvasState;
 	const zoom = canvasState.viewport.zoom;
@@ -69,6 +74,7 @@ export const CanvasControlLayers = ({
 				selection={selection}
 				objects={objects}
 				zoom={zoom}
+				labelDraft={connectorLabelDraft}
 			/>
 			<TransformControlsLayer
 				selection={selection}

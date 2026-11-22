@@ -39,6 +39,12 @@ type ConnectorLabelProps = {
 	/** Border style (solid / dashed / dotted). Defaults to solid when omitted. */
 	strokeDashType?: string;
 	disablePointerEvents?: boolean;
+	/**
+	 * True while the label is open in the editor, which lies over it and draws
+	 * the text: the box alone is drawn (the minimum box for empty text), at any
+	 * zoom, taking no pointer, and left out of image export. Default false.
+	 */
+	isEditing?: boolean;
 };
 
 const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
@@ -54,6 +60,7 @@ const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
 	strokeWidth = 0,
 	strokeDashType = "solid",
 	disablePointerEvents = false,
+	isEditing = false,
 }) => {
 	// An invalidation signal, not an argument: the box was measured against
 	// whatever face was loaded at the time, so a later arrival has to re-run this
@@ -81,9 +88,10 @@ const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
 	const layers = useLabelBackdropLayers(id);
 
 	// A label is one plain string, so its own size is the largest it draws.
-	const isLegible = useIsTextLegible(fontSize);
+	// The editor over a label being edited shows at any zoom, and so does its box.
+	const isLegible = useIsTextLegible(fontSize) || isEditing;
 
-	if (text === "") {
+	if (text === "" && !isEditing) {
 		return null;
 	}
 
@@ -97,7 +105,8 @@ const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
 	const display = isLegible ? undefined : "none";
 
 	return (
-		<>
+		// While edited, export drops the box the editor lies on, as it drops the editor.
+		<g data-canvas-export={isEditing ? "exclude" : undefined}>
 			{hasLayers && (
 				<LabelBackdropLayers
 					box={box}
@@ -119,7 +128,7 @@ const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
 				data-kind="connector"
 				data-id={id}
 				data-action="label"
-				pointerEvents={disablePointerEvents ? "none" : "auto"}
+				pointerEvents={disablePointerEvents || isEditing ? "none" : "auto"}
 				display={display}
 			>
 				<LabelBox
@@ -135,10 +144,10 @@ const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
 								: "none",
 					}}
 				>
-					{text}
+					{isEditing ? null : text}
 				</LabelBox>
 			</foreignObject>
-		</>
+		</g>
 	);
 };
 
@@ -146,6 +155,8 @@ const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
  * Renders a connector's label as a horizontally centered box at the given
  * anchor on the path. Returns null for empty text, and hides the box (kept
  * mounted) while it is too small to read at the canvas's zoom (useIsTextLegible).
+ * While the label is open in the editor (`isEditing`), the box is drawn for the
+ * editor to lie on, the editor drawing the text.
  * An `"auto"` label lying on a frame's backdrop is painted under the box, in
  * SVG ahead of the foreignObject: the page's color, then the frames' fills
  * (LabelBackdropLayers), the box's own background left transparent.

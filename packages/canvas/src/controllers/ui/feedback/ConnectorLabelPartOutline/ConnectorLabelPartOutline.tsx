@@ -19,15 +19,14 @@ type ConnectorLabelPartOutlineProps = {
 	/** The connector's resolved path, the one its label is drawn along (world coordinates). */
 	points: readonly Point[];
 	/**
-	 * The picked label; while it is open in the editor, the draft's text at the
-	 * placement the editor sits at. Outside the editor one with empty text draws
+	 * The picked label; while it is open in the editor, the draft
+	 * (resolveConnectorLabelDraft). Outside the editor one with empty text draws
 	 * no box and so no outline.
 	 */
 	label: ConnectorLabel;
 	/**
-	 * Whether the label is open in the editor: the outline then follows the
-	 * editor's box, drawn for an empty draft (the minimum box) and at any zoom,
-	 * as the editor is.
+	 * Whether the label is open in the editor: the outline is then drawn for an
+	 * empty draft (the minimum box) and at any zoom, as the box under the editor is.
 	 */
 	isTextEditing: boolean;
 };
@@ -35,10 +34,8 @@ type ConnectorLabelPartOutlineProps = {
 /**
  * Outlines a connector's picked label (the `connectorLabel` part kind): a
  * stroke along the label's box (calcConnectorLabelRect) with nothing inside.
- * Drawn in the layer in front of the text editors
- * (ConnectorLabelPartOutlineLayer), so the label's editor, an opaque box,
- * covers none of it. Outside the editor it is hidden while the label itself
- * is, too small to read at the canvas's zoom.
+ * Outside the editor it is hidden while the label itself is, too small to read
+ * at the canvas's zoom.
  */
 const ConnectorLabelPartOutlineComponent: React.FC<
 	ConnectorLabelPartOutlineProps

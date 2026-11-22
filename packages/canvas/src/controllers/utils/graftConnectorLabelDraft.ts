@@ -1,3 +1,5 @@
+import type { ConnectorLabel } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
+
 import { readOpenTextEdit } from "./readOpenTextEdit";
 import type { ConnectorLabelPlacement } from "../../rendering/objects/connector/geometry/label/calcConnectorLabelPlacement";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
@@ -16,8 +18,8 @@ export type ConnectorLabelDraftObjects = {
  * Where a connector label open in the editor sits: the pending placement of a
  * label being created, else the label's own. The one rule the editor's anchor
  * (TextEditorLayer), the point its backdrop is worked out at
- * ({@link graftConnectorLabelDraft}) and the picked label's outline
- * (ConnectorLabelPartOutlineLayer) all follow, so none of them can part from the others.
+ * ({@link graftConnectorLabelDraft}) and the label drawn under the editor
+ * ({@link resolveConnectorLabelDraft}) all follow, so none of them can part from the others.
  *
  * @param connector - The connector whose label is edited; its `label` may be absent for a label being created
  * @param pendingPlacement - The draft's placement (`TextEditDraft.placement`), set only while a label is being created; it wins over leftovers of a deleted label
@@ -32,14 +34,35 @@ export const resolveLabelDraftPlacement = (
 });
 
 /**
+ * The label to draw for a connector label open in the editor: the label's own
+ * style with the draft text, where the editor sits (resolveLabelDraftPlacement).
+ * The canvas draws its box under the editor, and the picked label's outline
+ * runs along that box (ConnectorControls).
+ *
+ * @param connector - The connector whose label is edited; its `label` may be absent for a label being created, which then has the default style
+ * @param text - The draft text (`TextEditDraft.text`); empty for a label being created, whose box is then the minimum one
+ * @param pendingPlacement - The draft's placement (`TextEditDraft.placement`), set only while a label is being created
+ */
+export const resolveConnectorLabelDraft = (
+	connector: ConnectorState,
+	text: string,
+	pendingPlacement: ConnectorLabelPlacement | undefined,
+): ConnectorLabel => ({
+	...connector.label,
+	text,
+	...resolveLabelDraftPlacement(connector, pendingPlacement),
+});
+
+/**
  * Prepares the connector label open in the editor for the label backdrops
  * alone (resolveLabelBackdrops), which judge a label by its anchor: the label
  * is given the placement the editor sits at (resolveLabelDraftPlacement, the
  * pending one of a label being created), and one being created gets a label to
  * be found by at all, empty until committed. The draft text is left out, the
- * backdrop not depending on it: what follows each keystroke is the editor's own
- * box width. Only the backdrop pass reads the result; the drawing, the menus
- * and hit testing keep the map graftTextEditDraft gives.
+ * backdrop not depending on it: what follows each keystroke is the width of the
+ * box the backdrop is drawn over ({@link resolveConnectorLabelDraft}). Only the
+ * backdrop pass reads the result; the drawing, the menus and hit testing keep
+ * the map graftTextEditDraft gives.
  *
  * @param state - The objects to graft onto (the text-edit draft map), with the
  *   editing session (`mode`) and the selection owning it

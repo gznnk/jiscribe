@@ -1,3 +1,4 @@
+import type { ConnectorLabel } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
 import type { BoundingBox } from "@jiscribe/geometry";
 import { type Dispatch, useCallback, useMemo } from "react";
@@ -12,6 +13,7 @@ import { toggleTextFormatCommandId } from "../commands/text/ToggleTextFormatComm
 import type { CanvasAction } from "../reducer/CanvasActions";
 import type { CanvasRegistries } from "../registries/CanvasRegistries";
 import type { TextFormat } from "../style/TextFormat";
+import { resolveConnectorLabelDraft } from "../utils/graftConnectorLabelDraft";
 import { graftTextEditDraft } from "../utils/graftTextEditDraft";
 import { readOpenTextEdit } from "../utils/readOpenTextEdit";
 
@@ -40,6 +42,12 @@ type TextEditSession = {
 	textEditObjectId: string | null;
 	/** The shape slot the open editor covers; null for a connector label or no session. */
 	editingTextSlotId: string | null;
+	/**
+	 * The connector label open in the editor, its draft text included
+	 * (resolveConnectorLabelDraft): the canvas draws its box under the editor.
+	 * Null while no connector label is open; `draftObjects` never carries it.
+	 */
+	connectorLabelDraft: ConnectorLabel | null;
 	/** `canvasState` carrying `draftObjects`, for the menus anchored to the drawn extent. */
 	menuCanvasState: CanvasControllerState;
 	/** Referentially stable as a whole and per handler. */
@@ -81,8 +89,8 @@ export const useTextEditSession = ({
 	dispatch,
 	registries,
 }: TextEditSessionParams): TextEditSession => {
-	// Neither memo below reads the caret, so both key on the session held through
-	// caret-only moves.
+	// None of the memos below reads the caret, so they key on the session held
+	// through caret-only moves.
 	const caretStableMode = useModeHeldAcrossCaretMoves(canvasState.mode);
 
 	// The slot being edited carries the uncommitted editor text, so geometry derived from
@@ -117,6 +125,17 @@ export const useTextEditSession = ({
 	const textEditObjectId = readTextEditObjectId(textEdit);
 	const editingTextSlotId =
 		textEdit?.kind === "shape" ? textEdit.textSlotId : null;
+	const connectorLabelDraft = useMemo(
+		() =>
+			textEdit?.kind === "connectorLabel"
+				? resolveConnectorLabelDraft(
+						textEdit.connector,
+						textEdit.text,
+						textEdit.placement,
+					)
+				: null,
+		[textEdit],
+	);
 
 	// The menu is anchored below the drawn extent, which during a text edit is the
 	// draft-grafted box (a keystroke regrows an auto-sized text before commit), so
@@ -221,6 +240,7 @@ export const useTextEditSession = ({
 		draftObjects,
 		textEditObjectId,
 		editingTextSlotId,
+		connectorLabelDraft,
 		menuCanvasState,
 		editorHandlers,
 	};

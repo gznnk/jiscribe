@@ -15,7 +15,7 @@ import { selectors } from "../../support/selectors";
  *   that resolves per element (`var()`, `currentColor`) or one the browser does
  *   not parse as a color leaves the theme color in place
  * - A label with a `fill` of its own keeps it
- * - The inline label editor draws its box in the same color as the label
+ * - The label box stays drawn in that color under the inline label editor, which paints none
  * - Both label-background swatches (ObjectMenu and properties sidebar) show it
  * - The theme's `--jiscribe-canvas-bg` stays the theme's under it
  */
@@ -200,7 +200,7 @@ test.describe("connector label background follows the document background", () =
 		);
 	});
 
-	test("draws the inline label editor in the document background", async ({
+	test("keeps the label box in the document background under the inline label editor", async ({
 		canvas,
 	}) => {
 		await loadDoc(canvas, buildDocText(DOC_BACKGROUND_HEX));
@@ -209,9 +209,10 @@ test.describe("connector label background follows the document background", () =
 
 		await labelBox.dblclick();
 		await expect(canvas.textEditorSurface()).toHaveValue("Yes");
+		await expect(labelBox).toHaveCSS("background-color", DOC_BACKGROUND);
 		await expect(canvas.page.locator(selectors.textEditor)).toHaveCSS(
 			"background-color",
-			DOC_BACKGROUND,
+			"rgba(0, 0, 0, 0)",
 		);
 	});
 

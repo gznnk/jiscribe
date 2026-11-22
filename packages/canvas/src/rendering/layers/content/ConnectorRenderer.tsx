@@ -1,3 +1,4 @@
+import type { ConnectorLabel as ConnectorLabelDoc } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import { isConnectorDrawnOrthogonal } from "@jiscribe/doc/model/objects/connector/isConnectorDrawnOrthogonal";
 import { isFreeEndpointRef } from "@jiscribe/doc/model/objects/types/EndpointRef";
 import { memo, useMemo } from "react";
@@ -22,12 +23,13 @@ type ConnectorRendererProps = {
 	targetObj: ObjectState | null;
 	disablePointerEvents?: boolean;
 	/**
-	 * True while this connector's label is being text-edited; suppresses the
-	 * static label, which ConnectorLabelEditor draws at the same position.
-	 * Derived per connector (not the global edited id) so starting/ending an
-	 * edit anywhere does not break the other connectors' memo.
+	 * This connector's label as open in the editor, its draft text included;
+	 * drawn in place of `connectorState.label` as the box under the editor,
+	 * even while its text is empty. Omitted while the label is not edited.
+	 * Handed to the edited connector alone so starting/ending an edit anywhere
+	 * does not break the other connectors' memo.
 	 */
-	isEditing?: boolean;
+	labelDraft?: ConnectorLabelDoc;
 };
 
 const ConnectorRendererComponent: React.FC<ConnectorRendererProps> = ({
@@ -35,7 +37,7 @@ const ConnectorRendererComponent: React.FC<ConnectorRendererProps> = ({
 	sourceObj,
 	targetObj,
 	disablePointerEvents = false,
-	isEditing = false,
+	labelDraft,
 }) => {
 	const resolved = useResolvedConnectorPoints(
 		connectorState,
@@ -43,12 +45,13 @@ const ConnectorRendererComponent: React.FC<ConnectorRendererProps> = ({
 		targetObj,
 	);
 
-	const label = connectorState.label;
+	const isEditing = labelDraft !== undefined;
+	const label = labelDraft ?? connectorState.label;
 	// Memoized so the anchor Point keeps its identity across unrelated re-renders
 	// and does not break ConnectorLabel's memo.
 	const labelAnchor = useMemo(
 		() =>
-			resolved && label && label.text !== "" && !isEditing
+			resolved && label && (label.text !== "" || isEditing)
 				? calcConnectorLabelAnchor(
 						resolved.points,
 						label.position,
@@ -107,6 +110,7 @@ const ConnectorRendererComponent: React.FC<ConnectorRendererProps> = ({
 					strokeWidth={label.strokeWidth}
 					strokeDashType={label.strokeDashType}
 					disablePointerEvents={disablePointerEvents}
+					isEditing={isEditing}
 				/>
 			)}
 		</>

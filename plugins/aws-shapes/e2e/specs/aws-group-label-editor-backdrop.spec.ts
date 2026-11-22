@@ -29,26 +29,66 @@ const setupConnectorOnFrame = async (
 	return { x: 550, y: 300 };
 };
 
-/** The editor box and the frame-fill layer its backdrop draws, read off the page. */
-const readEditorBackdrop = (canvas: CanvasDriver) =>
+/**
+ * The label's box the canvas draws under the open editor, the frame-fill layer
+ * drawn before it, and the editor itself, read off the page.
+ */
+const readLabelBackdrop = (canvas: CanvasDriver) =>
 	canvas.page.evaluate(() => {
-		const wrapper = document.querySelector('[data-testid="text-editor"]');
-		const layer = wrapper?.querySelector("svg g > *");
-		if (!wrapper || !layer) {
+		const editor = document.querySelector('[data-testid="text-editor"]');
+		const labelBox = document.querySelector(
+			"foreignObject[data-kind=connector][data-action=label]",
+		);
+		// LabelBackdropLayers: the knockout, then the group of layers, then the box.
+		const layer = labelBox?.previousElementSibling?.firstElementChild;
+		if (!editor || !labelBox || !layer) {
 			return null;
 		}
 		return {
-			background: getComputedStyle(wrapper).backgroundColor,
+			editorBackground: getComputedStyle(editor).backgroundColor,
+			editorWidth: editor.getBoundingClientRect().width,
+			labelBoxWidth: labelBox.getBoundingClientRect().width,
 			layerFill: getComputedStyle(layer).fill,
-			wrapperWidth: wrapper.getBoundingClientRect().width,
 			layerWidth: layer.getBoundingClientRect().width,
 		};
 	});
 
 /**
+ * How far each pixel in `clip` is from `color`, summed over the channels.
+ * Read from a screenshot, decoded in the page.
+ */
+const readPixelDistances = async (
+	canvas: CanvasDriver,
+	clip: { x: number; y: number; width: number; height: number },
+	color: string,
+): Promise<number[]> => {
+	const shot = await canvas.page.screenshot({ clip });
+	return canvas.page.evaluate(
+		async ([base64, rgb]) => {
+			const [r, g, b] = rgb.match(/\d+/g)!.map(Number);
+			const res = await fetch(`data:image/png;base64,${base64}`);
+			const bitmap = await createImageBitmap(await res.blob());
+			const offscreen = new OffscreenCanvas(bitmap.width, bitmap.height);
+			const ctx = offscreen.getContext("2d")!;
+			ctx.drawImage(bitmap, 0, 0);
+			const { data } = ctx.getImageData(0, 0, bitmap.width, bitmap.height);
+			const distances: number[] = [];
+			for (let i = 0; i < data.length; i += 4) {
+				distances.push(
+					Math.abs(data[i] - r) +
+						Math.abs(data[i + 1] - g) +
+						Math.abs(data[i + 2] - b),
+				);
+			}
+			return distances;
+		},
+		[shot.toString("base64"), color] as const,
+	);
+};
+
+/**
  * How many pixels of the editor's text box are far from the frame's fill: the
- * glyphs, which show only while the text paints over the backdrop. Read from a
- * screenshot, decoded in the page.
+ * glyphs, which show only while the text paints over the backdrop.
  */
 const countInkPixels = async (
 	canvas: CanvasDriver,
@@ -67,39 +107,18 @@ const countInkPixels = async (
 		width: Math.round(box.width) - 6,
 		height: Math.round(box.height) - 6,
 	};
-	const shot = await canvas.page.screenshot({ clip });
-	return canvas.page.evaluate(
-		async ([base64, fill]) => {
-			const [r, g, b] = fill.match(/\d+/g)!.map(Number);
-			const res = await fetch(`data:image/png;base64,${base64}`);
-			const bitmap = await createImageBitmap(await res.blob());
-			const offscreen = new OffscreenCanvas(bitmap.width, bitmap.height);
-			const ctx = offscreen.getContext("2d")!;
-			ctx.drawImage(bitmap, 0, 0);
-			const { data } = ctx.getImageData(0, 0, bitmap.width, bitmap.height);
-			let ink = 0;
-			for (let i = 0; i < data.length; i += 4) {
-				const distance =
-					Math.abs(data[i] - r) +
-					Math.abs(data[i + 1] - g) +
-					Math.abs(data[i + 2] - b);
-				if (distance > 120) {
-					ink += 1;
-				}
-			}
-			return ink;
-		},
-		[shot.toString("base64"), frameFill] as const,
-	);
+	const distances = await readPixelDistances(canvas, clip, frameFill);
+	return distances.filter((distance) => distance > 120).length;
 };
 
 /**
- * A connector label's editor is drawn on the same stack as the committed label:
- * the page's color, then the fill of the frame its anchor lies in, judged from
- * the moment it opens empty (graftConnectorLabelDraft), over the editor's own
- * box as it grows with the text, the box itself transparent.
+ * A connector label's box stays drawn by the canvas while its editor is open,
+ * on the same stack as the committed label: the page's color, then the fill of
+ * the frame its anchor lies in, judged from the moment it opens empty
+ * (graftConnectorLabelDraft), over the box as it grows with the text. The
+ * editor over it paints no box, only the text.
  */
-test.describe("a connector label's editor on a filled awsGroup", () => {
+test.describe("a connector label's box under its editor on a filled awsGroup", () => {
 	test("is painted on the frame's fill from the moment it opens, and follows each keystroke", async ({
 		canvas,
 	}) => {
@@ -109,24 +128,28 @@ test.describe("a connector label's editor on a filled awsGroup", () => {
 
 		const frameFill = await canvas.normalizeColor(FRAME_FILL);
 		// Empty, as a label being created opens.
-		await expect.poll(() => readEditorBackdrop(canvas)).not.toBeNull();
-		const empty = (await readEditorBackdrop(canvas))!;
-		expect(empty.background).toBe("rgba(0, 0, 0, 0)");
+		await expect.poll(() => readLabelBackdrop(canvas)).not.toBeNull();
+		const empty = (await readLabelBackdrop(canvas))!;
+		expect(empty.editorBackground).toBe("rgba(0, 0, 0, 0)");
 		expect(empty.layerFill).toBe(frameFill);
-		expect(empty.layerWidth).toBeCloseTo(empty.wrapperWidth, 0);
+		expect(empty.layerWidth).toBeCloseTo(empty.labelBoxWidth, 0);
+		expect(empty.labelBoxWidth).toBeCloseTo(empty.editorWidth, 0);
 
 		await canvas.page.keyboard.type("HTTPS traffic");
 		await expect
-			.poll(async () => (await readEditorBackdrop(canvas))?.layerWidth ?? 0)
+			.poll(async () => (await readLabelBackdrop(canvas))?.layerWidth ?? 0)
 			.toBeGreaterThan(empty.layerWidth);
-		const typed = (await readEditorBackdrop(canvas))!;
+		const typed = (await readLabelBackdrop(canvas))!;
 		expect(typed.layerFill).toBe(frameFill);
-		expect(typed.layerWidth).toBeCloseTo(typed.wrapperWidth, 0);
+		expect(typed.layerWidth).toBeCloseTo(typed.labelBoxWidth, 0);
+		expect(typed.labelBoxWidth).toBeCloseTo(typed.editorWidth, 0);
 		// The text paints over the backdrop, not under it.
 		expect(await countInkPixels(canvas, frameFill)).toBeGreaterThan(20);
 	});
 
-	test("draws a label's border again over the backdrop", async ({ canvas }) => {
+	test("shows the label box's border over the backdrop while the editor is open", async ({
+		canvas,
+	}) => {
 		const onLine = await setupConnectorOnFrame(canvas);
 		await canvas.typeTextAt(onLine, "HTTPS");
 		await canvas.commitText();
@@ -138,21 +161,26 @@ test.describe("a connector label's editor on a filled awsGroup", () => {
 		await canvas.deselect();
 
 		await canvas.typeTextAt(onLine, "");
-		await expect.poll(() => readEditorBackdrop(canvas)).not.toBeNull();
-		const border = await canvas.page.evaluate(() => {
-			const wrapper = document.querySelector('[data-testid="text-editor"]')!;
-			const after = getComputedStyle(wrapper, "::after");
-			return {
-				content: after.content,
-				width: after.borderTopWidth,
-				color: after.borderTopColor,
-			};
-		});
-		// What the SVG covers the box's own border with is drawn again on top.
-		expect(border).toEqual({
-			content: '""',
-			width: "3px",
-			color: await canvas.normalizeColor("#f59e0b"),
-		});
+		await expect.poll(() => readLabelBackdrop(canvas)).not.toBeNull();
+		const labelBox = await canvas.page
+			.locator("foreignObject[data-kind=connector][data-action=label]")
+			.boundingBox();
+		if (labelBox === null) {
+			throw new Error("the label box is not laid out");
+		}
+		// A row through the middle of the 3px top border, clear of the rounded corners.
+		const borderRow = {
+			x: Math.round(labelBox.x + labelBox.width / 4),
+			y: Math.round(labelBox.y) + 1,
+			width: Math.round(labelBox.width / 2),
+			height: 1,
+		};
+		const distances = await readPixelDistances(
+			canvas,
+			borderRow,
+			await canvas.normalizeColor("#f59e0b"),
+		);
+		const borderPixels = distances.filter((distance) => distance < 60);
+		expect(borderPixels.length).toBeGreaterThan(distances.length * 0.9);
 	});
 });

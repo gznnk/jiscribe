@@ -15,8 +15,7 @@ export const isAutoLabelFill = (
 /**
  * Resolves the render color for a label's background: a connector label's
  * `fill`, or the `labelFill` a `text: "label"` caption is painted on. Shared so
- * the labels, the connector label's inline editor and the label-fill swatches
- * produce the same result.
+ * the labels and the label-fill swatches produce the same result.
  *
  * @param fill the label's background as stored; omitted or `"auto"` gives
  *   `documentSurface`, so the box knocks out what lies behind it in the page's

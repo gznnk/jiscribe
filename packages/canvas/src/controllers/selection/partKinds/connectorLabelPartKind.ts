@@ -59,7 +59,7 @@ export const createConnectorLabelPartSelection = (): ObjectPartSelection => ({
  *
  * No `region`: the label's box follows from the resolved path, which takes
  * other objects and the registries, not from the connector alone. The outline
- * is drawn by a layer of its own instead (ConnectorLabelPartOutlineLayer).
+ * is drawn by the connector's own controls instead (ConnectorControls).
  *
  * @returns A definition to put in the connector's `ObjectTypeDefinition.partKinds`
  */

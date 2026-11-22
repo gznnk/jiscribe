@@ -137,8 +137,8 @@ foreignObject に `display="none"` を付ける。テキストオーバーレイ
 未指定を文書の面の色へ解決する（背後の線を抜くため）。これは文書の `background` が不透明ならその色、
 そうでなければテーマのキャンバス色 `theme.canvasBg` で、こちらは CSS 変数のままなのでテーマに追従する。
 `<Canvas>` が `state.background` からこれを求め（`rendering/objects/utils/resolveDocumentSurface.ts`）、
-`DocumentSurfaceContext`（`rendering/objects/DocumentSurfaceContext.ts`）で配る。読むのは両方のラベル・
-コネクターラベルのインライン編集・ラベル背景のスウォッチで、画像エクスポートはラベルの computed style を
+`DocumentSurfaceContext`（`rendering/objects/DocumentSurfaceContext.ts`）で配る。読むのは両方のラベルと
+ラベル背景のスウォッチで、画像エクスポートはラベルの computed style を
 焼き込むのでこれにも揃う。
 不透明とは、ブラウザが alpha 1 の `rgb()` 色へ解決できること。それ以外はテーマの値のままにする。
 透けて見えるのはそちらだから。透ける `background`（`transparent`・どの書き方でも alpha 1 未満）、要素ごとに
@@ -157,9 +157,10 @@ container の見出し帯と本体をまたぐラベルは、中心点がある�
 層があるときはページ色と層を `shape-rendering="crispEdges"` で描き、縁を同じピクセルに揃えて、箱の周りに
 ページ色の縁が出ないようにする。
 枠かラベルの持ち主が回転・反転していても同じ規則で、中心点を枠の座標に直して比べる。
-コネクターラベルのインライン編集中の箱も同じく描く。エディターの位置にラベルを置いて求め
-（`controllers/utils/graftConnectorLabelDraft.ts`。文字には依らず、作成中の空のラベルも含む）、エディターは同じ部品を
-文字の後ろの SVG に描き、枠線をその上に描き直す。
+コネクターラベルをインライン編集している間も、箱はキャンバスがエディターの下に描き続ける。エディターは
+透明で文字だけを描く。箱の大きさは入力中の文字から決め（`resolveConnectorLabelDraft`）、背景はエディターの
+位置にラベルを置いて求める（`graftConnectorLabelDraft`。どちらも `controllers/utils/graftConnectorLabelDraft.ts`。
+背景は文字には依らず、作成中の空のラベルも含む）。
 
 **単一ルール**: 「auto はロールのテーマトークンへ解決し、色は CSS で当てる」。`var(--jiscribe-*)` は
 SVG presentation 属性では解決されないため、stroke / fill / arrow の color も含め**色は属性では当てない**。
