@@ -110,7 +110,7 @@ const TOOLS_LIST_REQUEST = {
 /**
  * One tool from each of the stdio server's four families (its own, ai-tools doc,
  * ai-tools screen, plugin), so a listing that lost a family fails without the
- * test pinning the count (see apps/mcp/CLAUDE.md).
+ * test pinning the count (see apps/mcp/AGENTS.md).
  */
 const expectEveryToolFamily = (tools: readonly { name: string }[]): void => {
 	const names = tools.map((tool) => tool.name);
