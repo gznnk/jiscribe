@@ -25,6 +25,25 @@ describe("resolvePropertyPanelSectionLabel", () => {
 		).toBe(defaultCanvasMessages.propertyPanelSectionArrange);
 	});
 
+	it("resolves the tidy-up section, which the panel adds itself", () => {
+		expect(
+			resolvePropertyPanelSectionLabel(
+				"tidy-up",
+				"unused",
+				defaultCanvasMessages,
+				"en",
+			),
+		).toBe("Tidy up");
+		expect(
+			resolvePropertyPanelSectionLabel(
+				"tidy-up",
+				"unused",
+				jaCanvasMessages,
+				"ja",
+			),
+		).toBe("自動で整える");
+	});
+
 	it("resolves the connector's label section, which core declares by hand", () => {
 		expect(
 			resolvePropertyPanelSectionLabel(

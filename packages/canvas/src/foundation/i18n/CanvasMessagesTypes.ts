@@ -73,8 +73,10 @@ export type CanvasMessageStrings = {
 	propertyPanelSectionLabel: string;
 	/** Heading of the section stating a connector label's border, shown only once the label has text */
 	propertyPanelSectionLabelBorder: string;
-	/** Heading of the section holding the stacking-order, grouping, automatic layout and line-redrawing commands, shown for any selection the stacking or grouping apply to */
+	/** Heading of the section holding the stacking-order and grouping commands, shown for any selection they apply to */
 	propertyPanelSectionArrange: string;
+	/** Heading of the section holding the automatic layout and line-redrawing commands */
+	propertyPanelSectionTidyUp: string;
 	/** Heading of the section stating the note a single selected object carries in the document */
 	propertyPanelSectionMeta: string;
 	/** Label of the row stating the canvas surface color, and the aria-label of its field */

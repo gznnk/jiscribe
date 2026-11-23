@@ -39,6 +39,13 @@ async function drawJoinedRow(canvas: CanvasDriver): Promise<string[]> {
 	return ids;
 }
 
+/**
+ * A sidebar section as a whole, heading and rows: the accordion directly holding
+ * its toggle (propertyPanelSection matches the heading button alone).
+ */
+const sectionSelectorOf = (sectionId: string): string =>
+	`${selectors.propertyPanel} div:has(> [data-action="toggle:${sectionId}"])`;
+
 async function topOf(canvas: CanvasDriver, id: string): Promise<number> {
 	const box = await canvas.objectById(id).boundingBox();
 	if (!box) {
@@ -67,23 +74,43 @@ test.describe("automatic layout", () => {
 		);
 	});
 
-	test("offers both directions in the Canvas section and, for a selection, in the Arrange section", async ({
+	test("offers both directions in the Tidy up section, with nothing selected and for a selection", async ({
 		canvas,
 	}) => {
 		await drawJoinedRow(canvas);
-		const buttons = ["layoutTopToBottom", "layoutLeftToRight"].map(
-			(commandId) =>
-				canvas.page.locator(selectors.propertyPanelCommand(commandId)),
+		const commandIds = ["layoutTopToBottom", "layoutLeftToRight"];
+		const buttons = commandIds.map((commandId) =>
+			canvas.page.locator(selectors.propertyPanelCommand(commandId)),
 		);
+		/** The buttons found inside one section, by the section's id. */
+		const buttonsIn = (sectionId: string) =>
+			commandIds.map((commandId) =>
+				canvas.page.locator(
+					`${sectionSelectorOf(sectionId)} [data-action="command:${commandId}"]`,
+				),
+			);
+		/** The section ids of the sidebar, top to bottom. */
+		const readSectionIds = () =>
+			canvas.page
+				.locator(`${selectors.propertyPanel} [data-action^="toggle:"]`)
+				.evaluateAll((headers) =>
+					headers.map((header) =>
+						(header.getAttribute("data-action") ?? "").replace(/^toggle:/u, ""),
+					),
+				);
 
-		// Nothing selected: the panel holds the Canvas section alone.
+		// Nothing selected: the Canvas section, then Tidy up holding the buttons.
 		await canvas.openPropertyPanel();
 		await expect(
 			canvas.page.locator(selectors.propertyPanelSection("canvas")),
 		).toBeVisible();
-		for (const button of buttons) {
+		for (const button of buttonsIn("tidy-up")) {
 			await expect(button).toBeEnabled();
 		}
+		for (const button of buttonsIn("canvas")) {
+			await expect(button).toHaveCount(0);
+		}
+		await expect.poll(readSectionIds).toEqual(["canvas", "tidy-up"]);
 		// Each button draws its arrow as an icon of one shared size, clear of its text,
 		// rather than carrying an arrow character the font sizes per glyph.
 		const looks = await Promise.all(
@@ -117,8 +144,15 @@ test.describe("automatic layout", () => {
 		await expect(
 			canvas.page.locator(selectors.propertyPanelSection("canvas")),
 		).toHaveCount(0);
-		for (const button of buttons) {
+		for (const button of buttonsIn("tidy-up")) {
 			await expect(button).toBeEnabled();
 		}
+		for (const button of buttonsIn("arrange")) {
+			await expect(button).toHaveCount(0);
+		}
+		// A multi-selection gets no Meta section, so Tidy up comes last.
+		await expect
+			.poll(async () => (await readSectionIds()).slice(-2))
+			.toEqual(["arrange", "tidy-up"]);
 	});
 });

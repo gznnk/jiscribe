@@ -217,12 +217,15 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   caption may reach past it). The algorithm is dagre's,
   wrapped in the new headless `@jiscribe/layout` package.
 - **Automatic layout from the canvas.** Two new commands, `layoutTopToBottom` and
-  `layoutLeftToRight`, run the same layout from the context menu and from the
-  properties sidebar (the Arrange section for a selection, the Canvas section with
-  nothing selected). With a selection, the selected objects are arranged as one
-  graph, and a selected container shape brings what lies inside it along; with
-  nothing selected, each part of the drawing joined by lines is arranged in place
-  and a part with no line is left alone. One run is one undo step, the restacking
+  `layoutLeftToRight`, run the same layout from the context menu and from a new
+  Tidy up section of the properties sidebar, which follows the Canvas section with
+  nothing selected and the Arrange section for a selection; its heading is the new
+  message `propertyPanelSectionTidyUp`, and a host whose `commands` leave out both
+  directions and `routeConnectors` gets no such section. With a selection, the
+  selected objects are arranged as one graph, and a selected container shape
+  brings what lies inside it along; with nothing selected, each part of the
+  drawing joined by lines is arranged in place and a part with no line is left
+  alone. One run is one undo step, the restacking
   of the connectors under a caption included, and a second run that changes
   nothing records nothing. `@jiscribe/layout` now also exports the
   pure steps the doc op and the canvas share: `resolvePlacements` (which objects
@@ -230,10 +233,10 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   `isRectInside`, `calcFacingSides` and `createTakenEnds`.
 - **Redraw the lines only, from the canvas.** A new command, `routeConnectors`,
   runs the doc-op `routeConnectors` from the properties sidebar (a row of its own
-  after auto layout, in the Canvas section with nothing selected and the Arrange
-  section for a selection) and the context menu. What it redraws is what the
-  op's `ids` means: every connector with nothing selected; a selected connector,
-  or the connectors joining the shapes the selection stands for. Shapes do not
+  after auto layout, in the Tidy up section) and the context menu. What it
+  redraws is what the op's `ids` means: every connector with nothing selected; a
+  selected connector, or the connectors joining the shapes the selection stands
+  for. Shapes do not
   move, hand-shaped routes and moved labels in scope are redrawn, one run is one
   undo step, and a run that changes nothing records nothing. A command, a
   plugin's included, may now declare `busyLabel`: a press from any entry paints
@@ -241,8 +244,8 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   run blocks the main thread, fading in after 300 ms so a quick run shows
   nothing, its ring turning through the block. The redraw declares one,
   "Redrawing lines…". The auto layout buttons' tooltip now also says they redraw
-  the lines, and the Japanese label of the Arrange section is 「整列」 instead of
-  「重ね順」.
+  the lines, and the Japanese label of the Arrange section is 「重なりとグループ」
+  instead of 「重ね順」.
 - **A stencil bar floats over the canvas.** `<Canvas stencilBar>` draws a
   column of buttons over the viewport's left edge, centred top to bottom below
   the top-left pill and scrolling when the room there is shorter, over the

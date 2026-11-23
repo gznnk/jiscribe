@@ -70,6 +70,7 @@ import { isArrangeSectionShown } from "./utils/isArrangeSectionShown";
 import { isCanvasSectionShown } from "./utils/isCanvasSectionShown";
 import { isGroupingItemShown } from "./utils/isGroupingItemShown";
 import { isMetaSectionShown } from "./utils/isMetaSectionShown";
+import { isTidyUpSectionShown } from "./utils/isTidyUpSectionShown";
 import { resolvePropertyPanelSectionLabel } from "./utils/resolvePropertyPanelSectionLabel";
 import { useCanvasLocale } from "../../../../foundation/i18n/CanvasLocaleContext";
 import { useCanvasMessages } from "../../../../foundation/i18n/CanvasMessagesContext";
@@ -116,19 +117,27 @@ const CANVAS_SECTION_ID = "canvas";
 const CANVAS_SECTION_LABEL = "Canvas";
 
 /**
- * Identity and English wording of the Arrange section: the stacking-order,
- * grouping, automatic layout and line-redrawing commands, which belong to the
- * selection rather than to any type, so the panel adds the section itself after
- * the per-type ones.
+ * Identity and English wording of the Arrange section: the stacking-order and
+ * grouping commands, which belong to the selection rather than to any type, so
+ * the panel adds the section itself after the per-type ones.
  */
 const ARRANGE_SECTION_ID = "arrange";
 const ARRANGE_SECTION_LABEL = "Arrange";
 
 /**
+ * Identity and English wording of the Tidy up section: the automatic layout and
+ * line-redrawing commands, which the panel adds itself after the Canvas section
+ * with nothing selected and after the Arrange one for a selection. One id for
+ * both, so collapsing it in one place collapses it in the other.
+ */
+const TIDY_UP_SECTION_ID = "tidy-up";
+const TIDY_UP_SECTION_LABEL = "Tidy up";
+
+/**
  * Identity and English wording of the Meta section: the note the selected object
  * carries in the document, and the way to the file its `meta.reference` names,
  * which belong to the object rather than to its type, so the panel adds it itself
- * after the per-type sections and the Arrange one.
+ * after the per-type sections and the Arrange and Tidy up ones.
  */
 const META_SECTION_ID = "meta";
 const META_SECTION_LABEL = "Meta";
@@ -206,6 +215,8 @@ const PropertyPanelAccordion: React.FC<PropertyPanelAccordionProps> = ({
  * per-type sections are followed by the Arrange section whenever the selection
  * can be reordered or grouped, and by the Meta section whenever it names a single
  * object — both of which belong to the selection rather than to any of its types.
+ * The Tidy up section follows the Canvas section, and the Arrange one when that is
+ * shown, unless the canvas registers none of its commands (isTidyUpSectionShown).
  *
  * The panel is one gesture target (`data-kind="menu" data-id="property-panel"`)
  * handled by PropertyPanelHandler: everything inside it — its chrome, the
@@ -231,11 +242,14 @@ const PropertyPanelComponent: React.FC<PropertyPanelProps> = ({
 	const locale = useCanvasLocale();
 	const readStyle = useSelectionStyleReader(canvasState);
 	const sections = usePropertyPanelSections(canvasState);
-	const { objectPartKind } = useCanvasRegistries();
+	const { objectPartKind, command } = useCanvasRegistries();
 	const { collapsedSectionIds } = canvasState.propertyPanel;
 	const showsCanvasSection = isCanvasSectionShown(canvasState);
 	const showsArrangeSection =
 		!showsCanvasSection && isArrangeSectionShown(canvasState, objectPartKind);
+	const showsTidyUpSection =
+		(showsCanvasSection || showsArrangeSection) &&
+		isTidyUpSectionShown(command);
 	const showsGroupingItem = isGroupingItemShown(canvasState, objectPartKind);
 	const showsMetaSection =
 		!showsCanvasSection && isMetaSectionShown(canvasState, objectPartKind);
@@ -294,8 +308,6 @@ const PropertyPanelComponent: React.FC<PropertyPanelProps> = ({
 								/>
 								<ViewOpenItem view={canvasState.view} />
 								<ViewScrollItem view={canvasState.view} />
-								<AutoLayoutItem canvasState={canvasState} />
-								<RouteConnectorsItem canvasState={canvasState} />
 							</PropertyPanelAccordion>
 						)}
 						{!showsCanvasSection &&
@@ -356,6 +368,19 @@ const PropertyPanelComponent: React.FC<PropertyPanelProps> = ({
 								{showsGroupingItem && (
 									<GroupingItem canvasState={canvasState} />
 								)}
+							</PropertyPanelAccordion>
+						)}
+						{showsTidyUpSection && (
+							<PropertyPanelAccordion
+								sectionId={TIDY_UP_SECTION_ID}
+								label={resolvePropertyPanelSectionLabel(
+									TIDY_UP_SECTION_ID,
+									TIDY_UP_SECTION_LABEL,
+									messages,
+									locale,
+								)}
+								isExpanded={!collapsedSectionIds.includes(TIDY_UP_SECTION_ID)}
+							>
 								<AutoLayoutItem canvasState={canvasState} />
 								<RouteConnectorsItem canvasState={canvasState} />
 							</PropertyPanelAccordion>

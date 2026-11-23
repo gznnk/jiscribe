@@ -14,7 +14,9 @@ import {
 	layoutRegistries,
 } from "../../../../../commands/arrange/layout/__tests__/support/layoutFixtures";
 import { createInitialControllerState } from "../../../../../reducer/createInitialControllerState";
+import type { CanvasRegistries } from "../../../../../registries/CanvasRegistries";
 import { CanvasRegistriesContext } from "../../../../../registries/CanvasRegistriesContext";
+import { createCanvasRegistries } from "../../../../../registries/createCanvasRegistries";
 import { AutoLayoutItem } from "../AutoLayoutItem";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
@@ -22,10 +24,11 @@ Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 let container: HTMLDivElement | null = null;
 let root: ReturnType<typeof createRoot> | null = null;
 
-const renderTitles = (
+const render = (
 	locale: string,
 	messages = defaultCanvasMessages,
-): string[] => {
+	registries: CanvasRegistries = layoutRegistries,
+): HTMLDivElement => {
 	const canvasState: CanvasControllerState = createInitialControllerState(
 		buildChainDoc(),
 		layoutRegistries,
@@ -36,7 +39,7 @@ const renderTitles = (
 	const mounted = root;
 	act(() => {
 		mounted.render(
-			<CanvasRegistriesContext.Provider value={layoutRegistries}>
+			<CanvasRegistriesContext.Provider value={registries}>
 				<CanvasLocaleContext.Provider value={locale}>
 					<CanvasMessagesContext.Provider value={messages}>
 						<AutoLayoutItem canvasState={canvasState} />
@@ -45,8 +48,15 @@ const renderTitles = (
 			</CanvasRegistriesContext.Provider>,
 		);
 	});
-	return [...container.querySelectorAll("button")].map(({ title }) => title);
+	return container;
 };
+
+const titlesOf = (element: HTMLElement): string[] =>
+	[...element.querySelectorAll("button")].map(({ title }) => title);
+
+/** Text of the row's label column, the first cell PropertyRow draws. */
+const rowLabelOf = (element: HTMLElement): string | null | undefined =>
+	element.firstElementChild?.firstElementChild?.textContent;
 
 afterEach(() => {
 	act(() => root?.unmount());
@@ -55,18 +65,51 @@ afterEach(() => {
 	container = null;
 });
 
-describe("AutoLayoutItem tooltip", () => {
-	it("states the command's label, then that the shapes move too", () => {
-		expect(renderTitles("en")).toEqual([
+describe("AutoLayoutItem", () => {
+	it("labels the row after what it moves", () => {
+		expect(rowLabelOf(render("en"))).toBe("Shapes and lines");
+	});
+
+	it("labels the row in Japanese", () => {
+		expect(rowLabelOf(render("ja", jaCanvasMessages))).toBe("図形と線");
+	});
+
+	it("states the command's label in the tooltip, then that the shapes move too", () => {
+		expect(titlesOf(render("en"))).toEqual([
 			"Auto layout (top to bottom)\nRearranges the shapes and redraws the lines",
 			"Auto layout (left to right)\nRearranges the shapes and redraws the lines",
 		]);
 	});
 
-	it("reads in Japanese", () => {
-		expect(renderTitles("ja", jaCanvasMessages)).toEqual([
+	it("reads the tooltip in Japanese", () => {
+		expect(titlesOf(render("ja", jaCanvasMessages))).toEqual([
 			"自動整列（上から下）\n図形を並べ直し、線も引き直します",
 			"自動整列（左から右）\n図形を並べ直し、線も引き直します",
 		]);
+	});
+
+	it("draws only the button of a direction left registered", () => {
+		const element = render(
+			"en",
+			defaultCanvasMessages,
+			createCanvasRegistries({ commands: ["layoutLeftToRight"] }),
+		);
+
+		expect(
+			[...element.querySelectorAll("button")].map((button) =>
+				button.getAttribute("data-action"),
+			),
+		).toEqual(["command:layoutLeftToRight"]);
+	});
+
+	it("draws no row when neither direction is registered", () => {
+		const element = render(
+			"en",
+			defaultCanvasMessages,
+			createCanvasRegistries({ commands: ["undo"] }),
+		);
+
+		expect(element.textContent).toBe("");
+		expect(element.childElementCount).toBe(0);
 	});
 });

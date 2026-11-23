@@ -4,8 +4,9 @@ import { selectors } from "../../support/selectors";
 
 /**
  * The command redrawing the lines without moving a shape, from the three places a
- * person reaches it: the sidebar's Canvas section, its Arrange section and the
- * context menu, opened on the background since a right click on a shape selects it.
+ * person reaches it: the sidebar's Tidy up section with nothing selected and for a
+ * selection, and the context menu, opened on the background since a right click on
+ * a shape selects it.
  */
 
 /** Empty canvas, clear of the three shapes. */
@@ -18,6 +19,9 @@ const OBSTACLE = { left: 450, top: 200, right: 570, bottom: 260 };
 const SAMPLES_PER_STRETCH = 64;
 
 const REDRAW_BUTTON = selectors.propertyPanelCommand("routeConnectors");
+
+/** The redraw button only where it belongs: inside the sidebar's Tidy up section. */
+const TIDY_UP_REDRAW_BUTTON = `${selectors.propertyPanel} div:has(> [data-action="toggle:tidy-up"]) [data-action="command:routeConnectors"]`;
 
 /** How long the heavy drawing's run must keep the indicator fully up. */
 const MIN_SHOWN_MS = 500;
@@ -218,7 +222,7 @@ async function expectRedrawnAroundObstacle(
 }
 
 test.describe("redrawing the lines only", () => {
-	test("takes a line out of the shape it crosses from the Canvas section, and Undo restores it", async ({
+	test("takes a line out of the shape it crosses from the Tidy up section with nothing selected, and Undo restores it", async ({
 		canvas,
 	}) => {
 		const { shapeIds, connectorId } = await drawLineThroughShape(canvas);
@@ -226,6 +230,7 @@ test.describe("redrawing the lines only", () => {
 		await expect(
 			canvas.page.locator(selectors.propertyPanelSection("canvas")),
 		).toBeVisible();
+		await expect(canvas.page.locator(TIDY_UP_REDRAW_BUTTON)).toBeVisible();
 		await expectRowDirectlyAfterAutoLayout(canvas);
 
 		await expectRedrawnAroundObstacle(canvas, shapeIds, connectorId, () =>
@@ -233,7 +238,7 @@ test.describe("redrawing the lines only", () => {
 		);
 	});
 
-	test("takes a line out of the shape it crosses from the Arrange section, and Undo restores it", async ({
+	test("takes a line out of the shape it crosses from the Tidy up section for a selection, and Undo restores it", async ({
 		canvas,
 	}) => {
 		const { shapeIds, connectorId } = await drawLineThroughShape(canvas);
@@ -242,6 +247,7 @@ test.describe("redrawing the lines only", () => {
 		await expect(
 			canvas.page.locator(selectors.propertyPanelSection("arrange")),
 		).toBeVisible();
+		await expect(canvas.page.locator(TIDY_UP_REDRAW_BUTTON)).toBeVisible();
 		await expectRowDirectlyAfterAutoLayout(canvas);
 
 		await expectRedrawnAroundObstacle(canvas, shapeIds, connectorId, () =>

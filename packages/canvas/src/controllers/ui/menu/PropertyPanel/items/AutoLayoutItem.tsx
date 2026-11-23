@@ -4,6 +4,10 @@ import type { BuiltinItemProps } from "./BuiltinItemProps";
 import { useCanvasLocale } from "../../../../../foundation/i18n/CanvasLocaleContext";
 import { useCanvasMessages } from "../../../../../foundation/i18n/CanvasMessagesContext";
 import type { CanvasMessages } from "../../../../../foundation/i18n/CanvasMessagesTypes";
+import {
+	LayoutLeftToRightCommand,
+	LayoutTopToBottomCommand,
+} from "../../../../commands/arrange/layout/LayoutCommands";
 import { resolveCommandLabel } from "../../../../commands/CommandUtils";
 import { commandAction } from "../../../../gestures/handlers/menu/utils/menuActions";
 import { useCommandState } from "../../../../hooks/useCommandState";
@@ -29,12 +33,12 @@ const AUTO_LAYOUT_BUTTONS: readonly {
 	readText: (messages: CanvasMessages) => string;
 }[] = [
 	{
-		commandId: "layoutTopToBottom",
+		commandId: LayoutTopToBottomCommand.id,
 		Icon: ArrowDownIcon,
 		readText: (messages) => messages.propertyPanelAutoLayoutTopToBottom,
 	},
 	{
-		commandId: "layoutLeftToRight",
+		commandId: LayoutLeftToRightCommand.id,
 		Icon: ArrowRightIcon,
 		readText: (messages) => messages.propertyPanelAutoLayoutLeftToRight,
 	},
@@ -43,7 +47,8 @@ const AUTO_LAYOUT_BUTTONS: readonly {
 /**
  * The automatic layout commands as two buttons, one per direction. Each is
  * disabled while there is nothing to arrange rather than hidden, so the row keeps
- * its shape.
+ * its shape; a direction the canvas's `commands` leave out gets no button, and
+ * with both left out there is no row at all.
  */
 const AutoLayoutItemComponent: React.FC<
 	Pick<BuiltinItemProps, "canvasState">
@@ -51,30 +56,31 @@ const AutoLayoutItemComponent: React.FC<
 	const messages = useCanvasMessages();
 	const locale = useCanvasLocale();
 	const resolveCommand = useCommandState(canvasState);
+	const buttons = AUTO_LAYOUT_BUTTONS.flatMap((button) => {
+		const resolved = resolveCommand(button.commandId);
+		return resolved ? [{ ...button, resolved }] : [];
+	});
+	if (buttons.length === 0) {
+		return null;
+	}
 
 	return (
 		<PropertyRow label={messages.propertyPanelAutoLayout}>
 			<PropertyCommandGrid>
-				{AUTO_LAYOUT_BUTTONS.map(({ commandId, Icon, readText }) => {
-					const resolved = resolveCommand(commandId);
-					if (!resolved) {
-						return null;
-					}
-					return (
-						<PropertyCommandButton
-							key={commandId}
-							type="button"
-							disabled={!resolved.enabled}
-							title={`${resolveCommandLabel(resolved.command, messages, locale)}\n${messages.propertyPanelAutoLayoutTitle}`}
-							data-action={commandAction(commandId)}
-						>
-							<PropertyCommandButtonContent>
-								<Icon width={ARROW_ICON_SIZE} height={ARROW_ICON_SIZE} />
-								<span>{readText(messages)}</span>
-							</PropertyCommandButtonContent>
-						</PropertyCommandButton>
-					);
-				})}
+				{buttons.map(({ commandId, Icon, readText, resolved }) => (
+					<PropertyCommandButton
+						key={commandId}
+						type="button"
+						disabled={!resolved.enabled}
+						title={`${resolveCommandLabel(resolved.command, messages, locale)}\n${messages.propertyPanelAutoLayoutTitle}`}
+						data-action={commandAction(commandId)}
+					>
+						<PropertyCommandButtonContent>
+							<Icon width={ARROW_ICON_SIZE} height={ARROW_ICON_SIZE} />
+							<span>{readText(messages)}</span>
+						</PropertyCommandButtonContent>
+					</PropertyCommandButton>
+				))}
 			</PropertyCommandGrid>
 		</PropertyRow>
 	);

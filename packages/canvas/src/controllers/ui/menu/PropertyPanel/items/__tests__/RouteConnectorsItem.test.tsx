@@ -53,6 +53,10 @@ const buttonOf = (element: HTMLElement): HTMLButtonElement => {
 	return button;
 };
 
+/** Text of the row's label column, the first cell PropertyRow draws. */
+const rowLabelOf = (element: HTMLElement): string | null | undefined =>
+	element.firstElementChild?.firstElementChild?.textContent;
+
 const withConnector = (): CanvasControllerState =>
 	createInitialControllerState(buildChainDoc(), layoutRegistries);
 
@@ -75,7 +79,7 @@ describe("RouteConnectorsItem", () => {
 
 		const button = buttonOf(element);
 		expect(element.querySelectorAll("button")).toHaveLength(1);
-		expect(element.textContent).toContain("Lines only");
+		expect(rowLabelOf(element)).toBe("Lines only");
 		expect(button.textContent).toBe("Redraw");
 		expect(button.disabled).toBe(false);
 		expect(button.title).toBe(
@@ -94,7 +98,7 @@ describe("RouteConnectorsItem", () => {
 		const element = render(withConnector(), layoutRegistries, jaCanvasMessages);
 
 		const button = buttonOf(element);
-		expect(element.textContent).toContain("線だけ整える");
+		expect(rowLabelOf(element)).toBe("線だけ");
 		expect(button.textContent).toBe("引き直す");
 		expect(button.title).toBe("図形を動かさず、図形を避けて線を引き直します");
 	});

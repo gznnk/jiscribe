@@ -19,11 +19,16 @@ const SHAPE_FROM = { x: 100, y: 120 };
 const SHAPE_TO = { x: 260, y: 220 };
 
 /**
- * Viewport short enough that the sidebar's body scrolls and the last rows of a
- * line's panel have less room under them than a dropdown needs, which is what
- * the flip and the scroll rest on.
+ * Viewport short enough that the sidebar's body scrolls, which is what closing on
+ * a scroll rests on.
  */
 const SHORT_VIEWPORT = { width: 1000, height: 400 };
+
+/**
+ * Viewport for the flip: the rows under the last trigger still leave it no room
+ * below, while the sidebar is tall enough to hold the panel above it.
+ */
+const FLIP_VIEWPORT = { width: 1000, height: 480 };
 
 /** Screen rectangle of an element, as boundingBox() reports it. */
 type ScreenBox = { x: number; y: number; width: number; height: number };
@@ -44,20 +49,20 @@ const FILL_TRIGGER = `${selectors.propertyPanel} [aria-label="Background Color"]
 
 /**
  * The last dropdown of a polyline's panel. A line's rows are what leaves a
- * dropdown with no room under it: below this one sit only the two sections the
- * panel adds for the selection itself, collapsed to their headings by
+ * dropdown with no room under it: below this one sit only the sections the panel
+ * adds for the selection itself, collapsed to their headings by
  * {@link collapseSelectionSections} so they come to fewer pixels than the panel
  * this trigger opens.
  */
 const END_ARROW_TRIGGER = `${selectors.propertyPanel} [aria-label="End Arrow"]`;
 
 /**
- * Collapses the Arrange and Meta sections, the two the panel adds after the
- * per-type ones. Their rows are what a low dropdown would otherwise have room to
- * open into, so a test resting on the flip collapses them first.
+ * Collapses the Arrange, Tidy up and Meta sections, the three the panel adds after
+ * the per-type ones. Their rows are what a low dropdown would otherwise have room
+ * to open into, so a test resting on the flip collapses them first.
  */
 async function collapseSelectionSections(canvas: CanvasDriver) {
-	for (const sectionId of ["arrange", "meta"]) {
+	for (const sectionId of ["arrange", "tidy-up", "meta"]) {
 		await canvas.page
 			.locator(selectors.propertyPanelSection(sectionId))
 			.click();
@@ -175,7 +180,7 @@ test.describe("Properties sidebar dropdowns", () => {
 	});
 
 	test("opens above a row with no room under it", async ({ canvas }) => {
-		await canvas.page.setViewportSize(SHORT_VIEWPORT);
+		await canvas.page.setViewportSize(FLIP_VIEWPORT);
 		await canvas.drawShape("Polyline", SHAPE_FROM, SHAPE_TO);
 		await canvas.openPropertyPanel();
 		await collapseSelectionSections(canvas);

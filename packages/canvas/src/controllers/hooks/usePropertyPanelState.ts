@@ -10,9 +10,9 @@ import { isPropertyPanelShown } from "../utils/sidebarsState";
  * names — each selected object and, for a group, its descendants — which is the
  * only part of `objects` any row looks at (a row's frame, style, note and parent
  * are all fields of those objects). With nothing selected, `objects` itself takes
- * their place: the Canvas section's auto layout buttons are enabled by the
- * connectors anywhere in the drawing, which an undo or an external sync can add or
- * remove while nothing is selected.
+ * their place: the Tidy up section's buttons are then enabled by the connectors
+ * anywhere in the drawing, which an undo or an external sync can add or remove
+ * while nothing is selected.
  *
  * Kept in step with what PropertyPanel and its rows read: a field added to the
  * panel's reads and left out here goes stale on screen without a warning.
