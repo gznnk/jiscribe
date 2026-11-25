@@ -48,8 +48,9 @@ all thirteen plugins on a single canvas). Each has its own `playwright.config.ts
 as `pnpm --filter <package> test:e2e`. They share canvas's kit, which plugins reach
 through `@jiscribe/canvas-sdk/testing/*` — see `packages/canvas/docs/09-testing.md`.
 
-`apps/mcp`, `apps/desktop` and `apps/vscode-extension` carry their own
-`AGENTS.md` with implementation notes for work inside them.
+`apps/mcp`, `apps/desktop`, `apps/vscode-extension` and
+`packages/canvas/src/controllers/gestures` carry their own `AGENTS.md` with
+implementation notes for work inside them.
 
 ## After making a change
 
